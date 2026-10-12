@@ -95,8 +95,10 @@ function resolveBookExact(bookId) {
 
 // ---------- 引用回源验证 ----------
 // 逐条到 library/*.db 查章节原文比对；任一失败即返回错误清单（save 层整包拒收）
+// 同时吐出 stats：每本书 { seen: 引文验真覆盖的去重章节, total: 库里实际章节数 }——供出厂自检对账，零额外查询
 export function verifyCitations(citations, sourcesMap) {
   const errors = [];
+  const stats = {}; // bookId -> { seen: Set<string>, total: number }
   const cache = new Map(); // bookId -> { byChapter, byPage, chapters } | null
   for (const c of citations) {
     const bookId = sourcesMap ? sourcesMap[c.alias] : undefined;
@@ -143,9 +145,70 @@ export function verifyCitations(citations, sourcesMap) {
       const sample = normalize(stripAnnotations(texts.join(""))).slice(0, 60);
       errors.push({ ...c, reason: "quote-not-found",
         hint: `该章实文（前60字）：${sample}…；子句命中 ${v.hits}/${v.total}，请照抄 query_book 返回的原文（繁体照抄，勿自行简转繁）` });
+      continue;
+    }
+    if (!stats[bookId]) stats[bookId] = { seen: new Set(), total: entry.chapters.length };
+    stats[bookId].seen.add(String(c.chapter));
+  }
+  return { errors, stats };
+}
+
+// ---------- 出厂自检：声称 vs 实际（第三道质检，防"包装说明与内容对不上"） ----------
+// 教训：道德经包 description 写"81章原典速查"，实际引文只覆盖 14 章——生成模式凭印象写声称，不回头核对。
+// 原则：凡是智能体会拿来当导航依据的声称（覆盖范围/章节数/索引指向），必须机器可验。
+const CLAIM_ABILITY_RE = /(\d+)\s*章(?:原典)?\s*(?:速查|指南|手册|全覆盖)/g; // 能力声称："81章速查"
+const CLAIM_BOOK_TOTAL_RE = /全书\s*(\d+)\s*章/g; // 书属性声称："全书81章"
+const REF_PATH_RE = /(?:chapters\/)?(?:ch\d{2}-[a-z0-9-]+|glossary|patterns|cheatsheet)\.md/g; // 索引表指向的文件
+
+function coverageCheck(fmData, skillMdContent, files, stats) {
+  const errors = [];
+  const warnings = [];
+  const push = (reason, extra = {}) => errors.push({ reason, ...extra });
+
+  const bookIds = Object.values(fmData.sources || {});
+  const single = bookIds.length === 1 && stats[bookIds[0]];
+  const seenCount = single ? stats[bookIds[0]].seen.size : null;
+  const totalCount = single ? stats[bookIds[0]].total : null;
+
+  // a) 索引表存在性：SKILL.md 里提到的技能文件必须在 files 里真实存在（操作手册导航不能撞墙）
+  const available = new Set(files.map((f) => f.path));
+  for (const ref of new Set(skillMdContent.match(REF_PATH_RE) || [])) {
+    if (!available.has(ref))
+      push("broken-reference", { file: ref, hint: `SKILL.md 引用了 ${ref}，但 files 里没有这个文件——智能体按索引导航会撞墙` });
+  }
+
+  // b) 能力声称："N章速查/指南/手册/全覆盖"里的 N 必须等于实际覆盖数
+  for (const m of skillMdContent.matchAll(CLAIM_ABILITY_RE)) {
+    const n = Number(m[1]);
+    if (single && n !== seenCount)
+      push("claimed-coverage-lie", { claimed: n, actual: seenCount, match: m[0],
+        hint: `"${m[0]}" 是能力声称，但引文实际只覆盖 ${seenCount} 章——要么写"覆盖 ${seenCount} 章"，要么写"全书 ${totalCount} 章精选 ${seenCount} 章"` });
+  }
+
+  // c) 书属性声称："全书N章"里的 N 必须等于源书实际章节数
+  for (const m of skillMdContent.matchAll(CLAIM_BOOK_TOTAL_RE)) {
+    const n = Number(m[1]);
+    if (single && n !== totalCount)
+      push("book-total-lie", { claimed: n, actual: totalCount, match: m[0], hint: `"${m[0]}" 与源书实际 ${totalCount} 章不符——先到 query_book 核实原书章节数` });
+    else if (single && !fmData.coverage)
+      warnings.push(`"全书 ${n} 章"没问题，但建议在 frontmatter 补 "coverage: ${seenCount}/${totalCount}"，让智能体知道这是精选集`);
+  }
+
+  // d) coverage 声明："N" 或 "N/M"（N=引文覆盖章数，M=源书总章数）
+  const cov = String(fmData.coverage || "").trim();
+  if (cov) {
+    const cm = /^(\d+)(?:\s*\/\s*(\d+))?$/.exec(cov);
+    if (!cm) push("bad-coverage", { hint: "coverage 格式应为 N 或 N/M（如 14/81）" });
+    else if (single) {
+      if (Number(cm[1]) !== seenCount)
+        push("coverage-mismatch", { claimed: Number(cm[1]), actual: seenCount, hint: `coverage 声称覆盖 ${cm[1]} 章，引文实际覆盖 ${seenCount} 章` });
+      if (cm[2] && Number(cm[2]) !== totalCount)
+        push("coverage-total-mismatch", { claimed: Number(cm[2]), actual: totalCount, hint: `coverage 分母 ${cm[2]} 与源书实际 ${totalCount} 章不符` });
+    } else if (cm[2]) {
+      warnings.push("多书技能暂不校验 coverage 分母，请人工核对");
     }
   }
-  return errors;
+  return { errors, warnings };
 }
 
 // ---------- 落盘 / 读 / 枚举 ----------
@@ -185,8 +248,12 @@ export function saveSkill(slug, files, { skillsDir = DEFAULT_SKILLS_DIR } = {}) 
 
   const fmData = parseFrontmatter(skillMd.content).data;
   const citations = extractCitations(files);
-  const citErrors = verifyCitations(citations, fmData.sources);
+  const { errors: citErrors, stats: citStats } = verifyCitations(citations, fmData.sources);
   if (citErrors.length) return { ok: false, stage: "citation-check", errors: citErrors, citations_checked: citations.length };
+
+  // 第三道质检：出厂自检（声称 vs 实际）
+  const cov = coverageCheck(fmData, skillMd.content, files, citStats);
+  if (cov.errors.length) return { ok: false, stage: "coverage-check", errors: cov.errors, warnings: cov.warnings, citations_checked: citations.length };
 
   // 原子写：临时目录 → 删旧 → rename（Windows 下目录 rename 需先删旧）
   const root = path.resolve(skillsDir);
@@ -207,10 +274,21 @@ export function saveSkill(slug, files, { skillsDir = DEFAULT_SKILLS_DIR } = {}) 
     fs.rmSync(tmp, { recursive: true, force: true });
     return { ok: false, stage: "write", errors: [{ reason: "write-failed", hint: String(e.message || e) }] };
   }
+  const bookIds = Object.values(fmData.sources || {});
+  const single = bookIds.length === 1 && citStats[bookIds[0]];
   return {
     ok: true, slug, files: files.length,
     citations_checked: citations.length,
     chars_total: files.reduce((a, f) => a + (f.content || "").length, 0),
+    coverage: single
+      ? {
+          covered: citStats[bookIds[0]].seen.size,
+          total: citStats[bookIds[0]].total,
+          percent: Math.round((citStats[bookIds[0]].seen.size / citStats[bookIds[0]].total) * 100),
+          chapters: [...citStats[bookIds[0]].seen],
+        }
+      : null,
+    warnings: cov.warnings,
     dir: "skills/" + slug,
   };
 }

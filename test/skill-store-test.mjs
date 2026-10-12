@@ -29,6 +29,22 @@ const goodChapter = (quote) => `# 第一章 · 测试
 > ${quote}
 `;
 
+// frontmatter 构造器：可换 description、可带 coverage（出厂自检用）
+const makeFm = ({ coverage, desc = "用于单元测试的技能包" } = {}) => `---
+name: test-skill
+title: 测试技能
+description: ${desc}
+sources:
+  道德经: daodejing-zh
+${coverage ? `coverage: ${coverage}\n` : ""}---
+# 测试技能
+核心心智模型占位。
+`;
+
+// 两章引用样例（第四十八章、第八章——真库验真后 covered=2，道德经全书 81 章）
+const ch48 = goodChapter("為學日益，為道日損。〔道德经·第四十八章〕");
+const ch08 = goodChapter("上善若水，水善利萬物而不爭。〔道德经·第八章〕");
+
 // ========== 1) slug 白名单与路径穿越 ==========
 {
   for (const bad of ["../evil", "..\\evil", "a/b", ".git", "", "大写的中文"]) {
@@ -184,7 +200,78 @@ const goodChapter = (quote) => `# 第一章 · 测试
      cits[0].quote === "上善若水。" && cits[1].quote === "第二条", "引文提取: 只认 blockquote、行号与引文正确");
 }
 
-// ========== 15) 大小上限（防失控智能体写超大文件） ==========
+// ========== 15) 出厂自检：声称 vs 实际（coverage-check） ==========
+{
+  const base = { slug: "test-skill", skillsDir: tmp };
+
+  // a) coverage 声明正确（2/81）→ 过，且返回清点单
+  let r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: makeFm({ coverage: "2/81" }) }, { path: "chapters/ch01-a.md", content: ch48 }, { path: "chapters/ch02-b.md", content: ch08 }],
+    base);
+  ok(r.ok === true, "出厂自检: coverage 2/81 声明正确通过", JSON.stringify(r.errors));
+  ok(r.coverage && r.coverage.covered === 2 && r.coverage.total === 81 && r.coverage.percent === 2,
+    "出厂自检: 清点单 covered/total/percent 正确", JSON.stringify(r.coverage));
+  ok(Array.isArray(r.coverage.chapters) && r.coverage.chapters.length === 2, "出厂自检: 清点单带章节清单");
+
+  // b) coverage N 写错
+  r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: makeFm({ coverage: "3/81" }) }, { path: "chapters/ch01-a.md", content: ch48 }, { path: "chapters/ch02-b.md", content: ch08 }],
+    base);
+  ok(r.ok === false && r.stage === "coverage-check" && r.errors.some(e => e.reason === "coverage-mismatch"),
+    "出厂自检: coverage 覆盖数写错拒收");
+
+  // c) coverage 分母写错
+  r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: makeFm({ coverage: "2/80" }) }, { path: "chapters/ch01-a.md", content: ch48 }, { path: "chapters/ch02-b.md", content: ch08 }],
+    base);
+  ok(r.errors.some(e => e.reason === "coverage-total-mismatch"), "出厂自检: coverage 分母写错拒收");
+
+  // d) 能力声称对上（2章速查 + 2 章实覆盖）→ 过
+  r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: makeFm({ desc: "道德经2章速查" }) }, { path: "chapters/ch01-a.md", content: ch48 }, { path: "chapters/ch02-b.md", content: ch08 }],
+    base);
+  ok(r.ok === true, "出厂自检: 能力声称与实际一致放行", JSON.stringify(r.errors));
+
+  // e) 能力声称吹牛（复现道德经案：81章速查，实覆盖 2）→ 拒
+  r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: makeFm({ desc: "老子81章原典速查" }) }, { path: "chapters/ch01-a.md", content: ch48 }],
+    base);
+  ok(r.ok === false && r.errors.some(e => e.reason === "claimed-coverage-lie" && e.claimed === 81 && e.actual === 1),
+    "出厂自检: 「81章速查」吹牛拒收（复现本案）");
+
+  // f) 书属性声称：全书 81 章正确 → 过 + warning 建议补 coverage；全书 80 章 → 拒
+  r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: makeFm({ desc: "全书81章的精选，用于单元测试" }) }, { path: "chapters/ch01-a.md", content: ch48 }, { path: "chapters/ch02-b.md", content: ch08 }],
+    base);
+  ok(r.ok === true && r.warnings.some(w => w.includes("coverage")), "出厂自检: 书属性正确放行并提示补 coverage", JSON.stringify(r.warnings));
+  r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: makeFm({ desc: "全书80章的精选，用于单元测试" }) }, { path: "chapters/ch01-a.md", content: ch48 }],
+    base);
+  ok(r.errors.some(e => e.reason === "book-total-lie"), "出厂自检: 书属性写错拒收");
+
+  // g) 索引表指向不存在的文件 → 拒
+  const brokenIdx = makeFm({ coverage: "2/81" }) + "\n## 章节索引\n| chapters/ch99-none.md | 幽灵章 | 99 |\n";
+  r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: brokenIdx }, { path: "chapters/ch01-a.md", content: ch48 }, { path: "chapters/ch02-b.md", content: ch08 }],
+    base);
+  ok(r.errors.some(e => e.reason === "broken-reference" && e.file === "chapters/ch99-none.md"),
+    "出厂自检: 索引表指向不存在文件拒收");
+
+  // h) coverage 坏格式
+  r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: makeFm({ coverage: "很多章" }) }, { path: "chapters/ch01-a.md", content: ch48 }],
+    base);
+  ok(r.errors.some(e => e.reason === "bad-coverage"), "出厂自检: coverage 坏格式拒收");
+
+  // i) 多书技能：M 校验跳过只给 warning，不误杀
+  const fm2src = makeFm({ coverage: "1" }).replace("  道德经: daodejing-zh", "  道德经: daodejing-zh\n  論語: lunyu-xueer-zh");
+  r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: fm2src }, { path: "chapters/ch01-a.md", content: ch48 }],
+    base);
+  ok(r.ok === true && r.coverage === null, "出厂自检: 多书技能跳过 coverage 校验不误杀", JSON.stringify(r.errors));
+}
+
+// ========== 16) 大小上限（防失控智能体写超大文件） ==========
 {
   const big = "x".repeat(513 * 1024); // 513KB > 单文件上限 512KB
   let r = saveSkill("test-skill",
