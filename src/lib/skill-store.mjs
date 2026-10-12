@@ -18,6 +18,10 @@ const FILE_RE = /^(?:SKILL\.md|chapters\/ch\d{2}-[a-z0-9-]+\.md|glossary\.md|pat
 const CHAPTER_FILE_RE = /^ch\d{2}-[a-z0-9-]+\.md$/;
 // 引用标记：〔别名·章节〕，只认 blockquote 行
 const CITATION_RE = /〔(.+?)·(.+?)〕/;
+// 大小上限（防失控智能体写超大文件）：单文件 512KB、整包 1MB（BSP_SKILL_MAX_KB 可调，≥64 才生效）
+const MAX_FILE_BYTES = 512 * 1024;
+const MAX_TOTAL_BYTES = (Number(process.env.BSP_SKILL_MAX_KB) >= 64 ? Number(process.env.BSP_SKILL_MAX_KB) : 1024) * 1024;
+const kbStr = (n) => (n / 1024).toFixed(0) + "KB";
 
 // ---------- frontmatter（最小手写 YAML，不引依赖） ----------
 export function parseFrontmatter(md) {
@@ -153,6 +157,7 @@ export function saveSkill(slug, files, { skillsDir = DEFAULT_SKILLS_DIR } = {}) 
     push("bad-slug", { hint: "slug 只能是小写字母/数字/连字符（1~64位）；中文请写进 frontmatter title，slug 用拼音" });
 
   const seen = new Set();
+  let totalBytes = 0;
   for (const f of files || []) {
     if (!f || typeof f.path !== "string" || !FILE_RE.test(f.path)) {
       push("bad-path", { file: f && f.path, hint: "允许的路径：SKILL.md、chapters/chNN-小写连字符.md、glossary.md、patterns.md、cheatsheet.md" });
@@ -160,7 +165,13 @@ export function saveSkill(slug, files, { skillsDir = DEFAULT_SKILLS_DIR } = {}) 
     }
     if (seen.has(f.path)) push("bad-path", { file: f.path, hint: "路径重复" });
     seen.add(f.path);
+    const bytes = typeof f.content === "string" ? Buffer.byteLength(f.content, "utf8") : 0;
+    totalBytes += bytes;
+    if (bytes > MAX_FILE_BYTES)
+      push("file-too-large", { file: f.path, hint: `单文件 ${kbStr(bytes)} 超上限 ${kbStr(MAX_FILE_BYTES)}——技能应是蒸馏后的精华，不是书的搬运` });
   }
+  if (totalBytes > MAX_TOTAL_BYTES)
+    push("total-too-large", { hint: `整包 ${kbStr(totalBytes)} 超上限 ${kbStr(MAX_TOTAL_BYTES)}（BSP_SKILL_MAX_KB 可调）——一个技能正常 30~100KB，太大了说明没蒸馏` });
   const skillMd = (files || []).find(f => f && f.path === "SKILL.md");
   if (!skillMd) push("missing-skill-md", { hint: "files 里必须包含 SKILL.md" });
   else {

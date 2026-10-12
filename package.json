@@ -13,7 +13,8 @@
     "test": "npm run test:fast && npm run test:slow",
     "eval": "node test/v2-eval.mjs --rerank both",
     "ingest": "node src/embed-book.js --all",
-    "mcp": "node src/mcp-server.mjs"
+    "mcp": "node src/mcp-server.mjs",
+    "backup": "node src/backup.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.1",

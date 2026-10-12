@@ -184,6 +184,30 @@ const goodChapter = (quote) => `# 第一章 · 测试
      cits[0].quote === "上善若水。" && cits[1].quote === "第二条", "引文提取: 只认 blockquote、行号与引文正确");
 }
 
+// ========== 15) 大小上限（防失控智能体写超大文件） ==========
+{
+  const big = "x".repeat(513 * 1024); // 513KB > 单文件上限 512KB
+  let r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: goodFm }, { path: "glossary.md", content: big }],
+    { skillsDir: tmp });
+  ok(r.ok === false && r.stage === "structure" && r.errors.some(e => e.reason === "file-too-large"),
+    "大小上限: 单文件 513KB 拒收");
+  const mid = "y".repeat(400 * 1024); // 三个 400KB = 1.2MB > 整包上限 1MB，单文件均未超
+  r = saveSkill("test-skill",
+    [
+      { path: "SKILL.md", content: goodFm },
+      { path: "glossary.md", content: mid },
+      { path: "patterns.md", content: mid },
+      { path: "cheatsheet.md", content: mid },
+    ],
+    { skillsDir: tmp });
+  ok(r.ok === false && r.errors.some(e => e.reason === "total-too-large"),
+    "大小上限: 整包 1.2MB 拒收（单文件均未超）");
+  ok(!fs.existsSync(path.join(tmp, "test-skill", "glossary.md")) &&
+     !fs.existsSync(path.join(tmp, "test-skill", "patterns.md")),
+    "大小上限: 拒收后不落任何文件");
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== skill-store-test: ${pass} PASS / ${fail} FAIL =====`);
 if (fail) { console.error(`测试失败 ${fail} 项`); process.exit(1); }
