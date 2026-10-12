@@ -1,13 +1,19 @@
 // 渲染进程外壳：全局状态、导航、启动、首启向导、toast、IPC 包装。
-// 四个视图的渲染在 views.js；本文件只做"壳"，保持两边都在 300 行规矩内。
-import { renderShelf, renderReader, renderAsk, renderSkills } from "./views.js";
+// 四个视图的渲染分散在 views.js（书架）/ views-reader.js（翻书）/ views-ask.js（问一问+技能开关），
+// 本文件只做"壳"。事件绑定由各视图模块的 bindXxxEvents() 在 boot() 里统一调用——
+// 视图模块顶层绝不碰 DOM（ESM 循环导入下 app.js 的 const 绑定尚未初始化，会 TDZ 崩掉整个渲染层）。
+import { renderShelf, bindShelfEvents } from "./views.js";
+import { renderReader, loadReader, bindReaderEvents } from "./views-reader.js";
+import { renderAsk, renderSkills, loadSkillsView, bindAskEvents } from "./views-ask.js";
 
 export const $ = (s, r = document) => r.querySelector(s);
 export const state = {
   view: "shelf",              // shelf | reader | ask | skills
   books: [],                  // booksList 全量（含关掉 skill 的）
-  reader: { bookId: null, chapter: null, chapters: [], highlightId: null },
-  ask: { mode: "book", bookId: null, question: "", loading: false, result: null },
+  jobs: {},                   // 导入管线任务状态（bookId → {stage,label,detail,error}）
+  reader: { bookId: null, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false },
+  ask: { mode: "book", bookId: null, question: "", loading: false, result: null, skillSlug: null },
+  skills: { packages: [], loaded: false, viewing: null, detail: null, chapter: null, chapterContent: null, busy: false },
   model: { ready: false, text: "模型加载中…" },
   config: null,
 };
@@ -37,9 +43,9 @@ export function show(view) {
 function renderMain() {
   const main = $("#main");
   if (state.view === "shelf") main.innerHTML = renderShelf();
-  else if (state.view === "reader") main.innerHTML = renderReader();
+  else if (state.view === "reader") { main.innerHTML = renderReader(); loadReader(); }
   else if (state.view === "ask") main.innerHTML = renderAsk();
-  else main.innerHTML = renderSkills();
+  else { main.innerHTML = renderSkills(); loadSkillsView(); }
 }
 
 export function refresh() { renderMain(); }
@@ -87,6 +93,25 @@ function bindModelChip() {
   $("#sideFoot").textContent = "模型加载中…（首次约 700MB）";
 }
 
+// ---------- 导入管线进度：书架卡片横幅（阶段切换才刷书架列表，节流防抖） ----------
+function bindJobsProgress() {
+  let lastPaint = 0;
+  window.study.onJobsProgress((e) => {
+    if (!e || !e.bookId) return;
+    const prev = state.jobs[e.bookId];
+    const stageChanged = !prev || prev.stage !== e.stage;
+    state.jobs = { ...state.jobs, [e.bookId]: e };
+    if (state.view !== "shelf") return;
+    const now = Date.now();
+    if (stageChanged || now - lastPaint > 1500) {
+      lastPaint = now;
+      if (stageChanged) {
+        call(window.study.booksList()).then((b) => { state.books = b; refresh(); }).catch(() => refresh());
+      } else refresh();
+    }
+  });
+}
+
 // ---------- 启动 ----------
 async function boot() {
   document.querySelectorAll(".navbtn").forEach(b => (b.onclick = () => show(b.dataset.view)));
@@ -94,15 +119,21 @@ async function boot() {
     if (e.key !== "Enter") return;
     const q = e.target.value.trim();
     if (!q) return;
-    state.ask = { mode: "library", bookId: null, question: q, loading: false, result: null };
+    state.ask = { mode: "library", bookId: null, question: q, loading: false, result: null, skillSlug: null };
     show("ask");
     window.dispatchEvent(new CustomEvent("ask:submit"));
   });
   bindModelChip();
+  bindJobsProgress();
+  bindShelfEvents();
+  bindReaderEvents();
+  bindAskEvents();
   try {
     state.config = await call(window.study.configGet());
     await maybeWizard(state.config);
     state.books = await call(window.study.booksList());
+    state.jobs = await call(window.study.jobsStatus());
+    state.skills.packages = await call(window.study.skillsList()); // 问一问的技能包选择器要用
   } catch (e) { toast("启动失败：" + e.message); }
   renderMain();
   window.__studyBooted = true; // 冒烟脚本的启动完成信号（test/desktop-smoke-main.js）

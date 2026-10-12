@@ -11,12 +11,23 @@ contextBridge.exposeInMainWorld("study", {
   booksList: () => ipcRenderer.invoke("books:list"),
   bookCatalog: (bookId) => ipcRenderer.invoke("books:catalog", bookId),
   deleteBook: (bookId) => ipcRenderer.invoke("books:delete", bookId),
+  // 导入管线
+  importBook: (filePath) => ipcRenderer.invoke("books:import", filePath),
+  jobsStatus: () => ipcRenderer.invoke("jobs:status"),
+  jobsCancel: (bookId) => ipcRenderer.invoke("jobs:cancel", bookId),
+  jobsPickResult: () => ipcRenderer.invoke("jobs:pickResult"),
+  jobsResumeCatalog: (bookId, resultPath) => ipcRenderer.invoke("jobs:resumeCatalog", bookId, resultPath || null),
   // 问一问
   ask: (payload) => ipcRenderer.invoke("ask:query", payload),
   // 翻书
   chapters: (bookId) => ipcRenderer.invoke("reader:chapters", bookId),
   block: (bookId, chapter) => ipcRenderer.invoke("reader:block", bookId, chapter),
   locate: (bookId, chunkId) => ipcRenderer.invoke("reader:locate", bookId, chunkId),
+  // 翻书·编目资产
+  readerThemes: (bookId) => ipcRenderer.invoke("reader:themes", bookId),
+  readerThemeBlocks: (bookId, theme) => ipcRenderer.invoke("reader:themeBlocks", bookId, theme),
+  readerPersons: (bookId) => ipcRenderer.invoke("reader:persons", bookId),
+  readerPersonBlocks: (bookId, person) => ipcRenderer.invoke("reader:personBlocks", bookId, person),
   // 技能
   skillsList: () => ipcRenderer.invoke("skills:list"),
   skillRead: (slug, chapter) => ipcRenderer.invoke("skills:read", slug, chapter),
@@ -28,4 +39,5 @@ contextBridge.exposeInMainWorld("study", {
   onModelProgress: (cb) => ipcRenderer.on("model:progress", (_e, d) => cb(d)),
   onEngineReady: (cb) => ipcRenderer.on("engine:ready", (_e, d) => cb(d)),
   onEngineError: (cb) => ipcRenderer.on("engine:error", (_e, d) => cb(d)),
+  onJobsProgress: (cb) => ipcRenderer.on("jobs:progress", (_e, d) => cb(d)),
 });

@@ -345,6 +345,7 @@ export function listSkills({ skillsDir = currentSkillsDir() } = {}) {
       slug,
       title: (fm && fm.data.title) || slug,
       description: (fm && fm.data.description) || "",
+      coverage: (fm && fm.data.coverage) || null, // frontmatter 约定 coverage: 覆盖数/总章数（出厂自检背书）
       chapters: chapterIndex(dir).length,
       sources: Object.values((fm && fm.data.sources) || {}),
       updated_at: st.mtime.toISOString(),

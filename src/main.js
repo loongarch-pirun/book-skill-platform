@@ -25,6 +25,12 @@ async function boot() {
   engine.onModelProgress((e) => {
     if (win && !win.isDestroyed()) win.webContents.send("model:progress", e);
   });
+  // 导入管线：进度事件转发 + 启动时恢复「待编目」横幅（任务书在、结果不在的挂起 job）
+  const jobs = await import(pathToFileURL(path.join(__dirname, "desktop", "jobs.mjs")).href);
+  jobs.onJobsProgress((e) => {
+    if (win && !win.isDestroyed()) win.webContents.send("jobs:progress", e);
+  });
+  jobs.scanPending();
   return engine;
 }
 

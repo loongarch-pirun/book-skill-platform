@@ -8,8 +8,8 @@
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win nsis",
-    "test:fast": "node test/paths-test.mjs && node test/guard-test.mjs && node test/stage0-format-test.mjs && node test/stage1-chunk-test.mjs && node test/ftsliteral-test.mjs && node test/catalog-test.mjs && node test/skill-store-test.mjs && node test/ipc-test.mjs",
-    "test:slow": "node test/stage2-test.mjs && node test/stage3-mcp-test.mjs && node test/perf-test.mjs && node test/eval-gate.mjs",
+    "test:fast": "node test/paths-test.mjs && node test/guard-test.mjs && node test/stage0-format-test.mjs && node test/stage1-chunk-test.mjs && node test/ftsliteral-test.mjs && node test/catalog-test.mjs && node test/skill-store-test.mjs && node test/renderer-graph-test.mjs && node test/ipc-test.mjs",
+    "test:slow": "node test/stage2-test.mjs && node test/stage3-mcp-test.mjs && node test/jobs-test.mjs && node test/perf-test.mjs && node test/eval-gate.mjs",
     "test": "npm run test:fast && npm run test:slow",
     "eval": "node test/v2-eval.mjs --rerank both",
     "ingest": "node src/embed-all.js",
@@ -45,9 +45,19 @@
     },
     "files": [
       "src/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/onnxruntime-web/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/darwin/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/linux/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/win32/arm64/**",
+      "!node_modules/better-sqlite3/prebuilds/darwin*.node",
+      "!node_modules/better-sqlite3/prebuilds/linux*.node",
+      "!node_modules/better-sqlite3/prebuilds/win32-arm64.node",
+      "!node_modules/@napi-rs/**",
+      "!node_modules/@img/sharp-wasm32/**"
     ],
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         {
           "target": "nsis",

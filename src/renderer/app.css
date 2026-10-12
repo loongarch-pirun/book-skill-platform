@@ -88,8 +88,32 @@ body {
 .block { padding: 10px 12px; border-radius: 8px; border-left: 3px solid transparent; margin-bottom: 6px; }
 .block + .block { border-top: 1px solid #f0ead9; }
 .block.hl { border-left-color: var(--wood); background: #faf3e3; }
-.block .loc { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.block .loc { font-size: 11px; color: var(--muted); margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
 .block .text { font-family: Georgia, "Songti SC", "SimSun", serif; font-size: 15px; line-height: 1.9; white-space: pre-wrap; word-break: break-word; }
+.askthis {
+  font-size: 11px; padding: 1px 10px; border-radius: 10px; cursor: pointer;
+  background: #f0e9d8; color: #7a5c3e; border: 1px solid var(--line);
+}
+.askthis:hover { background: #e9dec6; }
+
+/* 翻书·编目条（主题分区 + 人物表） */
+.catstrip { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; }
+.catrow { display: flex; gap: 10px; align-items: flex-start; }
+.catrow + .catrow { margin-top: 6px; }
+.catlabel { flex: 0 0 64px; font-size: 12px; color: var(--wood); font-weight: 700; padding-top: 3px; }
+.catchips { display: flex; flex-wrap: wrap; gap: 5px; }
+.catchip {
+  font-size: 12px; padding: 2px 10px; border-radius: 11px; cursor: pointer;
+  background: #f0e9d8; color: #7a5c3e; border: 1px solid var(--line);
+}
+.catchip:hover { background: #e9dec6; }
+.catchip.active { background: var(--wood); color: #fff; border-color: var(--wood); }
+.catchip.person { background: #eef0f3; color: #5a6472; }
+.catchip.person:hover { background: #e2e6ec; }
+.catchip.person.active { background: #5a6472; color: #fff; }
+.catnone, .catempty { font-size: 12px; color: var(--muted); padding: 2px 0; }
+.filterbar { font-size: 12px; color: var(--warn); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+.ghost.sm { padding: 2px 10px; font-size: 12px; border-radius: 12px; }
 
 /* 问一问 */
 .askbox { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
@@ -127,6 +151,48 @@ body {
 /* 技能开关 */
 .placeholder { background: var(--card); border: 1px dashed var(--wood-soft); border-radius: 10px; padding: 40px; text-align: center; color: var(--muted); }
 .placeholder b { color: var(--wood); }
+
+/* 导入任务条（书架卡片横幅） */
+.dropzone.over { border-color: var(--wood); background: #f3ead6; }
+.jobstrip { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; background: #f6efdd; border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; margin-top: 8px; }
+.jobstrip .jobstage { font-weight: 700; color: var(--wood); }
+.jobstrip .jobdetail { color: var(--muted); }
+.jobstrip.fail { background: #f7e9e6; border-color: #e8cfc9; }
+.jobstrip.fail .jobstage { color: var(--bad); }
+.jobstrip.wait { background: #fdf6e3; border-color: #ecd9a8; }
+.jobstrip.wait .jobstage { color: var(--warn); }
+
+/* 问一问·技能包选择与参考区 */
+.skillpickrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.skillpick { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+.skillctx { background: #fbf6ea; border: 1px solid #ecd9a8; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+.sctxhead { font-size: 13px; font-weight: 700; color: var(--warn); margin-bottom: 8px; }
+.sctxchap { margin-bottom: 10px; }
+.sctxchap:last-child { margin-bottom: 0; }
+.sctxmeta { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.sctxtext { font-family: Georgia, "Songti SC", "SimSun", serif; font-size: 13px; line-height: 1.8; white-space: pre-wrap; word-break: break-word; }
+
+/* 技能开关面板 */
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.panel-head { font-size: 14px; font-weight: 700; color: var(--wood); margin-bottom: 10px; }
+.panel-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+.togglerow { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid #f0ead9; }
+.togglerow:first-of-type { border-top: none; }
+.togglerow .tt { flex: 1; font-size: 13px; }
+.togglerow .td { font-size: 12px; color: var(--muted); }
+.switch { padding: 4px 14px; border-radius: 14px; border: 1px solid var(--line); background: #f3f0ea; color: var(--muted); font-size: 12px; cursor: pointer; }
+.switch.on { background: #eef3e9; color: var(--ok); border-color: #d5e0c9; }
+.pkgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.pkgcard { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: #fbf7ec; }
+.pkgcard h4 { font-size: 14px; color: var(--wood); margin-bottom: 4px; }
+.pkdesc { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.pkmeta { font-size: 12px; margin-bottom: 8px; }
+.pkmeta b { color: var(--ok); }
+.skillmd { font-family: Georgia, "Songti SC", "SimSun", serif; font-size: 13px; line-height: 1.8; white-space: pre-wrap; word-break: break-word; background: #fbf7ec; border-radius: 8px; padding: 12px 14px; }
+.chapidx { padding: 7px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; gap: 8px; }
+.chapidx:hover { background: #f3ecdc; }
+.chapidx.active { background: #efe6d2; color: var(--wood); font-weight: 700; }
+.chapidx .n { font-size: 11px; color: var(--muted); }
 
 /* 首启向导 */
 .wizard {
