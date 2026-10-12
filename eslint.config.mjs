@@ -40,6 +40,25 @@ export default [
     rules: {},
   },
   {
+    // 渲染进程是浏览器 ESM（index.html 用 <script type="module"> 加载），
+    // 不是 Node CJS——sourceType 与全局变量都得按浏览器来
+    files: ["src/renderer/**/*.js"],
+    languageOptions: {
+      sourceType: "module",
+      globals: {
+        window: "readonly",
+        document: "readonly",
+        location: "readonly",
+        confirm: "readonly",
+        CustomEvent: "readonly",
+        console: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+      },
+    },
+    rules: {},
+  },
+  {
     files: ["src/**/*.mjs"],
     languageOptions: {
       sourceType: "module",

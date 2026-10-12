@@ -3,7 +3,26 @@
 // 被 search.mjs（ESM 直接 import）和 embed-book.js（CJS 动态 import）共用
 import path from "node:path";
 
-const ROOT = path.join(import.meta.dirname, "..", "..");
+const DEFAULT_ROOT = path.join(import.meta.dirname, "..", "..");
+
+let _modelsDir = null;
+// configure：桌面端数据目录注入（paths.mjs 解析结果，打包态迁 userData）。
+// 未调用时默认值逐字节维持旧行为——npm test 与 CLI 不受伤。
+export function configureModels({ modelsDir } = {}) {
+  if (modelsDir) _modelsDir = modelsDir;
+}
+export function currentModelsDir() {
+  return _modelsDir || process.env.BSP_MODELS_DIR || path.join(DEFAULT_ROOT, ".models");
+}
+
+let _onProgress = null;
+// setModelProgress：模型下载进度钩子（M4）。挂两个下载点（embedder pipeline 创建 +
+// reranker from_pretrained），桌面端订阅后转 model:progress 事件驱动首启下载向导。
+export function setModelProgress(fn) {
+  _onProgress = typeof fn === "function" ? fn : null;
+}
+// 钩子炸不拖垮模型加载（进度丢了无所谓，模型要拿到）
+const progressCb = (e) => { if (_onProgress) { try { _onProgress(e); } catch { /* 忽略钩子异常 */ } } };
 
 export const EMBED_MODELS = {
   // simThreshold: similar 边的余弦门槛（各模型分数尺度不同，分开调）
@@ -20,7 +39,7 @@ async function getTf() {
   if (!_tf) {
     _tf = await import("@huggingface/transformers");
     _tf.env.remoteHost = process.env.HF_ENDPOINT || "https://hf-mirror.com";
-    _tf.env.cacheDir = path.join(ROOT, ".models");
+    _tf.env.cacheDir = currentModelsDir();
     _tf.env.allowLocalModels = true;
   }
   return _tf;
@@ -32,7 +51,7 @@ export async function getEmbedder(modelKey = DEFAULT_EMBED) {
   if (!cfg) throw new Error(`未知向量模型: ${modelKey}（可选: ${Object.keys(EMBED_MODELS).join("/")}`);
   if (!_pipe || _pipeKey !== modelKey) {
     const tf = await getTf();
-    _pipe = await tf.pipeline("feature-extraction", cfg.id, { dtype: cfg.dtype });
+    _pipe = await tf.pipeline("feature-extraction", cfg.id, { dtype: cfg.dtype, progress_callback: progressCb });
     _pipeKey = modelKey;
   }
   const pipe = _pipe;
@@ -58,8 +77,8 @@ export async function getReranker() {
   // 替换只懂中英的 bge-reranker-base（它给跨语言对打 0.0001 分，压死 4 道漏题）。
   // 对照/回滚：BSP_RERANK_MODEL=Xenova/bge-reranker-base
   const ID = process.env.BSP_RERANK_MODEL || "onnx-community/bge-reranker-v2-m3-ONNX";
-  const tok = await tf.AutoTokenizer.from_pretrained(ID);
-  const model = await tf.AutoModelForSequenceClassification.from_pretrained(ID, { dtype: "int8" });
+  const tok = await tf.AutoTokenizer.from_pretrained(ID, { progress_callback: progressCb });
+  const model = await tf.AutoModelForSequenceClassification.from_pretrained(ID, { dtype: "int8", progress_callback: progressCb });
   _rerank = async (query, passages) => {
     const scores = [];
     for (const p of passages) {

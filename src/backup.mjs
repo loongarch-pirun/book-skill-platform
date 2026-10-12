@@ -11,7 +11,9 @@ const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 
 const ROOT = path.join(import.meta.dirname, "..");
-const LIB = path.join(ROOT, "library");
+// H4：书库目录可被环境变量改指（桌面端迁库后 BSP_LIB_DIR 指向 userData），
+// 不再焊死项目根——否则迁库用户会拿到只有代码的"假备份"
+const LIB = process.env.BSP_LIB_DIR || path.join(ROOT, "library");
 const BACKUP_DIR = path.join(ROOT, "backup");
 const NAME_RE = /^bsp-backup-(\d{8})-(\d{6})$/;
 
@@ -47,7 +49,11 @@ const warnings = [];
 
 // ---------- 1. 对每个库做 WAL checkpoint（尽力而为，被占用就带着 wal 一起拷） ----------
 function checkpointLibraries() {
-  if (!fs.existsSync(LIB)) return [];
+  if (!fs.existsSync(LIB)) {
+    // 不再静默返回空数组——那等于打"✅ 备份完成"却没备到一本书（H4 实锤的假备份）
+    warnings.push(`书库目录不存在：${LIB} ——如果迁过书库，设 BSP_LIB_DIR 指向新目录后重跑；否则这次备份只有代码没有书`);
+    return [];
+  }
   return fs.readdirSync(LIB).filter((f) => f.endsWith(".db")).sort().map((f) => {
     const dbPath = path.join(LIB, f);
     try {
@@ -113,6 +119,7 @@ const manifest = [
   `  1. git clone repo.bundle 项目名   ← 从 repo.bundle 克隆全部代码`,
   `  2. cd 项目名 && npm install`,
   `  3. 把本目录的 *.db 拷进 项目名/library/（目录不存在就新建），跑 npm test 验收`,
+  `     （迁过书库的用户：书库在自定义目录，用 BSP_LIB_DIR 指过去，别拷进项目 library/）`,
   ``,
   `提醒：这份备份躺在项目目录里，等于没离开这台电脑。`,
   `请把整个 bsp-backup-* 文件夹拷到 U 盘 / 网盘，才算真备份。`,
@@ -135,8 +142,15 @@ for (const name of old.slice(Math.max(0, KEEP - 1))) {
 }
 
 // ---------- 6. 汇总 ----------
-console.log(`✅ 备份完成：${path.relative(ROOT, dest)}`);
-console.log(`   体积 ${fmtSize(total)} · ${copied.length} 个文件 · 保留 ${KEEP} 份${removed.length ? `（清理旧份：${removed.join("、")}）` : ""}`);
+const dbCount = copied.filter(c => /\.db(-wal)?$/.test(c.rel)).length;
+if (dbCount === 0) {
+  // 一个库文件都没有——代码 bundle 再全也是假备份，必须喊醒用户
+  console.log(`⚠️ 备份完成，但没有任何书库文件！（书库目录：${LIB}）`);
+  console.log(`   迁过书库就设 BSP_LIB_DIR 指向新目录重跑；否则这份备份只含代码与 git 历史。`);
+} else {
+  console.log(`✅ 备份完成：${path.relative(ROOT, dest)}`);
+}
+console.log(`   体积 ${fmtSize(total)} · ${copied.length} 个文件（含 ${dbCount} 个书库文件） · 保留 ${KEEP} 份${removed.length ? `（清理旧份：${removed.join("、")}）` : ""}`);
 if (warnings.length) {
   console.log(`⚠️ 警告 ${warnings.length} 条：`);
   for (const w of warnings) console.log(`   - ${w}`);

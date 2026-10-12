@@ -11,14 +11,29 @@ import { getEmbedder, getReranker, cosine, assertEngine } from "./models.mjs";
 import { questionKeywords, buildFtsQuery, cjkLikeScores, capFtsHits } from "./keywords.mjs";
 import { getMatrix, matrixScores } from "./vec-cache.mjs";
 import { loadCatalogSignal } from "./catalog.mjs";
+import { loadSkillState } from "./skill-state.mjs";
 export { getEmbedder, cosine };
 
-const LIB_DIR = path.join(import.meta.dirname, "..", "..", "library");
+const DEFAULT_LIB_DIR = path.join(import.meta.dirname, "..", "..", "library");
+// M2：环境变量层——桌面把 paths.mjs 解析结果写进 process.env，spawn 的 CLI 子进程继承，
+// CLI 与桌面共享同一份解析（迁库后 CLI 不瞎）
+const ENV_LIB_DIR = process.env.BSP_LIB_DIR || null;
+let _libDir = null;
+// configure：桌面端数据目录注入；未调用时默认值逐字节维持旧行为（npm test 不受伤）
+export function configureSearch({ libDir } = {}) {
+  if (libDir) _libDir = libDir;
+}
+export function currentLibDir() {
+  return _libDir || ENV_LIB_DIR || DEFAULT_LIB_DIR;
+}
 
 // ---------- 书库清单 ----------
-export function listBooks(libDir = LIB_DIR) {
+// opts.includeDisabled: 默认 false——按 <libDir>/skill-state.json 过滤掉关掉 skill 的书（H3：
+// 关一本书，桌面与 MCP 都查不到它；但引用回源验证等内部用途显式传 true 豁免，否则已落盘的
+// 技能包会全部验证失败）。无状态文件时全返回不过滤（stage3 六本断言不受伤）。
+export function listBooks(libDir = currentLibDir(), { includeDisabled = false } = {}) {
   if (!fs.existsSync(libDir)) return [];
-  return fs.readdirSync(libDir).filter(f => f.endsWith(".db")).map(f => {
+  const books = fs.readdirSync(libDir).filter(f => f.endsWith(".db")).map(f => {
     const dbPath = path.join(libDir, f);
     try {
       const db = new Database(dbPath, { readonly: true });
@@ -27,9 +42,12 @@ export function listBooks(libDir = LIB_DIR) {
       return { id: f.replace(/\.db$/, ""), db: dbPath, title: meta.title || f, format: meta.format, model: meta.model || null, chunks: +meta.chunk_count, chars: +meta.total_chars, pages: meta.num_pages || null, chapters: meta.num_chapters || null };
     } catch { return null; }
   }).filter(Boolean);
+  if (includeDisabled) return books;
+  const state = loadSkillState(libDir);
+  return Object.keys(state).length ? books.filter(b => state[b.id] !== false) : books;
 }
 
-export function findBook(query, libDir = LIB_DIR) {
+export function findBook(query, libDir = currentLibDir()) {
   const q = String(query).toLowerCase();
   const books = listBooks(libDir);
   return books.find(b => b.id.toLowerCase().includes(q) || b.title.toLowerCase().includes(q)) || null;
@@ -176,7 +194,7 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
 }
 
 // ---------- 动态挑书路由（总入口：临时技能包） ----------
-export async function routeAndSearch(question, { topN = 4, maxBooks = 2, libDir = LIB_DIR } = {}) {
+export async function routeAndSearch(question, { topN = 4, maxBooks = 2, libDir = currentLibDir() } = {}) {
   const books = listBooks(libDir);
   if (!books.length) return { routed_books: [], results: [], note: "书库为空" };
   const embed = await getEmbedder();
@@ -232,7 +250,8 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 2, libDir 
   const results = [];
   for (const b of picked)
     for (const r of await hybridSearch(b.db, question, topN, { qv }))
-      results.push({ book: b.title, loc: r.loc, score: r.rerank ?? r.score, fts: r.fts, sem: r.sem, rerank: r.rerank, text: r.text });
+      // bookId/id 是桌面端引用跳转要的直通字段（纯加法，不碰排序与打分）
+      results.push({ book: b.title, bookId: b.id, id: r.id, loc: r.loc, score: r.rerank ?? r.score, fts: r.fts, sem: r.sem, rerank: r.rerank, text: r.text });
   results.sort((a, b) => b.score - a.score);
   const out = {
     routed_books: picked.map(b => ({ title: b.title, best_sim: +b.best.toFixed(3) })),

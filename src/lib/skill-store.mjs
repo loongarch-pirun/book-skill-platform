@@ -11,6 +11,15 @@ import { listBooks } from "./search.mjs";
 
 export const DEFAULT_SKILLS_DIR = path.join(import.meta.dirname, "..", "..", "skills");
 
+let _skillsDir = null;
+// configure：桌面端数据目录注入（打包态迁 userData）；未调用时逐字节维持旧行为
+export function configureSkillStore({ skillsDir } = {}) {
+  if (skillsDir) _skillsDir = skillsDir;
+}
+export function currentSkillsDir() {
+  return _skillsDir || DEFAULT_SKILLS_DIR;
+}
+
 // slug：纯小写字母/数字/连字符（Agent Skills 开放标准惯例）；中文书名写 frontmatter title
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 // 允许写入的文件路径白名单（防任意文件写入）
@@ -85,8 +94,10 @@ function verifyOneText(srcText, quote) {
 }
 
 // sources 别名 → 库定位：精确 title 优先，其次 id，再退 id 前缀（id 含格式后缀如 daodejing-zh.docx）
+// includeDisabled:true 豁免（H3）——关掉 skill 的书也要能验证已落盘技能包的引用，
+// 否则"关一本书"会把过去落盘的包全部打成 unknown-source
 function resolveBookExact(bookId) {
-  const books = listBooks();
+  const books = listBooks(undefined, { includeDisabled: true });
   return books.find(b => b.title === bookId)
     || books.find(b => b.id === bookId)
     || books.find(b => b.id.startsWith(bookId + "."))
@@ -212,7 +223,7 @@ function coverageCheck(fmData, skillMdContent, files, stats) {
 }
 
 // ---------- 落盘 / 读 / 枚举 ----------
-export function saveSkill(slug, files, { skillsDir = DEFAULT_SKILLS_DIR } = {}) {
+export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) {
   const errors = [];
   const push = (reason, extra = {}) => errors.push({ reason, ...extra });
 
@@ -303,7 +314,7 @@ function chapterIndex(dir) {
   });
 }
 
-export function readSkill(slug, chapter, { skillsDir = DEFAULT_SKILLS_DIR } = {}) {
+export function readSkill(slug, chapter, { skillsDir = currentSkillsDir() } = {}) {
   if (!SLUG_RE.test(slug)) return { error: "bad-slug", hint: "slug 只能是小写字母/数字/连字符" };
   const dir = path.join(skillsDir, slug);
   const skillPath = path.join(dir, "SKILL.md");
@@ -320,7 +331,7 @@ export function readSkill(slug, chapter, { skillsDir = DEFAULT_SKILLS_DIR } = {}
   return { slug, skill_md: skillMd, index: chapterIndex(dir) };
 }
 
-export function listSkills({ skillsDir = DEFAULT_SKILLS_DIR } = {}) {
+export function listSkills({ skillsDir = currentSkillsDir() } = {}) {
   if (!fs.existsSync(skillsDir)) return [];
   return fs.readdirSync(skillsDir).filter(f => {
     try {
