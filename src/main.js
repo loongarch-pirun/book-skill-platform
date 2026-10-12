@@ -37,7 +37,6 @@ app.whenReady().then(() => {
     const fs = require("fs");
     let result;
     try {
-      const { ipcMain } = require("electron");
       const db = new (require("better-sqlite3"))(":memory:");
       const ver = db.prepare("select sqlite_version() v").get().v;
       db.exec(`CREATE TABLE chunks(id INTEGER PRIMARY KEY, page INTEGER, text TEXT);

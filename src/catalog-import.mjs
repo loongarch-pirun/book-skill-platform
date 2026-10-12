@@ -9,7 +9,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
-const Database = require("better-sqlite3");
 const { importCatalog, rollbackCatalog, parseResultText } = await import("./lib/catalog.mjs");
 
 const args = process.argv.slice(2);

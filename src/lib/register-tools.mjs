@@ -1,6 +1,6 @@
 // MCP 工具注册（stdio server 与测试客户端共用同一份注册逻辑）
 import { z } from "zod";
-import { listBooks, findBook, hybridSearch, routeAndSearch } from "./search.mjs";
+import { listBooks, hybridSearch, routeAndSearch } from "./search.mjs";
 import { getCatalogSummary } from "./catalog.mjs";
 import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
 
