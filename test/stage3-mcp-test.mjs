@@ -1,8 +1,11 @@
-// 阶段3 验收：用官方 SDK 客户端（模拟任意智能体）接入 MCP server 实测三个工具
+// 阶段3 验收：用官方 SDK 客户端（模拟任意智能体）接入 MCP server 实测全部工具
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { registerServerTools } from "../src/lib/register-tools.mjs";
 
 let failed = 0;
@@ -18,7 +21,7 @@ await Promise.all([server.connect(sT), client.connect(cT)]);
 // 1. 工具清单
 const tools = await client.listTools();
 const names = tools.tools.map(t => t.name).sort();
-assert(JSON.stringify(names) === JSON.stringify(["list_books", "list_catalog", "query_book", "query_library"]), `智能体能看到 4 个工具: ${names.join(", ")}`);
+assert(JSON.stringify(names) === JSON.stringify(["list_books", "list_catalog", "list_skills", "query_book", "query_library", "read_skill", "save_skill"]), `智能体能看到 7 个工具: ${names.join(", ")}`);
 
 // 2. list_books
 const lb = await client.callTool({ name: "list_books", arguments: {} });
@@ -85,7 +88,46 @@ const lc4 = await client.callTool({ name: "list_catalog", arguments: { book: "�
 const lc4R = JSON.parse(lc4.content[0].text);
 assert(!!lc4R.error && Array.isArray(lc4R.available), `list_catalog 书名未命中返回错误+书目清单`);
 
+// 7. save_skill / read_skill / list_skills 端到端（引用回源用真库；临时技能测完即删）
+const E2E_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "skills", "e2e-check");
+const SKILL_MD = `---
+name: e2e-check
+title: 端到端测试技能
+description: stage3 端到端临时技能，测完即删
+sources:
+  道德经: daodejing-zh
+---
+# 端到端测试
+`;
+const sv = await client.callTool({ name: "save_skill", arguments: { slug: "e2e-check", files: [
+  { path: "SKILL.md", content: SKILL_MD },
+  { path: "chapters/ch01-test.md", content: "# 测试章\n\n> 上善若水，水善利萬物而不爭。〔道德经·第八章〕\n" },
+] } });
+const svR = JSON.parse(sv.content[0].text);
+assert(svR.ok === true && svR.citations_checked === 1, `save_skill 落盘成功且引用回源通过（校验 ${svR.citations_checked} 条）`);
+
+// 7b. 假引文整包拒收（防幻觉红线走 MCP 通道依然有效）
+const sv2 = await client.callTool({ name: "save_skill", arguments: { slug: "e2e-check", files: [
+  { path: "SKILL.md", content: SKILL_MD },
+  { path: "chapters/ch01-test.md", content: "# 测试章\n\n> 这是编造的假引文不存在的句子。〔道德经·第八章〕\n" },
+] } });
+const sv2R = JSON.parse(sv2.content[0].text);
+assert(sv2R.ok === false && sv2R.errors?.[0]?.reason === "quote-not-found", "save_skill 假引文经 MCP 通道整包拒收");
+
+// 7c. list_skills + read_skill（不带 chapter → 索引；带 chapter → 按需取章）
+const ls = await client.callTool({ name: "list_skills", arguments: {} });
+const lsR = JSON.parse(ls.content[0].text);
+assert(lsR.some(s => s.slug === "e2e-check"), "list_skills 能看到刚落盘的技能");
+const rd2 = await client.callTool({ name: "read_skill", arguments: { slug: "e2e-check" } });
+const rd2R = JSON.parse(rd2.content[0].text);
+assert(rd2R.skill_md && rd2R.index?.length === 1, "read_skill 不带 chapter 返回 SKILL.md + 章节索引");
+const rd = await client.callTool({ name: "read_skill", arguments: { slug: "e2e-check", chapter: "ch01-test.md" } });
+const rdR = JSON.parse(rd.content[0].text);
+assert(rdR.content && rdR.content.includes("上善若水"), "read_skill 按 chapter 按需取章");
+
+fs.rmSync(E2E_DIR, { recursive: true, force: true });  // 临时技能测完即删
+
 console.log("\n===== 阶段3 验收结果 =====");
 if (failed > 0) { console.log(`${failed} 项 FAIL`); process.exit(1); }
-console.log("全部 PASS：标准 MCP 协议接入成功，四工具可用（含编目浏览），自动挑书路由正确，引用可回源");
+console.log("全部 PASS：标准 MCP 协议接入成功，七工具可用（含编目浏览与技能落盘），自动挑书路由正确，引用可回源");
 process.exit(0);

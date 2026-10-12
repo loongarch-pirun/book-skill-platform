@@ -8,7 +8,7 @@
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win nsis",
-    "test:fast": "node test/guard-test.mjs && node test/stage0-format-test.mjs && node test/stage1-chunk-test.mjs && node test/ftsliteral-test.mjs && node test/catalog-test.mjs",
+    "test:fast": "node test/guard-test.mjs && node test/stage0-format-test.mjs && node test/stage1-chunk-test.mjs && node test/ftsliteral-test.mjs && node test/catalog-test.mjs && node test/skill-store-test.mjs",
     "test:slow": "node test/stage2-test.mjs && node test/stage3-mcp-test.mjs && node test/perf-test.mjs && node test/eval-gate.mjs",
     "test": "npm run test:fast && npm run test:slow",
     "eval": "node test/v2-eval.mjs --rerank both",

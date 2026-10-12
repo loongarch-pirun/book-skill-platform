@@ -7,9 +7,9 @@ import { registerServerTools } from "./lib/register-tools.mjs";
 
 const log = (...a) => console.error("[book-skill]", ...a);
 
-const server = new McpServer({ name: "book-skill", version: "0.3.0" });
+const server = new McpServer({ name: "book-skill", version: "0.4.0" });
 registerServerTools(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-log("book-skill MCP server ready (tools: list_books, list_catalog, query_book, query_library)");
+log("book-skill MCP server ready (tools: list_books, list_catalog, query_book, query_library, save_skill, read_skill, list_skills)");

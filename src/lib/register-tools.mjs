@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { listBooks, findBook, hybridSearch, routeAndSearch } from "./search.mjs";
 import { getCatalogSummary } from "./catalog.mjs";
+import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
 
 // 按 book 片段找书（与 query_book 同一套匹配；找不到返回 null 和可选书目）
 function matchBook(book) {
@@ -75,6 +76,42 @@ export function registerServerTools(server) {
     },
   }, async ({ question, topN }) => {
     const out = await routeAndSearch(question, { topN: clampTopN(topN) });
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  server.registerTool("save_skill", {
+    title: "技能落盘",
+    description: "把蒸馏好的技能文件集写入 skills/ 目录（SKILL.md + chapters/ + 可选 glossary/patterns/cheatsheet）。整包提交（幂等覆盖）。落盘前做两道校验：结构校验（slug/路径白名单/frontmatter）+ 引用回源验证——blockquote 里的「〔书名·章节〕」引文会到 library 原文比对，造假整包拒收并指出造假位置。更新已有技能：先 read_skill 取全文，修改后整包重交。引用规则：原文照抄检索结果（繁体照抄），行尾加〔别名·章节〕，别名必须是 SKILL.md frontmatter sources 里声明的映射。",
+    inputSchema: {
+      slug: z.string().describe("技能标识，小写字母/数字/连字符，如 daodejing；中文写进 frontmatter title"),
+      files: z.array(z.object({
+        path: z.string().describe("相对路径：SKILL.md | chapters/chNN-小写连字符.md | glossary.md | patterns.md | cheatsheet.md"),
+        content: z.string().describe("完整文件内容（markdown）"),
+      })).min(1).max(120).describe("整包文件集，必须包含 SKILL.md"),
+    },
+  }, async ({ slug, files }) => {
+    const out = saveSkill(slug, files);
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  server.registerTool("read_skill", {
+    title: "技能阅读（按需加载）",
+    description: "读已落盘的技能。不带 chapter：返回 SKILL.md 全文 + 章节索引（含每章预估 token），先看索引再决定读哪章——章节文件按需加载，不读不占上下文。带 chapter：返回该章全文。",
+    inputSchema: {
+      slug: z.string().describe("技能标识，如 daodejing"),
+      chapter: z.string().optional().describe("章节文件名，如 ch01-wu-wei。省略时只返回 SKILL.md + 索引"),
+    },
+  }, async ({ slug, chapter }) => {
+    const out = readSkill(slug, chapter);
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  server.registerTool("list_skills", {
+    title: "技能清单",
+    description: "列出 skills/ 目录里所有已落盘的技能（标题/描述/章节数/来源书）。回答任务前先看有没有现成技能可复用——有现成手册就不必重新检索全书。",
+    inputSchema: {},
+  }, async () => {
+    const out = listSkills();
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 }
