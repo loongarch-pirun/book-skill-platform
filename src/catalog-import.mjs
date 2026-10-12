@@ -36,10 +36,33 @@ if (!resultPaths.length) { console.error("用法: node src/catalog-import.mjs ca
 let failed = 0;
 for (const resultPath of resultPaths) {
   const name = path.basename(resultPath);
-  const taskPath = path.join(process.cwd(), "catalog-tasks", name);
-  if (!fs.existsSync(taskPath)) { console.error(`✗ 找不到配套任务书 catalog-tasks/${name}（先跑 catalog-export）`); failed++; continue; }
-  const task = JSON.parse(fs.readFileSync(taskPath, "utf8"));
-  const result = parseResultText(fs.readFileSync(resultPath, "utf8"));
+  let result;
+  try { result = parseResultText(fs.readFileSync(resultPath, "utf8")); }
+  catch (e) { console.error(`✗ ${name} 不是合法 JSON: ${e.message}`); failed++; continue; }
+
+  // 任务书配对：先按同名约定（catalog-tasks/<同名>.json），失败则按结果里的 task_ref
+  // （= 书库文件名）反查——结果文件被改过名也不至于断链。再找不到才报错并给改名指引。
+  const tasksDir = path.join(process.cwd(), "catalog-tasks");
+  const taskPath = path.join(tasksDir, name);
+  let task = null;
+  if (fs.existsSync(taskPath)) {
+    task = JSON.parse(fs.readFileSync(taskPath, "utf8"));
+  } else if (result.task_ref) {
+    const found = fs.readdirSync(tasksDir).filter(f => f.endsWith(".json")).map(f => {
+      try { return JSON.parse(fs.readFileSync(path.join(tasksDir, f), "utf8")); } catch { return null; }
+    }).filter(Boolean).find(t => t.book?.db === result.task_ref);
+    if (found) {
+      const foundName = fs.readdirSync(tasksDir).filter(f => f.endsWith(".json"))
+        .find(f => { try { return JSON.parse(fs.readFileSync(path.join(tasksDir, f), "utf8")).book?.db === result.task_ref; } catch { return false; } });
+      console.log(`ℹ ${name} 没有同名任务书，按 task_ref=${result.task_ref} 配到 catalog-tasks/${foundName}`);
+      task = found;
+    }
+  }
+  if (!task) {
+    console.error(`✗ 找不到配套任务书：结果文件与任务书按同名配对（catalog-tasks/${name}）。`);
+    console.error(`  如果改过结果文件名，请改回与 catalog-tasks/ 里的任务书同名；没有任务书就先跑 catalog-export。`);
+    failed++; continue;
+  }
   const dbPath = path.join(process.cwd(), "library", task.book.db);
   if (!fs.existsSync(dbPath)) { console.error(`✗ 找不到书库 library/${task.book.db}`); failed++; continue; }
 

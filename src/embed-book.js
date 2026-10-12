@@ -40,6 +40,12 @@ function extractConcepts(chunks) {
   const dbPath = process.argv[2];
   const modelKey = process.argv[3] || process.env.BSP_EMBED_MODEL || "e5";
   if (!dbPath || !fs.existsSync(dbPath)) { console.error("用法: node embed-book.js <book.db> [m3|e5|zh-small]"); process.exit(1); }
+  // L4 误导修复：embed-book 只吃建好的库。拿书原文件来的人最常见，给下一步指令
+  if (!dbPath.toLowerCase().endsWith(".db")) {
+    console.error(`embed-book 吃的是建好的库文件（.db），你给的是「${path.basename(dbPath)}」。`);
+    console.error(`先建库: node src/build-book.js "${dbPath}" ，再对本命令输出的 .db 跑向量化。`);
+    process.exit(1);
+  }
 
   const models = await import(pathToFileURL(path.join(__dirname, "lib", "models.mjs")).href);
   const catalog = await import(pathToFileURL(path.join(__dirname, "lib", "catalog.mjs")).href);
