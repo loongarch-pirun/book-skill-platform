@@ -75,7 +75,7 @@ async function parsePdf(file) {
 
 // ---------- EPUB：spine 顺序，每个 xhtml = 章节，<p> = 段 ----------
 function parseEpub(file) {
-  const zip = new AdmZip(file);
+  const zip = new AdmZip(file);  // 非 zip 文件在这里直接抛错（上游 main 统一接住）
   const containerXml = zip.readAsText("META-INF/container.xml");
   const opfPath = new DOMParser().parseFromString(containerXml, "application/xml")
     .getElementsByTagName("rootfile")[0].getAttribute("full-path");
@@ -106,7 +106,10 @@ function parseEpub(file) {
     if (!paras.length) continue;
     chapterNo++;
     const chapter = title || `章节 ${chapterNo}`;
-    for (const t of paras) chunks.push({ chapter, page: null, text: t });
+    // 长段落也要过 sentenceSplit（900 字上限）：单个大段落直接入块会让向量质量和 FTS 定位双输
+    for (const t of paras)
+      for (const seg of sentenceSplit(t))
+        chunks.push({ chapter, page: null, text: seg });
   }
   return { format: "epub", chapters: chapterNo, chunks, cleanedJunk: [] };
 }
@@ -129,7 +132,9 @@ async function parseDocx(file) {
     if (/^h[1-6]$/.test(tag)) { chapterNo++; chapter = t; continue; }
     const cm = t.match(/^(第[0-9一二三四五六七八九十百]+章)\s*(.*)$/);
     if (cm) { chapterNo++; chapter = cm[1]; }
-    chunks.push({ chapter, page: null, text: t });
+    // 长段落也要过 sentenceSplit（同 epub，900 字上限）
+    for (const seg of sentenceSplit(t))
+      chunks.push({ chapter, page: null, text: seg });
   }
   return { format: "docx", chapters: chapterNo, chunks, cleanedJunk: [] };
 }
@@ -137,60 +142,113 @@ async function parseDocx(file) {
 // ---------- 建库：一书一 .db ----------
 function buildDb(file, outPath, parsed) {
   const db = require("better-sqlite3")(outPath);
-  db.pragma("journal_mode = WAL");
-  db.exec(`
-    CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT);
-    CREATE TABLE chunks(
-      id INTEGER PRIMARY KEY,
-      chapter TEXT,
-      page INTEGER,
-      text TEXT NOT NULL
-    );
-    CREATE VIRTUAL TABLE chunks_fts USING fts5(
-      text, content='chunks', content_rowid='id', tokenize='trigram'
-    );
-  `);
-  const totalChars = parsed.chunks.reduce((a, c) => a + c.text.length, 0);
-  const setMeta = db.prepare("INSERT INTO meta(key,value) VALUES (?,?)");
-  setMeta.run("title", path.basename(file).replace(/\.[^.]+$/, ""));
-  setMeta.run("source_file", path.resolve(file));
-  setMeta.run("format", parsed.format);
-  setMeta.run("built_at", new Date().toISOString());
-  setMeta.run("num_pages", String(parsed.numPages || ""));
-  setMeta.run("num_chapters", String(parsed.chapters || ""));
-  setMeta.run("chunk_count", String(parsed.chunks.length));
-  setMeta.run("total_chars", String(totalChars));
-  setMeta.run("content_hash", crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex").slice(0, 16));
+  try {
+    db.pragma("journal_mode = WAL");
+    db.exec(`
+      CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT);
+      CREATE TABLE chunks(
+        id INTEGER PRIMARY KEY,
+        chapter TEXT,
+        page INTEGER,
+        text TEXT NOT NULL
+      );
+      CREATE VIRTUAL TABLE chunks_fts USING fts5(
+        text, content='chunks', content_rowid='id', tokenize='trigram'
+      );
+    `);
+    const totalChars = parsed.chunks.reduce((a, c) => a + c.text.length, 0);
+    const setMeta = db.prepare("INSERT INTO meta(key,value) VALUES (?,?)");
+    setMeta.run("title", path.basename(file).replace(/\.[^.]+$/, ""));
+    setMeta.run("source_file", path.resolve(file));
+    setMeta.run("format", parsed.format);
+    setMeta.run("built_at", new Date().toISOString());
+    setMeta.run("num_pages", String(parsed.numPages || ""));
+    setMeta.run("num_chapters", String(parsed.chapters || ""));
+    setMeta.run("chunk_count", String(parsed.chunks.length));
+    setMeta.run("total_chars", String(totalChars));
+    setMeta.run("content_hash", contentHash(file));
 
-  const tx = db.transaction(() => {
-    const ins = db.prepare("INSERT INTO chunks(chapter, page, text) VALUES (?,?,?)");
-    for (const c of parsed.chunks) {
-      const r = ins.run(c.chapter, c.page, c.text);
-      db.prepare("INSERT INTO chunks_fts(rowid, text) VALUES (?, ?)").run(r.lastInsertRowid, c.text);
-    }
-  });
-  tx();
-  db.close();
-  return { chunkCount: parsed.chunks.length, totalChars };
+    const tx = db.transaction(() => {
+      const ins = db.prepare("INSERT INTO chunks(chapter, page, text) VALUES (?,?,?)");
+      for (const c of parsed.chunks) {
+        const r = ins.run(c.chapter, c.page, c.text);
+        db.prepare("INSERT INTO chunks_fts(rowid, text) VALUES (?, ?)").run(r.lastInsertRowid, c.text);
+      }
+    });
+    tx();
+    return { chunkCount: parsed.chunks.length, totalChars };
+  } finally {
+    db.close();  // 中途抛错（磁盘满/锁冲突）不留句柄
+  }
 }
 
-// ---------- 主流程 ----------
-(async () => {
-  const args = process.argv.slice(2);
-  const file = args[0];
-  if (!file || !fs.existsSync(file)) { console.error("用法: node build-book.js <book文件> [-o out.db]"); process.exit(1); }
-  const outArg = args.includes("-o") ? args[args.indexOf("-o") + 1] : null;
+const contentHash = (file) =>
+  crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex").slice(0, 16);
+
+// ---------- 主流程（可被测试以 main(argv) 调用；直接运行时走 CLI） ----------
+async function main(argv = process.argv.slice(2)) {
+  const file = argv[0];
+  if (!file || !fs.existsSync(file)) {
+    console.error("用法: node build-book.js <book文件> [-o 输出.db] [--force]");
+    process.exitCode = 1;
+    return;
+  }
+  const force = argv.includes("--force");
+  const outArg = argv.includes("-o") ? argv[argv.indexOf("-o") + 1] : null;
   const ext = path.extname(file).toLowerCase();
 
+  // 解析：每种格式单独接错（损坏文件/伪装扩展名在这里现形，而不是蹦一屏英文堆栈）
   let parsed;
-  if (ext === ".pdf") parsed = await parsePdf(file);
-  else if (ext === ".epub") parsed = parseEpub(file);
-  else if (ext === ".docx") parsed = await parseDocx(file);
-  else { console.error("不支持的格式: " + ext); process.exit(1); }
+  try {
+    if (ext === ".pdf") parsed = await parsePdf(file);
+    else if (ext === ".epub") parsed = parseEpub(file);
+    else if (ext === ".docx") parsed = await parseDocx(file);
+    else { console.error("不支持的格式: " + ext + "（支持 .pdf/.epub/.docx）"); process.exitCode = 1; return; }
+  } catch (e) {
+    console.error(`解析失败（${ext}）: ${e.message}`);
+    console.error("文件可能损坏或不是真正的 " + ext + " 文件。");
+    process.exitCode = 1;
+    return;
+  }
+  if (!parsed.chunks.length) {
+    console.error("解析出 0 块：文件可能是空的、扫描图片型 PDF 或加密文档。");
+    process.exitCode = 1;
+    return;
+  }
 
   const out = outArg || path.join(path.dirname(file), "..", "library",
     path.basename(file).replace(/\.[^.]+$/, "") + "." + parsed.format + ".db");
   fs.mkdirSync(path.dirname(out), { recursive: true });
+
+  // 重灌保护：build-book 会整库重建（切片编号变化 → 编目边作废），三种情况拦住，--force 放行
+  if (fs.existsSync(out)) {
+    let old = null;
+    try {
+      const db = require("better-sqlite3")(out, { readonly: true });
+      old = Object.fromEntries(db.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
+      db.close();
+    } catch { /* 出路径上是个非库文件 → 视为无历史，直接覆盖 */ }
+    if (old && old.content_hash) {
+      const sameSource = old.source_file === path.resolve(file);
+      const sameHash = old.content_hash === contentHash(file);
+      if (!sameSource && !force) {
+        console.error(`拒绝：${out} 已存在，且是另一本书（${old.source_file}）的库。换 -o 输出路径，或 --force 覆盖。`);
+        process.exitCode = 1;
+        return;
+      }
+      if (sameSource && sameHash && !force) {
+        console.log(`跳过：${path.basename(out)} 已由同一文件同内容建过（hash ${old.content_hash}）。要强制重建加 --force。`);
+        return { skipped: true };
+      }
+      if (sameSource && !sameHash && !force) {
+        console.error(`拒绝：源文件内容已变（旧 hash ${old.content_hash} ≠ 新 ${contentHash(file)}）。`);
+        console.error(`重建会改变切片编号、作废这本书的编目数据（人物/主题/关系全清）。确认要重建就加 --force。`);
+        process.exitCode = 1;
+        return;
+      }
+    }
+  }
+
   for (const suffix of ["", "-wal", "-shm"]) {
     const p = out + suffix;
     if (fs.existsSync(p)) fs.rmSync(p);
@@ -202,4 +260,13 @@ function buildDb(file, outPath, parsed) {
   if (parsed.numPages) console.log(`  页数: ${parsed.numPages}`);
   if (parsed.chapters) console.log(`  章节: ${parsed.chapters}`);
   if (parsed.cleanedJunk.length) console.log(`  已去页眉页脚: ${parsed.cleanedJunk.length} 种重复行`);
-})();
+  return { chunkCount, totalChars };
+}
+
+// ---------- 入口：直接运行才启动 CLI；被 import/require 时只暴露函数（测试用真实实现） ----------
+if (require.main === module) {
+  main().catch(e => { console.error("建库失败:", e?.message || e); process.exitCode = 1; });
+  process.on("unhandledRejection", e => { console.error("未处理的异步错误:", e?.message || e); process.exitCode = 1; });
+}
+
+module.exports = { collapse, normLine, sentenceSplit, decodeHtml, parsePdf, parseEpub, parseDocx, buildDb, main, contentHash };
