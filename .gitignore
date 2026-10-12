@@ -1,0 +1,20 @@
+# 依赖与构建产物
+node_modules/
+release/
+
+# 模型缓存（几百 MB，不入库）
+.models/
+
+# 书库二进制（可由 books/ + embed-book.js 重建）
+library/
+library-backup-zh-small/
+*.db
+*.db-shm
+*.db-wal
+
+# 运行日志
+*.log
+
+# 系统杂物
+Thumbs.db
+.DS_Store

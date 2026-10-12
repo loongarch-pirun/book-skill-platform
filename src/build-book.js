@@ -1,0 +1,205 @@
+// 阶段1：切片保真层
+// 用法: node build-book.js <book文件> [-o 输出.db]
+// 规则: 原文一字不改（只去页眉页脚/空行、折叠空白），每块带 页码 或 章节 定位
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+const AdmZip = require("adm-zip");
+const { DOMParser } = require("@xmldom/xmldom");
+const mammoth = require("mammoth");
+
+// ---------- 通用：文本工具 ----------
+const collapse = (s) => s.replace(/[ \t\u00a0]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
+const normLine = (s) => s.replace(/\s+/g, "").replace(/第\s*\d+\s*页/g, "");
+const sentenceSplit = (text, maxLen = 900) => {
+  if (text.length <= maxLen) return [text];
+  const parts = text.split(/(?<=[。！？.!?])\s*/);
+  const out = [];
+  let buf = "";
+  for (const p of parts) {
+    if ((buf + p).length > maxLen && buf) { out.push(buf); buf = p; }
+    else buf += p;
+  }
+  if (buf) out.push(buf);
+  return out;
+};
+
+// ---------- PDF：按页提取，识别重复页眉页脚 ----------
+async function parsePdf(file) {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const doc = await pdfjs.getDocument({
+    data: new Uint8Array(fs.readFileSync(file)),
+    isEvalSupported: false, useSystemFonts: false,
+  }).promise;
+
+  // 每页先按 y 坐标重组行
+  const pageLines = [];
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i);
+    const tc = await page.getTextContent();
+    const rows = new Map();
+    for (const it of tc.items) {
+      if (!it.str || !it.str.trim()) continue;
+      const y = Math.round(it.transform[5]);
+      if (!rows.has(y)) rows.set(y, []);
+      rows.get(y).push({ x: it.transform[4], s: it.str });
+    }
+    const lines = [...rows.entries()]
+      .sort((a, b) => b[0] - a[0])
+      .map(([, arr]) => arr.sort((a, b) => a.x - b.x).map(o => o.s).join("")
+        .replace(/(?<=[A-Za-z0-9,.]) (?=[A-Za-z0-9])/g, m => m).trim());
+    pageLines.push(lines);
+  }
+
+  // 重复行（出现在 >35% 页面且较短）视为页眉页脚，丢弃
+  const freq = new Map();
+  for (const lines of pageLines) for (const l of lines) {
+    const k = normLine(l);
+    if (k.length === 0 || k.length > 80) continue;
+    freq.set(k, (freq.get(k) || 0) + 1);
+  }
+  const junk = new Set([...freq.entries()].filter(([, n]) => n > pageLines.length * 0.35).map(([k]) => k));
+
+  const pages = pageLines.map((lines, idx) => {
+    const kept = lines.filter(l => l.trim() && !junk.has(normLine(l)));
+    return { page: idx + 1, text: collapse(kept.join("\n")) };
+  }).filter(p => p.text);
+
+  // 页内切分：每块带页码
+  const chunks = [];
+  for (const p of pages)
+    for (const seg of sentenceSplit(p.text))
+      chunks.push({ chapter: null, page: p.page, text: seg });
+  return { format: "pdf", numPages: pages.length, chunks, cleanedJunk: [...junk] };
+}
+
+// ---------- EPUB：spine 顺序，每个 xhtml = 章节，<p> = 段 ----------
+function parseEpub(file) {
+  const zip = new AdmZip(file);
+  const containerXml = zip.readAsText("META-INF/container.xml");
+  const opfPath = new DOMParser().parseFromString(containerXml, "application/xml")
+    .getElementsByTagName("rootfile")[0].getAttribute("full-path");
+  const opf = new DOMParser().parseFromString(zip.readAsText(opfPath), "application/xml");
+  const manifest = new Map();
+  for (const it of opf.getElementsByTagName("item"))
+    manifest.set(it.getAttribute("id"), it.getAttribute("href"));
+  const spine = [...opf.getElementsByTagName("itemref")].map(r => manifest.get(r.getAttribute("idref")));
+  const opfDir = path.dirname(opfPath).replaceAll("\\", "/");
+
+  const chunks = [];
+  let chapterNo = 0;
+  for (const href of spine) {
+    if (!/\.x?html?$/i.test(href)) continue;
+    const entry = zip.getEntry(path.posix.join(opfDir, href).replaceAll("\\", "/"));
+    if (!entry) continue;
+    const doc = new DOMParser().parseFromString(zip.readAsText(entry), "application/xhtml+xml");
+    const title = collapse(doc.getElementsByTagName("title")[0]?.textContent?.replace(/\s+/g, " ") || "");
+    const body = doc.getElementsByTagName("body")[0];
+    if (!body) continue;
+    const paras = [];
+    for (const el of body.getElementsByTagName("*")) {
+      const tag = el.tagName.toLowerCase();
+      if (!/^(p|h[1-6]|blockquote|li)$/.test(tag)) continue;
+      const t = collapse(el.textContent || "");
+      if (t.length >= 8) paras.push(t);
+    }
+    if (!paras.length) continue;
+    chapterNo++;
+    const chapter = title || `章节 ${chapterNo}`;
+    for (const t of paras) chunks.push({ chapter, page: null, text: t });
+  }
+  return { format: "epub", chapters: chapterNo, chunks, cleanedJunk: [] };
+}
+
+// ---------- DOCX：mammoth 转 HTML，标题 → 章节 ----------
+const decodeHtml = (s) => s
+  .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+  .replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'");
+async function parseDocx(file) {
+  const { value: html } = await mammoth.convertToHtml({ path: file });
+  const chunks = [];
+  let chapter = "前言";
+  let chapterNo = 0;
+  const tagRe = /<(h[1-6]|p)[^>]*>([\s\S]*?)<\/\1>/gi;
+  let m;
+  while ((m = tagRe.exec(html)) !== null) {
+    const tag = m[1].toLowerCase();
+    const t = collapse(decodeHtml(m[2].replace(/<[^>]+>/g, "")));
+    if (!t) continue;
+    if (/^h[1-6]$/.test(tag)) { chapterNo++; chapter = t; continue; }
+    const cm = t.match(/^(第[0-9一二三四五六七八九十百]+章)\s*(.*)$/);
+    if (cm) { chapterNo++; chapter = cm[1]; }
+    chunks.push({ chapter, page: null, text: t });
+  }
+  return { format: "docx", chapters: chapterNo, chunks, cleanedJunk: [] };
+}
+
+// ---------- 建库：一书一 .db ----------
+function buildDb(file, outPath, parsed) {
+  const db = require("better-sqlite3")(outPath);
+  db.pragma("journal_mode = WAL");
+  db.exec(`
+    CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT);
+    CREATE TABLE chunks(
+      id INTEGER PRIMARY KEY,
+      chapter TEXT,
+      page INTEGER,
+      text TEXT NOT NULL
+    );
+    CREATE VIRTUAL TABLE chunks_fts USING fts5(
+      text, content='chunks', content_rowid='id', tokenize='trigram'
+    );
+  `);
+  const totalChars = parsed.chunks.reduce((a, c) => a + c.text.length, 0);
+  const setMeta = db.prepare("INSERT INTO meta(key,value) VALUES (?,?)");
+  setMeta.run("title", path.basename(file).replace(/\.[^.]+$/, ""));
+  setMeta.run("source_file", path.resolve(file));
+  setMeta.run("format", parsed.format);
+  setMeta.run("built_at", new Date().toISOString());
+  setMeta.run("num_pages", String(parsed.numPages || ""));
+  setMeta.run("num_chapters", String(parsed.chapters || ""));
+  setMeta.run("chunk_count", String(parsed.chunks.length));
+  setMeta.run("total_chars", String(totalChars));
+  setMeta.run("content_hash", crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex").slice(0, 16));
+
+  const tx = db.transaction(() => {
+    const ins = db.prepare("INSERT INTO chunks(chapter, page, text) VALUES (?,?,?)");
+    for (const c of parsed.chunks) {
+      const r = ins.run(c.chapter, c.page, c.text);
+      db.prepare("INSERT INTO chunks_fts(rowid, text) VALUES (?, ?)").run(r.lastInsertRowid, c.text);
+    }
+  });
+  tx();
+  db.close();
+  return { chunkCount: parsed.chunks.length, totalChars };
+}
+
+// ---------- 主流程 ----------
+(async () => {
+  const args = process.argv.slice(2);
+  const file = args[0];
+  if (!file || !fs.existsSync(file)) { console.error("用法: node build-book.js <book文件> [-o out.db]"); process.exit(1); }
+  const outArg = args.includes("-o") ? args[args.indexOf("-o") + 1] : null;
+  const ext = path.extname(file).toLowerCase();
+
+  let parsed;
+  if (ext === ".pdf") parsed = await parsePdf(file);
+  else if (ext === ".epub") parsed = parseEpub(file);
+  else if (ext === ".docx") parsed = await parseDocx(file);
+  else { console.error("不支持的格式: " + ext); process.exit(1); }
+
+  const out = outArg || path.join(path.dirname(file), "..", "library",
+    path.basename(file).replace(/\.[^.]+$/, "") + "." + parsed.format + ".db");
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  for (const suffix of ["", "-wal", "-shm"]) {
+    const p = out + suffix;
+    if (fs.existsSync(p)) fs.rmSync(p);
+  }
+  const { chunkCount, totalChars } = buildDb(file, out, parsed);
+
+  console.log(`建库完成: ${path.basename(out)}`);
+  console.log(`  格式: ${parsed.format} | 切片: ${chunkCount} 块 | 原文: ${totalChars} 字符`);
+  if (parsed.numPages) console.log(`  页数: ${parsed.numPages}`);
+  if (parsed.chapters) console.log(`  章节: ${parsed.chapters}`);
+  if (parsed.cleanedJunk.length) console.log(`  已去页眉页脚: ${parsed.cleanedJunk.length} 种重复行`);
+})();

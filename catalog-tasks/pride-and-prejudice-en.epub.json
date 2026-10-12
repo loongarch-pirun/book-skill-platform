@@ -1,0 +1,9498 @@
+{
+ "task_version": "1",
+ "generated_at": "2026-10-12T05:59:53.511Z",
+ "book": {
+  "db": "pride-and-prejudice-en.epub.db",
+  "title": "pride-and-prejudice-en",
+  "lang": "en",
+  "chunks": 2210,
+  "chapters": 16,
+  "total_chars": 711062
+ },
+ "provenance": {
+  "cluster_model": "e5",
+  "cluster_method": "centered-greedy-th0.38-min5",
+  "clustered_at": "2026-10-12T05:59:53.511Z",
+  "clusters": 86,
+  "covered_chunks": 1968
+ },
+ "clusters": [
+  {
+   "id": "c001",
+   "size": 120,
+   "members": [
+    1843,
+    1486,
+    697,
+    856,
+    1488,
+    119,
+    1881,
+    1467,
+    169,
+    1154,
+    1201,
+    371,
+    1438,
+    1036,
+    780,
+    271,
+    136,
+    1850,
+    1458,
+    1470,
+    702,
+    180,
+    1483,
+    1963,
+    1149,
+    2199,
+    1462,
+    1227,
+    2042,
+    839,
+    1726,
+    1183,
+    2064,
+    625,
+    484,
+    1529,
+    107,
+    338,
+    1432,
+    1361,
+    1490,
+    945,
+    481,
+    335,
+    2188,
+    1927,
+    447,
+    626,
+    709,
+    633,
+    272,
+    682,
+    781,
+    278,
+    706,
+    1532,
+    1434,
+    1774,
+    1879,
+    905,
+    1303,
+    1475,
+    792,
+    937,
+    337,
+    1193,
+    1436,
+    1476,
+    1482,
+    1190,
+    1199,
+    907,
+    138,
+    26,
+    542,
+    2201,
+    1329,
+    1473,
+    1429,
+    1151,
+    1250,
+    1200,
+    944,
+    1543,
+    1437,
+    1204,
+    1500,
+    275,
+    1304,
+    855,
+    1527,
+    887,
+    1498,
+    1370,
+    1628,
+    1431,
+    1624,
+    840,
+    1847,
+    1611,
+    1863,
+    1772,
+    936,
+    2192,
+    1612,
+    1159,
+    787,
+    934,
+    1896,
+    1196,
+    1187,
+    998,
+    1186,
+    1716,
+    228,
+    1505,
+    1606,
+    170,
+    1825,
+    1367
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 124
+    },
+    {
+     "t": "darcy",
+     "n": 99
+    },
+    {
+     "t": "jane",
+     "n": 98
+    },
+    {
+     "t": "bingley",
+     "n": 91
+    },
+    {
+     "t": "sister",
+     "n": 82
+    },
+    {
+     "t": "before",
+     "n": 62
+    },
+    {
+     "t": "miss",
+     "n": 61
+    },
+    {
+     "t": "though",
+     "n": 61
+    },
+    {
+     "t": "some",
+     "n": 59
+    },
+    {
+     "t": "who",
+     "n": 59
+    },
+    {
+     "t": "much",
+     "n": 50
+    },
+    {
+     "t": "every",
+     "n": 48
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 17
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 13
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 10
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 10
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 10
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1843,
+     "text": "Jane looked at Elizabeth with surprise and concern. She knew but little\nof their meeting in Derbyshire, and therefore felt for the awkwardness\nwhich must attend her sister, in seeing him almost for th"
+    },
+    {
+     "chunk": 1486,
+     "text": "He had been some time with Mr. Gardiner, who, with two or three other\ngentlemen from the house, was engaged by the river; and had left him\nonly on learning that the ladies of the family intended a vis"
+    }
+   ]
+  },
+  {
+   "id": "c002",
+   "size": 103,
+   "members": [
+    1692,
+    259,
+    935,
+    2184,
+    921,
+    2198,
+    310,
+    1394,
+    98,
+    789,
+    1623,
+    1082,
+    1019,
+    347,
+    1347,
+    673,
+    131,
+    1792,
+    81,
+    1003,
+    753,
+    189,
+    1694,
+    580,
+    504,
+    874,
+    468,
+    1136,
+    502,
+    2182,
+    2123,
+    2058,
+    1008,
+    1723,
+    1219,
+    2169,
+    1909,
+    1660,
+    1005,
+    388,
+    1618,
+    432,
+    241,
+    808,
+    975,
+    1338,
+    770,
+    1791,
+    243,
+    214,
+    778,
+    203,
+    45,
+    1771,
+    104,
+    911,
+    1104,
+    912,
+    1271,
+    848,
+    1345,
+    1779,
+    1562,
+    48,
+    868,
+    56,
+    2196,
+    115,
+    2163,
+    273,
+    1283,
+    1983,
+    669,
+    1919,
+    313,
+    1465,
+    1102,
+    1595,
+    1418,
+    2022,
+    491,
+    1969,
+    386,
+    1094,
+    515,
+    1662,
+    257,
+    667,
+    1635,
+    850,
+    923,
+    1323,
+    307,
+    384,
+    253,
+    292,
+    234,
+    1794,
+    1095,
+    352,
+    1062,
+    972,
+    924
+   ],
+   "top_terms": [
+    {
+     "t": "dear",
+     "n": 13
+    },
+    {
+     "t": "yes",
+     "n": 12
+    },
+    {
+     "t": "etc",
+     "n": 6
+    },
+    {
+     "t": "yours",
+     "n": 5
+    },
+    {
+     "t": "sir",
+     "n": 5
+    },
+    {
+     "t": "much",
+     "n": 5
+    },
+    {
+     "t": "lizzy",
+     "n": 4
+    },
+    {
+     "t": "little",
+     "n": 3
+    },
+    {
+     "t": "like",
+     "n": 3
+    },
+    {
+     "t": "come",
+     "n": 3
+    },
+    {
+     "t": "hope",
+     "n": 3
+    },
+    {
+     "t": "perhaps",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 19
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 11
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 10
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 9
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 8
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1692,
+     "text": "“Just as you please.”"
+    },
+    {
+     "chunk": 259,
+     "text": "“Yours, etc.”"
+    }
+   ]
+  },
+  {
+   "id": "c003",
+   "size": 77,
+   "members": [
+    849,
+    215,
+    1585,
+    2019,
+    602,
+    1796,
+    1311,
+    649,
+    1306,
+    1007,
+    427,
+    63,
+    1995,
+    285,
+    1013,
+    1009,
+    1511,
+    1026,
+    1034,
+    202,
+    381,
+    1116,
+    1285,
+    382,
+    397,
+    39,
+    692,
+    153,
+    200,
+    2093,
+    755,
+    2057,
+    1114,
+    1307,
+    656,
+    1241,
+    1138,
+    914,
+    201,
+    1313,
+    668,
+    412,
+    250,
+    842,
+    2101,
+    2167,
+    1670,
+    533,
+    1348,
+    1197,
+    902,
+    308,
+    2001,
+    1419,
+    2171,
+    2168,
+    1768,
+    394,
+    664,
+    330,
+    1263,
+    1294,
+    786,
+    387,
+    133,
+    1011,
+    847,
+    1992,
+    441,
+    54,
+    981,
+    179,
+    826,
+    674,
+    1674,
+    280,
+    318
+   ],
+   "top_terms": [
+    {
+     "t": "never",
+     "n": 15
+    },
+    {
+     "t": "know",
+     "n": 4
+    },
+    {
+     "t": "think",
+     "n": 4
+    },
+    {
+     "t": "much",
+     "n": 4
+    },
+    {
+     "t": "nothing",
+     "n": 3
+    },
+    {
+     "t": "compliment",
+     "n": 3
+    },
+    {
+     "t": "different",
+     "n": 3
+    },
+    {
+     "t": "yourself",
+     "n": 3
+    },
+    {
+     "t": "felt",
+     "n": 3
+    },
+    {
+     "t": "cannot",
+     "n": 3
+    },
+    {
+     "t": "always",
+     "n": 3
+    },
+    {
+     "t": "mind",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 17
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 7
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 7
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 7
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 6
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 849,
+     "text": "“I should not mind anything at all.”"
+    },
+    {
+     "chunk": 215,
+     "text": "“I should imagine not.”"
+    }
+   ]
+  },
+  {
+   "id": "c004",
+   "size": 70,
+   "members": [
+    1939,
+    1898,
+    1878,
+    1848,
+    904,
+    1906,
+    802,
+    1864,
+    1926,
+    1923,
+    238,
+    2191,
+    863,
+    813,
+    710,
+    92,
+    100,
+    1630,
+    1270,
+    486,
+    879,
+    1567,
+    834,
+    67,
+    1731,
+    1966,
+    1837,
+    1214,
+    341,
+    102,
+    1924,
+    71,
+    2152,
+    525,
+    97,
+    109,
+    1978,
+    1334,
+    356,
+    715,
+    743,
+    2156,
+    2132,
+    532,
+    122,
+    141,
+    492,
+    1829,
+    1316,
+    531,
+    2113,
+    220,
+    140,
+    1103,
+    2135,
+    2190,
+    2138,
+    229,
+    505,
+    93,
+    774,
+    1074,
+    764,
+    146,
+    719,
+    260,
+    1364,
+    1945,
+    1704,
+    1217
+   ],
+   "top_terms": [
+    {
+     "t": "bennet",
+     "n": 78
+    },
+    {
+     "t": "bingley",
+     "n": 29
+    },
+    {
+     "t": "miss",
+     "n": 19
+    },
+    {
+     "t": "soon",
+     "n": 18
+    },
+    {
+     "t": "elizabeth",
+     "n": 16
+    },
+    {
+     "t": "though",
+     "n": 14
+    },
+    {
+     "t": "after",
+     "n": 14
+    },
+    {
+     "t": "time",
+     "n": 12
+    },
+    {
+     "t": "daughter",
+     "n": 11
+    },
+    {
+     "t": "family",
+     "n": 10
+    },
+    {
+     "t": "happy",
+     "n": 9
+    },
+    {
+     "t": "day",
+     "n": 9
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 12
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 9
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 8
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 8
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 6
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1939,
+     "text": "It was an evening of no common delight to them all; the satisfaction of\nMiss Bennet’s mind gave such a glow of sweet animation to her face, as\nmade her look handsomer than ever. Kitty simpered and smi"
+    },
+    {
+     "chunk": 1898,
+     "text": "Mrs. Bennet, in short, was in very great spirits: she had seen enough of\nBingley’s behaviour to Jane to be convinced that she would get him at\nlast; and her expectations of advantage to her family, wh"
+    }
+   ]
+  },
+  {
+   "id": "c005",
+   "size": 66,
+   "members": [
+    810,
+    2187,
+    967,
+    1030,
+    1028,
+    919,
+    966,
+    630,
+    520,
+    1049,
+    836,
+    968,
+    22,
+    1000,
+    545,
+    518,
+    927,
+    825,
+    1040,
+    615,
+    805,
+    695,
+    513,
+    1112,
+    736,
+    1001,
+    806,
+    550,
+    552,
+    1240,
+    1107,
+    886,
+    973,
+    636,
+    1032,
+    831,
+    1027,
+    707,
+    2055,
+    705,
+    540,
+    940,
+    1108,
+    807,
+    1622,
+    837,
+    713,
+    711,
+    2059,
+    1238,
+    722,
+    1235,
+    997,
+    830,
+    769,
+    1268,
+    605,
+    628,
+    538,
+    1234,
+    547,
+    889,
+    143,
+    843,
+    1359,
+    579
+   ],
+   "top_terms": [
+    {
+     "t": "collins",
+     "n": 88
+    },
+    {
+     "t": "elizabeth",
+     "n": 61
+    },
+    {
+     "t": "lady",
+     "n": 47
+    },
+    {
+     "t": "charlotte",
+     "n": 39
+    },
+    {
+     "t": "bennet",
+     "n": 34
+    },
+    {
+     "t": "catherine",
+     "n": 33
+    },
+    {
+     "t": "much",
+     "n": 30
+    },
+    {
+     "t": "out",
+     "n": 27
+    },
+    {
+     "t": "before",
+     "n": 26
+    },
+    {
+     "t": "time",
+     "n": 25
+    },
+    {
+     "t": "soon",
+     "n": 25
+    },
+    {
+     "t": "make",
+     "n": 23
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 13
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 10
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 10
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 9
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 9
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 810,
+     "text": "excited before, how many years longer Mr. Bennet was likely to live; and\nSir William gave it as his decided opinion, that whenever Mr. Collins\nshould be in possession of the Longbourn estate, it would"
+    },
+    {
+     "chunk": 2187,
+     "text": "Before any answer could arrive from Mr. Collins, or any congratulations\nto Elizabeth from his wife, the Longbourn family heard that the\nCollinses were come themselves to Lucas Lodge. The reason of thi"
+    }
+   ]
+  },
+  {
+   "id": "c006",
+   "size": 62,
+   "members": [
+    2017,
+    1346,
+    1560,
+    46,
+    2030,
+    871,
+    671,
+    44,
+    1653,
+    1558,
+    2088,
+    434,
+    329,
+    644,
+    922,
+    646,
+    50,
+    1798,
+    752,
+    2021,
+    389,
+    364,
+    1693,
+    596,
+    1677,
+    523,
+    1393,
+    873,
+    2170,
+    1812,
+    1996,
+    638,
+    1172,
+    402,
+    298,
+    1801,
+    1790,
+    1559,
+    1877,
+    1678,
+    1142,
+    1404,
+    291,
+    1994,
+    747,
+    2125,
+    51,
+    198,
+    2015,
+    1684,
+    1286,
+    1650,
+    661,
+    1914,
+    574,
+    665,
+    1803,
+    1409,
+    1530,
+    1839,
+    795,
+    1656
+   ],
+   "top_terms": [
+    {
+     "t": "think",
+     "n": 5
+    },
+    {
+     "t": "yes",
+     "n": 4
+    },
+    {
+     "t": "told",
+     "n": 4
+    },
+    {
+     "t": "know",
+     "n": 4
+    },
+    {
+     "t": "tell",
+     "n": 3
+    },
+    {
+     "t": "heard",
+     "n": 3
+    },
+    {
+     "t": "uncle",
+     "n": 3
+    },
+    {
+     "t": "talk",
+     "n": 3
+    },
+    {
+     "t": "little",
+     "n": 3
+    },
+    {
+     "t": "gentleman",
+     "n": 3
+    },
+    {
+     "t": "dear",
+     "n": 3
+    },
+    {
+     "t": "who",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 8
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 8
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 7
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 7
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 7
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2017,
+     "text": "“Tell me, once for all, are you engaged to him?”"
+    },
+    {
+     "chunk": 1346,
+     "text": "“And you saw him frequently?”"
+    }
+   ]
+  },
+  {
+   "id": "c007",
+   "size": 62,
+   "members": [
+    1157,
+    2031,
+    2080,
+    132,
+    2032,
+    2079,
+    872,
+    348,
+    1182,
+    2075,
+    2117,
+    62,
+    1291,
+    1165,
+    2122,
+    2094,
+    623,
+    1025,
+    794,
+    1778,
+    1904,
+    78,
+    2077,
+    2090,
+    2045,
+    2069,
+    1602,
+    2143,
+    2162,
+    514,
+    1943,
+    1060,
+    1644,
+    622,
+    2089,
+    1297,
+    65,
+    732,
+    1168,
+    1160,
+    2086,
+    2164,
+    66,
+    816,
+    2144,
+    134,
+    1599,
+    130,
+    1520,
+    1162,
+    858,
+    729,
+    426,
+    2091,
+    216,
+    516,
+    744,
+    1832,
+    1836,
+    510,
+    261,
+    1242
+   ],
+   "top_terms": [
+    {
+     "t": "know",
+     "n": 15
+    },
+    {
+     "t": "think",
+     "n": 12
+    },
+    {
+     "t": "now",
+     "n": 12
+    },
+    {
+     "t": "well",
+     "n": 11
+    },
+    {
+     "t": "every",
+     "n": 11
+    },
+    {
+     "t": "never",
+     "n": 10
+    },
+    {
+     "t": "good",
+     "n": 10
+    },
+    {
+     "t": "always",
+     "n": 9
+    },
+    {
+     "t": "wish",
+     "n": 8
+    },
+    {
+     "t": "much",
+     "n": 8
+    },
+    {
+     "t": "say",
+     "n": 8
+    },
+    {
+     "t": "take",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 15
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 7
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 6
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 6
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 5
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1157,
+     "text": "“In vain have I struggled. It will not do. My feelings will not be\nrepressed. You must allow me to tell you how ardently I admire and love\nyou.”"
+    },
+    {
+     "chunk": 2031,
+     "text": "“I have said no such thing. I am only resolved to act in that manner,\nwhich will, in my own opinion, constitute my happiness, without\nreference to you, or to any person so wholly unconnected with me.”"
+    }
+   ]
+  },
+  {
+   "id": "c008",
+   "size": 58,
+   "members": [
+    1309,
+    1015,
+    925,
+    1169,
+    2040,
+    859,
+    1556,
+    566,
+    470,
+    1988,
+    1614,
+    1452,
+    2104,
+    577,
+    1922,
+    1243,
+    1763,
+    442,
+    1387,
+    1144,
+    1237,
+    1088,
+    1266,
+    1024,
+    1450,
+    2056,
+    600,
+    206,
+    2131,
+    1176,
+    757,
+    334,
+    77,
+    1871,
+    1933,
+    734,
+    262,
+    846,
+    1853,
+    167,
+    425,
+    1910,
+    823,
+    1736,
+    1753,
+    1503,
+    1893,
+    1178,
+    1433,
+    1083,
+    1552,
+    1849,
+    1522,
+    878,
+    2151,
+    1806,
+    380,
+    2038
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 44
+    },
+    {
+     "t": "answer",
+     "n": 9
+    },
+    {
+     "t": "made",
+     "n": 7
+    },
+    {
+     "t": "little",
+     "n": 7
+    },
+    {
+     "t": "who",
+     "n": 7
+    },
+    {
+     "t": "after",
+     "n": 6
+    },
+    {
+     "t": "though",
+     "n": 5
+    },
+    {
+     "t": "nothing",
+     "n": 5
+    },
+    {
+     "t": "subject",
+     "n": 5
+    },
+    {
+     "t": "help",
+     "n": 4
+    },
+    {
+     "t": "looked",
+     "n": 4
+    },
+    {
+     "t": "away",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 8
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 5
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 5
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 5
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 4
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1309,
+     "text": "But as Elizabeth could not receive comfort from any such expectation she\nmade no answer."
+    },
+    {
+     "chunk": 1015,
+     "text": "Elizabeth could hardly help smiling, as she assured her that had not\nbeen the case."
+    }
+   ]
+  },
+  {
+   "id": "c009",
+   "size": 49,
+   "members": [
+    1029,
+    1077,
+    1153,
+    1046,
+    1645,
+    1192,
+    2189,
+    1278,
+    376,
+    735,
+    1962,
+    1457,
+    539,
+    1499,
+    803,
+    480,
+    772,
+    168,
+    488,
+    519,
+    125,
+    1607,
+    445,
+    1377,
+    1111,
+    2159,
+    1358,
+    1209,
+    1232,
+    1478,
+    939,
+    1185,
+    963,
+    1251,
+    276,
+    908,
+    1703,
+    2063,
+    1533,
+    2041,
+    1807,
+    1727,
+    712,
+    2110,
+    616,
+    1868,
+    1315,
+    1770,
+    557
+   ],
+   "top_terms": [
+    {
+     "t": "see",
+     "n": 2
+    },
+    {
+     "t": "xxx",
+     "n": 1
+    },
+    {
+     "t": "xxxii",
+     "n": 1
+    },
+    {
+     "t": "xxxiv",
+     "n": 1
+    },
+    {
+     "t": "xxxi",
+     "n": 1
+    },
+    {
+     "t": "xlix",
+     "n": 1
+    },
+    {
+     "t": "xxxvi",
+     "n": 1
+    },
+    {
+     "t": "lxi",
+     "n": 1
+    },
+    {
+     "t": "lvi",
+     "n": 1
+    },
+    {
+     "t": "xliv",
+     "n": 1
+    },
+    {
+     "t": "xlvi",
+     "n": 1
+    },
+    {
+     "t": "xxii",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 5
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 4
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 4
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 4
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 4
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1029,
+     "text": "CHAPTER XXX."
+    },
+    {
+     "chunk": 1077,
+     "text": "CHAPTER XXXII."
+    }
+   ]
+  },
+  {
+   "id": "c010",
+   "size": 36,
+   "members": [
+    2146,
+    1461,
+    1521,
+    1460,
+    701,
+    1374,
+    1485,
+    1161,
+    1869,
+    428,
+    2062,
+    698,
+    594,
+    1456,
+    2179,
+    479,
+    1547,
+    694,
+    209,
+    651,
+    422,
+    440,
+    378,
+    2033,
+    2010,
+    1886,
+    1164,
+    1424,
+    1131,
+    360,
+    2140,
+    1279,
+    599,
+    1441,
+    2160,
+    1508
+   ],
+   "top_terms": [
+    {
+     "t": "darcy",
+     "n": 41
+    },
+    {
+     "t": "elizabeth",
+     "n": 30
+    },
+    {
+     "t": "much",
+     "n": 8
+    },
+    {
+     "t": "miss",
+     "n": 6
+    },
+    {
+     "t": "made",
+     "n": 6
+    },
+    {
+     "t": "nothing",
+     "n": 6
+    },
+    {
+     "t": "replied",
+     "n": 6
+    },
+    {
+     "t": "length",
+     "n": 5
+    },
+    {
+     "t": "though",
+     "n": 5
+    },
+    {
+     "t": "face",
+     "n": 5
+    },
+    {
+     "t": "family",
+     "n": 5
+    },
+    {
+     "t": "mother",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 6
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 6
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 5
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 4
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 4
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2146,
+     "text": "Elizabeth, still more affected, was earnest and solemn in her reply;\nand, at length, by repeated assurances that Mr. Darcy was really the\nobject of her choice, by explaining the gradual change which h"
+    },
+    {
+     "chunk": 1461,
+     "text": "Miss Darcy was tall, and on a larger scale than Elizabeth; and, though\nlittle more than sixteen, her figure was formed, and her appearance\nwomanly and graceful. She was less handsome than her brother,"
+    }
+   ]
+  },
+  {
+   "id": "c011",
+   "size": 35,
+   "members": [
+    1967,
+    758,
+    2002,
+    754,
+    2023,
+    1987,
+    49,
+    521,
+    2034,
+    1998,
+    2036,
+    76,
+    1979,
+    424,
+    882,
+    1050,
+    567,
+    219,
+    852,
+    290,
+    251,
+    317,
+    2009,
+    1597,
+    166,
+    1899,
+    2011,
+    410,
+    489,
+    245,
+    1970,
+    149,
+    236,
+    1780,
+    529
+   ],
+   "top_terms": [
+    {
+     "t": "bennet",
+     "n": 35
+    },
+    {
+     "t": "miss",
+     "n": 18
+    },
+    {
+     "t": "well",
+     "n": 7
+    },
+    {
+     "t": "mother",
+     "n": 6
+    },
+    {
+     "t": "know",
+     "n": 5
+    },
+    {
+     "t": "dear",
+     "n": 5
+    },
+    {
+     "t": "who",
+     "n": 4
+    },
+    {
+     "t": "find",
+     "n": 4
+    },
+    {
+     "t": "great",
+     "n": 4
+    },
+    {
+     "t": "think",
+     "n": 4
+    },
+    {
+     "t": "expect",
+     "n": 4
+    },
+    {
+     "t": "hope",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 12
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 8
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 4
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 3
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1967,
+     "text": "“I hope you are well, Miss Bennet. That lady, I suppose, is your\nmother?”"
+    },
+    {
+     "chunk": 758,
+     "text": "“What do you mean, Mr. Bennet, by talking in this way? You promised me\nto insist upon her marrying him.”"
+    }
+   ]
+  },
+  {
+   "id": "c012",
+   "size": 35,
+   "members": [
+    2145,
+    1901,
+    2136,
+    910,
+    124,
+    59,
+    738,
+    2114,
+    1931,
+    1633,
+    865,
+    620,
+    718,
+    2121,
+    1752,
+    2153,
+    867,
+    1958,
+    2139,
+    1824,
+    1449,
+    1296,
+    897,
+    2128,
+    1290,
+    766,
+    58,
+    716,
+    152,
+    60,
+    1317,
+    1389,
+    2111,
+    2039,
+    1310
+   ],
+   "top_terms": [
+    {
+     "t": "lizzy",
+     "n": 39
+    },
+    {
+     "t": "man",
+     "n": 14
+    },
+    {
+     "t": "know",
+     "n": 13
+    },
+    {
+     "t": "dear",
+     "n": 12
+    },
+    {
+     "t": "sure",
+     "n": 9
+    },
+    {
+     "t": "much",
+     "n": 9
+    },
+    {
+     "t": "father",
+     "n": 8
+    },
+    {
+     "t": "nothing",
+     "n": 8
+    },
+    {
+     "t": "now",
+     "n": 7
+    },
+    {
+     "t": "happy",
+     "n": 7
+    },
+    {
+     "t": "jane",
+     "n": 7
+    },
+    {
+     "t": "say",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 8
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 5
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 4
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 4
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2145,
+     "text": "“Lizzy,” said her father, “I have given him my consent. He is the kind\nof man, indeed, to whom I should never dare refuse anything, which he\ncondescended to ask. I now give it to you, if you are resol"
+    },
+    {
+     "chunk": 1901,
+     "text": "“Lizzy, you must not do so. You must not suspect me. It mortifies me. I\nassure you that I have now learnt to enjoy his conversation as an\nagreeable and sensible young man without having a wish beyond "
+    }
+   ]
+  },
+  {
+   "id": "c013",
+   "size": 35,
+   "members": [
+    2100,
+    1761,
+    1535,
+    1676,
+    1256,
+    1951,
+    2142,
+    1564,
+    1403,
+    2060,
+    1416,
+    1632,
+    324,
+    1991,
+    1351,
+    254,
+    582,
+    1392,
+    1247,
+    991,
+    1690,
+    1851,
+    1746,
+    1993,
+    163,
+    1786,
+    714,
+    2016,
+    74,
+    346,
+    822,
+    2102,
+    1870,
+    38,
+    1999
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 28
+    },
+    {
+     "t": "cried",
+     "n": 7
+    },
+    {
+     "t": "much",
+     "n": 6
+    },
+    {
+     "t": "replied",
+     "n": 5
+    },
+    {
+     "t": "ask",
+     "n": 3
+    },
+    {
+     "t": "surprised",
+     "n": 2
+    },
+    {
+     "t": "certainly",
+     "n": 2
+    },
+    {
+     "t": "though",
+     "n": 2
+    },
+    {
+     "t": "think",
+     "n": 2
+    },
+    {
+     "t": "indeed",
+     "n": 2
+    },
+    {
+     "t": "thought",
+     "n": 2
+    },
+    {
+     "t": "comprehend",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 8
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 5
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 4
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 3
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2100,
+     "text": "“I must ask whether you were surprised?” said Elizabeth."
+    },
+    {
+     "chunk": 1761,
+     "text": "“Oh, certainly,” said Elizabeth, though burning with curiosity; “we will\nask you no questions.”"
+    }
+   ]
+  },
+  {
+   "id": "c014",
+   "size": 33,
+   "members": [
+    383,
+    399,
+    395,
+    467,
+    662,
+    1813,
+    1903,
+    869,
+    392,
+    2084,
+    1218,
+    475,
+    1658,
+    2161,
+    645,
+    354,
+    349,
+    499,
+    233,
+    537,
+    530,
+    2083,
+    476,
+    1295,
+    1122,
+    2178,
+    2085,
+    1561,
+    1124,
+    1672,
+    2051,
+    511,
+    396
+   ],
+   "top_terms": [
+    {
+     "t": "write",
+     "n": 10
+    },
+    {
+     "t": "letter",
+     "n": 7
+    },
+    {
+     "t": "know",
+     "n": 6
+    },
+    {
+     "t": "think",
+     "n": 5
+    },
+    {
+     "t": "cannot",
+     "n": 5
+    },
+    {
+     "t": "some",
+     "n": 5
+    },
+    {
+     "t": "little",
+     "n": 5
+    },
+    {
+     "t": "often",
+     "n": 4
+    },
+    {
+     "t": "much",
+     "n": 4
+    },
+    {
+     "t": "give",
+     "n": 4
+    },
+    {
+     "t": "father",
+     "n": 4
+    },
+    {
+     "t": "wrote",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 8
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 7
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 5
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 383,
+     "text": "“How many letters you must have occasion to write in the course of a\nyear! Letters of business, too! How odious I should think them!”"
+    },
+    {
+     "chunk": 399,
+     "text": "“My ideas flow so rapidly that I have not time to express them; by which\nmeans my letters sometimes convey no ideas at all to my correspondents.”"
+    }
+   ]
+  },
+  {
+   "id": "c015",
+   "size": 31,
+   "members": [
+    1210,
+    996,
+    1152,
+    969,
+    985,
+    555,
+    613,
+    987,
+    990,
+    1223,
+    727,
+    993,
+    1047,
+    1037,
+    608,
+    1031,
+    841,
+    1035,
+    1233,
+    767,
+    512,
+    988,
+    1212,
+    815,
+    1048,
+    1230,
+    2150,
+    1080,
+    814,
+    980,
+    609
+   ],
+   "top_terms": [
+    {
+     "t": "collins",
+     "n": 23
+    },
+    {
+     "t": "lady",
+     "n": 22
+    },
+    {
+     "t": "catherine",
+     "n": 20
+    },
+    {
+     "t": "rosings",
+     "n": 16
+    },
+    {
+     "t": "much",
+     "n": 12
+    },
+    {
+     "t": "ladyship",
+     "n": 9
+    },
+    {
+     "t": "darcy",
+     "n": 8
+    },
+    {
+     "t": "last",
+     "n": 8
+    },
+    {
+     "t": "who",
+     "n": 7
+    },
+    {
+     "t": "room",
+     "n": 6
+    },
+    {
+     "t": "know",
+     "n": 6
+    },
+    {
+     "t": "first",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 13
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 5
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 5
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 3
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1210,
+     "text": "THE two gentlemen left Rosings the next morning; and Mr. Collins having\nbeen in waiting near the lodges, to make them his parting obeisance, was\nable to bring home the pleasing intelligence of their a"
+    },
+    {
+     "chunk": 996,
+     "text": "From the entrance hall, of which Mr. Collins pointed out, with a\nrapturous air, the fine proportion and finished ornaments, they followed\nthe servants through an antechamber to the room where Lady Cat"
+    }
+   ]
+  },
+  {
+   "id": "c016",
+   "size": 31,
+   "members": [
+    875,
+    952,
+    585,
+    876,
+    1125,
+    1830,
+    639,
+    2014,
+    1123,
+    506,
+    1128,
+    1679,
+    1887,
+    1885,
+    1872,
+    2000,
+    2115,
+    1085,
+    955,
+    173,
+    358,
+    266,
+    954,
+    2028,
+    1743,
+    32,
+    1221,
+    1413,
+    1952,
+    1862,
+    1265
+   ],
+   "top_terms": [
+    {
+     "t": "wish",
+     "n": 8
+    },
+    {
+     "t": "never",
+     "n": 8
+    },
+    {
+     "t": "about",
+     "n": 6
+    },
+    {
+     "t": "who",
+     "n": 6
+    },
+    {
+     "t": "marry",
+     "n": 6
+    },
+    {
+     "t": "man",
+     "n": 6
+    },
+    {
+     "t": "money",
+     "n": 5
+    },
+    {
+     "t": "many",
+     "n": 5
+    },
+    {
+     "t": "nothing",
+     "n": 5
+    },
+    {
+     "t": "much",
+     "n": 5
+    },
+    {
+     "t": "indeed",
+     "n": 5
+    },
+    {
+     "t": "cannot",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 5
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 5
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 4
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 3
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 875,
+     "text": "“I cannot believe it. Why should they try to influence him? They can\nonly wish his happiness; and if he is attached to me no other woman can\nsecure it.”"
+    },
+    {
+     "chunk": 952,
+     "text": "“No—why should he? If it were not allowable for him to gain my\naffections, because I had no money, what occasion could there be for\nmaking love to a girl whom he did not care about, and who was equall"
+    }
+   ]
+  },
+  {
+   "id": "c017",
+   "size": 28,
+   "members": [
+    2037,
+    1965,
+    1076,
+    995,
+    1982,
+    1073,
+    1211,
+    1226,
+    2154,
+    2018,
+    978,
+    1239,
+    2065,
+    1078,
+    1738,
+    1577,
+    979,
+    2035,
+    704,
+    943,
+    1385,
+    1977,
+    1444,
+    1751,
+    1631,
+    1443,
+    268,
+    1769
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 29
+    },
+    {
+     "t": "lady",
+     "n": 12
+    },
+    {
+     "t": "catherine",
+     "n": 12
+    },
+    {
+     "t": "without",
+     "n": 6
+    },
+    {
+     "t": "carriage",
+     "n": 6
+    },
+    {
+     "t": "room",
+     "n": 6
+    },
+    {
+     "t": "nothing",
+     "n": 6
+    },
+    {
+     "t": "heard",
+     "n": 5
+    },
+    {
+     "t": "door",
+     "n": 5
+    },
+    {
+     "t": "maria",
+     "n": 5
+    },
+    {
+     "t": "say",
+     "n": 5
+    },
+    {
+     "t": "letter",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 7
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 6
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 3
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 3
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2037,
+     "text": "Elizabeth made no answer; and without attempting to persuade her\nLadyship to return into the house, walked quietly into it herself. She\nheard the carriage drive away as she proceeded upstairs. Her mot"
+    },
+    {
+     "chunk": 1965,
+     "text": "She entered the room with an air more than usually ungracious, made no\nother reply to Elizabeth’s salutation than a slight inclination of the\nhead, and sat down without saying a word. Elizabeth had me"
+    }
+   ]
+  },
+  {
+   "id": "c018",
+   "size": 27,
+   "members": [
+    1455,
+    1248,
+    1572,
+    1369,
+    1477,
+    1554,
+    1365,
+    1368,
+    1435,
+    1569,
+    1463,
+    1472,
+    899,
+    2096,
+    2203,
+    1426,
+    961,
+    1608,
+    1538,
+    1882,
+    1373,
+    546,
+    1484,
+    1207,
+    444,
+    1526,
+    1537
+   ],
+   "top_terms": [
+    {
+     "t": "gardiner",
+     "n": 17
+    },
+    {
+     "t": "now",
+     "n": 8
+    },
+    {
+     "t": "much",
+     "n": 7
+    },
+    {
+     "t": "before",
+     "n": 7
+    },
+    {
+     "t": "every",
+     "n": 6
+    },
+    {
+     "t": "after",
+     "n": 6
+    },
+    {
+     "t": "whole",
+     "n": 6
+    },
+    {
+     "t": "house",
+     "n": 5
+    },
+    {
+     "t": "who",
+     "n": 5
+    },
+    {
+     "t": "some",
+     "n": 5
+    },
+    {
+     "t": "see",
+     "n": 5
+    },
+    {
+     "t": "off",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 9
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 8
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 2
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1455,
+     "text": "Mrs. Gardiner was surprised and concerned: but as they were now\napproaching the scene of her former pleasures, every idea gave way to\nthe charm of recollection; and she was too much engaged in pointin"
+    },
+    {
+     "chunk": 1248,
+     "text": "Their journey was performed without much conversation, or any alarm; and\nwithin four hours of their leaving Hunsford they reached Mr. Gardiner’s\nhouse, where they were to remain a few days."
+    }
+   ]
+  },
+  {
+   "id": "c019",
+   "size": 27,
+   "members": [
+    1941,
+    264,
+    703,
+    1739,
+    53,
+    950,
+    47,
+    320,
+    2141,
+    328,
+    1222,
+    239,
+    881,
+    949,
+    619,
+    221,
+    1673,
+    114,
+    1907,
+    2119,
+    862,
+    217,
+    2166,
+    188,
+    1845,
+    1875,
+    235
+   ],
+   "top_terms": [
+    {
+     "t": "jane",
+     "n": 13
+    },
+    {
+     "t": "dear",
+     "n": 7
+    },
+    {
+     "t": "now",
+     "n": 5
+    },
+    {
+     "t": "good",
+     "n": 5
+    },
+    {
+     "t": "woman",
+     "n": 4
+    },
+    {
+     "t": "let",
+     "n": 4
+    },
+    {
+     "t": "fine",
+     "n": 4
+    },
+    {
+     "t": "make",
+     "n": 4
+    },
+    {
+     "t": "who",
+     "n": 4
+    },
+    {
+     "t": "say",
+     "n": 4
+    },
+    {
+     "t": "happy",
+     "n": 3
+    },
+    {
+     "t": "well",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 8
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 4
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 3
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 3
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1941,
+     "text": "“Jane, I congratulate you. You will be a very happy woman.”"
+    },
+    {
+     "chunk": 264,
+     "text": "“I shall be very fit to see Jane—which is all I want.”"
+    }
+   ]
+  },
+  {
+   "id": "c020",
+   "size": 24,
+   "members": [
+    1382,
+    1381,
+    1981,
+    1380,
+    1378,
+    1480,
+    1427,
+    297,
+    446,
+    1188,
+    1507,
+    965,
+    1423,
+    1425,
+    1894,
+    1101,
+    1360,
+    1420,
+    1651,
+    1375,
+    974,
+    962,
+    522,
+    720
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 21
+    },
+    {
+     "t": "room",
+     "n": 10
+    },
+    {
+     "t": "after",
+     "n": 7
+    },
+    {
+     "t": "every",
+     "n": 7
+    },
+    {
+     "t": "house",
+     "n": 7
+    },
+    {
+     "t": "seen",
+     "n": 5
+    },
+    {
+     "t": "pemberley",
+     "n": 5
+    },
+    {
+     "t": "some",
+     "n": 5
+    },
+    {
+     "t": "high",
+     "n": 5
+    },
+    {
+     "t": "pleasure",
+     "n": 5
+    },
+    {
+     "t": "less",
+     "n": 4
+    },
+    {
+     "t": "passed",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 10
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 3
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 2
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 2
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1382,
+     "text": "The housekeeper came; a respectable looking elderly woman, much less\nfine, and more civil, than she had any notion of finding her. They\nfollowed her into the dining-parlour. It was a large, well-propo"
+    },
+    {
+     "chunk": 1381,
+     "text": "They descended the hill, crossed the bridge, and drove to the door; and,\nwhile examining the nearer aspect of the house, all her apprehension of\nmeeting its owner returned. She dreaded lest the chambe"
+    }
+   ]
+  },
+  {
+   "id": "c021",
+   "size": 24,
+   "members": [
+    416,
+    455,
+    2200,
+    1857,
+    218,
+    1479,
+    1859,
+    459,
+    1075,
+    1134,
+    1880,
+    1925,
+    213,
+    362,
+    457,
+    932,
+    1439,
+    423,
+    870,
+    305,
+    1135,
+    449,
+    1834,
+    464
+   ],
+   "top_terms": [
+    {
+     "t": "bingley",
+     "n": 24
+    },
+    {
+     "t": "elizabeth",
+     "n": 21
+    },
+    {
+     "t": "darcy",
+     "n": 19
+    },
+    {
+     "t": "miss",
+     "n": 13
+    },
+    {
+     "t": "looked",
+     "n": 5
+    },
+    {
+     "t": "much",
+     "n": 5
+    },
+    {
+     "t": "however",
+     "n": 4
+    },
+    {
+     "t": "care",
+     "n": 4
+    },
+    {
+     "t": "book",
+     "n": 4
+    },
+    {
+     "t": "therefore",
+     "n": 3
+    },
+    {
+     "t": "pemberley",
+     "n": 3
+    },
+    {
+     "t": "civility",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 6
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 5
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 4
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 416,
+     "text": "Mr. Darcy smiled; but Elizabeth thought she could perceive that he was\nrather offended, and therefore checked her laugh. Miss Bingley warmly\nresented the indignity he had received, in an expostulation"
+    },
+    {
+     "chunk": 455,
+     "text": "Miss Bingley made no answer, and soon afterwards got up and walked about\nthe room. Her figure was elegant, and she walked well; but Darcy, at\nwhom it was all aimed, was still inflexibly studious. In t"
+    }
+   ]
+  },
+  {
+   "id": "c022",
+   "size": 24,
+   "members": [
+    41,
+    69,
+    105,
+    116,
+    154,
+    433,
+    558,
+    657,
+    779,
+    809,
+    893,
+    976,
+    1039,
+    1105,
+    1198,
+    1220,
+    1339,
+    1466,
+    1621,
+    1663,
+    1984,
+    185,
+    10,
+    29
+   ],
+   "top_terms": [
+    {
+     "t": "george",
+     "n": 24
+    },
+    {
+     "t": "copyright",
+     "n": 22
+    },
+    {
+     "t": "allen",
+     "n": 22
+    },
+    {
+     "t": "saintsbury",
+     "n": 2
+    },
+    {
+     "t": "entreaties",
+     "n": 1
+    },
+    {
+     "t": "several",
+     "n": 1
+    },
+    {
+     "t": "jane",
+     "n": 1
+    },
+    {
+     "t": "austen",
+     "n": 1
+    },
+    {
+     "t": "preface",
+     "n": 1
+    },
+    {
+     "t": "illustrations",
+     "n": 1
+    },
+    {
+     "t": "hugh",
+     "n": 1
+    },
+    {
+     "t": "thomson",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 5
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 2
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 2
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 41,
+     "text": "[Copyright 1894 by George Allen.]"
+    },
+    {
+     "chunk": 69,
+     "text": "[Copyright 1894 by George Allen.]"
+    }
+   ]
+  },
+  {
+   "id": "c023",
+   "size": 24,
+   "members": [
+    2066,
+    699,
+    1524,
+    1041,
+    581,
+    2067,
+    1177,
+    110,
+    1072,
+    419,
+    408,
+    641,
+    1067,
+    2081,
+    151,
+    1515,
+    1100,
+    1137,
+    666,
+    2186,
+    2183,
+    1402,
+    2180,
+    655
+   ],
+   "top_terms": [
+    {
+     "t": "darcy",
+     "n": 24
+    },
+    {
+     "t": "say",
+     "n": 7
+    },
+    {
+     "t": "much",
+     "n": 6
+    },
+    {
+     "t": "cannot",
+     "n": 5
+    },
+    {
+     "t": "soon",
+     "n": 5
+    },
+    {
+     "t": "better",
+     "n": 5
+    },
+    {
+     "t": "miss",
+     "n": 4
+    },
+    {
+     "t": "eliza",
+     "n": 4
+    },
+    {
+     "t": "yours",
+     "n": 3
+    },
+    {
+     "t": "sister",
+     "n": 3
+    },
+    {
+     "t": "ever",
+     "n": 3
+    },
+    {
+     "t": "known",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 5
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 4
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 3
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 3
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2066,
+     "text": "“Mr. Darcy, I am a very selfish creature, and for the sake of giving\nrelief to my own feelings care not how much I may be wounding yours. I\ncan no longer help thanking you for your unexampled kindness"
+    },
+    {
+     "chunk": 699,
+     "text": "“What is Mr. Darcy to me, pray, that I should be afraid of him? I am\nsure we owe him no such particular civility as to be obliged to say\nnothing he may not like to hear.”"
+    }
+   ]
+  },
+  {
+   "id": "c024",
+   "size": 23,
+   "members": [
+    761,
+    730,
+    824,
+    739,
+    721,
+    1092,
+    756,
+    725,
+    750,
+    819,
+    1619,
+    2053,
+    728,
+    1099,
+    1109,
+    2061,
+    1091,
+    1959,
+    495,
+    1096,
+    560,
+    984,
+    762
+   ],
+   "top_terms": [
+    {
+     "t": "collins",
+     "n": 25
+    },
+    {
+     "t": "elizabeth",
+     "n": 8
+    },
+    {
+     "t": "never",
+     "n": 7
+    },
+    {
+     "t": "family",
+     "n": 6
+    },
+    {
+     "t": "cried",
+     "n": 5
+    },
+    {
+     "t": "charlotte",
+     "n": 5
+    },
+    {
+     "t": "time",
+     "n": 5
+    },
+    {
+     "t": "near",
+     "n": 5
+    },
+    {
+     "t": "possibility",
+     "n": 4
+    },
+    {
+     "t": "much",
+     "n": 4
+    },
+    {
+     "t": "think",
+     "n": 4
+    },
+    {
+     "t": "who",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 11
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 5
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 3
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 1
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 761,
+     "text": "Mr. Collins, meanwhile, was meditating in solitude on what had passed.\nHe thought too well of himself to comprehend on what motive his cousin\ncould refuse him; and though his pride was hurt, he suffer"
+    },
+    {
+     "chunk": 730,
+     "text": "“Really, Mr. Collins,” cried Elizabeth, with some warmth, “you puzzle me\nexceedingly. If what I have hitherto said can appear to you in the form\nof encouragement, I know not how to express my refusal "
+    }
+   ]
+  },
+  {
+   "id": "c025",
+   "size": 23,
+   "members": [
+    1326,
+    1363,
+    1579,
+    1592,
+    1502,
+    487,
+    374,
+    237,
+    1335,
+    1504,
+    1337,
+    1528,
+    1549,
+    1328,
+    1725,
+    1613,
+    536,
+    534,
+    1596,
+    1534,
+    269,
+    244,
+    1708
+   ],
+   "top_terms": [
+    {
+     "t": "lydia",
+     "n": 28
+    },
+    {
+     "t": "colonel",
+     "n": 21
+    },
+    {
+     "t": "forster",
+     "n": 20
+    },
+    {
+     "t": "much",
+     "n": 10
+    },
+    {
+     "t": "know",
+     "n": 10
+    },
+    {
+     "t": "cannot",
+     "n": 10
+    },
+    {
+     "t": "never",
+     "n": 9
+    },
+    {
+     "t": "officers",
+     "n": 8
+    },
+    {
+     "t": "mother",
+     "n": 7
+    },
+    {
+     "t": "poor",
+     "n": 7
+    },
+    {
+     "t": "make",
+     "n": 7
+    },
+    {
+     "t": "regiment",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 7
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 5
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 4
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 4
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1326,
+     "text": "But the gloom of Lydia’s prospect was shortly cleared away; for she\nreceived an invitation from Mrs. Forster, the wife of the colonel of the\nregiment, to accompany her to Brighton. This invaluable fri"
+    },
+    {
+     "chunk": 1363,
+     "text": "When Lydia went away she promised to write very often and very minutely\nto her mother and Kitty; but her letters were always long expected, and\nalways very short. Those to her mother contained little "
+    }
+   ]
+  },
+  {
+   "id": "c026",
+   "size": 23,
+   "members": [
+    1846,
+    1249,
+    1938,
+    1827,
+    1930,
+    274,
+    1206,
+    1553,
+    1372,
+    1861,
+    2112,
+    964,
+    1873,
+    1838,
+    1336,
+    1158,
+    1366,
+    1468,
+    255,
+    193,
+    1604,
+    175,
+    192
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 22
+    },
+    {
+     "t": "jane",
+     "n": 16
+    },
+    {
+     "t": "sister",
+     "n": 10
+    },
+    {
+     "t": "felt",
+     "n": 7
+    },
+    {
+     "t": "well",
+     "n": 6
+    },
+    {
+     "t": "happiness",
+     "n": 4
+    },
+    {
+     "t": "sisters",
+     "n": 4
+    },
+    {
+     "t": "family",
+     "n": 4
+    },
+    {
+     "t": "before",
+     "n": 4
+    },
+    {
+     "t": "long",
+     "n": 4
+    },
+    {
+     "t": "door",
+     "n": 3
+    },
+    {
+     "t": "looked",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 5
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 4
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 3
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1846,
+     "text": "She sat intently at work, striving to be composed, and without daring to\nlift up her eyes, till anxious curiosity carried them to the face of her\nsister as the servant was approaching the door. Jane l"
+    },
+    {
+     "chunk": 1249,
+     "text": "Jane looked well, and Elizabeth had little opportunity of studying her\nspirits, amidst the various engagements which the kindness of her aunt\nhad reserved for them. But Jane was to go home with her, a"
+    }
+   ]
+  },
+  {
+   "id": "c027",
+   "size": 21,
+   "members": [
+    323,
+    366,
+    301,
+    1854,
+    681,
+    287,
+    284,
+    240,
+    351,
+    319,
+    471,
+    288,
+    438,
+    340,
+    55,
+    72,
+    2134,
+    316,
+    89,
+    299,
+    332
+   ],
+   "top_terms": [
+    {
+     "t": "bingley",
+     "n": 21
+    },
+    {
+     "t": "miss",
+     "n": 12
+    },
+    {
+     "t": "sure",
+     "n": 5
+    },
+    {
+     "t": "sister",
+     "n": 4
+    },
+    {
+     "t": "darcy",
+     "n": 4
+    },
+    {
+     "t": "young",
+     "n": 3
+    },
+    {
+     "t": "bennet",
+     "n": 3
+    },
+    {
+     "t": "pleasure",
+     "n": 2
+    },
+    {
+     "t": "hope",
+     "n": 2
+    },
+    {
+     "t": "well",
+     "n": 2
+    },
+    {
+     "t": "since",
+     "n": 2
+    },
+    {
+     "t": "away",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 13
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 3
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 2
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 1
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 323,
+     "text": "“Nor I, I am sure,” said Miss Bingley."
+    },
+    {
+     "chunk": 366,
+     "text": "“She seems a very pleasant young woman,” said Bingley."
+    }
+   ]
+  },
+  {
+   "id": "c028",
+   "size": 21,
+   "members": [
+    461,
+    478,
+    406,
+    296,
+    398,
+    112,
+    1953,
+    1865,
+    854,
+    157,
+    279,
+    404,
+    1132,
+    294,
+    2108,
+    2124,
+    331,
+    782,
+    793,
+    400,
+    439
+   ],
+   "top_terms": [
+    {
+     "t": "bingley",
+     "n": 21
+    },
+    {
+     "t": "miss",
+     "n": 11
+    },
+    {
+     "t": "cried",
+     "n": 8
+    },
+    {
+     "t": "hurst",
+     "n": 6
+    },
+    {
+     "t": "never",
+     "n": 4
+    },
+    {
+     "t": "heard",
+     "n": 4
+    },
+    {
+     "t": "elizabeth",
+     "n": 4
+    },
+    {
+     "t": "much",
+     "n": 4
+    },
+    {
+     "t": "out",
+     "n": 4
+    },
+    {
+     "t": "see",
+     "n": 4
+    },
+    {
+     "t": "speech",
+     "n": 3
+    },
+    {
+     "t": "conversation",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 8
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 3
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 2
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 461,
+     "text": "“Oh, shocking!” cried Miss Bingley. “I never heard anything so\nabominable. How shall we punish him for such a speech?”"
+    },
+    {
+     "chunk": 478,
+     "text": "“Do let us have a little music,” cried Miss Bingley, tired of a\nconversation in which she had no share. “Louisa, you will not mind my\nwaking Mr. Hurst.”"
+    }
+   ]
+  },
+  {
+   "id": "c029",
+   "size": 21,
+   "members": [
+    589,
+    604,
+    1147,
+    1120,
+    473,
+    1288,
+    588,
+    583,
+    688,
+    1070,
+    680,
+    401,
+    1057,
+    413,
+    593,
+    359,
+    295,
+    776,
+    677,
+    165,
+    2155
+   ],
+   "top_terms": [
+    {
+     "t": "darcy",
+     "n": 24
+    },
+    {
+     "t": "nothing",
+     "n": 7
+    },
+    {
+     "t": "friend",
+     "n": 5
+    },
+    {
+     "t": "often",
+     "n": 5
+    },
+    {
+     "t": "never",
+     "n": 4
+    },
+    {
+     "t": "man",
+     "n": 4
+    },
+    {
+     "t": "perhaps",
+     "n": 4
+    },
+    {
+     "t": "much",
+     "n": 4
+    },
+    {
+     "t": "temper",
+     "n": 4
+    },
+    {
+     "t": "cannot",
+     "n": 4
+    },
+    {
+     "t": "myself",
+     "n": 4
+    },
+    {
+     "t": "good",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 8
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 4
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 2
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 2
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 589,
+     "text": "“I had not thought Mr. Darcy so bad as this—though I have never liked\nhim, I had not thought so very ill of him—I had supposed him to be\ndespising his fellow-creatures in general, but did not suspect "
+    },
+    {
+     "chunk": 604,
+     "text": "“Probably not; but Mr. Darcy can please where he chooses. He does not\nwant abilities. He can be a conversible companion if he thinks it worth\nhis while. Among those who are at all his equals in conseq"
+    }
+   ]
+  },
+  {
+   "id": "c030",
+   "size": 21,
+   "members": [
+    956,
+    983,
+    474,
+    462,
+    1667,
+    2074,
+    1282,
+    2177,
+    1818,
+    466,
+    796,
+    300,
+    947,
+    653,
+    568,
+    917,
+    248,
+    864,
+    128,
+    1262,
+    1788
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 21
+    },
+    {
+     "t": "think",
+     "n": 6
+    },
+    {
+     "t": "cried",
+     "n": 5
+    },
+    {
+     "t": "replied",
+     "n": 5
+    },
+    {
+     "t": "well",
+     "n": 4
+    },
+    {
+     "t": "really",
+     "n": 3
+    },
+    {
+     "t": "laugh",
+     "n": 3
+    },
+    {
+     "t": "safe",
+     "n": 3
+    },
+    {
+     "t": "know",
+     "n": 3
+    },
+    {
+     "t": "done",
+     "n": 3
+    },
+    {
+     "t": "hope",
+     "n": 3
+    },
+    {
+     "t": "good",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 4
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 3
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 2
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 956,
+     "text": "“Well,” cried Elizabeth, “have it as you choose. He shall be\nmercenary, and she shall be foolish.”"
+    },
+    {
+     "chunk": 983,
+     "text": "“I like her appearance,” said Elizabeth, struck with other ideas. “She\nlooks sickly and cross. Yes, she will do for him very well. She will\nmake him a very proper wife.”"
+    }
+   ]
+  },
+  {
+   "id": "c031",
+   "size": 20,
+   "members": [
+    553,
+    31,
+    142,
+    885,
+    632,
+    853,
+    9,
+    30,
+    13,
+    252,
+    8,
+    5,
+    2,
+    3,
+    68,
+    224,
+    1659,
+    70,
+    99,
+    501
+   ],
+   "top_terms": [
+    {
+     "t": "xvi",
+     "n": 2
+    },
+    {
+     "t": "xxv",
+     "n": 2
+    },
+    {
+     "t": "xviii",
+     "n": 2
+    },
+    {
+     "t": "xxiv",
+     "n": 2
+    },
+    {
+     "t": "pride",
+     "n": 2
+    },
+    {
+     "t": "prejudice",
+     "n": 2
+    },
+    {
+     "t": "list",
+     "n": 2
+    },
+    {
+     "t": "illustrations",
+     "n": 2
+    },
+    {
+     "t": "preface",
+     "n": 2
+    },
+    {
+     "t": "iii",
+     "n": 2
+    },
+    {
+     "t": "vii",
+     "n": 2
+    },
+    {
+     "t": "bennet",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "PRIDE. and PREJUDICE",
+     "n": 8
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 4
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 2
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 553,
+     "text": "CHAPTER XVI."
+    },
+    {
+     "chunk": 31,
+     "text": "Chapter I."
+    }
+   ]
+  },
+  {
+   "id": "c032",
+   "size": 20,
+   "members": [
+    1012,
+    1634,
+    1795,
+    1889,
+    1584,
+    1401,
+    1044,
+    1891,
+    1647,
+    1016,
+    1146,
+    2092,
+    1784,
+    1322,
+    1020,
+    1811,
+    1517,
+    1550,
+    1516,
+    1014
+   ],
+   "top_terms": [
+    {
+     "t": "governess",
+     "n": 4
+    },
+    {
+     "t": "brighton",
+     "n": 4
+    },
+    {
+     "t": "left",
+     "n": 3
+    },
+    {
+     "t": "pemberley",
+     "n": 3
+    },
+    {
+     "t": "suppose",
+     "n": 2
+    },
+    {
+     "t": "london",
+     "n": 2
+    },
+    {
+     "t": "sister",
+     "n": 2
+    },
+    {
+     "t": "before",
+     "n": 2
+    },
+    {
+     "t": "town",
+     "n": 2
+    },
+    {
+     "t": "three",
+     "n": 2
+    },
+    {
+     "t": "never",
+     "n": 2
+    },
+    {
+     "t": "quite",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 5
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 5
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 4
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 2
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1012,
+     "text": "“Has your governess left you?”"
+    },
+    {
+     "chunk": 1634,
+     "text": "“Do you suppose them to be in London?”"
+    }
+   ]
+  },
+  {
+   "id": "c033",
+   "size": 20,
+   "members": [
+    2029,
+    2006,
+    2173,
+    1054,
+    610,
+    992,
+    971,
+    2176,
+    2027,
+    986,
+    1184,
+    526,
+    1986,
+    2174,
+    528,
+    1971,
+    2073,
+    2049,
+    982,
+    1065
+   ],
+   "top_terms": [
+    {
+     "t": "lady",
+     "n": 23
+    },
+    {
+     "t": "catherine",
+     "n": 20
+    },
+    {
+     "t": "know",
+     "n": 3
+    },
+    {
+     "t": "hope",
+     "n": 3
+    },
+    {
+     "t": "tell",
+     "n": 3
+    },
+    {
+     "t": "indeed",
+     "n": 3
+    },
+    {
+     "t": "charlotte",
+     "n": 3
+    },
+    {
+     "t": "ever",
+     "n": 3
+    },
+    {
+     "t": "ladyship",
+     "n": 3
+    },
+    {
+     "t": "little",
+     "n": 3
+    },
+    {
+     "t": "myself",
+     "n": 3
+    },
+    {
+     "t": "nothing",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 7
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 5
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 3
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 2
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2029,
+     "text": "“Lady Catherine, I have nothing further to say. You know my sentiments.”"
+    },
+    {
+     "chunk": 2006,
+     "text": "Lady Catherine hesitated for a moment, and then replied,—"
+    }
+   ]
+  },
+  {
+   "id": "c034",
+   "size": 19,
+   "members": [
+    1783,
+    1167,
+    1669,
+    1654,
+    246,
+    1781,
+    1890,
+    1976,
+    751,
+    325,
+    1589,
+    1900,
+    1744,
+    1118,
+    1090,
+    1777,
+    199,
+    1384,
+    147
+   ],
+   "top_terms": [
+    {
+     "t": "yes",
+     "n": 7
+    },
+    {
+     "t": "replied",
+     "n": 4
+    },
+    {
+     "t": "elizabeth",
+     "n": 3
+    },
+    {
+     "t": "like",
+     "n": 3
+    },
+    {
+     "t": "letter",
+     "n": 2
+    },
+    {
+     "t": "better",
+     "n": 2
+    },
+    {
+     "t": "certainly",
+     "n": 2
+    },
+    {
+     "t": "deny",
+     "n": 1
+    },
+    {
+     "t": "done",
+     "n": 1
+    },
+    {
+     "t": "repeated",
+     "n": 1
+    },
+    {
+     "t": "answered",
+     "n": 1
+    },
+    {
+     "t": "express",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 4
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 3
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 3
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 2
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1783,
+     "text": "“Yes, she did.”"
+    },
+    {
+     "chunk": 1167,
+     "text": "“Can you deny that you have done it?” she repeated."
+    }
+   ]
+  },
+  {
+   "id": "c035",
+   "size": 19,
+   "members": [
+    857,
+    1820,
+    838,
+    1646,
+    1918,
+    483,
+    2127,
+    1895,
+    1809,
+    256,
+    543,
+    1823,
+    497,
+    1305,
+    34,
+    485,
+    801,
+    1098,
+    1835
+   ],
+   "top_terms": [
+    {
+     "t": "jane",
+     "n": 16
+    },
+    {
+     "t": "bennet",
+     "n": 16
+    },
+    {
+     "t": "elizabeth",
+     "n": 12
+    },
+    {
+     "t": "netherfield",
+     "n": 11
+    },
+    {
+     "t": "day",
+     "n": 8
+    },
+    {
+     "t": "coming",
+     "n": 6
+    },
+    {
+     "t": "soon",
+     "n": 6
+    },
+    {
+     "t": "after",
+     "n": 5
+    },
+    {
+     "t": "miss",
+     "n": 5
+    },
+    {
+     "t": "took",
+     "n": 4
+    },
+    {
+     "t": "well",
+     "n": 4
+    },
+    {
+     "t": "before",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 5
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 4
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 1
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 857,
+     "text": "A day or two passed before Jane had courage to speak of her feelings to\nElizabeth; but at last, on Mrs. Bennet’s leaving them together, after a\nlonger irritation than usual about Netherfield and its m"
+    },
+    {
+     "chunk": 1820,
+     "text": "But the spiritless condition which this event threw her into was shortly\nrelieved, and her mind opened again to the agitation of hope, by an\narticle of news which then began to be in circulation. The "
+    }
+   ]
+  },
+  {
+   "id": "c036",
+   "size": 19,
+   "members": [
+    883,
+    1474,
+    906,
+    708,
+    942,
+    559,
+    1229,
+    578,
+    1747,
+    556,
+    777,
+    1354,
+    1298,
+    1343,
+    1396,
+    1469,
+    1325,
+    1301,
+    1492
+   ],
+   "top_terms": [
+    {
+     "t": "wickham",
+     "n": 17
+    },
+    {
+     "t": "darcy",
+     "n": 12
+    },
+    {
+     "t": "before",
+     "n": 8
+    },
+    {
+     "t": "elizabeth",
+     "n": 7
+    },
+    {
+     "t": "now",
+     "n": 6
+    },
+    {
+     "t": "general",
+     "n": 6
+    },
+    {
+     "t": "much",
+     "n": 5
+    },
+    {
+     "t": "felt",
+     "n": 5
+    },
+    {
+     "t": "who",
+     "n": 5
+    },
+    {
+     "t": "longbourn",
+     "n": 4
+    },
+    {
+     "t": "saw",
+     "n": 4
+    },
+    {
+     "t": "though",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 3
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 3
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 3
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 883,
+     "text": "Mr. Wickham’s society was of material service in dispelling the gloom\nwhich the late perverse occurrences had thrown on many of the Longbourn\nfamily. They saw him often, and to his other recommendatio"
+    },
+    {
+     "chunk": 1474,
+     "text": "With respect to Wickham, the travellers soon found that he was not held\nthere in much estimation; for though the chief of his concerns with the\nson of his patron were imperfectly understood, it was ye"
+    }
+   ]
+  },
+  {
+   "id": "c037",
+   "size": 19,
+   "members": [
+    798,
+    1179,
+    1944,
+    634,
+    91,
+    663,
+    208,
+    129,
+    509,
+    584,
+    1302,
+    1989,
+    660,
+    2078,
+    659,
+    746,
+    1802,
+    1145,
+    1314
+   ],
+   "top_terms": [
+    {
+     "t": "cannot",
+     "n": 5
+    },
+    {
+     "t": "think",
+     "n": 4
+    },
+    {
+     "t": "much",
+     "n": 4
+    },
+    {
+     "t": "sir",
+     "n": 4
+    },
+    {
+     "t": "make",
+     "n": 4
+    },
+    {
+     "t": "made",
+     "n": 3
+    },
+    {
+     "t": "way",
+     "n": 3
+    },
+    {
+     "t": "business",
+     "n": 3
+    },
+    {
+     "t": "now",
+     "n": 3
+    },
+    {
+     "t": "sorry",
+     "n": 3
+    },
+    {
+     "t": "case",
+     "n": 2
+    },
+    {
+     "t": "imagine",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 5
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 3
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 2
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 2
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 798,
+     "text": "“I did not think you would; and that being the case, I cannot consider\nyour situation with much compassion.”"
+    },
+    {
+     "chunk": 1179,
+     "text": "“You could not have made me the offer of your hand in any possible way\nthat would have tempted me to accept it.”"
+    }
+   ]
+  },
+  {
+   "id": "c038",
+   "size": 18,
+   "members": [
+    1497,
+    548,
+    1671,
+    678,
+    1852,
+    1430,
+    1935,
+    2097,
+    1166,
+    90,
+    941,
+    1866,
+    2082,
+    429,
+    1459,
+    1510,
+    1045,
+    1180
+   ],
+   "top_terms": [
+    {
+     "t": "bingley",
+     "n": 7
+    },
+    {
+     "t": "miss",
+     "n": 5
+    },
+    {
+     "t": "went",
+     "n": 4
+    },
+    {
+     "t": "looked",
+     "n": 4
+    },
+    {
+     "t": "away",
+     "n": 3
+    },
+    {
+     "t": "saw",
+     "n": 3
+    },
+    {
+     "t": "little",
+     "n": 3
+    },
+    {
+     "t": "having",
+     "n": 2
+    },
+    {
+     "t": "say",
+     "n": 2
+    },
+    {
+     "t": "pain",
+     "n": 2
+    },
+    {
+     "t": "another",
+     "n": 2
+    },
+    {
+     "t": "without",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 3
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 2
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 2
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 2
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1497,
+     "text": "He then went away, and Miss Bingley was left to all the satisfaction of\nhaving forced him to say what gave no one any pain but herself."
+    },
+    {
+     "chunk": 548,
+     "text": "In another minute Mr. Bingley, but without seeming to have noticed what\npassed, took leave and rode on with his friend."
+    }
+   ]
+  },
+  {
+   "id": "c039",
+   "size": 18,
+   "members": [
+    1657,
+    1928,
+    1957,
+    1652,
+    1915,
+    1289,
+    1942,
+    1555,
+    765,
+    1594,
+    1767,
+    437,
+    1260,
+    1956,
+    833,
+    1600,
+    302,
+    1932
+   ],
+   "top_terms": [
+    {
+     "t": "jane",
+     "n": 15
+    },
+    {
+     "t": "elizabeth",
+     "n": 14
+    },
+    {
+     "t": "who",
+     "n": 4
+    },
+    {
+     "t": "came",
+     "n": 3
+    },
+    {
+     "t": "mother",
+     "n": 3
+    },
+    {
+     "t": "lydia",
+     "n": 3
+    },
+    {
+     "t": "instantly",
+     "n": 2
+    },
+    {
+     "t": "world",
+     "n": 2
+    },
+    {
+     "t": "heart",
+     "n": 2
+    },
+    {
+     "t": "running",
+     "n": 2
+    },
+    {
+     "t": "cried",
+     "n": 2
+    },
+    {
+     "t": "out",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 6
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 4
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 2
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1657,
+     "text": "Elizabeth impatiently caught it from his hand. Jane now came up."
+    },
+    {
+     "chunk": 1928,
+     "text": "Jane could have no reserves from Elizabeth, where confidence would give\npleasure; and, instantly embracing her, acknowledged, with the liveliest\nemotion, that she was the happiest creature in the worl"
+    }
+   ]
+  },
+  {
+   "id": "c040",
+   "size": 18,
+   "members": [
+    1086,
+    575,
+    570,
+    1081,
+    1821,
+    343,
+    156,
+    137,
+    344,
+    43,
+    451,
+    590,
+    2044,
+    2165,
+    1858,
+    403,
+    958,
+    135
+   ],
+   "top_terms": [
+    {
+     "t": "netherfield",
+     "n": 15
+    },
+    {
+     "t": "bingley",
+     "n": 9
+    },
+    {
+     "t": "much",
+     "n": 7
+    },
+    {
+     "t": "know",
+     "n": 7
+    },
+    {
+     "t": "who",
+     "n": 7
+    },
+    {
+     "t": "house",
+     "n": 5
+    },
+    {
+     "t": "well",
+     "n": 5
+    },
+    {
+     "t": "neighbourhood",
+     "n": 4
+    },
+    {
+     "t": "place",
+     "n": 4
+    },
+    {
+     "t": "nothing",
+     "n": 4
+    },
+    {
+     "t": "see",
+     "n": 4
+    },
+    {
+     "t": "before",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 4
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 3
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 3
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 2
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1086,
+     "text": "“If he means to be but little at Netherfield, it would be better for the\nneighbourhood that he should give up the place entirely, for then we\nmight possibly get a settled family there. But, perhaps, M"
+    },
+    {
+     "chunk": 575,
+     "text": "“I do not at all know; but I heard nothing of his going away when I\nwas at Netherfield. I hope your plans in favour of the ——shire will\nnot be affected by his being in the neighbourhood.”"
+    }
+   ]
+  },
+  {
+   "id": "c041",
+   "size": 18,
+   "members": [
+    652,
+    1292,
+    1668,
+    1805,
+    1698,
+    683,
+    595,
+    1814,
+    571,
+    1759,
+    1371,
+    2197,
+    1808,
+    1261,
+    1350,
+    565,
+    2158,
+    1386
+   ],
+   "top_terms": [
+    {
+     "t": "wickham",
+     "n": 22
+    },
+    {
+     "t": "about",
+     "n": 6
+    },
+    {
+     "t": "sister",
+     "n": 4
+    },
+    {
+     "t": "dear",
+     "n": 4
+    },
+    {
+     "t": "know",
+     "n": 4
+    },
+    {
+     "t": "think",
+     "n": 4
+    },
+    {
+     "t": "like",
+     "n": 4
+    },
+    {
+     "t": "place",
+     "n": 4
+    },
+    {
+     "t": "gone",
+     "n": 4
+    },
+    {
+     "t": "happy",
+     "n": 3
+    },
+    {
+     "t": "hope",
+     "n": 3
+    },
+    {
+     "t": "added",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 5
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 3
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 3
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 3
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 652,
+     "text": "“Mr. Wickham is blessed with such happy manners as may insure his\nmaking friends; whether he may be equally capable of retaining them,\nis less certain.”"
+    },
+    {
+     "chunk": 1292,
+     "text": "“Poor Wickham! there is such an expression of goodness in his\ncountenance! such an openness and gentleness in his manner.”"
+    }
+   ]
+  },
+  {
+   "id": "c042",
+   "size": 18,
+   "members": [
+    1664,
+    2120,
+    1689,
+    1557,
+    901,
+    507,
+    797,
+    860,
+    1680,
+    1760,
+    1308,
+    1264,
+    1588,
+    178,
+    1518,
+    866,
+    1686,
+    293
+   ],
+   "top_terms": [
+    {
+     "t": "jane",
+     "n": 16
+    },
+    {
+     "t": "well",
+     "n": 8
+    },
+    {
+     "t": "hope",
+     "n": 7
+    },
+    {
+     "t": "cried",
+     "n": 4
+    },
+    {
+     "t": "way",
+     "n": 4
+    },
+    {
+     "t": "though",
+     "n": 4
+    },
+    {
+     "t": "know",
+     "n": 4
+    },
+    {
+     "t": "nothing",
+     "n": 4
+    },
+    {
+     "t": "happiness",
+     "n": 4
+    },
+    {
+     "t": "always",
+     "n": 3
+    },
+    {
+     "t": "married",
+     "n": 3
+    },
+    {
+     "t": "either",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 5
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 3
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 1
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1664,
+     "text": "“Then it is as I always hoped,” cried Jane: “they are married!”"
+    },
+    {
+     "chunk": 2120,
+     "text": "“There can be no doubt of that. It is settled between us already that we\nare to be the happiest couple in the world. But are you pleased, Jane?\nShall you like to have such a brother?”"
+    }
+   ]
+  },
+  {
+   "id": "c043",
+   "size": 17,
+   "members": [
+    2005,
+    2003,
+    676,
+    2012,
+    1883,
+    572,
+    1405,
+    1840,
+    411,
+    1997,
+    799,
+    916,
+    184,
+    111,
+    1745,
+    458,
+    785
+   ],
+   "top_terms": [
+    {
+     "t": "know",
+     "n": 6
+    },
+    {
+     "t": "winter",
+     "n": 3
+    },
+    {
+     "t": "suppose",
+     "n": 2
+    },
+    {
+     "t": "make",
+     "n": 2
+    },
+    {
+     "t": "ever",
+     "n": 2
+    },
+    {
+     "t": "take",
+     "n": 2
+    },
+    {
+     "t": "never",
+     "n": 2
+    },
+    {
+     "t": "another",
+     "n": 2
+    },
+    {
+     "t": "ladyship",
+     "n": 2
+    },
+    {
+     "t": "acquaintance",
+     "n": 2
+    },
+    {
+     "t": "ask",
+     "n": 2
+    },
+    {
+     "t": "answer",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 4
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 2
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 2
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2005,
+     "text": "“Only this,—that if he is so, you can have no reason to suppose he will\nmake an offer to me.”"
+    },
+    {
+     "chunk": 2003,
+     "text": "“But you are not entitled to know mine; nor will such behaviour as\nthis ever induce me to be explicit.”"
+    }
+   ]
+  },
+  {
+   "id": "c044",
+   "size": 17,
+   "members": [
+    1742,
+    1819,
+    1320,
+    1810,
+    1681,
+    1542,
+    2172,
+    1548,
+    96,
+    1762,
+    1275,
+    1330,
+    1259,
+    1331,
+    1641,
+    1341,
+    1687
+   ],
+   "top_terms": [
+    {
+     "t": "lydia",
+     "n": 17
+    },
+    {
+     "t": "never",
+     "n": 4
+    },
+    {
+     "t": "like",
+     "n": 3
+    },
+    {
+     "t": "gone",
+     "n": 3
+    },
+    {
+     "t": "certainly",
+     "n": 3
+    },
+    {
+     "t": "news",
+     "n": 3
+    },
+    {
+     "t": "dear",
+     "n": 2
+    },
+    {
+     "t": "going",
+     "n": 2
+    },
+    {
+     "t": "off",
+     "n": 2
+    },
+    {
+     "t": "because",
+     "n": 2
+    },
+    {
+     "t": "sure",
+     "n": 2
+    },
+    {
+     "t": "marry",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 5
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 4
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 2
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 2
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1742,
+     "text": "“Very true; and if I had my will we should. But, my dear Lydia, I don’t\nat all like your going such a way off. Must it be so?”"
+    },
+    {
+     "chunk": 1819,
+     "text": "“It is no such thing. Lydia does not leave me because she is married;\nbut only because her husband’s regiment happens to be so far off. If\nthat had been nearer, she would not have gone so soon.”"
+    }
+   ]
+  },
+  {
+   "id": "c045",
+   "size": 16,
+   "members": [
+    1695,
+    1709,
+    1357,
+    1706,
+    1732,
+    1728,
+    1327,
+    1710,
+    1571,
+    888,
+    760,
+    1702,
+    1625,
+    23,
+    1252,
+    1566
+   ],
+   "top_terms": [
+    {
+     "t": "bennet",
+     "n": 18
+    },
+    {
+     "t": "lydia",
+     "n": 17
+    },
+    {
+     "t": "elizabeth",
+     "n": 7
+    },
+    {
+     "t": "jane",
+     "n": 7
+    },
+    {
+     "t": "sister",
+     "n": 7
+    },
+    {
+     "t": "kitty",
+     "n": 6
+    },
+    {
+     "t": "miss",
+     "n": 6
+    },
+    {
+     "t": "much",
+     "n": 6
+    },
+    {
+     "t": "good",
+     "n": 5
+    },
+    {
+     "t": "married",
+     "n": 5
+    },
+    {
+     "t": "out",
+     "n": 5
+    },
+    {
+     "t": "took",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 8
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 2
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 1
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1695,
+     "text": "Elizabeth took the letter from his writing-table, and they went upstairs\ntogether. Mary and Kitty were both with Mrs. Bennet: one communication\nwould, therefore, do for all. After a slight preparation"
+    },
+    {
+     "chunk": 1709,
+     "text": "The good news quickly spread through the house; and with proportionate\nspeed through the neighbourhood. It was borne in the latter with decent\nphilosophy. To be sure, it would have been more for the a"
+    }
+   ]
+  },
+  {
+   "id": "c046",
+   "size": 16,
+   "members": [
+    342,
+    1519,
+    37,
+    35,
+    573,
+    1513,
+    204,
+    791,
+    390,
+    723,
+    1920,
+    1816,
+    88,
+    1643,
+    1639,
+    749
+   ],
+   "top_terms": [
+    {
+     "t": "bennet",
+     "n": 6
+    },
+    {
+     "t": "darcy",
+     "n": 3
+    },
+    {
+     "t": "shook",
+     "n": 3
+    },
+    {
+     "t": "head",
+     "n": 3
+    },
+    {
+     "t": "silent",
+     "n": 2
+    },
+    {
+     "t": "made",
+     "n": 2
+    },
+    {
+     "t": "elizabeth",
+     "n": 2
+    },
+    {
+     "t": "who",
+     "n": 2
+    },
+    {
+     "t": "miss",
+     "n": 2
+    },
+    {
+     "t": "profuse",
+     "n": 1
+    },
+    {
+     "t": "acknowledgments",
+     "n": 1
+    },
+    {
+     "t": "acquiescence",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 3
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 3
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 2
+    },
+    {
+     "ch": "PRIDE. and PREJUDICE",
+     "n": 2
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 342,
+     "text": "Mrs. Bennet was profuse in her acknowledgments."
+    },
+    {
+     "chunk": 1519,
+     "text": "Darcy shook his head in silent acquiescence."
+    }
+   ]
+  },
+  {
+   "id": "c047",
+   "size": 16,
+   "members": [
+    1391,
+    598,
+    183,
+    379,
+    1140,
+    1398,
+    155,
+    182,
+    1349,
+    1191,
+    393,
+    700,
+    1411,
+    1130,
+    527,
+    1496
+   ],
+   "top_terms": [
+    {
+     "t": "darcy",
+     "n": 15
+    },
+    {
+     "t": "miss",
+     "n": 3
+    },
+    {
+     "t": "young",
+     "n": 2
+    },
+    {
+     "t": "sort",
+     "n": 2
+    },
+    {
+     "t": "give",
+     "n": 2
+    },
+    {
+     "t": "little",
+     "n": 2
+    },
+    {
+     "t": "yes",
+     "n": 2
+    },
+    {
+     "t": "acquaintance",
+     "n": 2
+    },
+    {
+     "t": "ladies",
+     "n": 2
+    },
+    {
+     "t": "lady",
+     "n": 1
+    },
+    {
+     "t": "know",
+     "n": 1
+    },
+    {
+     "t": "girl",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 4
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 3
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 3
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1391,
+     "text": "“Does that young lady know Mr. Darcy?”"
+    },
+    {
+     "chunk": 598,
+     "text": "“What sort of a girl is Miss Darcy?”"
+    }
+   ]
+  },
+  {
+   "id": "c048",
+   "size": 16,
+   "members": [
+    890,
+    1400,
+    1412,
+    1406,
+    1773,
+    1565,
+    1546,
+    1697,
+    946,
+    1442,
+    1617,
+    1414,
+    909,
+    1648,
+    1666,
+    1789
+   ],
+   "top_terms": [
+    {
+     "t": "gardiner",
+     "n": 15
+    },
+    {
+     "t": "elizabeth",
+     "n": 6
+    },
+    {
+     "t": "sister",
+     "n": 4
+    },
+    {
+     "t": "master",
+     "n": 4
+    },
+    {
+     "t": "jane",
+     "n": 3
+    },
+    {
+     "t": "great",
+     "n": 3
+    },
+    {
+     "t": "thought",
+     "n": 3
+    },
+    {
+     "t": "given",
+     "n": 2
+    },
+    {
+     "t": "before",
+     "n": 2
+    },
+    {
+     "t": "conversation",
+     "n": 2
+    },
+    {
+     "t": "reynolds",
+     "n": 2
+    },
+    {
+     "t": "father",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 5
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 3
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 2
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 890,
+     "text": "Mrs. Gardiner, to whom the chief of this news had been given before, in\nthe course of Jane and Elizabeth’s correspondence with her, made her\nsister a slight answer, and, in compassion to her nieces, t"
+    },
+    {
+     "chunk": 1400,
+     "text": "Mr. Gardiner, whose manners were easy and pleasant, encouraged her\ncommunicativeness by his questions and remarks: Mrs. Reynolds, either\nfrom pride or attachment, had evidently great pleasure in talki"
+    }
+   ]
+  },
+  {
+   "id": "c049",
+   "size": 15,
+   "members": [
+    1333,
+    1765,
+    2068,
+    372,
+    1715,
+    1583,
+    1598,
+    1696,
+    1764,
+    2193,
+    1629,
+    1576,
+    1254,
+    938,
+    95
+   ],
+   "top_terms": [
+    {
+     "t": "lydia",
+     "n": 19
+    },
+    {
+     "t": "dear",
+     "n": 9
+    },
+    {
+     "t": "father",
+     "n": 7
+    },
+    {
+     "t": "much",
+     "n": 6
+    },
+    {
+     "t": "family",
+     "n": 5
+    },
+    {
+     "t": "kitty",
+     "n": 5
+    },
+    {
+     "t": "time",
+     "n": 5
+    },
+    {
+     "t": "knew",
+     "n": 5
+    },
+    {
+     "t": "love",
+     "n": 5
+    },
+    {
+     "t": "least",
+     "n": 5
+    },
+    {
+     "t": "known",
+     "n": 4
+    },
+    {
+     "t": "added",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 6
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 2
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 1
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 1
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1333,
+     "text": "“Indeed, you are mistaken. I have no such injuries to resent. It is not\nof peculiar, but of general evils, which I am now complaining. Our\nimportance, our respectability in the world, must be affected"
+    },
+    {
+     "chunk": 1765,
+     "text": "“You may readily comprehend,” she added, “what my curiosity must be to\nknow how a person unconnected with any of us, and, comparatively\nspeaking, a stranger to our family, should have been amongst you"
+    }
+   ]
+  },
+  {
+   "id": "c050",
+   "size": 15,
+   "members": [
+    1355,
+    2008,
+    877,
+    696,
+    1059,
+    2149,
+    2095,
+    1175,
+    191,
+    2007,
+    463,
+    731,
+    1163,
+    1757,
+    629
+   ],
+   "top_terms": [
+    {
+     "t": "darcy",
+     "n": 11
+    },
+    {
+     "t": "well",
+     "n": 9
+    },
+    {
+     "t": "much",
+     "n": 7
+    },
+    {
+     "t": "miss",
+     "n": 6
+    },
+    {
+     "t": "know",
+     "n": 5
+    },
+    {
+     "t": "feelings",
+     "n": 4
+    },
+    {
+     "t": "even",
+     "n": 4
+    },
+    {
+     "t": "opinion",
+     "n": 4
+    },
+    {
+     "t": "wish",
+     "n": 4
+    },
+    {
+     "t": "bourgh",
+     "n": 4
+    },
+    {
+     "t": "cousin",
+     "n": 4
+    },
+    {
+     "t": "wishes",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 3
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 2
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 1
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1355,
+     "text": "“You, who so well know my feelings towards Mr. Darcy, will readily\ncomprehend how sincerely I must rejoice that he is wise enough to assume\neven the appearance of what is right. His pride, in that dir"
+    },
+    {
+     "chunk": 2008,
+     "text": "“Yes; and I had heard it before. But what is that to me? If there is no\nother objection to my marrying your nephew, I shall certainly not be\nkept from it by knowing that his mother and aunt wished him"
+    }
+   ]
+  },
+  {
+   "id": "c051",
+   "size": 15,
+   "members": [
+    1536,
+    1299,
+    1587,
+    569,
+    1545,
+    614,
+    1544,
+    1688,
+    1352,
+    1683,
+    1170,
+    1699,
+    1453,
+    1284,
+    1755
+   ],
+   "top_terms": [
+    {
+     "t": "wickham",
+     "n": 16
+    },
+    {
+     "t": "well",
+     "n": 8
+    },
+    {
+     "t": "believe",
+     "n": 6
+    },
+    {
+     "t": "ill",
+     "n": 5
+    },
+    {
+     "t": "know",
+     "n": 5
+    },
+    {
+     "t": "opinion",
+     "n": 4
+    },
+    {
+     "t": "think",
+     "n": 4
+    },
+    {
+     "t": "give",
+     "n": 4
+    },
+    {
+     "t": "jane",
+     "n": 4
+    },
+    {
+     "t": "who",
+     "n": 4
+    },
+    {
+     "t": "aunt",
+     "n": 4
+    },
+    {
+     "t": "time",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 4
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 4
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1536,
+     "text": "“Upon my word,” said Mrs. Gardiner, “I begin to be of your uncle’s\nopinion. It is really too great a violation of decency, honour, and\ninterest, for him to be guilty of it. I cannot think so very ill "
+    },
+    {
+     "chunk": 1299,
+     "text": "“Certainly. But the misfortune of speaking with bitterness is a most\nnatural consequence of the prejudices I had been encouraging. There is\none point on which I want your advice. I want to be told whe"
+    }
+   ]
+  },
+  {
+   "id": "c052",
+   "size": 14,
+   "members": [
+    108,
+    931,
+    377,
+    2130,
+    448,
+    139,
+    375,
+    103,
+    106,
+    118,
+    120,
+    1481,
+    415,
+    576
+   ],
+   "top_terms": [
+    {
+     "t": "bingley",
+     "n": 21
+    },
+    {
+     "t": "darcy",
+     "n": 21
+    },
+    {
+     "t": "miss",
+     "n": 14
+    },
+    {
+     "t": "hurst",
+     "n": 10
+    },
+    {
+     "t": "bennet",
+     "n": 9
+    },
+    {
+     "t": "room",
+     "n": 7
+    },
+    {
+     "t": "soon",
+     "n": 6
+    },
+    {
+     "t": "danced",
+     "n": 5
+    },
+    {
+     "t": "party",
+     "n": 5
+    },
+    {
+     "t": "never",
+     "n": 5
+    },
+    {
+     "t": "though",
+     "n": 5
+    },
+    {
+     "t": "however",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 6
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 1
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 1
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 108,
+     "text": "Mr. Bingley had soon made himself acquainted with all the principal\npeople in the room: he was lively and unreserved, danced every dance,\nwas angry that the ball closed so early, and talked of giving "
+    },
+    {
+     "chunk": 931,
+     "text": "She wrote again when the visit was paid, and she had seen Miss Bingley.\n“I did not think Caroline in spirits,” were her words, “but she was very\nglad to see me, and reproached me for giving her no not"
+    }
+   ]
+  },
+  {
+   "id": "c053",
+   "size": 14,
+   "members": [
+    1593,
+    1038,
+    1855,
+    40,
+    1376,
+    1591,
+    1675,
+    1224,
+    763,
+    1620,
+    42,
+    1117,
+    2107,
+    1955
+   ],
+   "top_terms": [
+    {
+     "t": "see",
+     "n": 2
+    },
+    {
+     "t": "walked",
+     "n": 2
+    },
+    {
+     "t": "towards",
+     "n": 2
+    },
+    {
+     "t": "brought",
+     "n": 1
+    },
+    {
+     "t": "gentlemen",
+     "n": 1
+    },
+    {
+     "t": "accompanied",
+     "n": 1
+    },
+    {
+     "t": "readily",
+     "n": 1
+    },
+    {
+     "t": "agreed",
+     "n": 1
+    },
+    {
+     "t": "came",
+     "n": 1
+    },
+    {
+     "t": "down",
+     "n": 1
+    },
+    {
+     "t": "place",
+     "n": 1
+    },
+    {
+     "t": "pemberley",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 2
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 2
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 2
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1593,
+     "text": "“He brought it with him for us to see.”"
+    },
+    {
+     "chunk": 1038,
+     "text": "“The gentlemen accompanied him.”"
+    }
+   ]
+  },
+  {
+   "id": "c054",
+   "size": 14,
+   "members": [
+    1685,
+    1649,
+    1974,
+    2050,
+    1804,
+    2047,
+    1940,
+    1729,
+    1691,
+    450,
+    86,
+    1573,
+    741,
+    554
+   ],
+   "top_terms": [
+    {
+     "t": "bennet",
+     "n": 6
+    },
+    {
+     "t": "father",
+     "n": 6
+    },
+    {
+     "t": "library",
+     "n": 5
+    },
+    {
+     "t": "girls",
+     "n": 5
+    },
+    {
+     "t": "room",
+     "n": 5
+    },
+    {
+     "t": "made",
+     "n": 3
+    },
+    {
+     "t": "house",
+     "n": 3
+    },
+    {
+     "t": "breakfast",
+     "n": 3
+    },
+    {
+     "t": "reply",
+     "n": 3
+    },
+    {
+     "t": "till",
+     "n": 2
+    },
+    {
+     "t": "went",
+     "n": 2
+    },
+    {
+     "t": "walked",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 4
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 4
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 2
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 1
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1685,
+     "text": "Mr. Bennet made no answer; and each of them, deep in thought, continued\nsilent till they reached the house. Their father then went to the\nlibrary to write, and the girls walked into the breakfast-room"
+    },
+    {
+     "chunk": 1649,
+     "text": "Away ran the girls, too eager to get in to have time for speech. They\nran through the vestibule into the breakfast-room; from thence to the\nlibrary;—their father was in neither; and they were on the p"
+    }
+   ]
+  },
+  {
+   "id": "c055",
+   "size": 14,
+   "members": [
+    601,
+    407,
+    1139,
+    52,
+    1842,
+    363,
+    83,
+    417,
+    790,
+    405,
+    1860,
+    465,
+    895,
+    2175
+   ],
+   "top_terms": [
+    {
+     "t": "bingley",
+     "n": 17
+    },
+    {
+     "t": "friend",
+     "n": 6
+    },
+    {
+     "t": "man",
+     "n": 5
+    },
+    {
+     "t": "see",
+     "n": 4
+    },
+    {
+     "t": "best",
+     "n": 4
+    },
+    {
+     "t": "love",
+     "n": 4
+    },
+    {
+     "t": "good",
+     "n": 3
+    },
+    {
+     "t": "better",
+     "n": 3
+    },
+    {
+     "t": "say",
+     "n": 3
+    },
+    {
+     "t": "miss",
+     "n": 3
+    },
+    {
+     "t": "who",
+     "n": 2
+    },
+    {
+     "t": "know",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 4
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 2
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 2
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 1
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 601,
+     "text": "“I am astonished at his intimacy with Mr. Bingley. How can Mr. Bingley,\nwho seems good-humour itself, and is, I really believe, truly amiable,\nbe in friendship with such a man? How can they suit each "
+    },
+    {
+     "chunk": 407,
+     "text": "“I am exceedingly gratified,” said Bingley, “by your converting what my\nfriend says into a compliment on the sweetness of my temper. But I am\nafraid you are giving it a turn which that gentleman did b"
+    }
+   ]
+  },
+  {
+   "id": "c056",
+   "size": 13,
+   "members": [
+    818,
+    827,
+    1713,
+    2137,
+    1990,
+    1272,
+    1578,
+    2194,
+    1916,
+    1884,
+    771,
+    1856,
+    690
+   ],
+   "top_terms": [
+    {
+     "t": "bennet",
+     "n": 16
+    },
+    {
+     "t": "elizabeth",
+     "n": 11
+    },
+    {
+     "t": "miss",
+     "n": 10
+    },
+    {
+     "t": "daughter",
+     "n": 9
+    },
+    {
+     "t": "though",
+     "n": 5
+    },
+    {
+     "t": "lucas",
+     "n": 5
+    },
+    {
+     "t": "after",
+     "n": 5
+    },
+    {
+     "t": "without",
+     "n": 5
+    },
+    {
+     "t": "place",
+     "n": 5
+    },
+    {
+     "t": "mary",
+     "n": 4
+    },
+    {
+     "t": "much",
+     "n": 4
+    },
+    {
+     "t": "before",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 3
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 2
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 2
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 818,
+     "text": "With proper civilities, the ladies then withdrew; all of them equally\nsurprised to find that he meditated a quick return. Mrs. Bennet wished\nto understand by it that he thought of paying his addresses"
+    },
+    {
+     "chunk": 827,
+     "text": "ELIZABETH was sitting with her mother and sisters, reflecting on what\nshe had heard, and doubting whether she was authorized to mention it,\nwhen Sir William Lucas himself appeared, sent by his daughte"
+    }
+   ]
+  },
+  {
+   "id": "c057",
+   "size": 13,
+   "members": [
+    2202,
+    2043,
+    503,
+    970,
+    508,
+    1236,
+    2024,
+    691,
+    693,
+    726,
+    2072,
+    1356,
+    2052
+   ],
+   "top_terms": [
+    {
+     "t": "lady",
+     "n": 14
+    },
+    {
+     "t": "catherine",
+     "n": 12
+    },
+    {
+     "t": "elizabeth",
+     "n": 11
+    },
+    {
+     "t": "ladyship",
+     "n": 8
+    },
+    {
+     "t": "nephew",
+     "n": 7
+    },
+    {
+     "t": "aunt",
+     "n": 6
+    },
+    {
+     "t": "some",
+     "n": 5
+    },
+    {
+     "t": "time",
+     "n": 5
+    },
+    {
+     "t": "bourgh",
+     "n": 5
+    },
+    {
+     "t": "make",
+     "n": 5
+    },
+    {
+     "t": "every",
+     "n": 5
+    },
+    {
+     "t": "who",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 4
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 2
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 1
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2202,
+     "text": "Lady Catherine was extremely indignant on the marriage of her nephew;\nand as she gave way to all the genuine frankness of her character, in\nher reply to the letter which announced its arrangement, she"
+    },
+    {
+     "chunk": 2043,
+     "text": "In revolving Lady Catherine’s expressions, however, she could not help\nfeeling some uneasiness as to the possible consequence of her persisting\nin this interference. From what she had said of her reso"
+    }
+   ]
+  },
+  {
+   "id": "c058",
+   "size": 13,
+   "members": [
+    685,
+    1586,
+    1084,
+    1580,
+    493,
+    591,
+    249,
+    686,
+    357,
+    913,
+    73,
+    1582,
+    187
+   ],
+   "top_terms": [
+    {
+     "t": "bingley",
+     "n": 6
+    },
+    {
+     "t": "wickham",
+     "n": 5
+    },
+    {
+     "t": "know",
+     "n": 4
+    },
+    {
+     "t": "colonel",
+     "n": 4
+    },
+    {
+     "t": "forster",
+     "n": 4
+    },
+    {
+     "t": "think",
+     "n": 3
+    },
+    {
+     "t": "myself",
+     "n": 3
+    },
+    {
+     "t": "meryton",
+     "n": 3
+    },
+    {
+     "t": "denny",
+     "n": 2
+    },
+    {
+     "t": "never",
+     "n": 2
+    },
+    {
+     "t": "saw",
+     "n": 2
+    },
+    {
+     "t": "till",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 3
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 3
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 3
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 1
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 685,
+     "text": "“Mr. Bingley does not know Mr. Wickham himself.”"
+    },
+    {
+     "chunk": 1586,
+     "text": "“And did Colonel Forster appear to think ill of Wickham himself? Does he\nknow his real character?”"
+    }
+   ]
+  },
+  {
+   "id": "c059",
+   "size": 12,
+   "members": [
+    640,
+    563,
+    635,
+    2195,
+    2071,
+    1733,
+    1042,
+    1156,
+    835,
+    1574,
+    637,
+    1428
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 16
+    },
+    {
+     "t": "darcy",
+     "n": 10
+    },
+    {
+     "t": "wickham",
+     "n": 9
+    },
+    {
+     "t": "after",
+     "n": 7
+    },
+    {
+     "t": "before",
+     "n": 6
+    },
+    {
+     "t": "charlotte",
+     "n": 5
+    },
+    {
+     "t": "make",
+     "n": 5
+    },
+    {
+     "t": "lydia",
+     "n": 5
+    },
+    {
+     "t": "who",
+     "n": 5
+    },
+    {
+     "t": "made",
+     "n": 4
+    },
+    {
+     "t": "without",
+     "n": 4
+    },
+    {
+     "t": "began",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 4
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 1
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 1
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 1
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 640,
+     "text": "When the dancing recommenced, however, and Darcy approached to claim her\nhand, Charlotte could not help cautioning her, in a whisper, not to be a\nsimpleton, and allow her fancy for Wickham to make her"
+    },
+    {
+     "chunk": 563,
+     "text": "Mr. Wickham did not play at whist, and with ready delight was he\nreceived at the other table between Elizabeth and Lydia. At first there\nseemed danger of Lydia’s engrossing him entirely, for she was a"
+    }
+   ]
+  },
+  {
+   "id": "c060",
+   "size": 12,
+   "members": [
+    1471,
+    1949,
+    1489,
+    2109,
+    277,
+    1464,
+    1494,
+    421,
+    933,
+    2129,
+    174,
+    1610
+   ],
+   "top_terms": [
+    {
+     "t": "bingley",
+     "n": 14
+    },
+    {
+     "t": "elizabeth",
+     "n": 14
+    },
+    {
+     "t": "jane",
+     "n": 9
+    },
+    {
+     "t": "miss",
+     "n": 5
+    },
+    {
+     "t": "pleasure",
+     "n": 4
+    },
+    {
+     "t": "make",
+     "n": 4
+    },
+    {
+     "t": "some",
+     "n": 4
+    },
+    {
+     "t": "half",
+     "n": 4
+    },
+    {
+     "t": "though",
+     "n": 4
+    },
+    {
+     "t": "always",
+     "n": 4
+    },
+    {
+     "t": "much",
+     "n": 4
+    },
+    {
+     "t": "longer",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 3
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 2
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 1
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1471,
+     "text": "Bingley expressed great pleasure in the certainty of seeing Elizabeth\nagain, having still a great deal to say to her, and many inquiries to\nmake after all their Hertfordshire friends. Elizabeth, const"
+    },
+    {
+     "chunk": 1949,
+     "text": "Elizabeth had now but little time for conversation with her sister; for\nwhile he was present Jane had no attention to bestow on anyone else: but\nshe found herself considerably useful to both of them, "
+    }
+   ]
+  },
+  {
+   "id": "c061",
+   "size": 12,
+   "members": [
+    1043,
+    1208,
+    1110,
+    1061,
+    1155,
+    1058,
+    1033,
+    773,
+    1068,
+    1113,
+    607,
+    592
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 11
+    },
+    {
+     "t": "colonel",
+     "n": 9
+    },
+    {
+     "t": "fitzwilliam",
+     "n": 9
+    },
+    {
+     "t": "after",
+     "n": 6
+    },
+    {
+     "t": "cousin",
+     "n": 5
+    },
+    {
+     "t": "darcy",
+     "n": 5
+    },
+    {
+     "t": "man",
+     "n": 4
+    },
+    {
+     "t": "collins",
+     "n": 4
+    },
+    {
+     "t": "some",
+     "n": 4
+    },
+    {
+     "t": "think",
+     "n": 3
+    },
+    {
+     "t": "letter",
+     "n": 3
+    },
+    {
+     "t": "manner",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 5
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 3
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 1
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1043,
+     "text": "Colonel Fitzwilliam entered into conversation directly, with the\nreadiness and ease of a well-bred man, and talked very pleasantly; but\nhis cousin, after having addressed a slight observation on the h"
+    },
+    {
+     "chunk": 1208,
+     "text": "She was immediately told, that the two gentlemen from Rosings had each\ncalled during her absence; Mr. Darcy, only for a few minutes, to take\nleave, but that Colonel Fitzwilliam had been sitting with t"
+    }
+   ]
+  },
+  {
+   "id": "c062",
+   "size": 12,
+   "members": [
+    742,
+    740,
+    880,
+    1056,
+    804,
+    851,
+    1002,
+    1018,
+    745,
+    1332,
+    1912,
+    2133
+   ],
+   "top_terms": [
+    {
+     "t": "bennet",
+     "n": 11
+    },
+    {
+     "t": "lizzy",
+     "n": 9
+    },
+    {
+     "t": "collins",
+     "n": 9
+    },
+    {
+     "t": "come",
+     "n": 7
+    },
+    {
+     "t": "miss",
+     "n": 7
+    },
+    {
+     "t": "make",
+     "n": 5
+    },
+    {
+     "t": "haste",
+     "n": 4
+    },
+    {
+     "t": "day",
+     "n": 4
+    },
+    {
+     "t": "young",
+     "n": 4
+    },
+    {
+     "t": "never",
+     "n": 4
+    },
+    {
+     "t": "little",
+     "n": 3
+    },
+    {
+     "t": "cannot",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 4
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 2
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 1
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 742,
+     "text": "“Oh, Mr. Bennet, you are wanted immediately; we are all in an uproar.\nYou must come and make Lizzy marry Mr. Collins, for she vows she will\nnot have him; and if you do not make haste he will change hi"
+    },
+    {
+     "chunk": 740,
+     "text": "“Sir, you quite misunderstand me,” said Mrs. Bennet, alarmed. “Lizzy is\nonly headstrong in such matters as these. In everything else she is as\ngood-natured a girl as ever lived. I will go directly to "
+    }
+   ]
+  },
+  {
+   "id": "c063",
+   "size": 12,
+   "members": [
+    160,
+    1638,
+    80,
+    957,
+    161,
+    1954,
+    1902,
+    265,
+    159,
+    263,
+    1051,
+    210
+   ],
+   "top_terms": [
+    {
+     "t": "lizzy",
+     "n": 6
+    },
+    {
+     "t": "dance",
+     "n": 3
+    },
+    {
+     "t": "mother",
+     "n": 2
+    },
+    {
+     "t": "ill",
+     "n": 2
+    },
+    {
+     "t": "last",
+     "n": 2
+    },
+    {
+     "t": "mind",
+     "n": 2
+    },
+    {
+     "t": "amusement",
+     "n": 2
+    },
+    {
+     "t": "think",
+     "n": 2
+    },
+    {
+     "t": "long",
+     "n": 2
+    },
+    {
+     "t": "believe",
+     "n": 2
+    },
+    {
+     "t": "cruel",
+     "n": 2
+    },
+    {
+     "t": "talking",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 4
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 3
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 1
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 160,
+     "text": "“Another time, Lizzy,” said her mother, “I would not dance with him,\nif I were you.”"
+    },
+    {
+     "chunk": 1638,
+     "text": "Then, after a short silence, he continued, “Lizzy, I bear you no\nill-will for being justified in your advice to me last May, which,\nconsidering the event, shows some greatness of mind.”"
+    }
+   ]
+  },
+  {
+   "id": "c064",
+   "size": 12,
+   "members": [
+    15,
+    18,
+    16,
+    27,
+    17,
+    14,
+    20,
+    25,
+    19,
+    24,
+    21,
+    28
+   ],
+   "top_terms": [
+    {
+     "t": "miss",
+     "n": 22
+    },
+    {
+     "t": "austen",
+     "n": 19
+    },
+    {
+     "t": "who",
+     "n": 12
+    },
+    {
+     "t": "though",
+     "n": 11
+    },
+    {
+     "t": "sense",
+     "n": 10
+    },
+    {
+     "t": "think",
+     "n": 9
+    },
+    {
+     "t": "perhaps",
+     "n": 8
+    },
+    {
+     "t": "nothing",
+     "n": 8
+    },
+    {
+     "t": "even",
+     "n": 8
+    },
+    {
+     "t": "darcy",
+     "n": 8
+    },
+    {
+     "t": "elizabeth",
+     "n": 8
+    },
+    {
+     "t": "love",
+     "n": 8
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "PRIDE. and PREJUDICE",
+     "n": 12
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 15,
+     "text": "I suppose, however, that the majority of at least competent votes\nwould, all things considered, be divided between Emma and the present\nbook; and perhaps the vulgar verdict (if indeed a fondness for M"
+    },
+    {
+     "chunk": 18,
+     "text": "The characteristics of Miss Austen’s humour are so subtle and delicate\nthat they are, perhaps, at all times easier to apprehend than to\nexpress, and at any particular time likely to be differently\napp"
+    }
+   ]
+  },
+  {
+   "id": "c065",
+   "size": 12,
+   "members": [
+    472,
+    312,
+    1119,
+    409,
+    687,
+    1087,
+    603,
+    1787,
+    2004,
+    311,
+    314,
+    1097
+   ],
+   "top_terms": [
+    {
+     "t": "darcy",
+     "n": 9
+    },
+    {
+     "t": "pemberley",
+     "n": 3
+    },
+    {
+     "t": "purchase",
+     "n": 3
+    },
+    {
+     "t": "perfectly",
+     "n": 2
+    },
+    {
+     "t": "upon",
+     "n": 2
+    },
+    {
+     "t": "word",
+     "n": 2
+    },
+    {
+     "t": "cannot",
+     "n": 2
+    },
+    {
+     "t": "say",
+     "n": 2
+    },
+    {
+     "t": "surprised",
+     "n": 2
+    },
+    {
+     "t": "never",
+     "n": 2
+    },
+    {
+     "t": "take",
+     "n": 2
+    },
+    {
+     "t": "neighbourhood",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 4
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 2
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 1
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 472,
+     "text": "“I am perfectly convinced by it that Mr. Darcy has no defect. He owns it\nhimself without disguise.”"
+    },
+    {
+     "chunk": 312,
+     "text": "“With all my heart: I will buy Pemberley itself, if Darcy will sell it.”"
+    }
+   ]
+  },
+  {
+   "id": "c066",
+   "size": 12,
+   "members": [
+    1269,
+    1946,
+    1730,
+    1720,
+    1750,
+    1626,
+    1636,
+    231,
+    549,
+    1267,
+    1734,
+    1775
+   ],
+   "top_terms": [
+    {
+     "t": "lydia",
+     "n": 11
+    },
+    {
+     "t": "wickham",
+     "n": 9
+    },
+    {
+     "t": "who",
+     "n": 4
+    },
+    {
+     "t": "kitty",
+     "n": 3
+    },
+    {
+     "t": "happiness",
+     "n": 3
+    },
+    {
+     "t": "world",
+     "n": 3
+    },
+    {
+     "t": "london",
+     "n": 3
+    },
+    {
+     "t": "good",
+     "n": 2
+    },
+    {
+     "t": "elizabeth",
+     "n": 2
+    },
+    {
+     "t": "little",
+     "n": 2
+    },
+    {
+     "t": "competition",
+     "n": 2
+    },
+    {
+     "t": "sisters",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 6
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 1
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 1
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1269,
+     "text": "With such kind of histories of their parties and good jokes did Lydia,\nassisted by Kitty’s hints and additions, endeavour to amuse her\ncompanions all the way to Longbourn. Elizabeth listened as little"
+    },
+    {
+     "chunk": 1946,
+     "text": "Wickham, Lydia, were all forgotten. Jane was beyond competition her\nfavourite child. At that moment she cared for no other. Her younger\nsisters soon began to make interest with her for objects of happ"
+    }
+   ]
+  },
+  {
+   "id": "c067",
+   "size": 11,
+   "members": [
+    2118,
+    2046,
+    2157,
+    898,
+    1390,
+    918,
+    1964,
+    456,
+    283,
+    1758,
+    1321
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 9
+    },
+    {
+     "t": "bennet",
+     "n": 7
+    },
+    {
+     "t": "miss",
+     "n": 3
+    },
+    {
+     "t": "assured",
+     "n": 3
+    },
+    {
+     "t": "looked",
+     "n": 2
+    },
+    {
+     "t": "amazement",
+     "n": 2
+    },
+    {
+     "t": "felt",
+     "n": 2
+    },
+    {
+     "t": "room",
+     "n": 2
+    },
+    {
+     "t": "still",
+     "n": 1
+    },
+    {
+     "t": "seriously",
+     "n": 1
+    },
+    {
+     "t": "truth",
+     "n": 1
+    },
+    {
+     "t": "surprise",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 2
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 2
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 2
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2118,
+     "text": "Miss Bennet still looked all amazement. Elizabeth again, and more\nseriously, assured her of its truth."
+    },
+    {
+     "chunk": 2046,
+     "text": "The surprise of the rest of the family, on hearing who their visitor had\nbeen, was very great: but they obligingly satisfied it with the same\nkind of supposition which had appeased Mrs. Bennet’s curio"
+    }
+   ]
+  },
+  {
+   "id": "c068",
+   "size": 11,
+   "members": [
+    1276,
+    227,
+    1740,
+    631,
+    1749,
+    1277,
+    270,
+    775,
+    1701,
+    1961,
+    1340
+   ],
+   "top_terms": [
+    {
+     "t": "lydia",
+     "n": 10
+    },
+    {
+     "t": "meryton",
+     "n": 9
+    },
+    {
+     "t": "elizabeth",
+     "n": 6
+    },
+    {
+     "t": "wickham",
+     "n": 5
+    },
+    {
+     "t": "news",
+     "n": 5
+    },
+    {
+     "t": "good",
+     "n": 5
+    },
+    {
+     "t": "aunt",
+     "n": 4
+    },
+    {
+     "t": "after",
+     "n": 4
+    },
+    {
+     "t": "girls",
+     "n": 3
+    },
+    {
+     "t": "walk",
+     "n": 3
+    },
+    {
+     "t": "miss",
+     "n": 3
+    },
+    {
+     "t": "bennets",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 3
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 2
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 1
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1276,
+     "text": "In the afternoon Lydia was urgent with the rest of the girls to walk to\nMeryton, and see how everybody went on; but Elizabeth steadily opposed\nthe scheme. It should not be said, that the Miss Bennets "
+    },
+    {
+     "chunk": 227,
+     "text": "The village of Longbourn was only one mile from Meryton; a most\nconvenient distance for the young ladies, who were usually tempted\nthither three or four times a week, to pay their duty to their aunt, "
+    }
+   ]
+  },
+  {
+   "id": "c069",
+   "size": 11,
+   "members": [
+    304,
+    642,
+    586,
+    1968,
+    223,
+    345,
+    2020,
+    1445,
+    1908,
+    1079,
+    1421
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 5
+    },
+    {
+     "t": "assured",
+     "n": 2
+    },
+    {
+     "t": "seemed",
+     "n": 2
+    },
+    {
+     "t": "etc",
+     "n": 2
+    },
+    {
+     "t": "suit",
+     "n": 1
+    },
+    {
+     "t": "perfectly",
+     "n": 1
+    },
+    {
+     "t": "room",
+     "n": 1
+    },
+    {
+     "t": "smiled",
+     "n": 1
+    },
+    {
+     "t": "whatever",
+     "n": 1
+    },
+    {
+     "t": "wished",
+     "n": 1
+    },
+    {
+     "t": "say",
+     "n": 1
+    },
+    {
+     "t": "honoured",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 3
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 3
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 2
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 304,
+     "text": "Elizabeth assured him that she could suit herself perfectly with those\nin the room."
+    },
+    {
+     "chunk": 642,
+     "text": "He smiled, and assured her that whatever she wished him to say should be\nsaid."
+    }
+   ]
+  },
+  {
+   "id": "c070",
+   "size": 10,
+   "members": [
+    126,
+    624,
+    612,
+    482,
+    2185,
+    928,
+    903,
+    891,
+    551,
+    315
+   ],
+   "top_terms": [
+    {
+     "t": "jane",
+     "n": 11
+    },
+    {
+     "t": "bingley",
+     "n": 8
+    },
+    {
+     "t": "elizabeth",
+     "n": 7
+    },
+    {
+     "t": "sister",
+     "n": 6
+    },
+    {
+     "t": "much",
+     "n": 5
+    },
+    {
+     "t": "miss",
+     "n": 3
+    },
+    {
+     "t": "affection",
+     "n": 3
+    },
+    {
+     "t": "alone",
+     "n": 2
+    },
+    {
+     "t": "former",
+     "n": 2
+    },
+    {
+     "t": "praise",
+     "n": 2
+    },
+    {
+     "t": "certainty",
+     "n": 2
+    },
+    {
+     "t": "point",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 3
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 2
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 1
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 126,
+     "text": "WHEN Jane and Elizabeth were alone, the former, who had been cautious in\nher praise of Mr. Bingley before, expressed to her sister how very much\nshe admired him."
+    },
+    {
+     "chunk": 624,
+     "text": "But Jane could think with certainty on only one point,—that Mr.\nBingley, if he had been imposed on, would have much to suffer when\nthe affair became public."
+    }
+   ]
+  },
+  {
+   "id": "c071",
+   "size": 10,
+   "members": [
+    999,
+    994,
+    1089,
+    1231,
+    1213,
+    1831,
+    2098,
+    1379,
+    960,
+    1947
+   ],
+   "top_terms": [
+    {
+     "t": "collins",
+     "n": 4
+    },
+    {
+     "t": "lady",
+     "n": 3
+    },
+    {
+     "t": "catherine",
+     "n": 3
+    },
+    {
+     "t": "park",
+     "n": 3
+    },
+    {
+     "t": "great",
+     "n": 3
+    },
+    {
+     "t": "after",
+     "n": 2
+    },
+    {
+     "t": "windows",
+     "n": 2
+    },
+    {
+     "t": "out",
+     "n": 2
+    },
+    {
+     "t": "kindly",
+     "n": 2
+    },
+    {
+     "t": "much",
+     "n": 2
+    },
+    {
+     "t": "summer",
+     "n": 2
+    },
+    {
+     "t": "about",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 3
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 2
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 1
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 999,
+     "text": "After sitting a few minutes, they were all sent to one of the windows to\nadmire the view, Mr. Collins attending them to point out its beauties,\nand Lady Catherine kindly informing them that it was muc"
+    },
+    {
+     "chunk": 994,
+     "text": "As the weather was fine, they had a pleasant walk of about half a mile\nacross the park. Every park has its beauty and its prospects; and\nElizabeth saw much to be pleased with, though she could not be "
+    }
+   ]
+  },
+  {
+   "id": "c072",
+   "size": 10,
+   "members": [
+    1053,
+    211,
+    195,
+    369,
+    1133,
+    1171,
+    113,
+    420,
+    2148,
+    1446
+   ],
+   "top_terms": [
+    {
+     "t": "darcy",
+     "n": 9
+    },
+    {
+     "t": "dancing",
+     "n": 2
+    },
+    {
+     "t": "consider",
+     "n": 2
+    },
+    {
+     "t": "spoke",
+     "n": 1
+    },
+    {
+     "t": "affectionate",
+     "n": 1
+    },
+    {
+     "t": "praise",
+     "n": 1
+    },
+    {
+     "t": "sister",
+     "n": 1
+    },
+    {
+     "t": "proficiency",
+     "n": 1
+    },
+    {
+     "t": "politeness",
+     "n": 1
+    },
+    {
+     "t": "elizabeth",
+     "n": 1
+    },
+    {
+     "t": "smiling",
+     "n": 1
+    },
+    {
+     "t": "charming",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 4
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 2
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 1
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 1
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1053,
+     "text": "Mr. Darcy spoke with affectionate praise of his sister’s proficiency."
+    },
+    {
+     "chunk": 211,
+     "text": "“Mr. Darcy is all politeness,” said Elizabeth, smiling."
+    }
+   ]
+  },
+  {
+   "id": "c073",
+   "size": 10,
+   "members": [
+    2208,
+    2206,
+    2210,
+    2207,
+    2205,
+    6,
+    1,
+    7,
+    2209,
+    4
+   ],
+   "top_terms": [
+    {
+     "t": "gutenberg",
+     "n": 13
+    },
+    {
+     "t": "project",
+     "n": 11
+    },
+    {
+     "t": "use",
+     "n": 5
+    },
+    {
+     "t": "ebook",
+     "n": 5
+    },
+    {
+     "t": "full",
+     "n": 4
+    },
+    {
+     "t": "works",
+     "n": 4
+    },
+    {
+     "t": "archive",
+     "n": 4
+    },
+    {
+     "t": "paid",
+     "n": 3
+    },
+    {
+     "t": "within",
+     "n": 3
+    },
+    {
+     "t": "days",
+     "n": 3
+    },
+    {
+     "t": "terms",
+     "n": 3
+    },
+    {
+     "t": "license",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 6
+    },
+    {
+     "ch": "PRIDE. and PREJUDICE",
+     "n": 4
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2208,
+     "text": "• You provide a full refund of any money paid by a user who notifies\nyou in writing (or by e-mail) within 30 days of receipt that s/he\ndoes not agree to the terms of the full Project Gutenberg™\nLicens"
+    },
+    {
+     "chunk": 2206,
+     "text": "This eBook is for the use of anyone anywhere in the United States and most\nother parts of the world at no cost and with almost no restrictions\nwhatsoever. You may copy it, give it away or re-use it un"
+    }
+   ]
+  },
+  {
+   "id": "c074",
+   "size": 9,
+   "members": [
+    2054,
+    1975,
+    717,
+    768,
+    828,
+    820,
+    1215,
+    788,
+    1655
+   ],
+   "top_terms": [
+    {
+     "t": "collins",
+     "n": 7
+    },
+    {
+     "t": "say",
+     "n": 2
+    },
+    {
+     "t": "well",
+     "n": 2
+    },
+    {
+     "t": "dear",
+     "n": 2
+    },
+    {
+     "t": "beg",
+     "n": 2
+    },
+    {
+     "t": "hear",
+     "n": 2
+    },
+    {
+     "t": "little",
+     "n": 2
+    },
+    {
+     "t": "good",
+     "n": 2
+    },
+    {
+     "t": "take",
+     "n": 1
+    },
+    {
+     "t": "liberty",
+     "n": 1
+    },
+    {
+     "t": "asking",
+     "n": 1
+    },
+    {
+     "t": "ladyship",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 5
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 1
+    },
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 2054,
+     "text": "“From Mr. Collins! and what can he have to say?”"
+    },
+    {
+     "chunk": 1975,
+     "text": "“May I take the liberty of asking your Ladyship whether you left Mr. and\nMrs. Collins well?”"
+    }
+   ]
+  },
+  {
+   "id": "c075",
+   "size": 9,
+   "members": [
+    1876,
+    959,
+    1905,
+    2147,
+    350,
+    2048,
+    2116,
+    172,
+    845
+   ],
+   "top_terms": [
+    {
+     "t": "lizzy",
+     "n": 7
+    },
+    {
+     "t": "dear",
+     "n": 4
+    },
+    {
+     "t": "cannot",
+     "n": 2
+    },
+    {
+     "t": "remember",
+     "n": 2
+    },
+    {
+     "t": "jane",
+     "n": 2
+    },
+    {
+     "t": "know",
+     "n": 2
+    },
+    {
+     "t": "let",
+     "n": 2
+    },
+    {
+     "t": "think",
+     "n": 1
+    },
+    {
+     "t": "weak",
+     "n": 1
+    },
+    {
+     "t": "danger",
+     "n": 1
+    },
+    {
+     "t": "now",
+     "n": 1
+    },
+    {
+     "t": "take",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 2
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 2
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 1
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1876,
+     "text": "“My dear Lizzy, you cannot think me so weak as to be in danger now.”"
+    },
+    {
+     "chunk": 959,
+     "text": "“Take care, Lizzy; that speech savours strongly of disappointment.”"
+    }
+   ]
+  },
+  {
+   "id": "c076",
+   "size": 9,
+   "members": [
+    1707,
+    1724,
+    1722,
+    1665,
+    1541,
+    1568,
+    1721,
+    225,
+    541
+   ],
+   "top_terms": [
+    {
+     "t": "wickham",
+     "n": 8
+    },
+    {
+     "t": "bennet",
+     "n": 7
+    },
+    {
+     "t": "lydia",
+     "n": 7
+    },
+    {
+     "t": "little",
+     "n": 6
+    },
+    {
+     "t": "pounds",
+     "n": 5
+    },
+    {
+     "t": "before",
+     "n": 5
+    },
+    {
+     "t": "thousand",
+     "n": 4
+    },
+    {
+     "t": "now",
+     "n": 4
+    },
+    {
+     "t": "never",
+     "n": 4
+    },
+    {
+     "t": "marry",
+     "n": 4
+    },
+    {
+     "t": "well",
+     "n": 4
+    },
+    {
+     "t": "soon",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 5
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 2
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 1
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1707,
+     "text": "Five thousand pounds was settled by marriage articles on Mrs. Bennet and\nthe children. But in what proportions it should be divided amongst the\nlatter depended on the will of the parents. This was one"
+    },
+    {
+     "chunk": 1724,
+     "text": "Mr. Bennet and his daughters saw all the advantages of Wickham’s\nremoval from the ——shire, as clearly as Mr. Gardiner could do. But\nMrs. Bennet was not so well pleased with it. Lydia’s being settled i"
+    }
+   ]
+  },
+  {
+   "id": "c077",
+   "size": 9,
+   "members": [
+    684,
+    617,
+    1228,
+    621,
+    2099,
+    689,
+    679,
+    900,
+    1512
+   ],
+   "top_terms": [
+    {
+     "t": "darcy",
+     "n": 13
+    },
+    {
+     "t": "wickham",
+     "n": 10
+    },
+    {
+     "t": "jane",
+     "n": 9
+    },
+    {
+     "t": "bingley",
+     "n": 8
+    },
+    {
+     "t": "friend",
+     "n": 7
+    },
+    {
+     "t": "well",
+     "n": 5
+    },
+    {
+     "t": "know",
+     "n": 4
+    },
+    {
+     "t": "think",
+     "n": 4
+    },
+    {
+     "t": "nothing",
+     "n": 3
+    },
+    {
+     "t": "quite",
+     "n": 3
+    },
+    {
+     "t": "conduct",
+     "n": 3
+    },
+    {
+     "t": "much",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 5
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 1
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 1
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 1
+    },
+    {
+     "ch": "“Engaged by the river.” CHAPTER XLV.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 684,
+     "text": "“No,” replied Jane, “I have not forgotten him; but I have nothing\nsatisfactory to tell you. Mr. Bingley does not know the whole of his\nhistory, and is quite ignorant of the circumstances which have\npr"
+    },
+    {
+     "chunk": 617,
+     "text": "ELIZABETH related to Jane, the next day, what had passed between Mr.\nWickham and herself. Jane listened with astonishment and concern: she\nknew not how to believe that Mr. Darcy could be so unworthy o"
+    }
+   ]
+  },
+  {
+   "id": "c078",
+   "size": 8,
+   "members": [
+    1280,
+    884,
+    123,
+    1714,
+    2181,
+    1748,
+    1491,
+    430
+   ],
+   "top_terms": [
+    {
+     "t": "darcy",
+     "n": 7
+    },
+    {
+     "t": "bennet",
+     "n": 6
+    },
+    {
+     "t": "miss",
+     "n": 2
+    },
+    {
+     "t": "made",
+     "n": 2
+    },
+    {
+     "t": "elizabeth",
+     "n": 2
+    },
+    {
+     "t": "shortly",
+     "n": 2
+    },
+    {
+     "t": "sorry",
+     "n": 2
+    },
+    {
+     "t": "still",
+     "n": 2
+    },
+    {
+     "t": "sister",
+     "n": 2
+    },
+    {
+     "t": "who",
+     "n": 2
+    },
+    {
+     "t": "much",
+     "n": 2
+    },
+    {
+     "t": "since",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 2
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 1
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 1
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 1
+    },
+    {
+     "ch": "“Unable to utter a syllable.” CHAPTER LIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1280,
+     "text": "Miss Bennet’s astonishment was soon lessened by the strong sisterly\npartiality which made any admiration of Elizabeth appear perfectly\nnatural; and all surprise was shortly lost in other feelings. She"
+    },
+    {
+     "chunk": 884,
+     "text": "Miss Bennet was the only creature who could suppose there might be any\nextenuating circumstances in the case unknown to the society of\nHertfordshire: her mild and steady candour always pleaded for\nall"
+    }
+   ]
+  },
+  {
+   "id": "c079",
+   "size": 8,
+   "members": [
+    1195,
+    1194,
+    1287,
+    1454,
+    1342,
+    1202,
+    915,
+    1205
+   ],
+   "top_terms": [
+    {
+     "t": "wickham",
+     "n": 11
+    },
+    {
+     "t": "letter",
+     "n": 5
+    },
+    {
+     "t": "every",
+     "n": 5
+    },
+    {
+     "t": "darcy",
+     "n": 5
+    },
+    {
+     "t": "read",
+     "n": 4
+    },
+    {
+     "t": "whole",
+     "n": 4
+    },
+    {
+     "t": "without",
+     "n": 4
+    },
+    {
+     "t": "well",
+     "n": 3
+    },
+    {
+     "t": "related",
+     "n": 3
+    },
+    {
+     "t": "far",
+     "n": 3
+    },
+    {
+     "t": "though",
+     "n": 3
+    },
+    {
+     "t": "capable",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 3
+    },
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 2
+    },
+    {
+     "ch": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1195,
+     "text": "In this perturbed state of mind, with thoughts that could rest on\nnothing, she walked on; but it would not do: in half a minute the letter\nwas unfolded again; and collecting herself as well as she cou"
+    },
+    {
+     "chunk": 1194,
+     "text": "But when this subject was succeeded by his account of Mr. Wickham—when\nshe read, with somewhat clearer attention, a relation of events which,\nif true, must overthrow every cherished opinion of his wor"
+    }
+   ]
+  },
+  {
+   "id": "c080",
+   "size": 8,
+   "members": [
+    1960,
+    1609,
+    811,
+    1712,
+    145,
+    1627,
+    498,
+    1948
+   ],
+   "top_terms": [
+    {
+     "t": "longbourn",
+     "n": 8
+    },
+    {
+     "t": "bennet",
+     "n": 6
+    },
+    {
+     "t": "family",
+     "n": 2
+    },
+    {
+     "t": "without",
+     "n": 2
+    },
+    {
+     "t": "receiving",
+     "n": 2
+    },
+    {
+     "t": "great",
+     "n": 2
+    },
+    {
+     "t": "who",
+     "n": 2
+    },
+    {
+     "t": "husband",
+     "n": 2
+    },
+    {
+     "t": "journey",
+     "n": 2
+    },
+    {
+     "t": "see",
+     "n": 2
+    },
+    {
+     "t": "talk",
+     "n": 2
+    },
+    {
+     "t": "before",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“The Post.” CHAPTER XLVIII.",
+     "n": 3
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 2
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 1
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 1
+    },
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1960,
+     "text": "The situation of affairs in the Longbourn family could not be long a\nsecret. Mrs. Bennet was privileged to whisper it to Mrs. Philips, and\nshe ventured, without any permission, to do the same by all h"
+    },
+    {
+     "chunk": 1609,
+     "text": "When he was gone, they were certain at least of receiving constant\ninformation of what was going on; and their uncle promised, at parting,\nto prevail on Mr. Bennet to return to Longbourn as soon as he"
+    }
+   ]
+  },
+  {
+   "id": "c081",
+   "size": 8,
+   "members": [
+    654,
+    658,
+    194,
+    181,
+    197,
+    207,
+    186,
+    1064
+   ],
+   "top_terms": [
+    {
+     "t": "darcy",
+     "n": 8
+    },
+    {
+     "t": "sir",
+     "n": 7
+    },
+    {
+     "t": "william",
+     "n": 7
+    },
+    {
+     "t": "lucas",
+     "n": 4
+    },
+    {
+     "t": "partner",
+     "n": 4
+    },
+    {
+     "t": "dancing",
+     "n": 3
+    },
+    {
+     "t": "friend",
+     "n": 3
+    },
+    {
+     "t": "though",
+     "n": 3
+    },
+    {
+     "t": "seemed",
+     "n": 2
+    },
+    {
+     "t": "subject",
+     "n": 2
+    },
+    {
+     "t": "towards",
+     "n": 2
+    },
+    {
+     "t": "bingley",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 4
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 2
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 1
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 654,
+     "text": "Darcy made no answer, and seemed desirous of changing the subject. At\nthat moment Sir William Lucas appeared close to them, meaning to pass\nthrough the set to the other side of the room; but, on perce"
+    },
+    {
+     "chunk": 658,
+     "text": "The latter part of this address was scarcely heard by Darcy; but Sir\nWilliam’s allusion to his friend seemed to strike him forcibly, and his\neyes were directed, with a very serious expression, towards"
+    }
+   ]
+  },
+  {
+   "id": "c082",
+   "size": 7,
+   "members": [
+    748,
+    385,
+    1897,
+    892,
+    920,
+    1022,
+    75
+   ],
+   "top_terms": [
+    {
+     "t": "opinion",
+     "n": 3
+    },
+    {
+     "t": "long",
+     "n": 3
+    },
+    {
+     "t": "pray",
+     "n": 2
+    },
+    {
+     "t": "nieces",
+     "n": 2
+    },
+    {
+     "t": "young",
+     "n": 2
+    },
+    {
+     "t": "let",
+     "n": 1
+    },
+    {
+     "t": "called",
+     "n": 1
+    },
+    {
+     "t": "down",
+     "n": 1
+    },
+    {
+     "t": "hear",
+     "n": 1
+    },
+    {
+     "t": "tell",
+     "n": 1
+    },
+    {
+     "t": "sister",
+     "n": 1
+    },
+    {
+     "t": "see",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 2
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 1
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 1
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 1
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 748,
+     "text": "“Let her be called down. She shall hear my opinion.”"
+    },
+    {
+     "chunk": 385,
+     "text": "“Pray tell your sister that I long to see her.”"
+    }
+   ]
+  },
+  {
+   "id": "c083",
+   "size": 7,
+   "members": [
+    844,
+    832,
+    144,
+    1815,
+    365,
+    355,
+    490
+   ],
+   "top_terms": [
+    {
+     "t": "bennet",
+     "n": 5
+    },
+    {
+     "t": "lucas",
+     "n": 5
+    },
+    {
+     "t": "charlotte",
+     "n": 4
+    },
+    {
+     "t": "think",
+     "n": 3
+    },
+    {
+     "t": "good",
+     "n": 3
+    },
+    {
+     "t": "indeed",
+     "n": 2
+    },
+    {
+     "t": "ever",
+     "n": 2
+    },
+    {
+     "t": "house",
+     "n": 2
+    },
+    {
+     "t": "much",
+     "n": 2
+    },
+    {
+     "t": "sort",
+     "n": 2
+    },
+    {
+     "t": "sensible",
+     "n": 2
+    },
+    {
+     "t": "foolish",
+     "n": 2
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXIV.",
+     "n": 1
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 1
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 1
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 844,
+     "text": "“Indeed, Mr. Bennet,” said she, “it is very hard to think that Charlotte\nLucas should ever be mistress of this house, that I should be forced\nto make way for her, and live to see her take my place in "
+    },
+    {
+     "chunk": 832,
+     "text": "Mr. Bennet’s emotions were much more tranquil on the occasion, and such\nas he did experience he pronounced to be of a most agreeable sort; for\nit gratified him, he said, to discover that Charlotte Luc"
+    }
+   ]
+  },
+  {
+   "id": "c084",
+   "size": 7,
+   "members": [
+    1069,
+    1143,
+    1063,
+    1066,
+    1121,
+    1129,
+    1148
+   ],
+   "top_terms": [
+    {
+     "t": "fitzwilliam",
+     "n": 7
+    },
+    {
+     "t": "colonel",
+     "n": 4
+    },
+    {
+     "t": "because",
+     "n": 2
+    },
+    {
+     "t": "told",
+     "n": 2
+    },
+    {
+     "t": "know",
+     "n": 2
+    },
+    {
+     "t": "well",
+     "n": 2
+    },
+    {
+     "t": "many",
+     "n": 2
+    },
+    {
+     "t": "others",
+     "n": 2
+    },
+    {
+     "t": "answer",
+     "n": 1
+    },
+    {
+     "t": "question",
+     "n": 1
+    },
+    {
+     "t": "without",
+     "n": 1
+    },
+    {
+     "t": "applying",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "“On looking up.” CHAPTER XXXIII.",
+     "n": 4
+    },
+    {
+     "ch": "“Lady Catherine, said she, you have given me a treasure.” CHAPTER XXIX.",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1069,
+     "text": "“I can answer your question,” said Fitzwilliam, “without applying to\nhim. It is because he will not give himself the trouble.”"
+    },
+    {
+     "chunk": 1143,
+     "text": "“He did not talk to me of his own arts,” said Fitzwilliam, smiling. “He\nonly told me what I have now told you.”"
+    }
+   ]
+  },
+  {
+   "id": "c085",
+   "size": 6,
+   "members": [
+    544,
+    1867,
+    101,
+    1911,
+    737,
+    336
+   ],
+   "top_terms": [
+    {
+     "t": "bennet",
+     "n": 6
+    },
+    {
+     "t": "good",
+     "n": 4
+    },
+    {
+     "t": "daughters",
+     "n": 3
+    },
+    {
+     "t": "married",
+     "n": 2
+    },
+    {
+     "t": "man",
+     "n": 2
+    },
+    {
+     "t": "day",
+     "n": 2
+    },
+    {
+     "t": "equally",
+     "n": 2
+    },
+    {
+     "t": "treasured",
+     "n": 1
+    },
+    {
+     "t": "hint",
+     "n": 1
+    },
+    {
+     "t": "trusted",
+     "n": 1
+    },
+    {
+     "t": "soon",
+     "n": 1
+    },
+    {
+     "t": "bear",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "Piling up the fire. CHAPTER XI.",
+     "n": 1
+    },
+    {
+     "ch": "“I am sure she did not listen.” CHAPTER LII.",
+     "n": 1
+    },
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 1
+    },
+    {
+     "ch": "“Lizzy, my dear, I want to speak to you.” CHAPTER LV.",
+     "n": 1
+    },
+    {
+     "ch": "“to assure you in the most animated language.” CHAPTER XIX.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 544,
+     "text": "Mrs. Bennet treasured up the hint, and trusted that she might soon have\ntwo daughters married; and the man whom she could not bear to speak of\nthe day before, was now high in her good graces."
+    },
+    {
+     "chunk": 1867,
+     "text": "Mrs. Bennet had been strongly inclined to ask them to stay and dine\nthere that day; but, though she always kept a very good table, she did\nnot think anything less than two courses could be good enough"
+    }
+   ]
+  },
+  {
+   "id": "c086",
+   "size": 6,
+   "members": [
+    1300,
+    61,
+    232,
+    84,
+    418,
+    675
+   ],
+   "top_terms": [
+    {
+     "t": "bennet",
+     "n": 6
+    },
+    {
+     "t": "miss",
+     "n": 3
+    },
+    {
+     "t": "children",
+     "n": 3
+    },
+    {
+     "t": "think",
+     "n": 2
+    },
+    {
+     "t": "impossible",
+     "n": 2
+    },
+    {
+     "t": "like",
+     "n": 2
+    },
+    {
+     "t": "paused",
+     "n": 1
+    },
+    {
+     "t": "little",
+     "n": 1
+    },
+    {
+     "t": "replied",
+     "n": 1
+    },
+    {
+     "t": "surely",
+     "n": 1
+    },
+    {
+     "t": "occasion",
+     "n": 1
+    },
+    {
+     "t": "exposing",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "I hope Mr. Bingley will like it. CHAPTER II.",
+     "n": 2
+    },
+    {
+     "ch": "A note for Miss Bennet. CHAPTER VII.",
+     "n": 2
+    },
+    {
+     "ch": "“His parting obeisance.” CHAPTER XXXVII.",
+     "n": 1
+    },
+    {
+     "ch": "delighted to see their dear friend again. CHAPTER XVII.",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1300,
+     "text": "Miss Bennet paused a little, and then replied, “Surely there can be no\noccasion for exposing him so dreadfully. What is your own opinion?”"
+    },
+    {
+     "chunk": 61,
+     "text": "“Mr. Bennet, how can you abuse your own children in such a way? You take\ndelight in vexing me. You have no compassion on my poor nerves.”"
+    }
+   ]
+  }
+ ],
+ "instructions": "你是图书馆编目员。请只依据本任务书中的证据（词频、代表块、章节分布）为这本书编目，禁止使用你对该书的既有知识补充证据中不存在的细节。\n\n输出单个 JSON 对象（不要 markdown 围栏、不要解释文字），字段如下：\n{\n  \"task_ref\": \"<原样返回 book.db 字段>\",\n  \"themes\": [ { \"id\": \"t1\", \"name\": \"主题名\", \"note\": \"一句话中文说明\" } ],\n  \"persons\": [ { \"name\": \"人物标准名\", \"match_names\": [\"书中真实出现的写法\", \"...\"], \"note\": \"身份一句话\" } ],\n  \"relations\": [ { \"a\": \"人物名\", \"b\": \"人物名\", \"note\": \"关系一句话\" } ],\n  \"assignments\": [ { \"cluster\": \"c001\", \"theme\": \"t1\" } ]\n}\n\n硬性要求：\n1. assignments 必须覆盖 clusters 里出现的每一个 id，且只允许出现这些 id；每个 cluster 恰好分给一个 theme。\n2. themes 数量建议 5~12 个，每个 theme 至少被一个 cluster 使用。\n3. persons 的 match_names 里每个字符串必须是书中原文真实出现的写法（导入程序会逐一在原文检索验证，任何一条不存在则整批拒绝）。没有把握的写法不要写。\n4. 只有真实出场的人物才列入 persons；relations 的 a/b 必须是 persons 里出现过的名字。\n5. 主题名与人物名用与书中原文一致的语言（英文书用英文，中文书用中文）；说明性文字用中文。"
+}

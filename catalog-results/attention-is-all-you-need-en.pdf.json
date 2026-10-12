@@ -1,0 +1,11 @@
+{
+  "task_ref": "attention-is-all-you-need-en.pdf.db",
+  "themes": [
+    { "id": "t1", "name": "The Transformer Architecture", "note": "全文核心：仅用注意力（不用循环与卷积）的序列转换模型，含架构细节、训练配置与实验结果" }
+  ],
+  "persons": [],
+  "relations": [],
+  "assignments": [
+    { "cluster": "c001", "theme": "t1" }
+  ]
+}

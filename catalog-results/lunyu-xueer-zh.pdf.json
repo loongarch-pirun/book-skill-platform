@@ -1,0 +1,17 @@
+{
+  "task_ref": "lunyu-xueer-zh.pdf.db",
+  "themes": [
+    { "id": "t1", "name": "論語學而全篇", "note": "學而第一全篇四頁：學習、孝弟、忠信、禮用、知人諸章合觀" }
+  ],
+  "persons": [
+    { "name": "孔子", "match_names": ["子曰", "夫子"], "note": "至聖先師，篇中語錄的主講者（書中原文以「子曰」標其語）" },
+    { "name": "有子", "match_names": ["有子"], "note": "孔子弟子有若，論孝悌為仁之本、禮之用和為貴" },
+    { "name": "曾子", "match_names": ["曾子"], "note": "孔子弟子曾參，日三省其身、愼終追遠" },
+    { "name": "子夏", "match_names": ["子夏"], "note": "孔子弟子卜商，論賢賢易色與朋友交言而有信" },
+    { "name": "子貢", "match_names": ["子貢"], "note": "孔子弟子端木賜，論貧而樂富而好禮" }
+  ],
+  "relations": [],
+  "assignments": [
+    { "cluster": "c001", "theme": "t1" }
+  ]
+}

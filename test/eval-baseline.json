@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-12",
+  "model": "e5",
+  "rate": 86,
+  "hits": 37,
+  "total": 43,
+  "rerank": true,
+  "rerankOffRate": 65,
+  "misses": [
+    "which convolutional sequence models are cited as prior work",
+    "who writes the letters that open the novel",
+    "怪物最后说要把自己怎么样",
+    "what is the famous opening sentence about",
+    "who finds lydia and wickham in london",
+    "达西先生的庄园叫什么名字"
+  ],
+  "note": "复试官开为门禁口径；rerankOffRate 仅记录诊断用。基线更新规矩：净提升才允许改，漏题清单变化必须写进 commit message。"
+}

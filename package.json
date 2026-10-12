@@ -1,0 +1,62 @@
+{
+  "name": "book-skill-platform",
+  "version": "0.1.0",
+  "description": "通用个人知识库平台：书进来，变成 AI 能查的 skill",
+  "main": "src/main.js",
+  "author": "boss",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis",
+    "test:fast": "node test/stage0-format-test.mjs && node test/stage1-chunk-test.mjs && node test/catalog-test.mjs",
+    "test:slow": "node test/stage2-test.mjs && node test/stage3-mcp-test.mjs && node test/eval-gate.mjs",
+    "test": "npm run test:fast && npm run test:slow",
+    "eval": "node test/v2-eval.mjs --rerank both",
+    "ingest": "node src/embed-book.js --all",
+    "mcp": "node src/mcp-server.mjs"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.3.1",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@pdf-lib/fontkit": "^1.1.1",
+    "@xmldom/xmldom": "^0.9.12",
+    "adm-zip": "^0.6.1",
+    "better-sqlite3": "^13.0.3",
+    "mammoth": "^1.13.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.4.299",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
+    "node-abi": "^4.37.0"
+  },
+  "build": {
+    "appId": "com.boss.book-skill-platform",
+    "productName": "BookSkillPlatform",
+    "npmRebuild": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false
+    }
+  }
+}

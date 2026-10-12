@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta charset="utf-8"><title>试金石 3</title>
+<style>body{font-family:"Microsoft YaHei",sans-serif;background:#f7f7f5;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+.card{background:#fff;border:1px solid #ddd;border-radius:12px;padding:32px 40px;max-width:560px}
+h1{font-size:18px;margin:0 0 12px}p{font-size:14px;color:#444;line-height:1.7;margin:6px 0}
+.ok{color:#0a7a45;font-weight:bold}.bad{color:#a32d2d;font-weight:bold}code{background:#f0f0ec;padding:1px 5px;border-radius:4px}</style>
+</head>
+<body><div class="card">
+<h1>试金石 3：打包后原生模块验证</h1>
+<p id="r">正在测试 better-sqlite3（FTS5 trigram 中文检索）…</p>
+<p id="d" style="color:#888;font-size:12px"></p>
+</div>
+<script>
+  window.api.sqliteTest().then(r => {
+    document.getElementById("r").innerHTML = r.ok
+      ? '<span class="ok">PASS</span> — 打包成 exe 后，better-sqlite3 中文检索正常'
+      : '<span class="bad">FAIL</span> — 检索结果异常';
+    document.getElementById("d").textContent =
+      `SQLite ${r.sqlite} | 命中：第${r.hit ? r.hit.page : "?"}页「${r.hit ? r.hit.text : ""}」`;
+  }).catch(e => {
+    document.getElementById("r").innerHTML = '<span class="bad">FAIL</span> — ' + e.message;
+  });
+</script>
+</body></html>
