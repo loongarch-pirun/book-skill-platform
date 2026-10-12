@@ -1,10 +1,11 @@
-// 向量化 + 概念关联图谱（模型可换：m3 / e5 / zh-small）
-// 用法: node embed-book.js <book.db> [模型key，默认 m3]
+// 向量化 + 概念关联图谱（模型可换：m3 / e5 / zh-small，唯一入口见 lib/models.mjs）
+// 用法: node embed-book.js <book.db> [模型key]（缺省取 BSP_EMBED_MODEL，再缺省 e5）
 // 干三件事：
 //   1) 用向量模型给每块原文算向量（存 chunks.emb），模型名写进 meta.model
 //   2) 生成概念节点（英文按词频、中文按二字组频，零 LLM）
 //   3) 生成边：书→章节（结构）、章节→概念（归属）、块↔块（语义近邻 top3）
 // 换模型时：库内旧向量自动作废重灌（保证查询和建库用同一个引擎）
+// 编目数据安全：只清 rule 层，llm 编目成果（主题/人物/关系/theme_vecs）跨重灌存活
 const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
