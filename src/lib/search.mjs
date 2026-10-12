@@ -8,6 +8,7 @@ const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 
 import { getEmbedder, getReranker, cosine, assertEngine } from "./models.mjs";
+import { questionKeywords, buildFtsQuery, cjkLikeScores, capFtsHits } from "./keywords.mjs";
 import { loadCatalogSignal } from "./catalog.mjs";
 export { getEmbedder, cosine };
 
@@ -47,18 +48,39 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
     const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
     const hasEmb = cols.includes("emb");
 
+    // ---------- 字面腿 ----------
+    // 关键词模式（默认）：整句 MATCH 是死路——书里不会出现整句问题（43 题实测字面腿命中 0）。
+    // 英文拆 ≥3 字实义词 OR 联合 MATCH（bm25 天然按 IDF 排序）；中文简转繁切 2-gram LIKE 计分
+    // （df 过滤掉无区分度的白话词）。两条路都只留 top-12 最尖的候选——实测不封顶会把
+    // 预筛窗口挤爆产生回归（86→81），封顶 12 = 最小扰动提名制。
+    // 权重固定 0.5（与语义腿对等）；BSP_FTS_W 可手动压低。旧模式：BSP_FTS_KW=0。
     const ftsScores = new Map();
     const q = String(question).replace(/"/g, "").trim();
-    if (q.length >= 3) {
+    const FTS_KW = process.env.BSP_FTS_KW !== "0";
+    let ftsW = Math.min(+(process.env.BSP_FTS_W || 0.5), 0.5);
+    if (q.length >= 3 && FTS_KW) {
+      const kws = questionKeywords(q);
+      const ftsQ = buildFtsQuery(kws);
+      if (ftsQ) {
+        try {
+          const hits = new Map();
+          for (const r of db.prepare(`SELECT c.id id, bm25(chunks_fts) rank FROM chunks_fts f JOIN chunks c ON c.id=f.rowid WHERE chunks_fts MATCH ?`).all(ftsQ))
+            hits.set(r.id, -r.rank);
+          for (const [id, s] of capFtsHits(hits)) ftsScores.set(id, s);
+        } catch { /* 词面意外 → 落中文 LIKE */ }
+      }
+      if (!ftsScores.size && kws.cjk.length)
+        for (const [id, n] of capFtsHits(cjkLikeScores(db, kws.cjk))) ftsScores.set(id, n);
+    } else if (q.length >= 3) {
       try {
         for (const r of db.prepare(`SELECT c.id id, bm25(chunks_fts) rank FROM chunks_fts f JOIN chunks c ON c.id=f.rowid WHERE chunks_fts MATCH ?`).all(`"${q}"`))
           ftsScores.set(r.id, -r.rank);
       } catch { /* 特殊字符降级 LIKE */ }
+      if (!ftsScores.size)
+        // LIKE 通配符转义：问题里的 % _ \ 当字面量处理，否则 "100%" 能匹配半本书
+        for (const r of db.prepare(`SELECT id FROM chunks WHERE text LIKE ? ESCAPE '\\' LIMIT 200`).all(`%${q.replace(/[\\%_]/g, "\\$&")}%`))
+          ftsScores.set(r.id, 10);
     }
-    if (!ftsScores.size)
-      // LIKE 通配符转义：问题里的 % _ \ 当字面量处理，否则 "100%" 能匹配半本书
-      for (const r of db.prepare(`SELECT id FROM chunks WHERE text LIKE ? ESCAPE '\\' LIMIT 200`).all(`%${q.replace(/[\\%_]/g, "\\$&")}%`))
-        ftsScores.set(r.id, 10);
 
     let semScores = new Map();
     const embedKey = embed.key;
@@ -87,10 +109,10 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
   // 却足以扰动预筛窗口重掷复试官的骰子（实测把 pemberley 英文题从过打到漏）——直接无效化
   for (const [k, v] of cat.hit) if (v.w < 0.15) cat.hit.delete(k);
 
-  // 候选池：字面/语义全集
+  // 候选池：字面/语义全集（字面腿权重 ftsW：关键词模式按质量阶梯，旧模式恒 0.5）
   const pool = new Map();
   for (const id of new Set([...nf.keys(), ...ns.keys()]))
-    pool.set(id, { id, score: 0.5 * (nf.get(id) || 0) + 0.5 * (ns.get(id) || 0), fts: nf.get(id) || 0, sem: ns.get(id) || 0 });
+    pool.set(id, { id, score: ftsW * (nf.get(id) || 0) + (1 - ftsW) * (ns.get(id) || 0), fts: nf.get(id) || 0, sem: ns.get(id) || 0 });
 
   // 池内命中：加权（低频人物/强主题信号权重高，高频名字几乎不加权）
   for (const [cid, sig] of cat.hit) {
@@ -109,7 +131,7 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
       .filter(x => !pool.has(x.id));
     const byW = (t, n) => out.filter(x => x.tag === t && x.w >= W_FLOOR[t]).sort((a, b) => b.w - a.w).slice(0, n);
     for (const x of [...byW("person", NOM_PERSON), ...byW("theme", NOM_THEME)]) {
-      const p = { id: x.id, score: 0.5 * (nf.get(x.id) || 0) + 0.5 * (ns.get(x.id) || 0) + CATALOG_W * x.w, fts: nf.get(x.id) || 0, sem: ns.get(x.id) || 0, cat: x.tag, catW: x.w, nom: true };
+      const p = { id: x.id, score: ftsW * (nf.get(x.id) || 0) + (1 - ftsW) * (ns.get(x.id) || 0) + CATALOG_W * x.w, fts: nf.get(x.id) || 0, sem: ns.get(x.id) || 0, cat: x.tag, catW: x.w, nom: true };
       pool.set(x.id, p);
       nominations.push(p);
     }
