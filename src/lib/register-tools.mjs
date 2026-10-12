@@ -9,6 +9,11 @@ function matchBook(book) {
   return listBooks().filter(b => b.id.toLowerCase().includes(q) || b.title.toLowerCase().includes(q));
 }
 
+// topN 统一上限：模型一次索要 999 条会拖垮上下文，zod 拒收 + 处理器兜底夹取
+// 导出为测试钩子（guard-test 直接断言这两层）
+export const TOPN_SCHEMA = z.number().int().min(1).max(20).optional().describe("返回条数，默认 4，最多 20");
+export const clampTopN = (n) => Math.min(Math.max(1, Math.floor(Number(n) || 4)), 20);
+
 export function registerServerTools(server) {
   server.registerTool("list_books", {
     title: "书架清单",
@@ -43,20 +48,21 @@ export function registerServerTools(server) {
     inputSchema: {
       book: z.string().describe("书名或书名片段，如 论语、attention、pride"),
       question: z.string().describe("要查的问题"),
-      topN: z.number().int().optional().describe("返回条数，默认 4"),
+      topN: TOPN_SCHEMA,
     },
   }, async ({ book, question, topN }) => {
+    const n = clampTopN(topN);
     const matches = matchBook(book);
     if (!matches.length) {
       // 书名没匹配上 → 不报错，自动路由到与问题最相关的那本书（与总入口同一套挑书逻辑）
-      const routed = await routeAndSearch(question, { topN: topN || 4, maxBooks: 1 });
+      const routed = await routeAndSearch(question, { topN: n, maxBooks: 1 });
       if (!routed.routed_books.length)
         return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」且书库为空`, available: listBooks().map(x => x.title) }) }] };
       return { content: [{ type: "text", text: JSON.stringify({ book: routed.routed_books[0].title, question, note: `未找到名为「${book}」的书，已自动选择最相关的书`, results: routed.results }, null, 2) }] };
     }
     const b = matches[0];
     const note = matches.length > 1 ? `书名「${book}」匹配到 ${matches.length} 本，已选「${b.id}」（其余：${matches.slice(1).map(m => m.id).join("、")}）。要查特定版本请用完整书名。` : undefined;
-    const results = await hybridSearch(b.db, question, topN || 4);
+    const results = await hybridSearch(b.db, question, n);
     return { content: [{ type: "text", text: JSON.stringify({ book: b.title, question, note, results }, null, 2) }] };
   });
 
@@ -65,10 +71,10 @@ export function registerServerTools(server) {
     description: "不知道该查哪本书时用这个：系统自动判断问题牵涉哪些书（可多本），现场组装答案，每条结果都带书的归属和定位。",
     inputSchema: {
       question: z.string().describe("要查的问题"),
-      topN: z.number().int().optional().describe("返回条数，默认 4"),
+      topN: TOPN_SCHEMA,
     },
   }, async ({ question, topN }) => {
-    const out = await routeAndSearch(question, { topN: topN || 4 });
+    const out = await routeAndSearch(question, { topN: clampTopN(topN) });
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 }

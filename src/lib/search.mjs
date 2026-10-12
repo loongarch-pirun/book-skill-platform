@@ -7,7 +7,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 
-import { getEmbedder, getReranker, cosine } from "./models.mjs";
+import { getEmbedder, getReranker, cosine, assertEngine } from "./models.mjs";
 import { loadCatalogSignal } from "./catalog.mjs";
 export { getEmbedder, cosine };
 
@@ -37,33 +37,38 @@ export function findBook(query, libDir = LIB_DIR) {
 // opts.qv: 预算好的问题向量（路由场景下避免重复编码）
 // opts.rerank: 默认开，传 false 只走混合
 export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rerank = true } = {}) {
+  topN = Math.min(Math.max(Number(topN) || 5, 1), 50);  // 防呆：NaN/负数/超大值都夹回正常区间
   const db = new Database(dbPath, { readonly: true });
-  const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
-  const hasEmb = cols.includes("emb");
-
-  const ftsScores = new Map();
-  const q = String(question).replace(/"/g, "").trim();
-  if (q.length >= 3) {
-    try {
-      for (const r of db.prepare(`SELECT c.id id, bm25(chunks_fts) rank FROM chunks_fts f JOIN chunks c ON c.id=f.rowid WHERE chunks_fts MATCH ?`).all(`"${q}"`))
-        ftsScores.set(r.id, -r.rank);
-    } catch { /* 特殊字符降级 LIKE */ }
-  }
-  if (!ftsScores.size)
-    for (const r of db.prepare(`SELECT id FROM chunks WHERE text LIKE ? LIMIT 200`).all(`%${q}%`))
-      ftsScores.set(r.id, 10);
-
-  let semScores = new Map();
-  let embedKey = null;
-  if (hasEmb) {
+  try {
+    // 引擎一致性卫兵：库和查询不在同一向量空间就拒绝跑（宁可不答，不答错）
     const embed = await getEmbedder();
-    embedKey = embed.key;
-    if (!qv) [qv] = await embed.embedQueries([q]);
-    for (const r of db.prepare("SELECT id, emb FROM chunks WHERE emb IS NOT NULL").all()) {
-      const v = new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4);
-      semScores.set(r.id, cosine(qv, v));
+    assertEngine(db, embed.key);
+
+    const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
+    const hasEmb = cols.includes("emb");
+
+    const ftsScores = new Map();
+    const q = String(question).replace(/"/g, "").trim();
+    if (q.length >= 3) {
+      try {
+        for (const r of db.prepare(`SELECT c.id id, bm25(chunks_fts) rank FROM chunks_fts f JOIN chunks c ON c.id=f.rowid WHERE chunks_fts MATCH ?`).all(`"${q}"`))
+          ftsScores.set(r.id, -r.rank);
+      } catch { /* 特殊字符降级 LIKE */ }
     }
-  }
+    if (!ftsScores.size)
+      // LIKE 通配符转义：问题里的 % _ \ 当字面量处理，否则 "100%" 能匹配半本书
+      for (const r of db.prepare(`SELECT id FROM chunks WHERE text LIKE ? ESCAPE '\\' LIMIT 200`).all(`%${q.replace(/[\\%_]/g, "\\$&")}%`))
+        ftsScores.set(r.id, 10);
+
+    let semScores = new Map();
+    const embedKey = embed.key;
+    if (hasEmb) {
+      if (!qv) [qv] = await embed.embedQueries([q]);
+      for (const r of db.prepare("SELECT id, emb FROM chunks WHERE emb IS NOT NULL").all()) {
+        const v = new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4);
+        semScores.set(r.id, cosine(qv, v));
+      }
+    }
 
   const norm = (m) => {
     if (m.size < 2) return new Map([...m.keys()].map(k => [k, 1]));
@@ -137,8 +142,10 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
         .sort((a, b) => (b.rerank + TIE * (b.catW || 0)) - (a.rerank + TIE * (a.catW || 0)));
     }
   }
-  db.close();
-  return final.slice(0, topN);
+    return final.slice(0, topN);
+  } finally {
+    db.close();  // 错误路径也必须关库（引擎不一致抛错/模型加载失败时不能泄漏句柄）
+  }
 }
 
 // ---------- 动态挑书路由（总入口：临时技能包） ----------
@@ -147,33 +154,41 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 2, libDir 
   if (!books.length) return { routed_books: [], results: [], note: "书库为空" };
   const embed = await getEmbedder();
   const [qv] = await embed.embedQueries([question]);
+  const skipped = [];  // 引擎不匹配的书：路由阶段跳过（混着旧引擎的书库不该整体罢工，但要说一声）
   const scored = books.map(b => {
     const db = new Database(b.db, { readonly: true });
-    const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
-    let best = 0;
-    if (cols.includes("emb")) {
-      for (const r of db.prepare("SELECT emb FROM chunks WHERE emb IS NOT NULL").all()) {
-        const v = new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4);
-        const s = cosine(qv, v);
-        if (s > best) best = s;
+    try {
+      try { assertEngine(db, embed.key); }
+      catch (e) { skipped.push({ title: b.title, reason: e.message }); return { ...b, best: -Infinity }; }
+      const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
+      let best = 0;
+      if (cols.includes("emb")) {
+        for (const r of db.prepare("SELECT emb FROM chunks WHERE emb IS NOT NULL").all()) {
+          const v = new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4);
+          const s = cosine(qv, v);
+          if (s > best) best = s;
+        }
       }
+      return { ...b, best };
+    } finally {
+      db.close();
     }
-    db.close();
-    return { ...b, best };
   }).sort((a, b) => b.best - a.best);
 
   // 规则：语义分 ≥ 首名×0.85 的书入选（最多 maxBooks 本，至少 1 本）
   // routeFloor 接线：EMBED_MODELS 里注册的绝对下限（e5 尺度 0.7）兜底，防止弱书蹭进来
   const top = scored[0];
-  const picked = scored.filter(b => b.best >= Math.max(embed.routeFloor, top.best * 0.85)).slice(0, maxBooks);
+  const picked = top.best === -Infinity ? [] : scored.filter(b => b.best >= Math.max(embed.routeFloor, top.best * 0.85)).slice(0, maxBooks);
   const results = [];
   for (const b of picked)
     for (const r of await hybridSearch(b.db, question, topN, { qv }))
       results.push({ book: b.title, loc: r.loc, score: r.rerank ?? r.score, fts: r.fts, sem: r.sem, rerank: r.rerank, text: r.text });
   results.sort((a, b) => b.score - a.score);
-  return {
+  const out = {
     routed_books: picked.map(b => ({ title: b.title, best_sim: +b.best.toFixed(3) })),
-    considered: scored.map(b => ({ title: b.title, best_sim: +b.best.toFixed(3) })),
+    considered: scored.filter(b => b.best > -Infinity).map(b => ({ title: b.title, best_sim: +b.best.toFixed(3) })),
     results: results.slice(0, topN),
   };
+  if (skipped.length) out.skipped_books = skipped;
+  return out;
 }

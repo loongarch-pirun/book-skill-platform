@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 import { z } from "zod";
-import { cosine, getEmbedder } from "./models.mjs";
+import { cosine, getEmbedder, assertEngine, DEFAULT_EMBED } from "./models.mjs";
 
 // ---------- 词频统计（与 embed-book.js 规则图谱同一套停用词，保持一致） ----------
 const EN_STOP = new Set(("the a an and or of to in is are was were be been being on for with as at by from this that these those it its their his her hers him them himself herself whom whose not but they we you he she which what if then than so such can could will would may might must have has had do does did our your i me my mine mr mrs said one two more most other no nor only own same too very just also into over under again further once here there when where why how all any both each few shall should ought per chapter volume".split(" ")));
@@ -311,6 +311,9 @@ export function validateResult(db, task, result) {
 
 // ---------- 5) 入库（事务 + mention 扫描 + 主题向量） ----------
 export async function importCatalog(db, task, result, { dryRun = false } = {}) {
+  // 引擎一致性卫兵（放在校验前面：库和当前引擎不同空间时，theme_vecs 会写入错空间的向量，
+  // 主题语义路从此失灵——这种错必须在入库前拦住，而不是入库后靠 eval 掉分才发现）
+  assertEngine(db, DEFAULT_EMBED);
   const v = validateResult(db, task, result);
   if (!v.ok) {
     const e = new Error("编目结果校验失败:\n" + v.errors.map(x => " - " + x).join("\n"));

@@ -70,3 +70,20 @@ export async function getReranker() {
 }
 
 export const cosine = (a, b) => { let d = 0; for (let i = 0; i < a.length; i++) d += a[i] * b[i]; return d; };
+
+// ---------- 引擎一致性卫兵 ----------
+// 库文件和查询端必须用同一个向量引擎（不同模型的向量空间不同，余弦分全是垃圾）。
+// 两道检查：
+//   1. meta.model 标记：库是用哪个引擎灌的，必须等于当前查询引擎（v2 起的库都有标记）
+//   2. 维度兜底：v1 时代的旧库没有标记，退而求其次验块向量长度 == 注册表的 dim
+// 抛错信息里直接给出修复路径（重灌 or 切引擎），不让下一个接班的人猜。
+export function assertEngine(db, embedKey) {
+  const cfg = EMBED_MODELS[embedKey];
+  if (!cfg) throw new Error(`assertEngine: 未知向量模型 ${embedKey}`);
+  const marked = db.prepare("SELECT value FROM meta WHERE key='model'").get()?.value || null;
+  if (marked && marked !== embedKey)
+    throw new Error(`引擎不一致：库是用 ${marked} 灌的，当前查询用 ${embedKey}，余弦分会是垃圾。修复：跑 embed-book.js 重灌（编目数据自动保留），或设 BSP_EMBED_MODEL=${marked} 切回原引擎。`);
+  const row = db.prepare("SELECT emb FROM chunks WHERE emb IS NOT NULL LIMIT 1").get();
+  if (row && row.emb.byteLength / 4 !== cfg.dim)
+    throw new Error(`维度不一致：库里向量 ${row.emb.byteLength / 4} 维，当前引擎 ${embedKey} 应为 ${cfg.dim} 维。重灌库或换引擎。`);
+}
