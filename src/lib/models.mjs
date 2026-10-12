@@ -54,7 +54,10 @@ export async function getReranker() {
   if (process.env.BSP_RERANK === "0") return null;
   if (_rerank) return _rerank;
   const tf = await getTf();
-  const ID = process.env.BSP_RERANK_MODEL || "Xenova/bge-reranker-base";
+  // 默认复试官：bge-reranker-v2-m3（568M，100+ 语言）——跨语言对（中文问题×英文原文）打分正常，
+  // 替换只懂中英的 bge-reranker-base（它给跨语言对打 0.0001 分，压死 4 道漏题）。
+  // 对照/回滚：BSP_RERANK_MODEL=Xenova/bge-reranker-base
+  const ID = process.env.BSP_RERANK_MODEL || "onnx-community/bge-reranker-v2-m3-ONNX";
   const tok = await tf.AutoTokenizer.from_pretrained(ID);
   const model = await tf.AutoModelForSequenceClassification.from_pretrained(ID, { dtype: "int8" });
   _rerank = async (query, passages) => {

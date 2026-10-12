@@ -1,18 +1,19 @@
 {
   "date": "2026-10-12",
   "model": "e5",
-  "rate": 86,
-  "hits": 37,
+  "reranker": "onnx-community/bge-reranker-v2-m3-ONNX",
+  "rate": 88,
+  "hits": 38,
   "total": 43,
   "rerank": true,
-  "rerankOffRate": 65,
+  "rerankOffRate": 67,
+  "avgLatencyMs": 3231,
   "misses": [
-    "which convolutional sequence models are cited as prior work",
+    "再远的路从哪里开始",
     "who writes the letters that open the novel",
     "怪物最后说要把自己怎么样",
     "what is the famous opening sentence about",
-    "who finds lydia and wickham in london",
     "达西先生的庄园叫什么名字"
   ],
-  "note": "复试官开为门禁口径；rerankOffRate 仅记录诊断用。基线更新规矩：净提升才允许改，漏题清单变化必须写进 commit message。"
+  "note": "v2-m3 复试官基线（原 bge-reranker-base 86 分）。净 +2（convs2s/gardiner 翻案），代价延迟 0.86s→3.2s。新增漏题「再远的路从哪里开始」= m3 对文言文弱（金块池内第 11 名擦肩）。剩余 4 漏题定案语义陷阱块（署名行/元信息/序言），换裁判无效。基线更新规矩：净提升才允许改，漏题清单变化必须写进 commit message。"
 }
