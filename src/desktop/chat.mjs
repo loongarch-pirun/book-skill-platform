@@ -7,7 +7,7 @@
 //   - 错误全部抛 UserError 人话（IPC 层统一包装，UI toast 直接展示）。
 import { ask, UserError } from "./engine.mjs";
 import { loadLlmConfig, readLlmKey, saveLlmConfig } from "./llm-config.mjs";
-import { askCloud, chat } from "../lib/llm.mjs";
+import { askCloud, chat, sanitizeHistory } from "../lib/llm.mjs";
 
 // ---------- 配置读写（给 UI；get 不含明文 key，set 不落半成品） ----------
 export function configGet() {
@@ -36,7 +36,8 @@ export async function testConnection() {
 
 // ---------- 云端总结：本地检索 → 云端生成 → 引用回源校验 ----------
 // topN 默认 6（比桌面默认 4 稍宽：总结要多一点素材；上限 20 由 ask 把关）
-export async function cloudSummary({ bookId = null, question, topN = 6, skillSlug = null } = {}) {
+// history：多轮对话历史（渲染层持有传来；净化后透传给云端——白名单/截断/近 6 条）
+export async function cloudSummary({ bookId = null, question, topN = 6, skillSlug = null, history = [] } = {}) {
   const q = String(question || "").trim();
   if (!q) throw new UserError("先提问再总结");
   const cfg = loadLlmConfig();
@@ -51,10 +52,10 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
   const results = raw.map((r) => ({ ...r, book: r.book || base.book || "" }));
   const skillChapters = (base.skill?.matched || []).map((m) => ({ title: m.title, content: m.content }));
 
-  // 2) 云端生成 + 引用校验（防幻觉延伸到生成层）
+  // 2) 云端生成 + 引用校验（防幻觉延伸到生成层；历史净化后随请求带上）
   const r = await askCloud({
     config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model },
-    question: q, results, skillChapters,
+    question: q, results, skillChapters, history: sanitizeHistory(history),
   });
   if (!r.ok) throw new UserError(r.message);
   return { answer: r.answer, citations: r.citations, dropped: r.dropped, usage: r.usage, mode: base.mode, book: base.book || null };

@@ -4,7 +4,7 @@ import http from "node:http";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { normalizeLlmConfig, buildMessages, chat, parseAnswer, verifyAnswer, askCloud } from "../src/lib/llm.mjs";
+import { normalizeLlmConfig, buildMessages, chat, parseAnswer, verifyAnswer, askCloud, sanitizeHistory } from "../src/lib/llm.mjs";
 import { configureLlmConfig, loadLlmConfig, readLlmKey, saveLlmConfig } from "../src/desktop/llm-config.mjs";
 
 let pass = 0, fail = 0;
@@ -16,6 +16,7 @@ const ok = (cond, name, extra = "") => {
 // ========== 0) 假 API 服务器 ==========
 // 场景变量控制响应；请求头/请求体记录下来供断言。
 let scenario = "normal";
+let scenarioQueue = null; // 若设了队列：按序消费（重试场景用：如 ["allFake","normal"]）
 let lastAuth = null, lastBody = null;
 const REPLIES = {
   // 片段1 的原文：「為學日益，為道日損。損之又損，以至於無為。」
@@ -31,11 +32,12 @@ const server = http.createServer((req, res) => {
   req.on("end", () => {
     lastAuth = req.headers.authorization || null;
     try { lastBody = JSON.parse(body); } catch { lastBody = null; }
-    if (scenario === "err401") { res.writeHead(401, { "Content-Type": "application/json" }); res.end('{"error":{"message":"bad key"}}'); return; }
-    if (scenario === "hang") return; // 不响应 → 客户端超时
-    const content = scenario === "badjson"
+    const sc = scenarioQueue && scenarioQueue.length ? scenarioQueue.shift() : scenario;
+    if (sc === "err401") { res.writeHead(401, { "Content-Type": "application/json" }); res.end('{"error":{"message":"bad key"}}'); return; }
+    if (sc === "hang") return; // 不响应 → 客户端超时
+    const content = sc === "badjson"
       ? "抱歉，我无法按格式回答。"
-      : JSON.stringify(REPLIES[scenario] || REPLIES.normal);
+      : JSON.stringify(REPLIES[sc] || REPLIES.normal);
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ choices: [{ message: { role: "assistant", content } }], usage: { total_tokens: 42 } }));
   });
@@ -134,6 +136,26 @@ const RESULTS = [
   ok(r4.ok === false && (r4.code === "NETWORK" || r4.code === "TIMEOUT"), "错误: 打不通的地址 → NETWORK");
 }
 
+// ========== 6b) QUOTE_FAIL / BADRESP 自动重试（模型偶发字形漂移的兜底） ==========
+{
+  scenarioQueue = ["allFake", "normal"];
+  const r = await askCloud({ config: CFG, question: "q", results: RESULTS });
+  ok(r.ok === true && r.answer.includes("往外丢东西"), "重试: 首次引用全假 → 自动重试后通过");
+  const lastMsg = String(lastBody?.messages?.slice(-1)[0]?.content || "");
+  ok(lastMsg.includes("补充要求") && lastMsg.includes("逐字抄写"), "重试: 第二次请求附带加强提醒");
+  scenarioQueue = null;
+
+  scenarioQueue = ["allFake", "allFake"];
+  const r2 = await askCloud({ config: CFG, question: "q", results: RESULTS });
+  ok(r2.ok === false && r2.code === "QUOTE_FAIL", "重试: 两次全假 → 仍然降级（防线强度不变）");
+  scenarioQueue = null;
+
+  scenario = "allFake";
+  const r3 = await askCloud({ config: CFG, question: "q", results: RESULTS, retryOnQuoteFail: false });
+  ok(r3.ok === false && r3.code === "QUOTE_FAIL", "重试: 开关关闭时不重试");
+  scenario = "normal";
+}
+
 // ========== 7) 配置存储（假加密器注入） ==========
 {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-llm-"));
@@ -162,6 +184,24 @@ const RESULTS = [
   const disk2 = fs.readFileSync(path.join(tmp, "llm.json"), "utf8");
   ok(disk2.includes("plain:") && !disk2.includes("sk-xyz9999"), "存储: 无加密器时降级 plain:（仍无裸 key）");
   ok(loadLlmConfig().warning !== null, "存储: 降级时 UI 拿得到警告");
+}
+
+// ========== 8) 历史净化（IPC 边界防御：渲染层传来的对话历史不可信） ==========
+{
+  const hist = sanitizeHistory([
+    { role: "user", content: "问题一" },
+    { role: "assistant", content: "回答一" },
+    { role: "system", content: "非法角色" },
+    { role: "user", content: "   " },
+    { role: "assistant", content: 12345 },
+    "垃圾",
+    { role: "user", content: "x".repeat(3000) },
+  ]);
+  ok(hist.length === 3 && hist[0].content === "问题一" && hist[1].role === "assistant", "历史净化: 非法条目被过滤（角色/空内容/非字符串）");
+  ok(hist[2].content.length === 2000, "历史净化: 单条截断 2000 字");
+  ok(sanitizeHistory(null).length === 0 && sanitizeHistory("x").length === 0, "历史净化: 非数组安全返回空");
+  const many = sanitizeHistory(Array.from({ length: 10 }, (_, i) => ({ role: "user", content: "m" + i })));
+  ok(many.length === 6 && many[0].content === "m4", "历史净化: 只留最近 6 条");
 }
 
 server.closeAllConnections?.();

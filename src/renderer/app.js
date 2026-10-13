@@ -5,6 +5,7 @@
 import { renderShelf, bindShelfEvents } from "./views.js";
 import { renderReader, loadReader, bindReaderEvents } from "./views-reader.js";
 import { renderAsk, renderSkills, loadSkillsView, bindAskEvents } from "./views-ask.js";
+import { renderChat, scrollChatBottom, bindChatEvents } from "./views-chat.js";
 
 export const $ = (s, r = document) => r.querySelector(s);
 export const state = {
@@ -15,6 +16,7 @@ export const state = {
   reader: { bookId: null, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false },
   ask: { mode: "book", bookId: null, question: "", loading: false, result: null, skillSlug: null },
   llm: { config: null, answer: null, loading: false, editing: false }, // 云端问答（V2 P2）：配置/回答/状态
+  chat: { mode: "book", bookId: null, skillSlug: null, messages: [], loading: false }, // 对话窗口（V2 P3）
   skills: { packages: [], loaded: false, viewing: null, detail: null, chapter: null, chapterContent: null, busy: false },
   model: { ready: false, text: "模型加载中…" },
   config: null,
@@ -47,6 +49,7 @@ function renderMain() {
   if (state.view === "shelf") main.innerHTML = renderShelf();
   else if (state.view === "reader") { main.innerHTML = renderReader(); loadReader(); }
   else if (state.view === "ask") main.innerHTML = renderAsk();
+  else if (state.view === "chat") { main.innerHTML = renderChat(); scrollChatBottom(); }
   else { main.innerHTML = renderSkills(); loadSkillsView(); }
 }
 
@@ -130,6 +133,7 @@ async function boot() {
   bindShelfEvents();
   bindReaderEvents();
   bindAskEvents();
+  bindChatEvents();
   try {
     state.config = await call(window.study.configGet());
     await maybeWizard(state.config);

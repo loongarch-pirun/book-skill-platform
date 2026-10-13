@@ -102,13 +102,21 @@ const copyDb = (src) => {
 
 // ========== 7) MCP 处理器端到端：topN=999 实际只返回 ≤20 条 ==========
 {
-  const handlers = new Map();
-  const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };
-  registerServerTools(mockServer);
-  const resp = await handlers.get("query_book")({ book: "attention", question: "what BLEU score did the big model get on english to german", topN: 999 });
-  const out = JSON.parse(resp.content[0].text);
-  ok(out.results.length <= 20 && out.results.length > 0, `topN: 处理器端到端 999 被夹取（实际返回 ${out.results.length} 条）`);
-  ok(out.results[0].text.toLowerCase().includes("28.4"), "topN: 夹取后检索质量不劣化（28.4 仍在首位）");
+  // 夹具：用户在客户端可能把书收起 skill（H3 过滤会让 query_book 查不到）——测试临时开启，finally 还原
+  const { loadSkillState, setSkillEnabled } = await import("../src/lib/skill-state.mjs");
+  const beforeOn = loadSkillState(LIB)["attention-is-all-you-need-en.pdf"];
+  setSkillEnabled(LIB, "attention-is-all-you-need-en.pdf", true);
+  try {
+    const handlers = new Map();
+    const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };
+    registerServerTools(mockServer);
+    const resp = await handlers.get("query_book")({ book: "attention", question: "what BLEU score did the big model get on english to german", topN: 999 });
+    const out = JSON.parse(resp.content[0].text);
+    ok(out.results.length <= 20 && out.results.length > 0, `topN: 处理器端到端 999 被夹取（实际返回 ${out.results.length} 条）`);
+    ok(out.results[0].text.toLowerCase().includes("28.4"), "topN: 夹取后检索质量不劣化（28.4 仍在首位）");
+  } finally {
+    setSkillEnabled(LIB, "attention-is-all-you-need-en.pdf", beforeOn !== false);
+  }
 }
 
 // ========== 8) importCatalog 挂卫兵：库引擎不匹配时入库前就拦 ==========

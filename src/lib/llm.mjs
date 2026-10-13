@@ -21,6 +21,16 @@ export function normalizeLlmConfig({ baseUrl, apiKey, model } = {}) {
   return { baseUrl: base, apiKey: key, model: mdl };
 }
 
+// ---------- 历史净化（IPC 边界防御：渲染层传来的对话历史不可信） ----------
+// 白名单角色 / 丢空内容与非字符串 / 只留最近 6 条（3 轮）/ 单条截断 2000 字（控 token）
+export function sanitizeHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history
+    .filter((h) => h && (h.role === "user" || h.role === "assistant") && typeof h.content === "string" && h.content.trim())
+    .slice(-6)
+    .map((h) => ({ role: h.role, content: h.content.trim().slice(0, 2000) }));
+}
+
 // ---------- 提示词 ----------
 // 铁律三条写死在 system：只依据片段、引用逐字抄、找不到就说没有。输出格式 JSON。
 const SYSTEM = `你是一个严谨的读书助手：用户提问后，你会收到一组从书中检索到的「原文片段」，你要只依据这些片段来回答。
@@ -156,17 +166,28 @@ export function verifyAnswer(parsed, results) {
 
 // ---------- 一站式（chat.mjs 调用） ----------
 // 规则：citations 为空 = 合法（例如"书中没有相关内容"）；有但全被剔除 = 降级（QUOTE_FAIL）。
-export async function askCloud({ config, question, results, skillChapters, history, timeoutMs, temperature, maxTokens } = {}) {
+// 重试策略（retryOnQuoteFail 默认开）：QUOTE_FAIL / BADRESP 先自动重试一次（附加加强提醒）——
+// 实测模型偶发把繁体引文写成简体（字形漂移）或 JSON 崩坏；重试后的输出仍须过同一道校验，
+// 防线强度不变，只是把"偶发抽风"与"真幻觉"区分开。
+export async function askCloud({ config, question, results, skillChapters, history, timeoutMs, temperature, maxTokens, retryOnQuoteFail = true } = {}) {
   const norm = normalizeLlmConfig(config);
   if (norm.error) return llmErr("CONFIG", norm.error);
-  const messages = buildMessages({ question, results, skillChapters, history });
-  const r = await chat({ ...norm, messages, timeoutMs, temperature, maxTokens });
-  if (!r.ok) return r;
-  const parsed = parseAnswer(r.text);
-  if (!parsed) return llmErr("BADRESP", "云端回答未按格式返回，已降级为原文片段");
-  const v = verifyAnswer(parsed, results);
-  if (parsed.citations.length > 0 && v.citations.length === 0) {
-    return llmErr("QUOTE_FAIL", "云端回答的引用未能通过核验，已降级为原文片段");
+  const once = async (retryNote) => {
+    const messages = buildMessages({ question, results, skillChapters, history });
+    if (retryNote) messages[messages.length - 1].content += `\n\n补充要求：${retryNote}`;
+    const r = await chat({ ...norm, messages, timeoutMs, temperature, maxTokens });
+    if (!r.ok) return r;
+    const parsed = parseAnswer(r.text);
+    if (!parsed) return llmErr("BADRESP", "云端回答未按格式返回，已降级为原文片段");
+    const v = verifyAnswer(parsed, results);
+    if (parsed.citations.length > 0 && v.citations.length === 0) {
+      return llmErr("QUOTE_FAIL", "云端回答的引用未能通过核验，已降级为原文片段");
+    }
+    return { ok: true, answer: v.answer, citations: v.citations, dropped: v.dropped.length, usage: r.usage };
+  };
+  let out = await once(null);
+  if (!out.ok && retryOnQuoteFail && (out.code === "QUOTE_FAIL" || out.code === "BADRESP")) {
+    out = await once("引用必须逐字抄写上面「原文片段」里的句子，一字不差（保持繁体字形，不要转成简体），并按要求的 JSON 格式输出。");
   }
-  return { ok: true, answer: v.answer, citations: v.citations, dropped: v.dropped.length, usage: r.usage };
+  return out;
 }

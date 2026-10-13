@@ -131,6 +131,19 @@ click("llmclose", {});
 await sleep(10);
 assert(!mainEl.innerHTML.includes("云端 AI 配置"), "配置卡收起（llmclose 接线）");
 
+// ---------- 5c) 对话窗口（V2 P3）：发消息 → 消息流入列 ----------
+app.show("chat");
+await sleep(10);
+assert(mainEl.innerHTML.includes("多轮问答"), "对话视图渲染（P3 导航接线）");
+getEl("#chatQ").value = "什么是真正的强大？";
+click("chatgo", {});
+await sleep(30);
+assert(app.state.chat.messages.length === 2 && app.state.chat.messages[1].content === "测试总结", "对话：发送 → user+assistant 入列（chatSummary 接线）");
+assert(mainEl.innerHTML.includes("什么是真正的强大？") && mainEl.innerHTML.includes("测试总结"), "对话：消息流双气泡渲染");
+click("chatclear", {});
+await sleep(10);
+assert(app.state.chat.messages.length === 0, "对话：清空接线");
+
 // ---------- 6) jobs 进度事件 → 书架横幅 ----------
 app.show("shelf");
 await sleep(10);
