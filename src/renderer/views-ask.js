@@ -31,6 +31,7 @@ export function renderAsk() {
              <span class="chip">匹配章节随答案一起给，按需加载不占检索</span>`
           : '<span class="chip">（还没有技能包——去对话里让智能体落一个）</span>'}
       </div>
+      ${cloudBarHtml()}
     </div>
     <div id="askOut">${a.loading ? '<div class="skeleton">引擎检索中（平均约 3 秒，首次要先下模型）…</div>' : askResultHtml(a.result)}</div>`;
 }
@@ -42,7 +43,7 @@ function askResultHtml(r) {
     : "";
   const skill = r.skill ? skillCtxHtml(r.skill) : "";
   if (!r.results?.length) return routed + skill + '<div class="empty">没有检索到相关内容</div>';
-  return routed + skill + `<div class="results">${r.results.map((x) => `
+  return routed + skill + cloudAnswerHtml(r) + `<div class="results">${r.results.map((x) => `
     <div class="result">
       <div class="rhead">
         <span class="rbook">${esc(x.book || "")}</span>
@@ -64,10 +65,65 @@ function skillCtxHtml(s) {
   return `<div class="skillctx"><div class="sctxhead">${head}</div>${chapters}</div>`;
 }
 
+// ---------- 云端问答（V2 P2）：状态条 / 配置卡 / 云端总结区 ----------
+// 状态条：未配置→引导填 key；已配置→显示模型与 key 尾号（key 永不回显全文）
+function cloudBarHtml() {
+  const L = state.llm;
+  const c = L.config || {};
+  if (L.editing) {
+    return `
+      <div class="cloudcfg">
+        <div class="cfgtitle">云端 AI 配置（OpenAI 兼容接口 · DeepSeek / 智谱 GLM 等通用）</div>
+        <div class="cfgrow"><input id="llmBase" placeholder="接口地址，如 https://api.deepseek.com/v1" value="${esc(c.baseUrl || "")}"></div>
+        <div class="cfgrow"><input id="llmModel" placeholder="模型名，如 deepseek-chat" value="${esc(c.model || "")}"></div>
+        <div class="cfgrow"><input id="llmKey" type="password" placeholder="${c.hasKey ? "已存 key（尾号 " + esc(c.keyTail || "") + "），留空不改" : "API key（sk-…，仅保存在本机）"}"></div>
+        <div class="cfgbtns">
+          <button class="primary sm" data-action="llmsave">保存</button>
+          <button class="ghost sm" data-action="llmtest">测试连接</button>
+          <button class="ghost sm" data-action="llmclose">取消</button>
+        </div>
+        <div class="cfgwarn">检索永远在本机；发送给云端 AI 的只有「你的问题 + 这次检索到的原文片段」。</div>
+        ${c.warning ? `<div class="cfgwarn">${esc(c.warning)}</div>` : ""}
+      </div>`;
+  }
+  return `
+    <div class="cloudrow">
+      ${c.hasKey
+        ? `<span class="chip ok">云端 AI 已就绪 · ${esc(c.model || "")} · 尾号 ${esc(c.keyTail || "")}</span>`
+        : '<span class="chip">云端 AI 未配置——填一把 API key，就能让它基于原文写总结</span>'}
+      <button class="ghost sm" data-action="llmedit">${c.hasKey ? "换配置" : "填 API key"}</button>
+    </div>`;
+}
+
+// 云端总结区：按钮 → 写作中 → 回答（引用徽标跳原文，复用全局 cite 事件）
+function cloudAnswerHtml(r) {
+  const L = state.llm;
+  const c = L.config || {};
+  if (!c.hasKey) return ""; // 未配置不显示按钮（上方状态条有引导）
+  if (L.loading) return `
+    <div class="cloudans"><div class="cskel">云端 AI 正在写作（基于上面 ${r.results.length} 段原文，约几秒到半分钟）…</div></div>`;
+  if (L.answer) {
+    const a = L.answer;
+    return `
+      <div class="cloudans">
+        <div class="chead">云端总结 · ${esc(c.model || "")}${a.book ? " · 取材《" + esc(a.book) + "》" : ""}${a.dropped ? ` · <span class="dropwarn">${a.dropped} 条引用未通过核验已隐藏</span>` : ""}</div>
+        <div class="catext">${esc(a.answer)}</div>
+        ${a.citations?.length ? `<div class="cacites">${a.citations.map((x) => `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${x.id ?? ""}">${esc(x.book)} · ${esc(x.loc || "定位")} · 跳原文</span>`).join("")}</div>` : ""}
+        <div class="cfoot"><button class="ghost sm" data-action="clsummary">重新总结</button></div>
+      </div>`;
+  }
+  return `
+    <div class="cloudans">
+      <button class="primary sm" data-action="clsummary">让云端 AI 总结这次检索</button>
+      <span class="chip">基于以上 ${r.results.length} 段原文写作 · 引用可回源</span>
+    </div>`;
+}
+
 async function submitAsk() {
   const a = state.ask;
   const q = ($("#askQ")?.value || "").trim();
   if (!q) return;
+  state.llm.answer = null; // 新问题：上一次的云端总结失效，清掉
   a.question = q;
   a.bookId = a.mode === "book" ? ($("#askBook")?.value || a.bookId) : null;
   a.skillSlug = $("#useSkill")?.checked ? ($("#skillSel")?.value || null) : null;
@@ -179,6 +235,46 @@ export function bindAskEvents() {
     const act = el.dataset.action;
     if (act === "mode") { state.ask.mode = el.dataset.mode; state.ask.result = null; refresh(); }
     else if (act === "askgo") submitAsk();
+    // ---------- 云端问答（V2 P2） ----------
+    else if (act === "llmedit") { state.llm.editing = true; refresh(); }
+    else if (act === "llmclose") { state.llm.editing = false; refresh(); }
+    else if (act === "llmsave") {
+      const baseUrl = $("#llmBase")?.value.trim() || undefined;
+      const model = $("#llmModel")?.value.trim() || undefined;
+      const apiKey = $("#llmKey")?.value.trim() || undefined;
+      try {
+        const cfg = await call(window.study.llmConfigSet({ baseUrl, model, apiKey }));
+        state.llm.config = cfg;
+        state.llm.editing = false;
+        toast("云端 AI 配置已保存" + (cfg.keyTail ? `（key 尾号 ${cfg.keyTail}）` : ""));
+      } catch (err) { toast("保存失败：" + err.message); }
+      refresh();
+    }
+    else if (act === "llmtest") {
+      toast("正在测试连接…");
+      try {
+        const r = await call(window.study.llmTest());
+        toast(`连接成功——模型回复「${r.reply}」`);
+      } catch (err) { toast("连接失败：" + err.message); }
+    }
+    else if (act === "clsummary") {
+      const q = (state.ask.question || "").trim();
+      if (!state.ask.result || !q) { toast("先提问检索一次，再让云端总结"); return; }
+      state.llm.loading = true;
+      state.llm.answer = null;
+      refresh();
+      try {
+        const r = await call(window.study.chatSummary({
+          bookId: state.ask.mode === "book" ? state.ask.bookId : null,
+          question: q,
+          topN: 6,
+          skillSlug: state.ask.skillSlug,
+        }));
+        state.llm.answer = r;
+      } catch (err) { toast(err.message); }
+      state.llm.loading = false;
+      refresh();
+    }
     else if (act === "toggleskill") {
       const b = state.books.find((x) => x.id === el.dataset.bid);
       if (!b) return;

@@ -24,6 +24,11 @@ contextBridge.exposeInMainWorld("study", {
   jobsCatalogPrompt: (bookId) => ipcRenderer.invoke("jobs:catalogPrompt", bookId), // 一键生成编目提示词
   // 问一问
   ask: (payload) => ipcRenderer.invoke("ask:query", payload),
+  // 云端问答（V2 P2）：配置 / 测试连接 / 云端总结
+  llmConfigGet: () => ipcRenderer.invoke("llm:configGet"),
+  llmConfigSet: (patch) => ipcRenderer.invoke("llm:configSet", patch),
+  llmTest: () => ipcRenderer.invoke("llm:test"),
+  chatSummary: (payload) => ipcRenderer.invoke("chat:summary", payload),
   // 翻书
   chapters: (bookId) => ipcRenderer.invoke("reader:chapters", bookId),
   block: (bookId, chapter) => ipcRenderer.invoke("reader:block", bookId, chapter),

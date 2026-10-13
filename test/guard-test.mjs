@@ -173,6 +173,25 @@ const copyDb = (src) => {
   ok(callWin > -1 && scanAt > callWin, "静态: main.js 启动扫待编目在 createWindow 之后（G-04 时序）");
 }
 
+// ========== 11) 静态防回归：V2 云端问答接线契约（P2） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  // ① 渲染层禁止直连外部 API——网络调用只能经 IPC → 主进程（云端问答上线后的新红线）
+  const hits = ["views.js", "views-ask.js", "views-reader.js", "app.js"]
+    .filter((f) => /\bfetch\s*\(/.test(stripComments(readSrc("src", "renderer", f))));
+  ok(hits.length === 0, `静态: 渲染层无直连 fetch（防绕过 IPC 调外部 API；命中: ${hits.join(",") || "无"}）`);
+
+  // ② chat.mjs 必须复用 ask() 检索（同一条路径），生成走 askCloud——不许自己重写检索
+  const chatSrc = readSrc("src", "desktop", "chat.mjs");
+  ok(/await ask\(\{/.test(chatSrc) && chatSrc.includes("askCloud"), "静态: chat.mjs 复用 ask() + askCloud（检索路径唯一）");
+
+  // ③ main.js 必须注入 safeStorage（llm-config 的加密来源，缺了 key 会退化成明文）
+  ok(readSrc("src", "main.js").includes("safeStorage"), "静态: main.js 注入 safeStorage（key 加密链）");
+}
+
 // ========== 收尾 ==========
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);

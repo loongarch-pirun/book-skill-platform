@@ -3,6 +3,7 @@
 // 每个 handler 返回 { ok, data } 或 { ok:false, error:{code,message} }——UI 不崩（M3）
 import * as engine from "./engine.mjs";
 import * as jobs from "./jobs.mjs";
+import * as chat from "./chat.mjs";
 
 export async function registerIpc({ ipcMain, app, dialog, getWin }) {
   const handle = (channel, fn) => ipcMain.handle(channel, async (_e, ...args) => {
@@ -43,6 +44,12 @@ export async function registerIpc({ ipcMain, app, dialog, getWin }) {
 
   // 问一问
   handle("ask:query", (eng, payload) => eng.ask(payload));
+
+  // 云端问答（V2 P2）：配置 / 测试连接 / 云端总结（固定管道：本地检索 → 云端生成 → 引用校验）
+  handle("llm:configGet", () => chat.configGet());
+  handle("llm:configSet", (eng, patch) => chat.configSet(patch));
+  handle("llm:test", () => chat.testConnection());
+  handle("chat:summary", (eng, payload) => chat.cloudSummary(payload));
 
   // 翻书
   handle("reader:chapters", (eng, bookId) => eng.readerChapters(bookId));

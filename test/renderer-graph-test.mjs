@@ -50,6 +50,10 @@ const studyStub = {
   jobsPickResult: () => reply(null),
   jobsResumeCatalog: () => reply({}),
   ask: () => { ipcCalls.push("ask"); return reply({ mode: "book", results: [] }); },
+  llmConfigGet: () => { ipcCalls.push("llmConfigGet"); return reply({ baseUrl: "", model: "", hasKey: false, keyTail: null, encryption: "unknown", warning: null }); },
+  llmConfigSet: () => reply({ baseUrl: "https://x", model: "m", hasKey: true, keyTail: "…test", encryption: "safeStorage", warning: null }),
+  llmTest: () => reply({ reply: "收到" }),
+  chatSummary: () => reply({ answer: "测试总结", citations: [], dropped: 0 }),
   chapters: () => { ipcCalls.push("chapters"); return reply({ book: "测试书", chapters: [{ name: "第一章", blocks: 3 }] }); },
   block: () => { ipcCalls.push("block"); return reply({ book: "测试书", chapter: "第一章", blocks: [{ n: 1, id: 1, page: null, text: "學而時習之" }] }); },
   locate: () => reply({ chapter: "第一章" }),
@@ -81,8 +85,8 @@ try {
 // ---------- 2) boot 跑完：书架渲染 + 关键 IPC 都拨了 ----------
 await sleep(50); // boot 是异步的，等几个 IPC 往返
 assert(mainEl.innerHTML.includes("书架"), "boot 后渲染出书架视图");
-assert(ipcCalls.includes("booksList") && ipcCalls.includes("jobsScanPending") && ipcCalls.includes("jobsStatus") && ipcCalls.includes("skillsList"),
-  `boot 拨通 booksList/jobsScanPending/jobsStatus/skillsList（实际：${[...new Set(ipcCalls)].join(",")}）`);
+assert(ipcCalls.includes("booksList") && ipcCalls.includes("jobsScanPending") && ipcCalls.includes("jobsStatus") && ipcCalls.includes("skillsList") && ipcCalls.includes("llmConfigGet"),
+  `boot 拨通 booksList/jobsScanPending/jobsStatus/skillsList/llmConfigGet（实际：${[...new Set(ipcCalls)].join(",")}）`);
 assert(mainEl.innerHTML.includes("测试书"), "书架显示书卡（booksList 数据落地）");
 
 // ---------- 3) 翻书视图：点卡片进翻书（open 委托）+ loadReader 接线 ----------
@@ -117,6 +121,15 @@ app.show("ask");
 await sleep(10);
 assert(mainEl.innerHTML.includes("用技能包回答"), "问一问带技能包勾选（state.skills.packages 已由 boot 预拉）");
 assert(mainEl.innerHTML.includes("测试技能"), "技能包下拉列出可选包");
+
+// ---------- 5b) 云端问答（V2 P2）：状态条 + 配置卡展开/收起 ----------
+assert(mainEl.innerHTML.includes("云端 AI 未配置"), "问一问带云端 AI 状态条（未配置引导）");
+click("llmedit", {});
+await sleep(10);
+assert(mainEl.innerHTML.includes("云端 AI 配置") && mainEl.innerHTML.includes("测试连接"), "配置卡展开（llmedit 接线）");
+click("llmclose", {});
+await sleep(10);
+assert(!mainEl.innerHTML.includes("云端 AI 配置"), "配置卡收起（llmclose 接线）");
 
 // ---------- 6) jobs 进度事件 → 书架横幅 ----------
 app.show("shelf");

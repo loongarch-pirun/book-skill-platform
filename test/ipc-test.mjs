@@ -22,7 +22,7 @@ engine.init({ packaged: false });
 
 const EXPECTED = ["config:get", "config:set", "config:pickLibDir", "books:list", "books:catalog", "books:delete",
   "ask:query", "reader:chapters", "reader:block", "reader:locate", "skills:list", "skills:read", "skills:toggle",
-  "engine:status", "engine:warmup"];
+  "engine:status", "engine:warmup", "llm:configGet", "llm:configSet", "llm:test", "chat:summary"];
 ok(EXPECTED.every((ch) => handlers.has(ch)), `关键通道全部注册（期望子集 ${EXPECTED.length} 条 / 实际注册 ${handlers.size} 条）`);
 
 const invoke = async (ch, ...args) => handlers.get(ch)({}, ...args);
@@ -55,6 +55,12 @@ ok(skillMd.ok && /道德经/.test(skillMd.data.skill_md || ""), "skills:read 读
 
 const st = await invoke("engine:status");
 ok(st.ok && !!st.data.dirs && typeof st.data.rerank === "boolean", "engine:status");
+
+// ---------- 云端问答（V2 P2）：未注入 safeStorage 时安全默认 / 拒收 ----------
+const lcfg = await invoke("llm:configGet");
+ok(lcfg.ok && lcfg.data.hasKey === false, "llm:configGet 未注入 safeStorage 时安全默认（hasKey:false）");
+const lset = await invoke("llm:configSet", { baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat", apiKey: "sk-test" });
+ok(lset.ok === false, "llm:configSet 未注入时拒收（不落盘）");
 
 // ---------- 错误包装：坏书名 → {ok:false,error} 不抛 ----------
 const bad = await invoke("books:catalog", "不存在的书xyz");

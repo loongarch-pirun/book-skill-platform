@@ -34,6 +34,16 @@ async function boot() {
   engine.onModelProgress((e) => {
     if (win && !win.isDestroyed()) win.webContents.send("model:progress", e);
   });
+  // V2 云端问答（P2）：safeStorage 注入 llm-config——主进程是唯一能碰 safeStorage 的地方；
+  // llm-config 模块保持零 Electron 依赖（测试可注入假加密器），加密器从这里传进去
+  const { safeStorage } = require("electron");
+  const llmConfig = await import(pathToFileURL(path.join(__dirname, "desktop", "llm-config.mjs")).href);
+  llmConfig.configureLlmConfig({
+    userData: app.getPath("userData"),
+    available: safeStorage.isEncryptionAvailable(),
+    encrypt: (s) => safeStorage.encryptString(s),
+    decrypt: (b) => safeStorage.decryptString(b),
+  });
   // 导入管线：进度事件转发（scanPending 不在这里调——它的 emit 要经 win 转发，
   // 必须等 createWindow 之后；见 G-04）
   const jobs = await import(pathToFileURL(path.join(__dirname, "desktop", "jobs.mjs")).href);

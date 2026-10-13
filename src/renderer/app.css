@@ -223,3 +223,19 @@ body {
   background: var(--ink); color: #fff; padding: 8px 18px; border-radius: 8px;
   font-size: 13px; z-index: 30; max-width: 70%;
 }
+
+/* 云端问答（V2 P2）：状态条 / 配置卡 / 云端总结区 */
+.cloudrow { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.cloudcfg { margin-top: 8px; background: #fffdf7; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.cloudcfg .cfgtitle { font-weight: 600; font-size: 13px; margin-bottom: 8px; }
+.cloudcfg .cfgrow { margin-bottom: 6px; }
+.cloudcfg .cfgrow input { width: 100%; box-sizing: border-box; padding: 6px 9px; border: 1px solid #d9cfb6; border-radius: 8px; background: #fffefb; font-size: 13px; }
+.cloudcfg .cfgbtns { display: flex; gap: 8px; margin-top: 8px; }
+.cloudcfg .cfgwarn { margin-top: 8px; font-size: 12px; color: var(--warn); }
+.cloudans { margin: 10px 0; background: #fdfaf1; border: 1px solid #eadfc2; border-radius: 12px; padding: 10px 12px; }
+.cloudans .chead { font-size: 12px; color: var(--warn); margin-bottom: 6px; }
+.cloudans .dropwarn { color: var(--bad); }
+.cloudans .catext { white-space: pre-wrap; line-height: 1.75; }
+.cloudans .cacites { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+.cloudans .cskel { color: var(--warn); font-size: 13px; }
+.cloudans .cfoot { margin-top: 8px; }

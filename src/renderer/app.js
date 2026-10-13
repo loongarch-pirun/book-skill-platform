@@ -14,6 +14,7 @@ export const state = {
   prompt: null,               // 待编目一键提示词面板（书架）：{bookId, text, chars, path} | null
   reader: { bookId: null, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false },
   ask: { mode: "book", bookId: null, question: "", loading: false, result: null, skillSlug: null },
+  llm: { config: null, answer: null, loading: false, editing: false }, // 云端问答（V2 P2）：配置/回答/状态
   skills: { packages: [], loaded: false, viewing: null, detail: null, chapter: null, chapterContent: null, busy: false },
   model: { ready: false, text: "模型加载中…" },
   config: null,
@@ -138,6 +139,7 @@ async function boot() {
     await call(window.study.jobsScanPending());
     state.jobs = await call(window.study.jobsStatus());
     state.skills.packages = await call(window.study.skillsList()); // 问一问的技能包选择器要用
+    state.llm.config = await call(window.study.llmConfigGet()); // 云端问答（P2）：配置状态（不含明文 key）
   } catch (e) { toast("启动失败：" + e.message); }
   renderMain();
   window.__studyBooted = true; // 冒烟脚本的启动完成信号（test/desktop-smoke-main.js）
