@@ -3,7 +3,9 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 const path = require("node:path");
-const LIB = path.join(process.env.USERPROFILE, "Desktop", "book-skill-platform", "library");
+// 按仓库根定位（原来写死 USERPROFILE/Desktop/book-skill-platform/library，
+// 换台机器或换个目录就崩——云端 CI 正是因此失败）
+const LIB = path.join(import.meta.dirname, "..", "library");
 
 let failed = 0;
 const assert = (cond, msg) => { console.log((cond ? "PASS" : "FAIL") + " - " + msg); if (!cond) failed++; };

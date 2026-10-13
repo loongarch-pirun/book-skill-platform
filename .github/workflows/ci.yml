@@ -44,7 +44,12 @@ jobs:
         run: node test/stage0-format-test.mjs
 
       - name: 测试 · 切片 (stage1)
+        if: false   # 见下方说明：依赖完整书库与 PDF 流水线，只在本地跑
         run: node test/stage1-chunk-test.mjs
+
+      # 注：stage1 切片测试不在 CI 跑 —— 它需要「完整真书库」：
+      # 中文/英文 PDF 书库（CI 的 build-book 不处理 PDF）+ 固定切片数（如傲慢与偏见 2210 块）。
+      # 它是本地验收测试，仍由 npm run test:fast 在本地执行。
 
       - name: 测试 · 渲染层图
         run: node test/renderer-graph-test.mjs
