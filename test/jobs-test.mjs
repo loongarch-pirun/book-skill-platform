@@ -14,7 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 const Database = require("better-sqlite3");
 
-const { startImport, resumeCatalog, cancelImport, scanPending, jobsStatus, jobDirs } = await import("../src/desktop/jobs.mjs");
+const { startImport, resumeCatalog, cancelImport, scanPending, jobsStatus, jobDirs, catalogPrompt } = await import("../src/desktop/jobs.mjs");
 const { configureSearch } = await import("../src/lib/search.mjs");
 const { configureModels } = await import("../src/lib/models.mjs");
 
@@ -119,6 +119,21 @@ assert(dirs.libDir === libDir && dirs.tasksDir === path.join(tmp, "catalog-tasks
   // ---------- 4) 重导入幂等：同书再拖一次 → 切片跳过 → 结果已在 → 自动入库到 done ----------
   const r2 = await startImport(src);
   assert(r2.stage === "done", `重导入幂等：同源同内容切片跳过、结果已在自动入库（stage=${r2.stage}）`);
+}
+
+// ---------- 4.5) 一键提示词：任务书 → 可粘贴文本（落盘 + cluster 全覆盖 + instructions 原文） ----------
+{
+  const prompt = catalogPrompt("lunyu-xueer-zh.docx");
+  const task = JSON.parse(fs.readFileSync(path.join(dirs.tasksDir, "lunyu-xueer-zh.docx.json"), "utf8"));
+  assert(task.clusters.every((c) => prompt.text.includes(c.id)) && prompt.text.includes("图书馆编目员"),
+    `提示词含全部 ${task.clusters.length} 个 cluster id 与 instructions 原文`);
+  const pf = path.join(dirs.tasksDir, "lunyu-xueer-zh.docx.prompt.md");
+  assert(fs.existsSync(pf) && fs.readFileSync(pf, "utf8") === prompt.text && prompt.chars === prompt.text.length,
+    "提示词落盘 catalog-tasks/<bookId>.prompt.md（与返回值一字不差，chars 对账）");
+  assert(prompt.text.includes("catalog-results/lunyu-xueer-zh.docx.json"), "提示词末尾带操作说明（结果存哪）");
+  let e = null;
+  try { catalogPrompt("根本没有这本书.docx"); } catch (err) { e = err; }
+  assert(e && /找不到.*任务书/.test(e.message), "没有任务书 → 人话报错（不裸崩）");
 }
 
 // ---------- 5) txt 分支：转 docx → 建库（小文本，秒级） ----------

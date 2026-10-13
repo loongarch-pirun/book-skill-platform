@@ -141,6 +141,38 @@ const copyDb = (src) => {
   ok(out.results.length > 0 && /不亦說乎|不亦说乎/.test(out.results[0].text), "路由: 好书结果正常返回");
 }
 
+// ========== 10) 静态防回归：真机拖拽/导入链路的三处已修缺陷不许复活 ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+
+  // G-01：packaged 态 execPath 是 exe——凡 spawn 必须经 nodeEnv() 补 ELECTRON_RUN_AS_NODE
+  const jobsSrc = readSrc("src", "desktop", "jobs.mjs");
+  const spawnLines = jobsSrc.split("\n").filter((l) => /\bspawn\(/.test(l) && !l.trimStart().startsWith("//"));
+  ok(spawnLines.length >= 2 && spawnLines.every((l) => l.includes("nodeEnv()")),
+    `静态: jobs.mjs 每处 spawn 都带 nodeEnv()（防 G-01 复活；实际 ${spawnLines.length} 处：${spawnLines.length}/${spawnLines.length}）`);
+
+  // G-02：Electron 32+ 已移除 File.path——渲染层禁止直接读，必须走 preload 的 filePathOf
+  // （只查代码行，注释里说明性提到的字样不算——历史上就是注释先踩了这个假阳性）
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+  const viewsSrc = readSrc("src", "renderer", "views.js");
+  ok(!/\bf\.path\b/.test(stripComments(viewsSrc)), "静态: 渲染层无 File.path 直读（防 G-02 复活）");
+  ok(viewsSrc.includes("filePathOf"), "静态: 渲染层拖拽经 study.filePathOf 取路径");
+  const preloadSrc = readSrc("src", "preload.js");
+  ok(preloadSrc.includes("getPathForFile"), "静态: preload 暴露 webUtils.getPathForFile");
+
+  // G-03：拖拽拦在 document 级（防浏览器把文件当页面打开 / 落空区静默）
+  ok(viewsSrc.includes('document.addEventListener("drop"') && viewsSrc.includes('document.addEventListener("dragover"'),
+    "静态: 拖拽监听在 document 级（防 G-03 复活）");
+
+  // G-04：preload 暴露 scanPending；boot 时序在 createWindow 之后
+  ok(preloadSrc.includes("jobsScanPending"), "静态: preload 暴露 jobsScanPending（G-04）");
+  const mainSrc = readSrc("src", "main.js");
+  const callWin = mainSrc.indexOf("createWindow();");
+  const scanAt = mainSrc.indexOf("booted?.jobs.scanPending()");
+  ok(callWin > -1 && scanAt > callWin, "静态: main.js 启动扫待编目在 createWindow 之后（G-04 时序）");
+}
+
 // ========== 收尾 ==========
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);

@@ -1,4 +1,4 @@
-// IPC 通道层测试：假 ipcMain 捕获 handler，验证 15 条通道注册与行为
+// IPC 通道层测试：假 ipcMain 捕获 handler，对关键通道子集逐个断言注册与行为
 // 测的是生产同一份注册代码（ipc.mjs）——不需要 Electron 进程。
 // ask:query 要加载模型（重），留给 desktop-smoke（真机）与 eval-gate；这里只测不碰模型的通道。
 import fs from "node:fs";
@@ -23,7 +23,7 @@ engine.init({ packaged: false });
 const EXPECTED = ["config:get", "config:set", "config:pickLibDir", "books:list", "books:catalog", "books:delete",
   "ask:query", "reader:chapters", "reader:block", "reader:locate", "skills:list", "skills:read", "skills:toggle",
   "engine:status", "engine:warmup"];
-ok(EXPECTED.every((ch) => handlers.has(ch)), `15 条通道全部注册（实际 ${handlers.size}）`);
+ok(EXPECTED.every((ch) => handlers.has(ch)), `关键通道全部注册（期望子集 ${EXPECTED.length} 条 / 实际注册 ${handlers.size} 条）`);
 
 const invoke = async (ch, ...args) => handlers.get(ch)({}, ...args);
 

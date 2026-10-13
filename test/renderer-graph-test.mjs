@@ -45,6 +45,7 @@ const studyStub = {
   importBook: () => reply({}),
   jobsStatus: () => { ipcCalls.push("jobsStatus"); return reply({}); },
   jobsScanPending: () => { ipcCalls.push("jobsScanPending"); return reply([]); },
+  jobsCatalogPrompt: (bookId) => { ipcCalls.push("jobsCatalogPrompt"); return reply({ bookId, chars: 42, path: `catalog-tasks/${bookId}.prompt.md`, text: "【编目任务书】测试提示词正文……" }); },
   jobsCancel: () => reply({}),
   jobsPickResult: () => reply(null),
   jobsResumeCatalog: () => reply({}),
@@ -87,7 +88,7 @@ assert(mainEl.innerHTML.includes("测试书"), "书架显示书卡（booksList �
 // ---------- 3) 翻书视图：点卡片进翻书（open 委托）+ loadReader 接线 ----------
 const click = (action, data = {}) => {
   const el = { dataset: { action, ...data } };
-  const ev = { target: { closest: (s) => (s === "[data-action]" ? el : null) } };
+  const ev = { target: { closest: (s) => (s === "[data-action]" ? el : null) }, stopPropagation() {} };
   for (const fn of mainEl.listeners.click || []) fn(ev);
 };
 click("open", { bid: "t.docx" }); // 模拟点书架卡片
@@ -123,6 +124,17 @@ await sleep(10);
 studyStub.__jobsCb?.({ bookId: "new.docx", stage: "vector", label: "向量化中", detail: "向量 3/10 块" });
 await sleep(30);
 assert(Object.keys(app.state.jobs).length === 1, "jobs 进度事件落进 state.jobs");
+
+// ---------- 7) 待编目一键提示词：按钮 → 生成 → 面板展开（G-04 之后的第 5 步防线） ----------
+// 用已在书架上的 t.docx 发 catalog 事件（横幅只对 state.books 里存在的书渲染卡片）
+studyStub.__jobsCb?.({ bookId: "t.docx", stage: "catalog", label: "待编目", detail: "任务书已生成，等编目结果" });
+await sleep(30);
+assert(mainEl.innerHTML.includes("生成提示词"), "待编目卡片带「生成提示词」按钮");
+click("catprompt", { bid: "t.docx" });
+await sleep(40);
+assert(app.state.prompt?.bookId === "t.docx" && app.state.prompt.text.includes("编目任务书"), "点击后拉回提示词全文（state.prompt）");
+assert(mainEl.innerHTML.includes('id="promptText"') && mainEl.innerHTML.includes("复制提示词") && mainEl.innerHTML.includes("收起"),
+  "提示词面板渲染（只读文本框 + 复制/收起按钮）");
 
 console.log("\n========== 结果 ==========");
 if (failed > 0) { console.log(`有 ${failed} 项 FAIL`); process.exit(1); }

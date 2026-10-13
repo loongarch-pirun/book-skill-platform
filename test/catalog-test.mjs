@@ -6,7 +6,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
-import { validateResult, loadCatalogSignal, rollbackCatalog } from "../src/lib/catalog.mjs";
+import { validateResult, loadCatalogSignal, rollbackCatalog, buildPromptText } from "../src/lib/catalog.mjs";
 
 let failed = 0;
 const assert = (cond, msg) => { console.log((cond ? "PASS" : "FAIL") + " - " + msg); if (!cond) failed++; };
@@ -55,6 +55,13 @@ const halfFake = JSON.parse(JSON.stringify(fakeResult));
 halfFake.persons = [{ name: "Elizabeth Bennet", match_names: ["Elizabeth", "Lizzzzy"], note: "" }];
 const vHalf = validateResult(db, task, halfFake);
 assert(!vHalf.ok && vHalf.errors.some(e => /Lizzzzy/.test(e)), `防幻觉负例: 真人物夹带假写法 Lizzzzy 同样被拒`);
+
+// 3c) 一键提示词（buildPromptText）：instructions 原文透传 + cluster 全覆盖 + 操作说明
+const promptText = buildPromptText(task);
+assert(promptText.includes(task.instructions), "提示词: instructions 原文透传（唯一真源，防两端规则漂移）");
+assert(task.clusters.every(c => promptText.includes(c.id)), `提示词: 覆盖全部 ${task.clusters.length} 个 cluster id`);
+assert(promptText.includes("catalog-results/pride-and-prejudice-en.epub.json") && promptText.includes("导入编目结果"),
+  "提示词: 末尾带操作说明（结果存哪 + 回来点哪个按钮）");
 
 // 4) mention 边抽查：已知含 "Caroline Bingley." 签名的块 243 必有 mention 边
 const m243 = db.prepare("SELECT dst FROM edges WHERE src_type='chunk' AND src='243' AND kind='mention' AND source='llm'").all().map(r => r.dst);
