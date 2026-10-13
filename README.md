@@ -91,16 +91,25 @@ catalog-results/ 编目结果（中间产物）
 ## 测试
 
 ```bash
-npm run test:fast   # 轻量测试，无需下载模型
-npm run test:slow   # 重型测试，需要本地模型（首次会自动下载）
-npm test            # 全部
+npm run lint        # 代码规范检查
+npm run test:fast   # 轻量测试（需要已建好的 library/*.db）
+npm run test:slow   # 重型测试，需要本地模型（首次会自动下载 ~700MB）
+npm run test:ci     # CI 专用子集：无需书库、无需模型
+npm test            # 全部（fast + slow）
 ```
+
+**自动测试（CI）**：每次推送或 PR，GitHub Actions（`.github/workflows/ci.yml`）会自动跑
+`npm run lint` + `npm run test:ci`（先造一本样例书，再跑检查）。
+
+`test:ci` 只含**不依赖本地书库与模型**的检查：格式保真、切片、渲染层图、解析 fuzz、路径守卫、技能包质检。
+依赖真书库向量/编目数据的测试（`guard` / `ftsliteral` / `catalog` / `ipc`）与全部 `test:slow`
+只在本地跑——它们需要 `library/*.db`（未入库）并会下载约 700MB 模型。
 
 ---
 
 ## 许可证
 
-[MIT](./LICENSE) © 2026 江晓华
+[Apache-2.0](./LICENSE) © 2026 江晓华
 
 ---
 

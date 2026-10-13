@@ -6,7 +6,9 @@ import js from "@eslint/js";
 export default [
   {
     ignores: [
-      "release/**",
+      // release*/** 同时覆盖 release/ 与 release-new/（打包产物，含 asar/exe/压缩 JS，
+      // 不是源码，必须排除——否则本地 eslint . 会去扫几百 MB 产物）
+      "release*/**",
       "node_modules/**",
       "books/**",
       "library/**",

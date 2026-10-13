@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+# 说明：CI 只跑「不依赖本地书库、不依赖 700MB 模型」的检查。
+# 以下测试需要 library/*.db（建好的书库，未入 git）或向量/编目数据，只在本地跑：
+#   guard-test / ftsliteral-test / catalog-test / ipc-test / 全部 test:slow
+# 详见 README「测试」章节。
+
+jobs:
+  test:
+    runs-on: windows-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+      - name: 代码规范检查
+        run: npm run lint
+
+      - name: 造一本样例书库（纯文本解析，不下载任何模型）
+        run: node src/build-book.js books/daodejing-zh.docx
+
+      - name: 跑 CI 测试
+        run: npm run test:ci
