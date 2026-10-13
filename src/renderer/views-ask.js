@@ -154,6 +154,10 @@ export async function shelfJobAction(act, bookId) {
       const job = state.jobs[bookId];
       if (!job?.filePath) { toast("找不到原始文件路径，请重新把书拖进书架"); return; }
       await call(window.study.importBook(job.filePath));
+    } else if (act === "catprompt") {
+      const r = await call(window.study.jobsCatalogPrompt(bookId));
+      state.prompt = { bookId, text: r.text, chars: r.chars, path: r.path };
+      toast(`提示词已生成（${r.chars} 字）——复制后粘给任意 AI，结果存回 catalog-results/`);
     } else if (act === "catimport") {
       const picked = await call(window.study.jobsPickResult());
       await call(window.study.jobsResumeCatalog(bookId, picked));

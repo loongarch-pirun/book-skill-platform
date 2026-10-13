@@ -51,6 +51,7 @@ export default [
         window: "readonly",
         document: "readonly",
         location: "readonly",
+        navigator: "readonly", // views.js 剪贴板复制用（navigator.clipboard）
         confirm: "readonly",
         CustomEvent: "readonly",
         console: "readonly",

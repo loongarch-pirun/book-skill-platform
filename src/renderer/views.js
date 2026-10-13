@@ -14,7 +14,25 @@ export function renderShelf() {
     <div class="view-title">书架</div>
     <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据</div>
     <div class="dropzone" id="dropzone"><b>把书拖到这里</b>（.epub / .docx / .pdf / .txt）<span class="soon">自动切片 → 向量化 → 生成编目任务书（编目结果可稍后导入）</span></div>
+    ${promptBoxHTML()}
     <div class="shelf">${books.map((b) => bookCard(b)).join("") || '<div class="empty">书架空空如也——去拖本书进来</div>'}
+    </div>`;
+}
+
+// 待编目「一键提示词」面板：生成后展开（只读文本域 + 复制/收起）
+function promptBoxHTML() {
+  const p = state.prompt;
+  if (!p) return "";
+  const book = state.books.find((b) => b.id === p.bookId);
+  return `
+    <div class="promptbox">
+      <div class="prompthead"><b>《${esc(book?.title || p.bookId)}》的编目提示词</b>
+        <span class="promptmeta">${p.chars} 字 · 已存 catalog-tasks/${esc(p.bookId)}.prompt.md</span></div>
+      <textarea readonly rows="8" id="promptText">${esc(p.text)}</textarea>
+      <div class="promptactions">
+        <button class="ghost sm" data-action="promptcopy">复制提示词</button>
+        <button class="ghost sm" data-action="promptclose">收起</button>
+      </div>
     </div>`;
 }
 
@@ -30,6 +48,7 @@ function bookCard(b) {
       <button class="ghost sm" data-action="jobretry" data-bid="${esc(b.id)}">重试</button></div>`;
   } else if (job && job.stage === "catalog") {
     badge = `<div class="jobstrip wait"><span class="jobstage">待编目</span><span class="jobdetail">任务书已生成，等编目结果</span>
+      <button class="ghost sm" data-action="catprompt" data-bid="${esc(b.id)}">生成提示词</button>
       <button class="ghost sm" data-action="catimport" data-bid="${esc(b.id)}">导入编目结果</button></div>`;
   }
   return `
@@ -56,6 +75,24 @@ async function importFile(filePath, name) {
   } finally {
     state.books = await call(window.study.booksList());
     refresh();
+  }
+}
+
+// 剪贴板：优先 Clipboard API；打包 file:// 下若被拒，退回老式 execCommand（返回 false 由调用方提示）
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      return ok;
+    } catch { return false; }
   }
 }
 
@@ -107,9 +144,14 @@ export function bindShelfEvents() {
       } catch (err) { toast("删除失败：" + err.message); }
     }
     else if (act === "cite") jumpTo(el.dataset.bid, el.dataset.cid);
-    else if (act === "jobcancel" || act === "jobretry" || act === "catimport") {
+    else if (act === "jobcancel" || act === "jobretry" || act === "catimport" || act === "catprompt") {
       e.stopPropagation();
       shelfJobAction(act, el.dataset.bid);
     }
+    else if (act === "promptcopy") {
+      const ok = await copyText(state.prompt?.text || "");
+      toast(ok ? "已复制——粘给任意 AI 对话框即可（输出 JSON 存到 catalog-results/）" : "复制失败——请手动全选文本框里的内容");
+    }
+    else if (act === "promptclose") { state.prompt = null; refresh(); }
   });
 }

@@ -39,6 +39,7 @@ export async function registerIpc({ ipcMain, app, dialog, getWin }) {
     return r.canceled ? null : r.filePaths[0];
   });
   handle("jobs:resumeCatalog", (eng, bookId, resultPath) => jobs.resumeCatalog(bookId, resultPath || null));
+  handle("jobs:catalogPrompt", (eng, bookId) => jobs.catalogPrompt(bookId));
 
   // 问一问
   handle("ask:query", (eng, payload) => eng.ask(payload));

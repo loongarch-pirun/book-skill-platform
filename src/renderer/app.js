@@ -11,6 +11,7 @@ export const state = {
   view: "shelf",              // shelf | reader | ask | skills
   books: [],                  // booksList 全量（含关掉 skill 的）
   jobs: {},                   // 导入管线任务状态（bookId → {stage,label,detail,error}）
+  prompt: null,               // 待编目一键提示词面板（书架）：{bookId, text, chars, path} | null
   reader: { bookId: null, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false },
   ask: { mode: "book", bookId: null, question: "", loading: false, result: null, skillSlug: null },
   skills: { packages: [], loaded: false, viewing: null, detail: null, chapter: null, chapterContent: null, busy: false },

@@ -10,7 +10,7 @@ import path from "node:path";
 import os from "node:os";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
-import { clusterChunks, buildTask, parseResultText, importCatalog } from "../lib/catalog.mjs";
+import { clusterChunks, buildTask, parseResultText, importCatalog, buildPromptText } from "../lib/catalog.mjs";
 import { currentLibDir } from "../lib/search.mjs";
 import { UserError } from "./engine.mjs";
 
@@ -206,6 +206,23 @@ export function scanPending() {
     emit(bookId, { stage: "catalog", label: "待编目", detail: "任务书已生成，等编目结果", error: null, taskPath: path.join(tasksDir, f) });
   }
   return out;
+}
+
+// ---------- 一键提示词：任务书 → 可直粘给任意 AI 的完整提示词（落盘 + 返回全文） ----------
+// 编目第④步保持半自动设计：提示词不代打 AI，只把「人工整理任务书」变成「复制粘贴」。
+export function catalogPrompt(bookId) {
+  const id = String(bookId || "");
+  const { tasksDir } = jobDirs();
+  const taskPath = path.join(tasksDir, `${id}.json`);
+  if (!fs.existsSync(taskPath)) throw new UserError(`找不到《${id}》的编目任务书——这本书还没走到编目这步`);
+  let task;
+  try { task = JSON.parse(fs.readFileSync(taskPath, "utf8")); }
+  catch (e) { throw new UserError(`任务书不是合法 JSON（${e.message}）——可先重新导入这本书`); }
+  const text = buildPromptText(task);
+  const outPath = path.join(tasksDir, `${id}.prompt.md`);
+  try { fs.writeFileSync(outPath, text, "utf8"); }
+  catch (e) { throw new UserError(`提示词落盘失败：${e.message}`); }
+  return { bookId: id, chars: text.length, path: outPath, text };
 }
 
 // ---------- 内部：向量化子进程（进度行透传为 detail） ----------

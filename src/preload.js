@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld("study", {
   jobsCancel: (bookId) => ipcRenderer.invoke("jobs:cancel", bookId),
   jobsPickResult: () => ipcRenderer.invoke("jobs:pickResult"),
   jobsResumeCatalog: (bookId, resultPath) => ipcRenderer.invoke("jobs:resumeCatalog", bookId, resultPath || null),
+  jobsCatalogPrompt: (bookId) => ipcRenderer.invoke("jobs:catalogPrompt", bookId), // 一键生成编目提示词
   // 问一问
   ask: (payload) => ipcRenderer.invoke("ask:query", payload),
   // 翻书

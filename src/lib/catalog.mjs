@@ -255,6 +255,39 @@ export function buildTask(db, clusterRes) {
   };
 }
 
+// ---------- 3.5) 一键提示词：任务书 → 可直接粘贴给任意 AI 的完整提示词 ----------
+// 唯一真源 = 任务书里的 instructions 字段（不在这里另写一套规则，避免两端漂移）；
+// members 截前 20 个省 token（cluster id 的用处只是 assignments 覆盖核对，前 20 够判断归属）。
+export function buildPromptText(task) {
+  const b = task.book || {};
+  const clusters = task.clusters || [];
+  const out = [];
+  out.push(`请在阅读下面的【编目任务书】后，为《${b.title || b.db || "这本书"}》产出编目结果 JSON。`);
+  out.push("");
+  out.push("===== 编目任务书 =====");
+  out.push(`book: ${b.db}（共 ${b.chunks ?? "?"} 块 / ${b.chapters ?? "?"} 章 / ${b.total_chars ?? "?"} 字，语言 ${b.lang || "?"}）`);
+  out.push("");
+  out.push(task.instructions || "(任务书缺 instructions 字段——本文件可能不是本程序生成的，建议重新走一遍导入)");
+  out.push("");
+  out.push(`===== clusters（共 ${clusters.length} 堆）=====`);
+  for (const c of clusters) {
+    const members = (c.members || []).slice(0, 20);
+    const more = (c.members || []).length > members.length ? `（只列前 20/${c.members.length}，其余不影响归属判断）` : "";
+    out.push(`- ${c.id}（${c.size} 块）${more}`);
+    out.push(`  members: ${members.join(",")}`);
+    if (c.top_terms?.length) out.push(`  高频词: ${c.top_terms.map((t) => `${t.t}×${t.n}`).join(" ")}`);
+    if (c.chapters?.length) out.push(`  章节分布: ${c.chapters.map((x) => `${x.ch}×${x.n}`).join(" / ")}`);
+    for (const s of c.samples || []) out.push(`  代表块 #${s.chunk}: ${String(s.text || "").replace(/\s+/g, " ").slice(0, 200)}`);
+  }
+  out.push("");
+  out.push("===== 操作说明（给人看，AI 无需响应）=====");
+  // book.db 是库文件名（xxx.db）；结果文件按 bookId 命名（去 .db），与 jobs/catalog-import 的约定一致
+  const resultName = String(b.db || "<bookId>").replace(/\.db$/, "");
+  out.push(`1. 拿到 AI 输出的 JSON 后，保存为文件：catalog-results/${resultName}.json`);
+  out.push("2. 回到「我的书房」书架，在这张书卡上点「导入编目结果」并选中该文件——五重校验通过即入库。");
+  return out.join("\n");
+}
+
 // ---------- 4) 编目结果校验（五重：JSON/zod schema/人物验真/cluster 全覆盖/引用完整） ----------
 const ResultSchema = z.object({
   task_ref: z.string().min(1),
