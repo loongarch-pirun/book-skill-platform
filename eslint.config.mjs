@@ -70,6 +70,7 @@ export default [
         console: "readonly",
         Buffer: "readonly",
         fetch: "readonly", // Node 18+ 全局 fetch（fetch-wikisource 用）
+        AbortController: "readonly", // Node 18+ 全局（llm.mjs / probe-llm.mjs 的网络超时用）
         setTimeout: "readonly",
         clearTimeout: "readonly",
         setInterval: "readonly",
