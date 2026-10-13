@@ -62,6 +62,16 @@ let threw = false;
 try { writeConfig(null, { libraryDir: "/x" }); } catch { threw = true; }
 ok(threw, "writeConfig: 缺 userData 抛错（未打包态没有配置层）");
 
+// 8) main.js 静态防回归（真机验收逮到的白屏真凶，编号 D-12）：
+//    loadFile 相对路径按 cwd 解析——dev 态 cwd=项目根碰巧能跑，双击 exe 时 cwd=exe 目录，
+//    index.html 不在那儿 → 静默白屏，且没有任何跑得起来的自动化测试能覆盖它（沙箱开不了窗口）。
+//    只能静态断言：loadFile 必须按 __dirname 定位，且不许出现裸 "index.html"。
+const mainSrc = fs.readFileSync(path.join(PROJECT_ROOT, "src", "main.js"), "utf8");
+const loadFileArg = (mainSrc.match(/loadFile\(([^)]*)\)/) || [])[1] || "";
+ok(loadFileArg.includes("__dirname"), "main.js: loadFile 按 __dirname 定位（防打包态白屏 D-12）");
+ok(!/loadFile\(["']index\.html["']\)/.test(mainSrc), "main.js: 无裸相对路径 loadFile(\"index.html\")");
+ok(mainSrc.includes("did-fail-load"), "main.js: 页面加载失败有 did-fail-load 兜底弹窗（不静默）");
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`===== paths-test: ${pass} PASS / ${fail} FAIL =====`);
 process.exit(fail ? 1 : 0);

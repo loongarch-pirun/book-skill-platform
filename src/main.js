@@ -14,7 +14,16 @@ function createWindow() {
     title: "我的书房",
     webPreferences: { preload: path.join(__dirname, "preload.js") },
   });
-  win.loadFile("index.html");
+  // 真机验收逮到的白屏真凶：loadFile 相对路径按 cwd 解析——dev 态 cwd=项目根碰巧能跑，
+  // 双击 exe 时 cwd=exe 所在目录，index.html 不在那儿 → 静默空白。必须按 __dirname 定位。
+  win.loadFile(path.join(__dirname, "index.html")).catch((e) => {
+    console.error("[window] 界面加载失败：", e);
+  });
+  // 兜底：页面加载失败不许静默——弹窗说人话，带上地址方便定位
+  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
+    console.error("[window] 页面加载失败", code, desc, url);
+    dialog.showErrorBox("界面打不开", `加载失败：${desc || code}\n地址：${url}\n\n请截图发给开发。`);
+  });
 }
 
 async function boot() {
