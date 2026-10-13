@@ -20,6 +20,12 @@ const EMBED_SCRIPT = path.join(import.meta.dirname, "..", "embed-book.js");
 const TXT2DOCX_SCRIPT = path.join(import.meta.dirname, "..", "txt2docx.js");
 const EXT_FMT = { pdf: "pdf", epub: "epub", docx: "docx", txt: "docx" }; // txt 先转 docx 再建库
 
+// 子进程 node 化：打包态 process.execPath 是 BookSkillPlatform.exe——缺这个变量，
+// 子进程被当成 GUI 应用启动：脚本一行不执行、进程永不退出 → Promise 永不 resolve，
+// 卡片永久卡在「向量化中」/「准备文件」（G-01，两次打包态探针实测）。
+// 开发态（electron.exe）把 .js 参数当 app 入口跑、跑完自退，加变量后行为不变（实测零副作用）。
+const nodeEnv = () => ({ ...process.env, ELECTRON_RUN_AS_NODE: "1" });
+
 // ---------- 目录约定：任务书/结果/原件紧挨书库（迁库一起走；dev 态即项目根三个目录） ----------
 export function jobDirs() {
   const libDir = currentLibDir();
@@ -105,7 +111,8 @@ export async function startImport(filePath) {
   }
   if (cancelled.has(bookId)) return cancelResult(bookId);
 
-  // 2) 向量化：spawn embed-book.js <db>（显式传参；env 已由 engine.init 回写，M2 同解析）
+  // 2) 向量化：spawn embed-book.js <db>（显式传参；环境变量由 engine.init 回写的是
+  //    BSP_LIB_DIR/BSP_SKILLS_DIR/BSP_MODELS_DIR 三个目录，nodeEnv() 另行补 ELECTRON_RUN_AS_NODE）
   emit(bookId, { stage: "vector", label: "向量化中", detail: r.skipped ? "库已存在，补向量/概念图谱" : "首次要下嵌入模型（约 112MB）" });
   const code = await runEmbed(bookId, outDb);
   if (cancelled.has(bookId)) return cancelResult(bookId);
@@ -200,7 +207,7 @@ export function scanPending() {
 // ---------- 内部：向量化子进程（进度行透传为 detail） ----------
 function runEmbed(bookId, dbPath) {
   return new Promise((resolve) => {
-    const child = spawn(process.execPath, [EMBED_SCRIPT, dbPath], { env: process.env });
+    const child = spawn(process.execPath, [EMBED_SCRIPT, dbPath], { env: nodeEnv() });
     const j = jobs.get(bookId);
     if (j) j.child = child;
     let buf = "";
@@ -223,7 +230,7 @@ async function txtToDocx(txtPath) {
   const out = path.join(os.tmpdir(), "bsp-import", path.basename(txtPath).replace(/\.txt$/, ".docx"));
   fs.mkdirSync(path.dirname(out), { recursive: true });
   await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [TXT2DOCX_SCRIPT, txtPath, out], { env: process.env });
+    const child = spawn(process.execPath, [TXT2DOCX_SCRIPT, txtPath, out], { env: nodeEnv() });
     let err = "";
     child.stderr.on("data", d => err += d);
     child.on("close", (code) => code === 0
