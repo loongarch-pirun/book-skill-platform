@@ -44,6 +44,7 @@ const studyStub = {
   deleteBook: () => reply({}),
   importBook: () => reply({}),
   jobsStatus: () => { ipcCalls.push("jobsStatus"); return reply({}); },
+  jobsScanPending: () => { ipcCalls.push("jobsScanPending"); return reply([]); },
   jobsCancel: () => reply({}),
   jobsPickResult: () => reply(null),
   jobsResumeCatalog: () => reply({}),
@@ -79,8 +80,8 @@ try {
 // ---------- 2) boot 跑完：书架渲染 + 关键 IPC 都拨了 ----------
 await sleep(50); // boot 是异步的，等几个 IPC 往返
 assert(mainEl.innerHTML.includes("书架"), "boot 后渲染出书架视图");
-assert(ipcCalls.includes("booksList") && ipcCalls.includes("jobsStatus") && ipcCalls.includes("skillsList"),
-  `boot 拨通 booksList/jobsStatus/skillsList（实际：${[...new Set(ipcCalls)].join(",")}）`);
+assert(ipcCalls.includes("booksList") && ipcCalls.includes("jobsScanPending") && ipcCalls.includes("jobsStatus") && ipcCalls.includes("skillsList"),
+  `boot 拨通 booksList/jobsScanPending/jobsStatus/skillsList（实际：${[...new Set(ipcCalls)].join(",")}）`);
 assert(mainEl.innerHTML.includes("测试书"), "书架显示书卡（booksList 数据落地）");
 
 // ---------- 3) 翻书视图：点卡片进翻书（open 委托）+ loadReader 接线 ----------

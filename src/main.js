@@ -34,13 +34,13 @@ async function boot() {
   engine.onModelProgress((e) => {
     if (win && !win.isDestroyed()) win.webContents.send("model:progress", e);
   });
-  // 导入管线：进度事件转发 + 启动时恢复「待编目」横幅（任务书在、结果不在的挂起 job）
+  // 导入管线：进度事件转发（scanPending 不在这里调——它的 emit 要经 win 转发，
+  // 必须等 createWindow 之后；见 G-04）
   const jobs = await import(pathToFileURL(path.join(__dirname, "desktop", "jobs.mjs")).href);
   jobs.onJobsProgress((e) => {
     if (win && !win.isDestroyed()) win.webContents.send("jobs:progress", e);
   });
-  jobs.scanPending();
-  return engine;
+  return { engine, jobs };
 }
 
 app.whenReady().then(async () => {
@@ -68,15 +68,18 @@ app.whenReady().then(async () => {
   }
 
   // 引擎初始化失败也要把窗口开起来（UI 会显示错误，不是白屏）
-  let engine = null;
-  try { engine = await boot(); }
+  let booted = null;
+  try { booted = await boot(); }
   catch (e) { console.error("[boot] 引擎初始化失败：", e); }
   createWindow();
+  // G-04：启动恢复「待编目」横幅必须在 createWindow 之后——scanPending 的 emit 经
+  // boot() 里注册的转发发给 win，createWindow 之前 win 还是 null，事件会被守卫静默丢掉
+  booted?.jobs.scanPending();
   // 后台预热嵌入模型（不阻塞窗口；就绪/失败都推到渲染进程）
-  if (engine) {
-    engine.warmup()
+  if (booted?.engine) {
+    booted.engine.warmup()
       .then((r) => { if (win && !win.isDestroyed()) win.webContents.send("engine:ready", r); })
-      .catch((e) => { if (win && !win.isDestroyed()) win.webContents.send("engine:error", engine.humanizeError(e)); });
+      .catch((e) => { if (win && !win.isDestroyed()) win.webContents.send("engine:error", booted.engine.humanizeError(e)); });
   }
 });
 

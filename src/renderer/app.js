@@ -132,6 +132,9 @@ async function boot() {
     state.config = await call(window.study.configGet());
     await maybeWizard(state.config);
     state.books = await call(window.study.booksList());
+    // G-04：先让主进程重扫「待编目」（任务书在、结果不在的挂起 job），再拉状态快照——
+    // 覆盖运行时换书库目录 / 主进程那次扫描事件早于页面注册监听而丢失的场景
+    await call(window.study.jobsScanPending());
     state.jobs = await call(window.study.jobsStatus());
     state.skills.packages = await call(window.study.skillsList()); // 问一问的技能包选择器要用
   } catch (e) { toast("启动失败：" + e.message); }

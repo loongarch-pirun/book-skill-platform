@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld("study", {
   // （webUtils 仅在 preload 可用，渲染层经这里转发）
   filePathOf: (file) => webUtils.getPathForFile(file),
   jobsStatus: () => ipcRenderer.invoke("jobs:status"),
+  jobsScanPending: () => ipcRenderer.invoke("jobs:scanPending"), // G-04：启动/换库后扫描「待编目」恢复横幅
   jobsCancel: (bookId) => ipcRenderer.invoke("jobs:cancel", bookId),
   jobsPickResult: () => ipcRenderer.invoke("jobs:pickResult"),
   jobsResumeCatalog: (bookId, resultPath) => ipcRenderer.invoke("jobs:resumeCatalog", bookId, resultPath || null),
