@@ -1,19 +1,20 @@
 {
-  "date": "2026-10-12",
+  "date": "2026-10-13",
   "model": "e5",
   "reranker": "onnx-community/bge-reranker-v2-m3-ONNX",
   "rate": 88,
-  "hits": 38,
-  "total": 43,
+  "hits": 46,
+  "total": 52,
   "rerank": true,
   "rerankOffRate": 67,
-  "avgLatencyMs": 3231,
+  "avgLatencyMs": 3713,
   "misses": [
+    "国家当中什么最贵重，江山和君主哪个轻",
     "再远的路从哪里开始",
     "who writes the letters that open the novel",
     "怪物最后说要把自己怎么样",
     "what is the famous opening sentence about",
     "达西先生的庄园叫什么名字"
   ],
-  "note": "v2-m3 复试官基线（原 bge-reranker-base 86 分）。净 +2（convs2s/gardiner 翻案），代价延迟 0.86s→3.2s。新增漏题「再远的路从哪里开始」= m3 对文言文弱（金块池内第 11 名擦肩）。剩余 4 漏题定案语义陷阱块（署名行/元信息/序言），换裁判无效。基线更新规矩：净提升才允许改，漏题清单变化必须写进 commit message。"
+  "note": "v2-m3 复试官基线。2026-10-13 新书《孟子》冷接入：考卷 43→52 题（孟子 9 题），旧 43 题逐本零回归（lunyu 9/9、daodejing 8/9、attention 9/9、frankenstein 6/8、P&P 6/8，与上轮完全一致），总分持平 88。新增漏题「国家当中什么最贵重，江山和君主哪个轻」（孟子·尽心下·14 民為貴）——e5 语义腿跨不过白话问×文言答，答案块 top-30 外（开关复试官均如此），与「再远的路」同为文言边界类，非回归。基线更新理由：新书入考卷属题集扩充而非能力变化，漏题清单变化已写进 commit message。基线更新规矩：净提升才允许改，漏题清单变化必须写进 commit message。"
 }

@@ -26,7 +26,7 @@ assert(JSON.stringify(names) === JSON.stringify(["list_books", "list_catalog", "
 // 2. list_books
 const lb = await client.callTool({ name: "list_books", arguments: {} });
 const books = JSON.parse(lb.content[0].text);
-assert(books.length === 6 && books.every(b => b.title && b.format), `list_books 返回 6 本书: ${books.map(b => b.title).join(" / ")}`);
+assert(books.length === 7 && books.every(b => b.title && b.format), `list_books 返回 7 本书: ${books.map(b => b.title).join(" / ")}`);
 
 // 3. query_book 单书（书名精确匹配到 PDF 版，带页码定位）
 const qb = await client.callTool({ name: "query_book", arguments: { book: "lunyu-xueer-zh.pdf", question: "不患人之不己知", topN: 3 } });
@@ -46,10 +46,15 @@ const qb3R = JSON.parse(qb3.content[0].text);
 assert(qb3R.results?.length >= 1 && /lunyu/i.test(qb3R.book) && qb3R.note,
   `query_book 书名未命中时自动路由: ${qb3R.book}`);
 
-// 4. query_library 动态挑书（中文问题应路由到论语，不碰英文书）
+// 4. query_library 动态挑书（中文问题应在中文书里挑，不碰英文书）
+// 注：2026-10-13 孟子入书库后，「和朋友相处要讲信用」会同时路由到孟子(0.865)+论语(0.862)
+// ——两本都正当相关（孟子亦論朋友），最终答案仍由论语块居首。故断言收紧为：
+// 论语必须在路由清单里 + 不许混进英文书，不规定两本中文书谁第一。
 const ql = await client.callTool({ name: "query_library", arguments: { question: "和朋友相处要讲信用", topN: 3 } });
 const qlR = JSON.parse(ql.content[0].text);
-assert(qlR.routed_books.length >= 1 && /lunyu/i.test(qlR.routed_books[0].title),
+const routedTitles = qlR.routed_books.map(b => b.title);
+assert(qlR.routed_books.length >= 1 && /lunyu/i.test(routedTitles.join(","))
+  && routedTitles.every(t => !/frankenstein|attention|prejudice/i.test(t)),
   `query_library 自动挑书: ${qlR.routed_books.map(b => b.title + "(" + b.best_sim + ")").join(", ")}`);
 assert(qlR.results.length >= 1 && qlR.results.every(r => r.book && r.loc !== undefined), `总入口结果带书的归属 + 定位`);
 
@@ -77,7 +82,7 @@ const lc2R = JSON.parse(lc2.content[0].text);
 assert(lc2R.filtered_themes?.length >= 1 && lc2R.theme_representatives && Object.values(lc2R.theme_representatives).flat().every(x => x.preview && x.chapter !== undefined),
   `list_catalog 主题过滤带代表块预览: ${lc2R.filtered_themes?.map(t => t.name).join(" / ")}`);
 
-// 6d. list_catalog 1 堆小书（论语 pdf：全库 6 本现已全部编目）
+// 6d. list_catalog 1 堆小书（论语 pdf：全库 7 本现已全部编目）
 const lc3 = await client.callTool({ name: "list_catalog", arguments: { book: "lunyu-xueer-zh.pdf" } });
 const lc3R = JSON.parse(lc3.content[0].text);
 assert(lc3R.cataloged === true && lc3R.themes?.length === 1 && lc3R.persons?.length === 5,
