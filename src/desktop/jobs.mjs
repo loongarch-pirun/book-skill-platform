@@ -63,18 +63,26 @@ export async function startImport(filePath) {
   cancelled.delete(bookId);
   emit(bookId, { stage: "slice", label: "准备文件", detail: path.basename(file), error: null, filePath: file });
 
-  // 0) 原件进 books/（自包含：以后重导入不依赖 Downloads 里的原始文件）；txt 先转 docx
+  // 0) 原件进 books/（自包含：以后重导入不依赖 Downloads 里的原始文件）；txt 先转 docx。
+  //    失败必须落 failed 态——否则横幅卡「准备文件」，且 stage=slice 不在完成态列表里，
+  //    这本书会被「正在导入中」永远拒之门外（P2 逮到的卡死缺陷）
   let source;
-  if (ext === "txt") {
-    fs.mkdirSync(booksDir, { recursive: true });
-    const kept = path.join(booksDir, `${base}.txt`);
-    fs.copyFileSync(file, kept);
-    source = await txtToDocx(kept); // 稳定路径：重导入时源文件 hash 稳定，重灌保护认得出
-  } else {
-    fs.mkdirSync(booksDir, { recursive: true });
-    const dest = path.join(booksDir, path.basename(file));
-    if (path.resolve(dest) !== file) fs.copyFileSync(file, dest);
-    source = dest;
+  try {
+    if (ext === "txt") {
+      fs.mkdirSync(booksDir, { recursive: true });
+      const kept = path.join(booksDir, `${base}.txt`);
+      fs.copyFileSync(file, kept);
+      source = await txtToDocx(kept); // 稳定路径：重导入时源文件 hash 稳定，重灌保护认得出
+    } else {
+      fs.mkdirSync(booksDir, { recursive: true });
+      const dest = path.join(booksDir, path.basename(file));
+      if (path.resolve(dest) !== file) fs.copyFileSync(file, dest);
+      source = dest;
+    }
+  } catch (e) {
+    const why = e instanceof UserError ? e.message : `准备文件失败：${e.message || e}`;
+    emit(bookId, { stage: "failed", label: "导入失败", error: why });
+    throw new UserError(why);
   }
   if (cancelled.has(bookId)) return cancelResult(bookId);
 
@@ -111,7 +119,12 @@ export async function startImport(filePath) {
   emit(bookId, { stage: "catalog", label: "编目中", detail: "聚堆 → 生成任务书" });
   const dbRo = new Database(outDb, { readonly: true });
   let clusterRes, task;
-  try { clusterRes = clusterChunks(dbRo); task = buildTask(dbRo, clusterRes); } finally { dbRo.close(); }
+  try { clusterRes = clusterChunks(dbRo); task = buildTask(dbRo, clusterRes); }
+  catch (e) {
+    const why = `编目聚堆失败：${e.message || e}`;
+    emit(bookId, { stage: "failed", label: "导入失败", error: why });
+    throw new UserError(why);
+  } finally { dbRo.close(); }
   fs.mkdirSync(tasksDir, { recursive: true });
   const taskPath = path.join(tasksDir, `${bookId}.json`);
   fs.writeFileSync(taskPath, JSON.stringify(task, null, 1), "utf8");
@@ -138,7 +151,14 @@ export async function resumeCatalog(bookId, resultPath) {
   if (!fs.existsSync(dbPath)) throw new UserError(`书库文件不见了：${dbPath}`);
 
   emit(id, { stage: "catalog", label: "编目入库中", detail: "五重校验 → 入库", error: null });
-  const db = new Database(dbPath);
+  // 坏库文件/库被外部改坏：new Database 与 importCatalog 都要包住——裸 SqliteError
+  // 冒泡到 IPC 是一屏英文堆栈，不是人话（P2 逮到）
+  let db;
+  try { db = new Database(dbPath); } catch (e) {
+    const why = `书库打不开（${e.message}）——文件可能损坏或被占用`;
+    emit(id, { stage: "failed", label: "导入失败", error: why });
+    throw new UserError(why);
+  }
   try {
     const stats = await importCatalog(db, task, result);
     emit(id, { stage: "done", label: "完成", detail: `主题 ${stats.themes} · 人物 ${stats.persons} · 关系 ${stats.relations}`, error: null });
@@ -196,13 +216,19 @@ function runEmbed(bookId, dbPath) {
   });
 }
 
-// txt → docx（复用 txt2docx.js CLI；稳定临时路径保证重导入幂等）
+// txt → docx（复用 txt2docx.js CLI；稳定临时路径保证重导入幂等）。
+// stderr 要拼进错误——txt2docx 的人话提示（如「UTF-16 请另存为 UTF-8」）被吞掉
+// 只剩「转换失败」，用户等于没得到可执行的修复指引（P2 逮到的 D-09）
 async function txtToDocx(txtPath) {
   const out = path.join(os.tmpdir(), "bsp-import", path.basename(txtPath).replace(/\.txt$/, ".docx"));
   fs.mkdirSync(path.dirname(out), { recursive: true });
   await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [TXT2DOCX_SCRIPT, txtPath, out], { env: process.env });
-    child.on("close", (code) => (code === 0 ? resolve() : reject(new UserError("txt 转 docx 失败"))));
+    let err = "";
+    child.stderr.on("data", d => err += d);
+    child.on("close", (code) => code === 0
+      ? resolve()
+      : reject(new UserError(`txt 转 docx 失败：${err.trim().split("\n")[0].slice(0, 150) || `退出码 ${code}`}`)));
     child.on("error", reject);
   });
   return out;

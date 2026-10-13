@@ -294,6 +294,10 @@ console.log("===== 4) 既有防线回归 =====");
   const r1 = await buildBook.main([docx, "-o", out]);
   const r2 = await buildBook.main([docx, "-o", out]); // 同源同内容
   const capSkip = cap.join(" / "); cap.length = 0;
+  // 副本场景（P2 修复的行为）：jobs 导入会把原件复制进 books/ 再建库，源路径永远是
+  // 副本路径——与库里同内容不同路径的文件必须判 skipped 而不是「另一本书」
+  const copy5 = path.join(WORK, "guard-copy.docx");
+  fs.copyFileSync(docx, copy5);
   // 同源变内容：同路径重打 zip（document.xml 加一段正文）——source_file 不变、hash 变
   const z = new AdmZip(docx);
   const xml = z.readAsText("word/document.xml");
@@ -307,12 +311,15 @@ console.log("===== 4) 既有防线回归 =====");
   await runTxt2Docx(path.join(WORK, "nohead.txt"), mod);
   const r4 = await buildBook.main([mod, "-o", out]);
   const capOther = cap.join(" / ");
+  const r5 = await buildBook.main([copy5, "-o", out]); // 副本：不同路径同内容
+  const capCopy = cap.join(" / ");
   console.error = oe; console.log = ol; process.exitCode = keepExit;
   ok(r1 && r1.chunkCount > 0, "保护①：首次导入成功");
   ok(r2 && r2.skipped === true, "保护②：同源同内容 → skipped（不重建）");
   ok(/跳过/.test(capSkip), `保护②人话：跳过提示可读（${capSkip.slice(0, 60)}）`);
   ok(r3 === undefined && /内容已变/.test(capChanged), `保护③：同源变内容 → 拒绝（${capChanged.slice(0, 70)}）`);
   ok(r4 === undefined && /另一本书|拒绝/.test(capOther), `保护④：不同源 → 拒绝（${capOther.slice(0, 70)}）`);
+  ok(r5 && r5.skipped === true && /跳过/.test(capCopy), `保护⑤：不同路径同内容（jobs 副本场景）→ skipped（${capCopy.slice(0, 60)}）`);
 }
 
 // ---------- 汇总 ----------

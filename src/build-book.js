@@ -229,15 +229,20 @@ async function main(argv = process.argv.slice(2)) {
       db.close();
     } catch { /* 出路径上是个非库文件 → 视为无历史，直接覆盖 */ }
     if (old && old.content_hash) {
+      // 同一本书的判据以内容 hash 为主：jobs 导入会把原件复制进 books/ 再建库，
+      // 源路径永远是副本路径（与原件路径不同）——按路径判"另一本书"会误杀
+      // 「先手动建库再 GUI 导入同一本书」这个合法场景（P2 逮到）。sha256 同
+      // 即同一本书；路径同+hash 同=跳过；路径同+hash 变=内容已变拒绝重建
+      // （会作废编目）；路径不同+hash 不同=真的是另一本，拒绝。
       const sameSource = old.source_file === path.resolve(file);
       const sameHash = old.content_hash === contentHash(file);
-      if (!sameSource && !force) {
-        console.error(`拒绝：${out} 已存在，且是另一本书（${old.source_file}）的库。换 -o 输出路径，或 --force 覆盖。`);
+      if (!sameSource && !sameHash && !force) {
+        console.error(`拒绝：${out} 已存在，且内容与「${old.source_file}」的库不同（hash 不同）。换 -o 输出路径，或 --force 覆盖。`);
         process.exitCode = 1;
         return;
       }
-      if (sameSource && sameHash && !force) {
-        console.log(`跳过：${path.basename(out)} 已由同一文件同内容建过（hash ${old.content_hash}）。要强制重建加 --force。`);
+      if (sameHash && !force) {
+        console.log(`跳过：${path.basename(out)} 已由同一内容建过（hash ${old.content_hash}，源 ${old.source_file}）。要强制重建加 --force。`);
         return { skipped: true };
       }
       if (sameSource && !sameHash && !force) {
