@@ -37,5 +37,23 @@ jobs:
       - name: 造一本样例书库（纯文本解析，不下载任何模型）
         run: node src/build-book.js books/daodejing-zh.docx
 
-      - name: 跑 CI 测试
-        run: npm run test:ci
+      # 逐个跑而不是一条 npm run test:ci：
+      # 这样哪个测试挂了，在 Actions 界面上一眼就能看到（而不是只知道"测试步骤失败"）。
+      # 清单与 package.json 的 test:ci 保持一致。
+      - name: 测试 · 格式保真 (stage0)
+        run: node test/stage0-format-test.mjs
+
+      - name: 测试 · 切片 (stage1)
+        run: node test/stage1-chunk-test.mjs
+
+      - name: 测试 · 渲染层图
+        run: node test/renderer-graph-test.mjs
+
+      - name: 测试 · 解析 fuzz
+        run: node test/parser-fuzz.mjs
+
+      - name: 测试 · 路径守卫
+        run: node test/paths-test.mjs
+
+      - name: 测试 · 技能包质检
+        run: node test/skill-store-test.mjs
