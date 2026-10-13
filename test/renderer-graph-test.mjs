@@ -27,6 +27,7 @@ global.document = {
   querySelector: (s) => getEl(s),
   querySelectorAll: () => [],
   createElement: () => makeEl(),
+  addEventListener: () => {}, // views.js 拖拽监听挂在 document 级（G-03 防浏览器导航），stub 放行
 };
 global.CustomEvent = global.CustomEvent || class CustomEvent { constructor(t) { this.type = t; } };
 global.location = { reload() {} };

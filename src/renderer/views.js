@@ -60,33 +60,35 @@ async function importFile(filePath, name) {
 }
 
 // ---------- 事件绑定（boot() 里调用，不趁模块加载） ----------
-// 拖拽用 #main 委托（boot 时 #main 还是空的，dropzone 要等 renderMain 才存在；dragover/drop 冒泡）
+// 拖拽：document 级拦截——不 preventDefault 的话浏览器会把拖入的文件当页面直接打开，
+// 整个界面被顶掉；热区放宽为「书架页全页可落」（#dropzone 只负责高亮），
+// 其它视图拖入给明确提示，不再静默无反应（G-03）
 export function bindShelfEvents() {
+  const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
+  const zone = () => document.querySelector("#dropzone"); // 只有书架页有
+  document.addEventListener("dragover", (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); // 必须：否则浏览器把文件当页面导航打开
+    zone()?.classList.add("over");
+  });
+  document.addEventListener("dragleave", (e) => {
+    if (!e.relatedTarget) zone()?.classList.remove("over"); // 拖出窗口才清高亮（子元素间移动不清，防闪烁）
+  });
+  document.addEventListener("drop", (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); // 必须：拦住浏览器把文件当页面打开
+    zone()?.classList.remove("over");
+    const f = e.dataTransfer?.files?.[0];
+    if (!f) return;
+    if (!zone()) { toast("先点左侧「书架」，再把书拖进来"); return; } // 其它视图：说清楚，不静默
+    // G-02：Electron 32+ 已移除 File.path，直接读 f.path 恒为 undefined
+    // （旧链路会把它一路带到主进程解析成 cwd，最后报出与真因不符的「不支持的格式 .?」）
+    let fp = "";
+    try { fp = window.study.filePathOf(f); } catch { /* 取不到就落下面的人话提示 */ }
+    if (!fp) { toast("没拿到文件路径——请重试拖拽"); return; }
+    importFile(fp, f.name);
+  });
   const main = $("#main");
-  main.addEventListener("dragover", (e) => {
-    const dz = e.target.closest?.("#dropzone");
-    if (!dz) return;
-    e.preventDefault(); // 不 preventDefault 浏览器会直接打开文件而不是 drop
-    dz.classList.add("over");
-  });
-  main.addEventListener("dragleave", (e) => {
-    e.target.closest?.("#dropzone")?.classList.remove("over");
-  });
-  main.addEventListener("drop", (e) => {
-    const dz = e.target.closest?.("#dropzone");
-    if (!dz) return;
-    e.preventDefault();
-    dz.classList.remove("over");
-    const f = e.dataTransfer.files?.[0];
-    if (f) {
-      // G-02：Electron 32+ 已移除 File.path，直接读 f.path 恒为 undefined
-      // （旧链路会把它一路带到主进程解析成 cwd，最后报出与真因不符的「不支持的格式 .?」）
-      let fp = "";
-      try { fp = window.study.filePathOf(f); } catch { /* 取不到就落下面的人话提示 */ }
-      if (!fp) { toast("没拿到文件路径——请重试拖拽"); return; }
-      importFile(fp, f.name);
-    }
-  });
   main.addEventListener("click", async (e) => {
     const el = e.target.closest("[data-action]");
     if (!el) return;
