@@ -36,13 +36,6 @@ tf.env.remoteHost = process.env.HF_ENDPOINT || "https://hf-mirror.com";
 tf.env.cacheDir = path.join(ROOT, ".models");
 tf.env.allowLocalModels = true;
 
-const timeit = async (label, fn) => {
-  const t0 = Date.now();
-  const r = await fn();
-  console.log(`  ${label}: ${Date.now() - t0} ms`);
-  return r;
-};
-
 if (WHICH === "m3" || WHICH === "e5") {
   const cfg = WHICH === "m3"
     ? { id: "Xenova/bge-m3", dtype: "int8", pooling: "cls", prefix: "" }

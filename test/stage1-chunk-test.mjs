@@ -18,7 +18,6 @@ const fts = (db, q) => db.prepare(`SELECT c.id, c.chapter, c.page, c.text FROM c
   assert(a.length === 1 && a[0].page === 4, `抽查"不患人之不己知"→第${a[0]?.page}页（预期4）`);
   const b = fts(db, '"學而時習之"');
   assert(b.length >= 1 && b[0].page === 1, `抽查"學而時習之"→第${b[0]?.page}页（预期1）`);
-  const all16 = db.prepare("SELECT COUNT(*) n FROM chunks WHERE text LIKE '%第%'").get().n;
   const chs = db.prepare("SELECT text FROM chunks").all().map(r => r.text).join("");
   const chCount = (chs.match(/第\d+章/g) || []).length;
   assert(chCount === 16, `16个章句全部在库中（找到${chCount}个章标）`);

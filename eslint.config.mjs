@@ -66,6 +66,7 @@ export default [
         process: "readonly",
         console: "readonly",
         Buffer: "readonly",
+        fetch: "readonly", // Node 18+ 全局 fetch（fetch-wikisource 用）
         setTimeout: "readonly",
         clearTimeout: "readonly",
         setInterval: "readonly",
@@ -73,6 +74,55 @@ export default [
       },
     },
     rules: {},
+  },
+  {
+    // .js 测试是 CommonJS（require），与 src CJS 同款 globals
+    files: ["test/**/*.js"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: {
+        require: "readonly",
+        module: "writable",
+        exports: "writable",
+        __dirname: "readonly",
+        __filename: "readonly",
+        process: "readonly",
+        console: "readonly",
+        Buffer: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
+      },
+    },
+    rules: {
+      "no-console": "off",
+      "no-unused-vars": ["error", { args: "none", caughtErrors: "all", ignoreRestSiblings: true }],
+      "no-empty": ["error", { allowEmptyCatch: true }],
+    },
+  },
+  {
+    // 测试文件：Node ESM（.mjs），靠 console 输出 PASS/FAIL 计数；
+    // 此前 test/ 不在任何作用域内 → node globals 全 no-undef 的假阳性，纳管修掉
+    files: ["test/**/*.mjs"],
+    languageOptions: {
+      sourceType: "module",
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        Buffer: "readonly",
+        global: "readonly", // renderer-graph-test 的 DOM stub 挂在 global 上
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
+      },
+    },
+    rules: {
+      "no-console": "off",
+      "no-unused-vars": ["error", { args: "none", caughtErrors: "all", ignoreRestSiblings: true }],
+      "no-empty": ["error", { allowEmptyCatch: true }],
+    },
   },
   {
     files: ["src/**/*.js", "src/**/*.mjs"],

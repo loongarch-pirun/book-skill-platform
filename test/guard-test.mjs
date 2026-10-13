@@ -14,7 +14,6 @@ import { registerServerTools, TOPN_SCHEMA, clampTopN } from "../src/lib/register
 
 const LIB = path.join(import.meta.dirname, "..", "library");
 const GOOD = path.join(LIB, "lunyu-xueer-zh.docx.db");      // 16 块，小而全（有向量/FTS/编目）
-const SRC_DB = path.join(LIB, "attention-is-all-you-need-en.pdf.db"); // 51 块，测 topN 夹取
 
 let pass = 0, fail = 0;
 const ok = (cond, name, extra = "") => {

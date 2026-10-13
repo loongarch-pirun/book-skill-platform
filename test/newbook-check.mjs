@@ -102,7 +102,6 @@ async function checkOne(dbPath) {
       const [qv] = await embed.embedQueries([mid.text.slice(0, 60)]);
       const all = db.prepare("SELECT id, emb FROM chunks WHERE emb IS NOT NULL").all()
         .map(r => ({ id: r.id, v: new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4) }));
-      const ranked = all.map(r => ({ id: r.id, s: embed.simThreshold === undefined ? 0 : 0 })); // 占位，下面真算
       const { cosine } = await import("../src/lib/models.mjs");
       const scored = all.map(r => ({ id: r.id, s: cosine(qv, r.v) })).sort((a, b) => b.s - a.s);
       const rank = scored.findIndex(r => r.id === mid.id) + 1;

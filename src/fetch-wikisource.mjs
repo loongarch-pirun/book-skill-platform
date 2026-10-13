@@ -57,9 +57,9 @@ function cleanWikitext(wt, pageBasename) {
   for (const rawLine of s.split("\n")) {
     const line = rawLine.trim();
     if (!line) continue;
-    // 维基文库页脚导航行：「上一篇　回目录　下一篇」（部分篇目有，囬録/目录两种写法）——
-    // 是模板渲染的导航不是正文，滤掉（漏进去会多出 8 个纯导航垃圾块）
-    if (/^上一篇[　\s]*回目[録录]?[　\s]*下一篇$/.test(line)) continue;
+    // 维基文库页脚导航行：「上一篇/回目录/下一篇」（部分篇目有，囬録/目录两种写法；
+    // 全角空格分隔）——是模板渲染的导航不是正文，滤掉（漏进去会多出 8 个纯导航垃圾块）
+    if (/^上一篇[\u3000\s]*回目[録录]?[\u3000\s]*下一篇$/.test(line)) continue;
     // wiki 分隔线 ---- / ==== 等：篇与篇之间的装饰线，不是正文
     if (/^[-=*_~#]{2,}$/.test(line)) continue;
     const hm = line.match(/^===\s*([^=]+?)\s*===$/);
@@ -70,7 +70,7 @@ function cleanWikitext(wt, pageBasename) {
       continue;
     }
     if (/^(={2,}|Category:)/.test(line)) continue;
-    const para = line.replace(/^　+/, "").trim();
+    const para = line.replace(/^\u3000+/, "").trim();
     if (!para) continue;
     if (!cur) cur = { label: pageBasename, paras: [] }, sections.push(cur);
     cur.paras.push(para);

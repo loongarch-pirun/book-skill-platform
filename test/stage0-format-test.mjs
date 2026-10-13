@@ -9,7 +9,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BOOKS = path.join(__dirname, "..", "books");
-const { parsePdf, parseEpub, parseDocx, sentenceSplit, buildDb, main } = require("../src/build-book.js");
+const { parsePdf, parseEpub, parseDocx, sentenceSplit, main } = require("../src/build-book.js");
 const Database = require("better-sqlite3");
 
 let failed = 0;

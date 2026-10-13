@@ -26,7 +26,7 @@ console.log("论语章句:", lines.length, "章");
       // 简单折行：每行 28 个全角字符
       const text = lines[i];
       for (let off = 0; off < text.length; off += 28) {
-        page.drawText(`第${i + 1}章  ` === undefined ? "" : (off === 0 ? `第${i + 1}章 ` : "       ") + text.slice(off, off + 28), { x: 60, y, size: 12, font });
+        page.drawText((off === 0 ? `第${i + 1}章 ` : "       ") + text.slice(off, off + 28), { x: 60, y, size: 12, font });
         y -= 24;
       }
       y -= 12;

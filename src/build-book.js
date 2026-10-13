@@ -265,8 +265,8 @@ async function main(argv = process.argv.slice(2)) {
 
 // ---------- 入口：直接运行才启动 CLI；被 import/require 时只暴露函数（测试用真实实现） ----------
 if (require.main === module) {
-  main().catch(e => { console.error("建库失败:", e?.message || e); process.exitCode = 1; });
-  process.on("unhandledRejection", e => { console.error("未处理的异步错误:", e?.message || e); process.exitCode = 1; });
+  main().catch(e => { console.error("建库失败:", e?.stack || e?.message || e); process.exitCode = 1; });
+  process.on("unhandledRejection", e => { console.error("未处理的异步错误:", e?.stack || e?.message || e); process.exitCode = 1; });
 }
 
 module.exports = { collapse, normLine, sentenceSplit, decodeHtml, parsePdf, parseEpub, parseDocx, buildDb, main, contentHash };

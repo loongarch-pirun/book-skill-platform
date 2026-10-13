@@ -6,8 +6,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
-import { validateResult, loadCatalogSignal, rollbackCatalog, importCatalog } from "../src/lib/catalog.mjs";
-import { buildTask, clusterChunks } from "../src/lib/catalog.mjs";
+import { validateResult, loadCatalogSignal, rollbackCatalog } from "../src/lib/catalog.mjs";
 
 let failed = 0;
 const assert = (cond, msg) => { console.log((cond ? "PASS" : "FAIL") + " - " + msg); if (!cond) failed++; };

@@ -1,7 +1,5 @@
 // 字面腿关键词化验收：关键词腿真的干活了 + 不打扰会做的题 + 开关退回旧行为
 // 跑法: node test/ftsliteral-test.mjs
-import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";

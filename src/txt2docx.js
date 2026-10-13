@@ -4,7 +4,15 @@ const path = require("path");
 const AdmZip = require("adm-zip");
 const [, , inFile, outFile] = process.argv;
 if (!inFile || !outFile) { console.error("用法: node txt2docx.js <in.txt> <out.docx>"); process.exit(1); }
-const lines = fs.readFileSync(inFile, "utf8").split("\n").map(s => s.trim()).filter(Boolean);
+const buf = fs.readFileSync(inFile);
+// BOM 治理（P1 fuzz 逮到的静默损毁）：UTF-16 直接拒——按 UTF-8 误读会变成 \0 穿插的
+// 乱码垃圾，不崩、账平、零提示，内容静默毁掉；UTF-8 BOM 剥掉即可（Windows 记事本常见）
+if (buf.length >= 2 && ((buf[0] === 0xff && buf[1] === 0xfe) || (buf[0] === 0xfe && buf[1] === 0xff))) {
+  console.error(`检测到 UTF-16 编码的文本（${buf[0] === 0xff ? "LE" : "BE"} BOM）：${path.basename(inFile)}`);
+  console.error("UTF-16 按 UTF-8 误读会成乱码垃圾。请先用编辑器另存为 UTF-8 再导入。");
+  process.exit(1);
+}
+const lines = buf.toString("utf8").replace(/^\uFEFF/, "").split("\n").map(s => s.trim()).filter(Boolean);
 // "# 标题" 约定：输出 Heading1 段落（mammoth 会转成 <h1>，build-book 据此分章节）。
 // 普通行仍是正文段——老 txt 没有 # 行，行为零变化。
 const isHeading = (t) => /^#\s+\S/.test(t);
