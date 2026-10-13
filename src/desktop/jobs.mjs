@@ -52,7 +52,11 @@ export function onJobsProgress(fn) { subs.add(fn); return () => subs.delete(fn);
 
 // ---------- 主流程：拖一本书进来 → 四步管线 ----------
 export async function startImport(filePath) {
-  const file = path.resolve(String(filePath || ""));
+  const raw = String(filePath ?? "").trim();
+  // 空路径防御：旧的拖拽链路会传 undefined 进来，path.resolve("") 静默解析成 cwd，
+  // existsSync(cwd) 又为真，最后抛出与真因不符的「不支持的格式 .?」（G-02 故障链）
+  if (!raw) throw new UserError("没拿到文件路径——请重试拖拽");
+  const file = path.resolve(raw);
   if (!fs.existsSync(file)) throw new UserError(`找不到文件：${file}`);
   const ext = (path.extname(file).match(/^\.(.+)$/) || [])[1]?.toLowerCase();
   const fmt = EXT_FMT[ext];

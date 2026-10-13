@@ -1,6 +1,6 @@
 // preload：contextBridge 把 window.study.* 暴露给渲染进程
 // 铁律：只转发 IPC，不暴露任何 Node 能力（渲染进程纯前端，碰不到 fs/sqlite）
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 contextBridge.exposeInMainWorld("study", {
   // 配置 / 首启向导
@@ -13,6 +13,9 @@ contextBridge.exposeInMainWorld("study", {
   deleteBook: (bookId) => ipcRenderer.invoke("books:delete", bookId),
   // 导入管线
   importBook: (filePath) => ipcRenderer.invoke("books:import", filePath),
+  // Electron 32+ 已移除 File.path（官方破坏性变更）——拖拽文件取真实路径只能走 webUtils
+  // （webUtils 仅在 preload 可用，渲染层经这里转发）
+  filePathOf: (file) => webUtils.getPathForFile(file),
   jobsStatus: () => ipcRenderer.invoke("jobs:status"),
   jobsCancel: (bookId) => ipcRenderer.invoke("jobs:cancel", bookId),
   jobsPickResult: () => ipcRenderer.invoke("jobs:pickResult"),

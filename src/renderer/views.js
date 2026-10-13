@@ -78,7 +78,14 @@ export function bindShelfEvents() {
     e.preventDefault();
     dz.classList.remove("over");
     const f = e.dataTransfer.files?.[0];
-    if (f) importFile(f.path, f.name);
+    if (f) {
+      // G-02：Electron 32+ 已移除 File.path，直接读 f.path 恒为 undefined
+      // （旧链路会把它一路带到主进程解析成 cwd，最后报出与真因不符的「不支持的格式 .?」）
+      let fp = "";
+      try { fp = window.study.filePathOf(f); } catch { /* 取不到就落下面的人话提示 */ }
+      if (!fp) { toast("没拿到文件路径——请重试拖拽"); return; }
+      importFile(fp, f.name);
+    }
   });
   main.addEventListener("click", async (e) => {
     const el = e.target.closest("[data-action]");
