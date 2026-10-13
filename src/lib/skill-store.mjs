@@ -32,6 +32,36 @@ const MAX_FILE_BYTES = 512 * 1024;
 const MAX_TOTAL_BYTES = (Number(process.env.BSP_SKILL_MAX_KB) >= 64 ? Number(process.env.BSP_SKILL_MAX_KB) : 1024) * 1024;
 const kbStr = (n) => (n / 1024).toFixed(0) + "KB";
 
+// ---------- 中文数字解析（覆盖声称防幻觉的硬缺口） ----------
+// 教训：「八十一章原典速查」这类中文数字声称，纯 (\d+) 正则静默放过——
+// 声称检查漏一类就等于没查。最小实现：一~亿、段式（二千五百一十一），
+// 兼容全角阿拉伯数字；解析不出（NaN）时调用方按"无法核验"从严处理。
+const CN_DIGIT = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 零: 0, 〇: 0, 两: 2 };
+const CN_NUM_RE = /^[0-9０-９一二三四五六七八九十百千两零〇]+$/;
+function cnSeg(s) {
+  if (/^[0-9０-９]+$/.test(s)) return Number(s.replace(/[０-９]/g, d => "０１２３４５６７８９".indexOf(d)));
+  let total = 0, section = 0;
+  for (const ch of s) {
+    if (ch in CN_DIGIT) section = CN_DIGIT[ch];
+    else if (ch === "十") { total += (section || 1) * 10; section = 0; }
+    else if (ch === "百") { total += (section || 1) * 100; section = 0; }
+    else if (ch === "千") { total += (section || 1) * 1000; section = 0; }
+    else return NaN; // 段内出现非数字字（如"余"）→ 放弃解析
+  }
+  return total + section;
+}
+export function claimNum(s) {
+  const t = String(s || "").trim();
+  if (!CN_NUM_RE.test(t)) return NaN;
+  let total = 0;
+  for (const seg of t.split(/[億亿]/)) {
+    let v = 0;
+    for (const w of seg.split(/[萬万]/)) v = v * 10000 + cnSeg(w);
+    total = total * 100000000 + v;
+  }
+  return total;
+}
+
 // ---------- frontmatter（最小手写 YAML，不引依赖） ----------
 export function parseFrontmatter(md) {
   const m = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(String(md || ""));
@@ -46,7 +76,19 @@ export function parseFrontmatter(md) {
     } else {
       const km = line.match(/^([A-Za-z_]\w*)\s*:\s*(.*)$/);
       if (!km) continue;
-      if (km[1] === "sources") { sources = {}; data.sources = sources; }
+      if (km[1] === "sources") {
+        sources = {};
+        data.sources = sources;
+        // flow map（sources: { a: b }）与单值（sources: book）形式：原实现只认块式缩进，
+        // flow map 的值被静默丢掉 → 全部引用报 unknown-source（P0 逮到的静默丢值）
+        const flow = /^\{([\s\S]*)\}$/.exec(km[2].trim());
+        if (flow) {
+          for (const part of flow[1].split(",")) {
+            const kv = part.split(":");
+            if (kv.length >= 2) sources[kv[0].trim().replace(/^["']|["']$/g, "")] = kv.slice(1).join(":").trim().replace(/^["']|["']$/g, "");
+          }
+        } else if (km[2].trim()) sources[km[2].trim()] = km[2].trim();
+      }
       else data[km[1]] = km[2].trim();
     }
   }
@@ -80,9 +122,12 @@ const stripAnnotations = (s) => String(s || "")
 
 const normalize = (s) => String(s || "").replace(/[\s\p{P}\p{S}]/gu, "");
 
-// 引文按标点切子句（切分要在去标点之前），丢 <4 字短句，逐子句在源文中找
+// 引文按标点切子句（切分要在去标点之前），丢 <4 字短句，逐子句在源文中找。
+// 对称剥离校注：源文侧剥了「一作」校注，引文侧也必须剥——智能体照抄 query_book
+// 返回的含校注原文时，不剥引文会把真实引用误判为造假（P0 逮到：道德经包的使用
+// 约定要求照抄原文、原文含校注，修前恰好没有引文考验过这条路径）。
 function quoteClauses(quote) {
-  return String(quote || "").split(/[。；！？!?;.\n]+/).map(normalize).filter(c => c.length >= 4);
+  return String(quote || "").split(/[。；！？!?;.\n]+/).map(s => normalize(stripAnnotations(s))).filter(c => c.length >= 4);
 }
 
 function verifyOneText(srcText, quote) {
@@ -167,8 +212,8 @@ export function verifyCitations(citations, sourcesMap) {
 // ---------- 出厂自检：声称 vs 实际（第三道质检，防"包装说明与内容对不上"） ----------
 // 教训：道德经包 description 写"81章原典速查"，实际引文只覆盖 14 章——生成模式凭印象写声称，不回头核对。
 // 原则：凡是智能体会拿来当导航依据的声称（覆盖范围/章节数/索引指向），必须机器可验。
-const CLAIM_ABILITY_RE = /(\d+)\s*章(?:原典)?\s*(?:速查|指南|手册|全覆盖)/g; // 能力声称："81章速查"
-const CLAIM_BOOK_TOTAL_RE = /全书\s*(\d+)\s*章/g; // 书属性声称："全书81章"
+const CLAIM_ABILITY_RE = /([0-9０-９一二三四五六七八九十百千两零〇]+)\s*章(?:原典)?\s*(?:速查|指南|手册|全覆盖)/g; // 能力声称："81章速查"/「八十一章速查」
+const CLAIM_BOOK_TOTAL_RE = /全书\s*([0-9０-９一二三四五六七八九十百千两零〇]+)\s*章/g; // 书属性声称："全书81章"/「全书八十一章」
 const REF_PATH_RE = /(?:chapters\/)?(?:ch\d{2}-[a-z0-9-]+|glossary|patterns|cheatsheet)\.md/g; // 索引表指向的文件
 
 function coverageCheck(fmData, skillMdContent, files, stats) {
@@ -188,33 +233,33 @@ function coverageCheck(fmData, skillMdContent, files, stats) {
       push("broken-reference", { file: ref, hint: `SKILL.md 引用了 ${ref}，但 files 里没有这个文件——智能体按索引导航会撞墙` });
   }
 
-  // b) 能力声称："N章速查/指南/手册/全覆盖"里的 N 必须等于实际覆盖数
+  // b) 能力声称："N章速查/指南/手册/全覆盖"里的 N 必须等于实际覆盖数（N 支持中文数字）
   for (const m of skillMdContent.matchAll(CLAIM_ABILITY_RE)) {
-    const n = Number(m[1]);
+    const n = claimNum(m[1]);
     if (single && n !== seenCount)
-      push("claimed-coverage-lie", { claimed: n, actual: seenCount, match: m[0],
+      push("claimed-coverage-lie", { claimed: n, claimedText: m[1], actual: seenCount, match: m[0],
         hint: `"${m[0]}" 是能力声称，但引文实际只覆盖 ${seenCount} 章——要么写"覆盖 ${seenCount} 章"，要么写"全书 ${totalCount} 章精选 ${seenCount} 章"` });
   }
 
-  // c) 书属性声称："全书N章"里的 N 必须等于源书实际章节数
+  // c) 书属性声称："全书N章"里的 N 必须等于源书实际章节数（N 支持中文数字）
   for (const m of skillMdContent.matchAll(CLAIM_BOOK_TOTAL_RE)) {
-    const n = Number(m[1]);
+    const n = claimNum(m[1]);
     if (single && n !== totalCount)
-      push("book-total-lie", { claimed: n, actual: totalCount, match: m[0], hint: `"${m[0]}" 与源书实际 ${totalCount} 章不符——先到 query_book 核实原书章节数` });
+      push("book-total-lie", { claimed: n, claimedText: m[1], actual: totalCount, match: m[0], hint: `"${m[0]}" 与源书实际 ${totalCount} 章不符——先到 query_book 核实原书章节数` });
     else if (single && !fmData.coverage)
       warnings.push(`"全书 ${n} 章"没问题，但建议在 frontmatter 补 "coverage: ${seenCount}/${totalCount}"，让智能体知道这是精选集`);
   }
 
-  // d) coverage 声明："N" 或 "N/M"（N=引文覆盖章数，M=源书总章数）
+  // d) coverage 声明："N" 或 "N/M"（N=引文覆盖章数，M=源书总章数；均支持中文数字）
   const cov = String(fmData.coverage || "").trim();
   if (cov) {
-    const cm = /^(\d+)(?:\s*\/\s*(\d+))?$/.exec(cov);
-    if (!cm) push("bad-coverage", { hint: "coverage 格式应为 N 或 N/M（如 14/81）" });
+    const cm = /^([0-9０-９一二三四五六七八九十百千两零〇]+)(?:\s*\/\s*([0-9０-９一二三四五六七八九十百千两零〇]+))?$/.exec(cov);
+    if (!cm) push("bad-coverage", { hint: "coverage 格式应为 N 或 N/M（如 14/81、八十一）" });
     else if (single) {
-      if (Number(cm[1]) !== seenCount)
-        push("coverage-mismatch", { claimed: Number(cm[1]), actual: seenCount, hint: `coverage 声称覆盖 ${cm[1]} 章，引文实际覆盖 ${seenCount} 章` });
-      if (cm[2] && Number(cm[2]) !== totalCount)
-        push("coverage-total-mismatch", { claimed: Number(cm[2]), actual: totalCount, hint: `coverage 分母 ${cm[2]} 与源书实际 ${totalCount} 章不符` });
+      if (claimNum(cm[1]) !== seenCount)
+        push("coverage-mismatch", { claimed: claimNum(cm[1]), claimedText: cm[1], actual: seenCount, hint: `coverage 声称覆盖 ${cm[1]} 章，引文实际覆盖 ${seenCount} 章` });
+      if (cm[2] && claimNum(cm[2]) !== totalCount)
+        push("coverage-total-mismatch", { claimed: claimNum(cm[2]), claimedText: cm[2], actual: totalCount, hint: `coverage 分母 ${cm[2]} 与源书实际 ${totalCount} 章不符` });
     } else if (cm[2]) {
       warnings.push("多书技能暂不校验 coverage 分母，请人工核对");
     }
