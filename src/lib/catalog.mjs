@@ -209,7 +209,7 @@ const INSTRUCTIONS = `你是图书馆编目员。请只依据本任务书中的�
 {
   "task_ref": "<原样返回 book.db 字段>",
   "themes": [ { "id": "t1", "name": "主题名", "note": "一句话中文说明" } ],
-  "persons": [ { "name": "人物标准名", "match_names": ["书中真实出现的写法", "..."], "note": "身份一句话" } ],
+  "persons": [ { "name": "人物标准名", "match_names": ["书中真实出现的写法", "..."], "aliases_zh": ["中文译名（可选，仅广为人知时写）"], "note": "身份一句话" } ],
   "relations": [ { "a": "人物名", "b": "人物名", "note": "关系一句话" } ],
   "assignments": [ { "cluster": "c001", "theme": "t1" } ]
 }
@@ -217,7 +217,7 @@ const INSTRUCTIONS = `你是图书馆编目员。请只依据本任务书中的�
 硬性要求：
 1. assignments 必须覆盖 clusters 里出现的每一个 id，且只允许出现这些 id；每个 cluster 恰好分给一个 theme。
 2. themes 数量建议 5~12 个，每个 theme 至少被一个 cluster 使用。
-3. persons 的 match_names 里每个字符串必须是书中原文真实出现的写法（导入程序会逐一在原文检索验证，任何一条不存在则整批拒绝）。没有把握的写法不要写。
+3. persons 的 match_names 里每个字符串必须是书中原文真实出现的写法（导入程序会逐一在原文检索验证，任何一条不存在则整批拒绝）。没有把握的写法不要写。aliases_zh 是**可选**的中文译名（如 Darcy→达西、Mencius→孟子），仅当该译名广为人知时提供、宁缺毋滥——它不参与书内验真，用于中文提问时链到书内写法。
 4. 只有真实出场的人物才列入 persons；relations 的 a/b 必须是 persons 里出现过的名字。
 5. 主题名与人物名用与书中原文一致的语言（英文书用英文，中文书用中文）；说明性文字用中文。`;
 
@@ -296,6 +296,7 @@ const ResultSchema = z.object({
   persons: z.array(z.object({
     name: z.string().min(1),
     match_names: z.array(z.string().min(1)).min(1),
+    aliases_zh: z.array(z.string().min(1)).optional().default([]),  // P1.5 中文译名：软字段（只防呆，不进书内验真）
     note: z.string().optional(),
   })).optional().default([]),
   relations: z.array(z.object({ a: z.string().min(1), b: z.string().min(1), note: z.string().optional() })).optional().default([]),
@@ -334,6 +335,7 @@ export function validateResult(db, task, result) {
     if (!names.has(rel.b)) errors.push(`relations.b 不是已声明人物: ${rel.b}`);
   }
   // 防幻觉：人物 match_names 必须在原文真实出现
+  // （aliases_zh 中文译名不参与验真——译名书里没有，是链接用的软字段；防呆由 zod 兜）
   const check = db.prepare("SELECT COUNT(*) n FROM chunks WHERE instr(lower(text), lower(?)) > 0");
   for (const p of r.persons) for (const m of p.match_names) {
     if (!check.get(m).n) errors.push(`人物「${p.name}」的 match_name「${m}」在原文中不存在（防幻觉校验）`);
@@ -373,7 +375,7 @@ export async function importCatalog(db, task, result, { dryRun = false } = {}) {
     const insEdge = db.prepare("INSERT INTO edges(src_type,src,dst_type,dst,kind,weight,ref,source) VALUES(?,?,?,?,?,?,?,'llm')");
 
     for (const t of r.themes) insNode.run("theme", t.name, JSON.stringify({ note: t.note || "", id: t.id }));
-    for (const p of r.persons) insNode.run("person", p.name, JSON.stringify({ note: p.note || "", match_names: p.match_names }));
+    for (const p of r.persons) insNode.run("person", p.name, JSON.stringify({ note: p.note || "", match_names: p.match_names, aliases_zh: p.aliases_zh }));
 
     // chunk→theme belongs 边（cluster→theme 映射展开到成员块）
     const themeNameOf = new Map(r.assignments.map(a => [a.cluster, r.themes.find(t => t.id === a.theme)?.name]));
@@ -387,6 +389,7 @@ export async function importCatalog(db, task, result, { dryRun = false } = {}) {
     for (const rel of r.relations) insEdge.run("person", rel.a, "person", rel.b, "relation", 1, rel.note || "");
 
     // mention 边：match_names 全文扫描（英文词边界正则 / 中文 includes），按人物去重
+    // （aliases_zh 不扫——译名不在书内，扫了必空）
     const chunks = db.prepare("SELECT id, text FROM chunks").all();
     const updPerson = db.prepare("UPDATE nodes SET ref=? WHERE type='person' AND name=? AND source='llm'");
     for (const p of r.persons) {
@@ -610,7 +613,7 @@ export function getCatalogSummary(dbPath, themeFilter) {
     const persons = db.prepare("SELECT name, ref FROM nodes WHERE type='person' AND source='llm' ORDER BY rowid").all().map(p => {
       let info = {};
       try { info = JSON.parse(p.ref || "{}"); } catch { }
-      return { name: p.name, note: info.note || "", match_names: info.match_names || [], mention_count: info.mention_count || 0 };
+      return { name: p.name, note: info.note || "", match_names: info.match_names || [], aliases_zh: info.aliases_zh || [], mention_count: info.mention_count || 0 };
     });
     const relations = db.prepare("SELECT src, dst, ref FROM edges WHERE kind='relation' AND source='llm' ORDER BY rowid").all()
       .map(e => ({ a: e.src, b: e.dst, note: e.ref || "" }));
@@ -714,7 +717,7 @@ export function getPersonDetail(dbPath, name) {
       }));
     return {
       cataloged: true, person: p.name, note: info.note || "", matched_by: m.matched_by,
-      match_names: info.match_names || [], mention_count: info.mention_count || 0,
+      match_names: info.match_names || [], aliases_zh: info.aliases_zh || [], mention_count: info.mention_count || 0,
       mention_chunks: mentionIds.length,
       relations, representative_chunks: representativeChunks(db, mentionIds),
     };

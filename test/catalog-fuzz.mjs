@@ -14,7 +14,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 const Database = require("better-sqlite3");
 
-const { getPersonDetail, getThemeDetail } = await import("../src/lib/catalog.mjs");
+const { getPersonDetail, getThemeDetail, validateResult, importCatalog, linkEntities, entityAliasTerms } = await import("../src/lib/catalog.mjs");
+const { assertEngine, DEFAULT_EMBED } = await import("../src/lib/models.mjs");
 const { generateSkillScaffold, MAX_CHUNK_IDS } = await import("../src/lib/catalog-skill.mjs");
 
 let pass = 0, fail = 0, observe = 0;
@@ -46,7 +47,7 @@ function copyPp(tag) {
 function makeDb(libDir, name, { chunks = [], nodes = [], edges = [] } = {}) {
   const p = path.join(libDir, name);
   const db = new Database(p);
-  db.exec(`CREATE TABLE chunks(id INTEGER PRIMARY KEY, chapter TEXT, page INTEGER, text TEXT);
+  db.exec(`CREATE TABLE chunks(id INTEGER PRIMARY KEY, chapter TEXT, page INTEGER, text TEXT, emb BLOB);
     CREATE TABLE nodes(id INTEGER PRIMARY KEY, type TEXT NOT NULL, name TEXT NOT NULL, ref TEXT, source TEXT);
     CREATE TABLE edges(src_type TEXT, src TEXT, dst_type TEXT, dst TEXT, kind TEXT, weight REAL, source TEXT, ref TEXT);
     CREATE TABLE meta(key TEXT, value TEXT);`);
@@ -296,6 +297,61 @@ console.log("\n--- P2-B generateSkillScaffold ---");
     "P2-B10: 章节全空串 → 「本书无章节结构」兜底行");
   safeRm(tmp);
   safeRm(path.dirname(ppDb));
+}
+
+// ========== P1.5 中文译名 aliases_zh（渐进增强：打通"中文问英文书"） ==========
+console.log("\n--- P1.5 aliases_zh ---");
+{
+  const tmp15 = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-p15-"));
+  const lib15 = path.join(tmp15, "library");
+  fs.mkdirSync(lib15, { recursive: true });
+  const thin = { task_ref: "p15.db", themes: [{ id: "t1", name: "Test Theme" }], assignments: [{ cluster: "c001", theme: "t1" }] };
+  const task15 = { book: { db: "p15.db" }, clusters: [{ id: "c001", members: [1, 2] }] };
+  const dbPath15 = makeDb(lib15, "p15.db", {
+    chunks: [
+      { id: 1, text: "Elizabeth walked to the parsonage in the morning." },
+      { id: 2, text: "The carriage stopped at the gate." },
+    ],
+  });
+  const db15 = new Database(dbPath15);
+  // ① 空串译名 → schema 拒收（软防呆）
+  const vEmpty15 = validateResult(db15, task15, { ...thin, persons: [{ name: "Elizabeth Bennet", match_names: ["Elizabeth"], aliases_zh: [""] }] });
+  ok(!vEmpty15.ok && vEmpty15.errors.some(e => e.includes("aliases_zh")),
+    `P1.5: aliases_zh 空串被 schema 拒收（${vEmpty15.errors[0] || "无错误？"}）`);
+  // ② 省略 aliases_zh → 默认空数组（存量编目结果零影响，行为与 P1 一致）
+  const vOmit15 = validateResult(db15, task15, { ...thin, persons: [{ name: "Elizabeth Bennet", match_names: ["Elizabeth"] }] });
+  ok(vOmit15.ok && Array.isArray(vOmit15.data.persons[0].aliases_zh) && vOmit15.data.persons[0].aliases_zh.length === 0,
+    "P1.5: 省略 aliases_zh → 默认空数组（旧任务书产物照常放行）");
+  // ③ 合法译名放行：书内没有「伊丽莎白」也不拦（软字段，不做书内验真）
+  const vOk15 = validateResult(db15, task15, { ...thin, persons: [{ name: "Elizabeth Bennet", match_names: ["Elizabeth"], aliases_zh: ["伊丽莎白"] }] });
+  ok(vOk15.ok, `P1.5: 合法译名放行——「伊丽莎白」书内没有不拦（软字段）${vOk15.ok ? "" : "｜" + vOk15.errors[0]}`);
+  db15.close();
+  // OBSERVE：build 后 embed 前的半成品库（无 emb 列，非坏库）——assertEngine 对维度的
+  // SELECT emb 裸抛 SqliteError（build-book 建表不带 emb，embed-book ALTER 补；导入中断即此态）。
+  // 本轮登记不修（models.mjs 出计划范围）；建议修法：先 PRAGMA 查列存在再验维度。
+  // 夹具手工建表复刻 build-book 形态（makeDb 现已带 emb 列，造不出此态）
+  const noembPath = path.join(lib15, "noemb.db");
+  const x15 = new Database(noembPath);
+  x15.exec("CREATE TABLE meta(key TEXT, value TEXT); CREATE TABLE chunks(id INTEGER PRIMARY KEY, chapter TEXT, page INTEGER, text TEXT NOT NULL);");
+  x15.close();
+  const dbNoEmb = new Database(noembPath);
+  let noEmbThrew = false;
+  try { assertEngine(dbNoEmb, DEFAULT_EMBED); } catch (e) { noEmbThrew = e?.name === "SqliteError" || String(e?.code || "").startsWith("SQLITE_"); }
+  dbNoEmb.close();
+  obs(noEmbThrew, "P1.5-OBS: 无 emb 列半成品库 assertEngine 裸抛 SqliteError（登记不修）");
+  // ④ 全链闭环：importCatalog 写入节点 ref → 中文译名命中 → 注入的是书内写法（译名不进 FTS）
+  const dbW15 = new Database(dbPath15);
+  await importCatalog(dbW15, task15, { ...thin, persons: [{ name: "Elizabeth Bennet", match_names: ["Elizabeth"], aliases_zh: ["伊丽莎白"], note: "" }] });
+  const refW15 = JSON.parse(dbW15.prepare("SELECT ref FROM nodes WHERE type='person' AND name='Elizabeth Bennet'").get().ref || "{}");
+  ok(Array.isArray(refW15.aliases_zh) && refW15.aliases_zh[0] === "伊丽莎白",
+    `P1.5: importCatalog 把译名写进节点 ref（${JSON.stringify(refW15.aliases_zh)}，mention_count=${refW15.mention_count}）`);
+  const hitZh15 = linkEntities(dbW15, "伊丽莎白是个怎样的人");
+  ok(hitZh15.some(m => m.name === "Elizabeth Bennet"), "P1.5: 中文译名命中人物（linkEntities 词表并入 aliases_zh）");
+  const terms15 = entityAliasTerms(dbW15, "伊丽莎白是个怎样的人");
+  ok(terms15.en.includes("elizabeth") && terms15.cjk.length === 0,
+    `P1.5: 译名命中后注入 match_names 书内写法（en=${terms15.en.join(",")}；译名自身不进 FTS）`);
+  dbW15.close();
+  safeRm(tmp15);
 }
 
 console.log();
