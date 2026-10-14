@@ -22,8 +22,8 @@ export function currentSkillsDir() {
 
 // slug：纯小写字母/数字/连字符（Agent Skills 开放标准惯例）；中文书名写 frontmatter title
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
-// 允许写入的文件路径白名单（防任意文件写入）
-const FILE_RE = /^(?:SKILL\.md|chapters\/ch\d{2}-[a-z0-9-]+\.md|glossary\.md|patterns\.md|cheatsheet\.md)$/;
+// 允许写入的文件路径白名单（防任意文件写入）；catalog.json = 技能×编目融合 P-A（机器可读索引）
+const FILE_RE = /^(?:SKILL\.md|chapters\/ch\d{2}-[a-z0-9-]+\.md|glossary\.md|patterns\.md|cheatsheet\.md|catalog\.json)$/;
 const CHAPTER_FILE_RE = /^ch\d{2}-[a-z0-9-]+\.md$/;
 // 引用标记：〔别名·章节〕，只认 blockquote 行
 const CITATION_RE = /〔(.+?)·(.+?)〕/;
@@ -267,6 +267,29 @@ function coverageCheck(fmData, skillMdContent, files, stats) {
   return { errors, warnings };
 }
 
+// ---------- catalog.json 校验（P-A，先 warning 后收紧） ----------
+// catalog.json 是机器可读的导航地图：解析不了/书源对不上，智能体按图索骥会撞墙。
+// 首版只 warning 不拒收（观察期后升 error——融合规划第五节风险表约定）。
+function catalogCheck(files, fmData) {
+  const warnings = [];
+  const f = (files || []).find(x => x && x.path === "catalog.json");
+  if (!f) return warnings;
+  let data; // 不预置 null：解析失败即 return，预置值永远读不到（eslint 也会报警）
+  try { data = JSON.parse(f.content); }
+  catch (e) {
+    warnings.push(`catalog.json 不是合法 JSON（${e.message}）——机器读的地图解析不了等于没有，请重跑 skill-scaffold 生成`);
+    return warnings;
+  }
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    warnings.push("catalog.json 应为 JSON 对象——请重跑 skill-scaffold 生成");
+    return warnings;
+  }
+  const bookIds = new Set(Object.values(fmData.sources || {}));
+  if (data.book_id && bookIds.size && !bookIds.has(data.book_id))
+    warnings.push(`catalog.json 的 book_id（${data.book_id}）不在 SKILL.md sources 里（${[...bookIds].join("、")}）——包里的地图和封面指向不同的书，请核对`);
+  return warnings;
+}
+
 // ---------- 落盘 / 读 / 枚举 ----------
 export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) {
   const errors = [];
@@ -279,7 +302,7 @@ export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) 
   let totalBytes = 0;
   for (const f of files || []) {
     if (!f || typeof f.path !== "string" || !FILE_RE.test(f.path)) {
-      push("bad-path", { file: f && f.path, hint: "允许的路径：SKILL.md、chapters/chNN-小写连字符.md、glossary.md、patterns.md、cheatsheet.md" });
+      push("bad-path", { file: f && f.path, hint: "允许的路径：SKILL.md、chapters/chNN-小写连字符.md、glossary.md、patterns.md、cheatsheet.md、catalog.json" });
       continue;
     }
     if (seen.has(f.path)) push("bad-path", { file: f.path, hint: "路径重复" });
@@ -307,9 +330,10 @@ export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) 
   const { errors: citErrors, stats: citStats } = verifyCitations(citations, fmData.sources);
   if (citErrors.length) return { ok: false, stage: "citation-check", errors: citErrors, citations_checked: citations.length };
 
-  // 第三道质检：出厂自检（声称 vs 实际）
+  // 第三道质检：出厂自检（声称 vs 实际）+ catalog.json 校验（P-A，warning 级）
   const cov = coverageCheck(fmData, skillMd.content, files, citStats);
   if (cov.errors.length) return { ok: false, stage: "coverage-check", errors: cov.errors, warnings: cov.warnings, citations_checked: citations.length };
+  const catalogWarnings = catalogCheck(files, fmData);
 
   // 原子写：临时目录 → 删旧 → rename（Windows 下目录 rename 需先删旧）
   const root = path.resolve(skillsDir);
@@ -344,7 +368,7 @@ export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) 
           chapters: [...citStats[bookIds[0]].seen],
         }
       : null,
-    warnings: cov.warnings,
+    warnings: [...cov.warnings, ...catalogWarnings],
     dir: "skills/" + slug,
   };
 }
@@ -373,7 +397,13 @@ export function readSkill(slug, chapter, { skillsDir = currentSkillsDir() } = {}
     return { slug, file: "chapters/" + chapter, content: fs.readFileSync(p, "utf8") };
   }
   const skillMd = fs.readFileSync(skillPath, "utf8");
-  return { slug, skill_md: skillMd, index: chapterIndex(dir) };
+  // catalog（P-A）：包内带 catalog.json 就解析返回（机器可读索引）；坏 JSON / 没有都返回 null——旧包零影响
+  let catalog = null;
+  const catPath = path.join(dir, "catalog.json");
+  if (fs.existsSync(catPath)) {
+    try { catalog = JSON.parse(fs.readFileSync(catPath, "utf8")); } catch { catalog = null; }
+  }
+  return { slug, skill_md: skillMd, index: chapterIndex(dir), catalog };
 }
 
 export function listSkills({ skillsDir = currentSkillsDir() } = {}) {
@@ -391,6 +421,7 @@ export function listSkills({ skillsDir = currentSkillsDir() } = {}) {
       title: (fm && fm.data.title) || slug,
       description: (fm && fm.data.description) || "",
       coverage: (fm && fm.data.coverage) || null, // frontmatter 约定 coverage: 覆盖数/总章数（出厂自检背书）
+      has_catalog: fs.existsSync(path.join(dir, "catalog.json")), // P-A：包内是否带机器可读索引
       chapters: chapterIndex(dir).length,
       sources: Object.values((fm && fm.data.sources) || {}),
       updated_at: st.mtime.toISOString(),

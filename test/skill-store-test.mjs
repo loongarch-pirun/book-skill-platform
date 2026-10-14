@@ -295,6 +295,44 @@ const ch08 = goodChapter("上善若水，水善利萬物而不爭。〔道德经
     "大小上限: 拒收后不落任何文件");
 }
 
+// ========== 17) catalog.json 进包（P-A：技能×编目融合，皮骨同包） ==========
+{
+  const base = { slug: "test-skill", skillsDir: tmp };
+  // 真骨架长这样（skill-scaffold 生成）：book_id 与 SKILL.md sources 指向同一本书，章节表是查出来的真值
+  const catalog = JSON.stringify({
+    book: "道德经", book_id: "daodejing-zh", cataloged: true,
+    chapters_total: 81, chunks_total: 120,
+    chapters: [{ chapter: "第八章", chunks: 3, suggested_file: "ch01-di-ba-zhang.md" }],
+    themes: [], persons: [], relations: [],
+  }, null, 2);
+
+  // a) 合法 catalog.json → 放行；read_skill 带 catalog；list_skills 标 has_catalog
+  let r = saveSkill("test-skill", [{ path: "SKILL.md", content: goodFm }, { path: "catalog.json", content: catalog }], base);
+  ok(r.ok === true, "P-A: 带 catalog.json 整包落盘通过", JSON.stringify(r.errors));
+  let read = readSkill("test-skill", undefined, base);
+  ok(read.catalog && read.catalog.book_id === "daodejing-zh" && read.catalog.chapters_total === 81,
+    "P-A: read_skill 返回 catalog（机器可读索引随包走，离库分享也能用）");
+  ok(listSkills(base).find(s => s.slug === "test-skill").has_catalog === true, "P-A: list_skills 带 has_catalog=true");
+
+  // b) 坏 JSON → 首版只 warning 不拒收（融合规划风险表：先观察再升 error）
+  r = saveSkill("test-skill", [{ path: "SKILL.md", content: goodFm }, { path: "catalog.json", content: "{ 这不是 json" }], base);
+  ok(r.ok === true && r.warnings.some(w => w.includes("catalog.json")),
+    "P-A: 坏 catalog.json 只 warning 不拒收（先观察后收紧）", JSON.stringify(r.errors));
+  ok(readSkill("test-skill", undefined, base).catalog === null, "P-A: 坏 catalog.json 读回降级为 null（不炸读流程）");
+
+  // c) book_id 与 SKILL.md sources 不对齐 → warning（包里的地图和封面必须指向同一本书）
+  r = saveSkill("test-skill", [{ path: "SKILL.md", content: goodFm },
+    { path: "catalog.json", content: catalog.replace("daodejing-zh", "zhuangzi-zh") }], base);
+  ok(r.ok === true && r.warnings.some(w => w.includes("book_id")),
+    "P-A: catalog book_id 与 sources 不对齐给 warning", JSON.stringify(r.warnings));
+
+  // d) 旧包（无 catalog.json）零影响——新增不得破坏既有资产
+  saveSkill("test-skill", [{ path: "SKILL.md", content: goodFm }], base);
+  read = readSkill("test-skill", undefined, base);
+  ok(read.catalog === null && listSkills(base).find(s => s.slug === "test-skill").has_catalog === false,
+    "P-A: 旧包零影响——catalog=null / has_catalog=false");
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== skill-store-test: ${pass} PASS / ${fail} FAIL =====`);
 if (fail) { console.error(`测试失败 ${fail} 项`); process.exit(1); }
