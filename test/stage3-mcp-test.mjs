@@ -70,6 +70,14 @@ const ql2 = await client.callTool({ name: "query_library", arguments: { question
 const ql2R = JSON.parse(ql2.content[0].text);
 assert(/attention/i.test(ql2R.routed_books[0].title), `英文问题自动路由到英文书: ${ql2R.routed_books[0].title}`);
 
+// 4c. maxBooks（P5）：路由窗口可调——同一问题收窄到 1 本只挑最相关的，=2 与默认一致
+const ql3 = await client.callTool({ name: "query_library", arguments: { question: "和朋友相处要讲信用", topN: 3, maxBooks: 1 } });
+const ql3R = JSON.parse(ql3.content[0].text);
+const ql4 = await client.callTool({ name: "query_library", arguments: { question: "和朋友相处要讲信用", topN: 3, maxBooks: 2 } });
+const ql4R = JSON.parse(ql4.content[0].text);
+assert(ql3R.routed_books.length === 1 && ql4R.routed_books.length === qlR.routed_books.length,
+  `query_library maxBooks 收窄/放宽: maxBooks=1 → ${ql3R.routed_books.length} 本，maxBooks=2 → ${ql4R.routed_books.length} 本`);
+
 // 5. 引用完整性：结果文本非空、含原文
 assert(qlR.results.every(r => r.text && r.text.length > 10), `所有结果带原文（可回源核对）`);
 

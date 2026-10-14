@@ -17,6 +17,10 @@ function matchBook(book) {
 export const TOPN_SCHEMA = z.number().int().min(1).max(20).optional().describe("返回条数，默认 4，最多 20");
 export const clampTopN = (n) => Math.min(Math.max(1, Math.floor(Number(n) || 4)), 20);
 
+// maxBooks 统一上限（P5）：路由窗口 [1..8]，默认 2——与 TOPN 同款 zod + 处理器双层防呆
+export const MAXBOOKS_SCHEMA = z.number().int().min(1).max(8).optional().describe("全库检索最多挑几本书，默认 2，最多 8；资料库多时可调大");
+export const clampMaxBooks = (n) => Math.min(Math.max(1, Math.floor(Number(n) || 2)), 8);
+
 export function registerServerTools(server) {
   server.registerTool("list_books", {
     title: "书架清单",
@@ -137,13 +141,14 @@ export function registerServerTools(server) {
 
   server.registerTool("query_library", {
     title: "全库检索（自动挑书）",
-    description: "不知道该查哪本书时用这个：系统自动判断问题牵涉哪些书（可多本），现场组装答案，每条结果都带书的归属和定位。",
+    description: "不知道该查哪本书时用这个：系统自动判断问题牵涉哪些书（可多本），现场组装答案，每条结果都带书的归属和定位。maxBooks 控制最多挑几本（默认 2），资料库多时可调大。",
     inputSchema: {
       question: z.string().describe("要查的问题"),
       topN: TOPN_SCHEMA,
+      maxBooks: MAXBOOKS_SCHEMA,
     },
-  }, async ({ question, topN }) => {
-    const out = await routeAndSearch(question, { topN: clampTopN(topN) });
+  }, async ({ question, topN, maxBooks }) => {
+    const out = await routeAndSearch(question, { topN: clampTopN(topN), maxBooks: clampMaxBooks(maxBooks) });
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 

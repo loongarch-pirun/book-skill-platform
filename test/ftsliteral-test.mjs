@@ -1,4 +1,4 @@
-// 字面腿关键词化验收：关键词腿真的干活了 + 不打扰会做的题 + 开关退回旧行为 + P1 实体链接别名注入
+// 字面腿关键词化验收：关键词腿真的干活了 + 不打扰会做的题 + 开关退回旧行为 + P1 实体链接别名注入 + P5 清单缓存
 // 跑法: node test/ftsliteral-test.mjs
 import fs from "node:fs";
 import os from "node:os";
@@ -10,9 +10,10 @@ const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const Database = require("better-sqlite3");
 
-import { hybridSearch } from "../src/lib/search.mjs";
+import { hybridSearch, listBooks, clearListCache, listCacheStats } from "../src/lib/search.mjs";
 import { questionKeywords, buildFtsQuery, cjkLikeScores, capFtsHits, convS2T, ftsWeightFor, FTS_TOPK } from "../src/lib/keywords.mjs";
 import { linkEntities, entityAliasTerms } from "../src/lib/catalog.mjs";
+import { setSkillEnabled } from "../src/lib/skill-state.mjs";
 
 const LIB = path.join(__dirname, "..", "library");
 const ATT = path.join(LIB, "attention-is-all-you-need-en.pdf.db");
@@ -203,6 +204,71 @@ const assert = (cond, msg, extra = "") => {
   const rsMz = await hybridSearch(MZ, "齐宣王问政于孟子", 20, { rerank: false });
   const hitMz2 = rsMz.find(r => /齊宣王/.test(r.text));
   assert(hitMz2 && hitMz2.fts > 0, `端到端: 简体问句命中繁体原文块（id=${hitMz2?.id} fts=${hitMz2?.fts ? hitMz2.fts.toFixed(2) : "无"}）`);
+}
+
+// ===== 8) P5 书库清单缓存：首查重扫 / 再查命中 / 指纹变化重扫 / 过滤现读 / 开关回退 =====
+{
+  delete process.env.BSP_LIST_CACHE;  // 外部环境若设过 =0，先清掉再测（默认开）
+  const tmpLib = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-p5-"));
+  const mkDb = (f, title) => {
+    const db = new Database(path.join(tmpLib, f));
+    db.exec("CREATE TABLE meta(key TEXT, value TEXT); CREATE TABLE chunks(id INTEGER PRIMARY KEY, text TEXT);");
+    db.prepare("INSERT INTO meta(key, value) VALUES('title', ?)").run(title);
+    db.prepare("INSERT INTO meta(key, value) VALUES('chunk_count', '1')").run();
+    db.prepare("INSERT INTO chunks(id, text) VALUES(1, '正文')").run();
+    db.close();
+  };
+  mkDb("a.db", "甲书"); mkDb("b.db", "乙书");
+
+  clearListCache();
+  const s0 = listCacheStats();
+  assert(s0.enabled === true && s0.hits === 0 && s0.misses === 0 && s0.dirs === 0, "缓存: clearListCache 归零 + 默认开");
+  const l1 = listBooks(tmpLib);
+  const s1 = listCacheStats();
+  assert(l1.length === 2 && s1.misses === 1 && s1.hits === 0, `缓存: 首查重扫建缓存（${l1.length} 本，miss=${s1.misses}）`);
+  listBooks(tmpLib); listBooks(tmpLib);
+  const s2 = listCacheStats();
+  assert(s2.hits === 2 && s2.misses === 1, `缓存: 再查命中不重扫（hits=${s2.hits} misses=${s2.misses}）`);
+  mkDb("c.db", "丙书");
+  const l3 = listBooks(tmpLib);
+  assert(l3.length === 3 && listCacheStats().misses === 2, "缓存: 新增 .db → 文件名集合变化重扫（3 本现身）");
+  const touch = new Date(Date.now() + 2000);
+  fs.utimesSync(path.join(tmpLib, "a.db"), touch, touch);
+  listBooks(tmpLib);
+  const s4 = listCacheStats();
+  assert(s4.misses === 3 && s4.hits === 2, `缓存: touch .db mtime → 指纹变化重扫（hits=${s4.hits} misses=${s4.misses}）`);
+  // 内容变化经指纹刷新：改 meta.title → 重扫后拿到新值（无僵尸缓存）
+  const bdb = new Database(path.join(tmpLib, "b.db"));
+  bdb.prepare("UPDATE meta SET value='乙书改' WHERE key='title'").run();
+  bdb.close();
+  fs.utimesSync(path.join(tmpLib, "b.db"), touch, touch);
+  const l5 = listBooks(tmpLib);
+  assert(l5.find(b => b.id === "b")?.title === "乙书改" && listCacheStats().misses === 4,
+    "缓存: 内容变化经 mtime 指纹刷新（无僵尸）");
+  // skill-state 过滤在缓存之上现读：关书即时生效且不触发重扫
+  setSkillEnabled(tmpLib, "a", false);
+  const l6 = listBooks(tmpLib);
+  const s6 = listCacheStats();
+  assert(l6.length === 2 && !l6.some(b => b.id === "a") && s6.hits === 3 && s6.misses === 4,
+    "缓存: 关书即时过滤且不触发重扫（state 现读在缓存之上）");
+  const l7 = listBooks(tmpLib, { includeDisabled: true });
+  assert(l7.length === 3, "缓存: includeDisabled 豁免仍见全量（引用回源路径不受 H3 影响）");
+  // 返回值与缓存隔离：改调用方拿到的对象不污染后续查询
+  l7[0].title = "被污染";
+  const l8 = listBooks(tmpLib, { includeDisabled: true });
+  assert(l8.find(b => b.id === l7[0].id).title !== "被污染", "缓存: 返回值浅拷贝与缓存隔离（调用方乱改不污染）");
+  // BSP_LIST_CACHE=0 一键回退：旧路径直查（不读不写缓存，计数冻结）
+  process.env.BSP_LIST_CACHE = "0";
+  const before = listCacheStats();
+  const l9 = listBooks(tmpLib, { includeDisabled: true });
+  const l9b = listBooks(tmpLib, { includeDisabled: true });
+  const after = listCacheStats();
+  assert(l9.length === 3 && l9b.length === 3 && after.hits === before.hits && after.misses === before.misses,
+    "缓存: BSP_LIST_CACHE=0 回退旧路径（结果正确且不触缓存计数）");
+  delete process.env.BSP_LIST_CACHE;
+  const l10 = listBooks(tmpLib, { includeDisabled: true });
+  assert(l10.length === 3 && listCacheStats().hits === before.hits + 1, "缓存: 删掉变量恢复启用（命中缓存）");
+  fs.rmSync(tmpLib, { recursive: true, force: true });
 }
 
 console.log("\n===== 字面腿关键词化验收结果 =====");

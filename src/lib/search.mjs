@@ -31,9 +31,28 @@ export function currentLibDir() {
 // opts.includeDisabled: 默认 false——按 <libDir>/skill-state.json 过滤掉关掉 skill 的书（H3：
 // 关一本书，桌面与 MCP 都查不到它；但引用回源验证等内部用途显式传 true 豁免，否则已落盘的
 // 技能包会全部验证失败）。无状态文件时全返回不过滤（stage3 六本断言不受伤）。
-export function listBooks(libDir = currentLibDir(), { includeDisabled = false } = {}) {
-  if (!fs.existsSync(libDir)) return [];
-  const books = fs.readdirSync(libDir).filter(f => f.endsWith(".db")).map(f => {
+//
+// P5 进程内缓存：缓存**未过滤的全量清单**（按 libDir 分桶）——includeDisabled 过滤在缓存
+// 之上现读 skill-state（轻 json），skill-state 变化天然不触发清单失效。失效信号两个：
+// .db 文件名集合变化 + 任一 .db 的 mtime/size 变化（readdir+stat 是轻操作；重的是逐库
+// open 查 meta——指纹变化才重扫）。**不落盘**（desktop/MCP 双进程写盘缓存会打架）；
+// BSP_LIST_CACHE=0 一键回退旧路径。默认开（清单条目几十字节无内存压力、失效信号明确）。
+// 返回结构与语义与旧版一致（12 处调用方零感知）。
+const listCache = new Map();  // libDir -> { fp, list }
+let listHits = 0, listMisses = 0;
+const listCacheEnabled = () => process.env.BSP_LIST_CACHE !== "0";
+
+// 指纹：文件名集合 + 每个 .db 的 mtime/size（每次 listBooks 都算——readdir + N 次 stat，微秒级）
+function libFingerprint(libDir) {
+  return fs.readdirSync(libDir).filter(f => f.endsWith(".db")).sort().map(f => {
+    try { const st = fs.statSync(path.join(libDir, f)); return `${f}:${st.mtimeMs}:${st.size}`; }
+    catch { return `${f}:gone`; }  // stat 失败按"变化"处理：下一轮重扫兜底
+  }).join("|");
+}
+
+// 逐库 open 查 meta（重操作，仅指纹变化时执行）
+function scanBooks(libDir) {
+  return fs.readdirSync(libDir).filter(f => f.endsWith(".db")).map(f => {
     const dbPath = path.join(libDir, f);
     try {
       const db = new Database(dbPath, { readonly: true });
@@ -42,10 +61,29 @@ export function listBooks(libDir = currentLibDir(), { includeDisabled = false } 
       return { id: f.replace(/\.db$/, ""), db: dbPath, title: meta.title || f, format: meta.format, model: meta.model || null, chunks: +meta.chunk_count, chars: +meta.total_chars, pages: meta.num_pages || null, chapters: meta.num_chapters || null };
     } catch { return null; }
   }).filter(Boolean);
+}
+
+export function listBooks(libDir = currentLibDir(), { includeDisabled = false } = {}) {
+  if (!fs.existsSync(libDir)) return [];
+  let all;
+  if (listCacheEnabled()) {
+    const fp = libFingerprint(libDir);
+    const ent = listCache.get(libDir);
+    if (ent && ent.fp === fp) { listHits++; all = ent.list; }
+    else { listMisses++; all = scanBooks(libDir); listCache.set(libDir, { fp, list: all }); }
+  } else {
+    all = scanBooks(libDir);  // BSP_LIST_CACHE=0：旧路径，不读不写缓存
+  }
+  // 数组+元素浅拷贝：调用方改返回值不污染缓存（每条 10 字段，微秒级；旧版每次调用本就返回新对象）
+  const books = all.map(b => ({ ...b }));
   if (includeDisabled) return books;
   const state = loadSkillState(libDir);
   return Object.keys(state).length ? books.filter(b => state[b.id] !== false) : books;
 }
+
+// 观测钩子（测试断言命中/失效）+ 一键清空（与 vec-cache 的 clearVecCache/vecCacheStats 对称）
+export function clearListCache() { listCache.clear(); listHits = 0; listMisses = 0; }
+export function listCacheStats() { return { enabled: listCacheEnabled(), hits: listHits, misses: listMisses, dirs: listCache.size }; }
 
 export function findBook(query, libDir = currentLibDir()) {
   const q = String(query).toLowerCase();
