@@ -116,7 +116,10 @@ export const EN_STOP = new Set(("a an the and or of to in on for with as at by f
 
 // 从问题抽关键词：英文 ≥3 字符实义词（弯引号 ’ 归一成直引号、属格 's 剥掉——
 // epub 正文全是弯引号，实测 "darcy's" 直引号形式 df=0，剥成 darcy 才能命中）；
-// 中文简转繁后切 2-gram
+// 中文简繁双形切 2-gram（简转繁形服务繁体书；**原形 grams 服务简体文档**——B2 真实
+// 工作资料 E2E 实证：简体问题×简体资料时转繁形 LIKE 全落空、字面腿整体哑火。
+// 双形只加词不改分：新增的原形 gram 必含至少一个简形差体字（无差体字的 gram 两形
+// 相同、Set 去重后不增量），对纯繁体书 df=0 被 cjkLikeScores 的 keep 过滤天然丢弃）
 export function questionKeywords(q) {
   const s = String(q || "").replace(/\u2019/g, "'").toLowerCase();
   const en = [];
@@ -124,9 +127,12 @@ export function questionKeywords(q) {
     const clean = w.replace(/^['-]+|['-]+$/g, "").replace(/'s$/, "");
     if (clean.length >= 3 && !EN_STOP.has(clean)) en.push(clean);
   }
-  const t = convS2T(s.replace(/[^\u4e00-\u9fff]/g, ""));
+  const raw = s.replace(/[^\u4e00-\u9fff]/g, "");
+  const t = convS2T(raw);
   const cjk = [];
   for (let i = 0; i + 2 <= t.length; i++) cjk.push(t.slice(i, i + 2));
+  if (t !== raw)  // 有简形差体字才补原形（纯繁体/无差体问题零新增零开销）
+    for (let i = 0; i + 2 <= raw.length; i++) cjk.push(raw.slice(i, i + 2));
   return { en, cjk };
 }
 

@@ -98,18 +98,21 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
   topN = Math.min(Math.max(Number(topN) || 5, 1), 50);  // 防呆：NaN/负数/超大值都夹回正常区间
   const db = new Database(dbPath, { readonly: true });
   try {
-    // 引擎一致性卫兵：库和查询不在同一向量空间就拒绝跑（宁可不答，不答错）
+    // 引擎一致性卫兵（有向量才需要）：库和查询不在同一向量空间就拒绝跑（宁可不答，不答错）。
+    // 无 emb 列（build-book 直出 / embed 中断途中）没有向量可错配 → 豁免，字面腿照常可用
+    // （与 similar.mjs 的 no-vectors 优雅路径同哲学；写路径 importCatalog 仍由 assertEngine
+    // 严格拦"先灌向量再编目"）
     const embed = await getEmbedder();
-    assertEngine(db, embed.key);
-
     const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
     const hasEmb = cols.includes("emb");
+    if (hasEmb) assertEngine(db, embed.key);
 
     // ---------- 字面腿 ----------
     // 关键词模式（默认）：整句 MATCH 是死路——书里不会出现整句问题（43 题实测字面腿命中 0）。
-    // 英文拆 ≥3 字实义词 OR 联合 MATCH（bm25 天然按 IDF 排序）；中文简转繁切 2-gram LIKE 计分
-    // （df 过滤掉无区分度的白话词）。两条路都只留 top-12 最尖的候选——实测不封顶会把
-    // 预筛窗口挤爆产生回归（86→81），封顶 12 = 最小扰动提名制。
+    // 英文拆 ≥3 字实义词 OR 联合 MATCH（bm25 天然按 IDF 排序）；中文简繁双形切 2-gram LIKE
+    // 计分（转繁形服务繁体书、原形服务简体工作资料；df 过滤掉无区分度的白话词）。两条路都
+    // 只留 top-12 最尖的候选——实测不封顶会把预筛窗口挤爆产生回归（86→81），封顶 12 = 最小
+    // 扰动提名制。
     // 权重固定 0.5（与语义腿对等）；BSP_FTS_W 可手动压低。旧模式：BSP_FTS_KW=0。
     const ftsScores = new Map();
     const q = String(question).replace(/"/g, "").trim();
@@ -249,26 +252,30 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 2, libDir 
   const PRESCREEN = Math.max(1, +(process.env.BSP_ROUTE_PRESCREEN ?? 6));
   const fullScan = (db, b) => {
     let best = 0;
+    // 未灌向量的库没有可算的分（0 分自然被 routeFloor 挡在门外）；也避开 getMatrix 的 emb 查询
+    const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
+    if (!cols.includes("emb")) return 0;
     const mat = getMatrix(db, b.db, embed.key);
     if (mat) {
       const s = new Map();
       matrixScores(mat, qv, s);
       for (const v of s.values()) if (v > best) best = v;
     } else {
-      const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
-      if (cols.includes("emb"))
-        for (const r of db.prepare("SELECT emb FROM chunks WHERE emb IS NOT NULL").all()) {
-          const v = new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4);
-          const sc = cosine(qv, v);
-          if (sc > best) best = sc;
-        }
+      for (const r of db.prepare("SELECT emb FROM chunks WHERE emb IS NOT NULL").all()) {
+        const v = new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4);
+        const sc = cosine(qv, v);
+        if (sc > best) best = sc;
+      }
     }
     return best;
   };
   const scored = books.map(b => {
     const db = new Database(b.db, { readonly: true });
     try {
-      try { assertEngine(db, embed.key); }
+      try {
+        const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
+        if (cols.includes("emb")) assertEngine(db, embed.key);  // 无向量列的库跳过引擎卫兵（无错配可言）
+      }
       catch (e) { skipped.push({ title: b.title, reason: e.message }); return { ...b, best: -Infinity }; }
       return { ...b, best: fullScan(db, b) };
     } finally {

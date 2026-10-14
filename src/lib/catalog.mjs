@@ -485,11 +485,20 @@ export function entityAliasTerms(db, q) {
         const clean = String(n || "").replace(/"/g, "");  // 去 " 防 FTS MATCH 语法破坏（search.mjs 对 q 同款处理）
         if (!clean) continue;
         if (/[\u4e00-\u9fff]/.test(clean)) {
-          const t = convS2T(clean.toLowerCase());
-          for (let i = 0; i + 2 <= t.length; i++) {
-            const gram = t.slice(i, i + 2);
+          // 简繁双形（原形在前——match_names 是书内写法：简体书靠原形命中；转繁形服务
+          // 繁体书/简繁混排）。原形优先保证 cap 16 截断时书内形不被丢弃（B2 真实工作
+          // 资料 E2E 实证：简体资料转繁后 LIKE 全落空）。无差体字时两形相同、去重零增量。
+          const rawC = clean.toLowerCase();
+          const t = convS2T(rawC);
+          for (let i = 0; i + 2 <= rawC.length; i++) {
+            const gram = rawC.slice(i, i + 2);
             if (!shadow.includes(gram)) cjk.push(gram);
           }
+          if (t !== rawC)
+            for (let i = 0; i + 2 <= t.length; i++) {
+              const gram = t.slice(i, i + 2);
+              if (!shadow.includes(gram)) cjk.push(gram);
+            }
         } else {
           const words = clean.split(/\s+/);  // 剪枝①：多词写法只取末词
           for (const w of questionKeywords(words.length > 1 ? words[words.length - 1] : clean).en)
@@ -517,8 +526,10 @@ export function loadCatalogSignal(db, q, qv, embedKey) {
     if (!prev) hit.set(id, { w: Math.min(1, w), tag });
     else hit.set(id, { w: Math.min(1, prev.w + w), tag: prev.tag.includes(tag) ? prev.tag : prev.tag + "+" + tag });
   };
-  const mentionEdge = db.prepare("SELECT src FROM edges WHERE kind='mention' AND dst_type='person' AND dst=?");
   try {
+    // prepare 必须在 try 内（本轮代码检查修）：半成品库（embed 中断在 ALTER 与迁移之间）没有
+    // edges 表，放 try 外会裸崩 SqliteError 穿层——注释承诺的"表不存在 → 静默跳过"被位置打穿
+    const mentionEdge = db.prepare("SELECT src FROM edges WHERE kind='mention' AND dst_type='person' AND dst=?");
     const matched = new Map();  // name -> factor（linkEntities 纯函数，匹配逻辑与其共用一份）
     for (const m of linkEntities(db, q)) {
       matched.set(m.name, m.factor);
