@@ -1,7 +1,7 @@
 // MCP 工具注册（stdio server 与测试客户端共用同一份注册逻辑）
 import { z } from "zod";
 import { listBooks, hybridSearch, routeAndSearch } from "./search.mjs";
-import { getCatalogSummary, getPersonDetail, getThemeDetail } from "./catalog.mjs";
+import { getCatalogSummary, getPersonDetail, getThemeDetail, expandNeighborhood } from "./catalog.mjs";
 import { similarChunks } from "./similar.mjs";
 import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
 
@@ -72,6 +72,23 @@ export function registerServerTools(server) {
     if (!matches.length)
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
     const out = getThemeDetail(matches[0].db, name);
+    out.book = matches[0].title;
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  server.registerTool("expand", {
+    title: "人物关系网（图邻域）",
+    description: "给一个人物名，沿人物关系边拉出邻居网：每个邻居带关系描述、出场块数、代表原文块（章节/页码 + 80 字预览）。回答「还有谁牵涉其中」「这件事还牵连哪些人」类问题时用它顺藤摸瓜，再对邻居继续 get_person 深查或 query_book 查原文。推荐动线：list_catalog 看全图 → get_person 摸全档案 → expand 拉邻居网 → 邻居继续深挖。",
+    inputSchema: {
+      book: z.string().describe("书名或书名片段，如 pride、论语"),
+      name: z.string().describe("人物名或名字片段，如 Elizabeth、达西"),
+      perNeighbor: z.number().int().min(1).max(5).optional().describe("每个邻居返回的代表块数，默认 3，最多 5"),
+    },
+  }, async ({ book, name, perNeighbor }) => {
+    const matches = matchBook(book);
+    if (!matches.length)
+      return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
+    const out = expandNeighborhood(matches[0].db, name, { perNeighbor });
     out.book = matches[0].title;
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });

@@ -14,7 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 const Database = require("better-sqlite3");
 
-const { getPersonDetail, getThemeDetail, validateResult, importCatalog, linkEntities, entityAliasTerms } = await import("../src/lib/catalog.mjs");
+const { getPersonDetail, getThemeDetail, validateResult, importCatalog, linkEntities, entityAliasTerms, expandNeighborhood } = await import("../src/lib/catalog.mjs");
 const { assertEngine, DEFAULT_EMBED } = await import("../src/lib/models.mjs");
 const { generateSkillScaffold, MAX_CHUNK_IDS } = await import("../src/lib/catalog-skill.mjs");
 
@@ -56,7 +56,7 @@ function makeDb(libDir, name, { chunks = [], nodes = [], edges = [] } = {}) {
   const ni = db.prepare("INSERT INTO nodes(type,name,ref,source) VALUES(?,?,?,?)");
   for (const n of nodes) ni.run(n.type, n.name, n.ref ? JSON.stringify(n.ref) : null, n.source || "llm");
   const ei = db.prepare("INSERT INTO edges(src_type,src,dst_type,dst,kind,weight,source,ref) VALUES(?,?,?,?,?,?,?,?)");
-  for (const e of edges) ei.run("chunk", String(e.src), e.dst_type || "person", e.dst, e.kind, 1, e.source || "llm", e.ref || "");
+  for (const e of edges) ei.run(e.src_type || "chunk", String(e.src), e.dst_type || "person", e.dst, e.kind, 1, e.source || "llm", e.ref || "");
   db.close();
   return p;
 }
@@ -352,6 +352,85 @@ console.log("\n--- P1.5 aliases_zh ---");
     `P1.5: 译名命中后注入 match_names 书内写法（en=${terms15.en.join(",")}；译名自身不进 FTS）`);
   dbW15.close();
   safeRm(tmp15);
+}
+
+// ========== P2-C expand 图邻域（MCP expand 工具，纯浏览不喂检索） ==========
+console.log("\n--- P2-C expandNeighborhood ---");
+{
+  const tmpC = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-p2c-"));
+  const libC = path.join(tmpC, "library");
+  fs.mkdirSync(libC, { recursive: true });
+  // 合成图：甲—乙（双描述多边）+ 甲自环 + 甲→幽灵（悬空）+ 丙—甲；乙 6 个出场块；丁 零边
+  const chunksC = [];
+  for (let i = 1; i <= 8; i++) chunksC.push({ id: i, chapter: `第${i}章`, text: `正文片段${i}。` });
+  const edgesC = [
+    { src: "甲", src_type: "person", dst: "乙", kind: "relation", ref: "同窗好友" },
+    { src: "甲", src_type: "person", dst: "乙", kind: "relation", ref: "多年邻居" },
+    { src: "甲", src_type: "person", dst: "甲", kind: "relation", ref: "自环" },
+    { src: "甲", src_type: "person", dst: "幽灵", kind: "relation", ref: "悬空" },
+    { src: "丙", src_type: "person", dst: "甲", kind: "relation", ref: "旧识" },
+    { src: 1, dst: "甲", kind: "mention" },
+    { src: 2, dst: "甲", kind: "mention" },
+    { src: 3, dst: "丙", kind: "mention" },
+  ];
+  for (let i = 1; i <= 6; i++) edgesC.push({ src: i, dst: "乙", kind: "mention" });
+  const pC = makeDb(libC, "graph.db", {
+    chunks: chunksC,
+    nodes: [
+      { type: "person", name: "甲", ref: { match_names: ["甲"], mention_count: 2 }, source: "llm" },
+      { type: "person", name: "乙", ref: { match_names: ["乙"], mention_count: 50 }, source: "llm" },
+      { type: "person", name: "丙", ref: { match_names: ["丙"], mention_count: 5 }, source: "llm" },
+      { type: "person", name: "丁", ref: { match_names: ["丁"], mention_count: 1 }, source: "llm" },
+    ],
+    edges: edgesC,
+  });
+  const rC = expandNeighborhood(pC, "甲");
+  ok(rC.cataloged === true && rC.person === "甲" && rC.matched_by === "exact",
+    `P2-C1: 正常展开（person=${rC.person} matched_by=${rC.matched_by}）`);
+  const namesC = rC.neighbors.map(n => n.name);
+  ok(namesC.length === 2 && namesC[0] === "乙" && namesC[1] === "丙" && !namesC.includes("幽灵"),
+    `P2-C1: 邻居按出场数降序 + 自环/悬空边剔除（${namesC.join(",")}；乙50>丙5）`);
+  ok(rC.neighbors[0].note === "同窗好友 / 多年邻居", `P2-C1b: 多边 note 合并 " / "（${rC.neighbors[0].note}）`);
+  ok(rC.neighbors[0].representative_chunks.length === 3 && rC.neighbors[0].representative_chunks.every(c => c.chunk && c.preview),
+    `P2-C1c: 代表块带 chunk/预览（默认 3 个：${rC.neighbors[0].representative_chunks.map(c => c.chunk).join(",")}）`);
+  ok(expandNeighborhood(pC, "").error === "person-not-found" && expandNeighborhood(pC, "   ").error === "person-not-found",
+    "P2-C2: 空名/空白名 → person-not-found（D01 防幻觉守卫在 expand 上不复发）");
+  const rMissC = expandNeighborhood(pC, "不存在");
+  ok(rMissC.error === "person-not-found" && Array.isArray(rMissC.available) && rMissC.available.length === 4,
+    `P2-C3: 未命中 → person-not-found + ${rMissC.available?.length} 个候选清单`);
+  ok(expandNeighborhood(pC, "丁").neighbors_total === 0 && expandNeighborhood(pC, "丁").neighbors.length === 0,
+    "P2-C4: 无关系边人物 → 空邻居不崩（relation_total=0）");
+  ok(expandNeighborhood(pC, "甲", { perNeighbor: 5 }).neighbors[0].representative_chunks.length === 5
+    && expandNeighborhood(pC, "甲", { perNeighbor: 99 }).neighbors[0].representative_chunks.length === 5,
+    "P2-C5a: perNeighbor 上夹 5（99→5）");
+  ok(expandNeighborhood(pC, "甲", { perNeighbor: 0 }).neighbors[0].representative_chunks.length === 3
+    && expandNeighborhood(pC, "甲", { perNeighbor: -5 }).neighbors[0].representative_chunks.length === 1,
+    "P2-C5b: perNeighbor 0→默认3 / 负数→下限1（与 clampTopN 同款语义）");
+  ok(expandNeighborhood(pC, "甲", { perNeighbor: 1 }).neighbors[0].representative_chunks.length === 1,
+    "P2-C5c: perNeighbor=1 取 1 块（原采样公式 (n-1) 除零 → 静默空数组，已修 Math.max(1,n-1)）");
+  // 坏库 / 旧 schema / 截断
+  const badC = path.join(libC, "bad.db");
+  fs.writeFileSync(badC, "definitely not a sqlite database");
+  ok(expandNeighborhood(badC, "甲").reason === "db-broken", "P2-C6: 垃圾文件库 → db-broken（人话，不裸崩）");
+  const oldC = path.join(libC, "old.db");
+  const dbOld = new Database(oldC);
+  dbOld.exec("CREATE TABLE nodes(id INTEGER PRIMARY KEY, type TEXT, name TEXT, ref TEXT); CREATE TABLE edges(src TEXT, dst TEXT);");
+  dbOld.close();
+  ok(expandNeighborhood(oldC, "甲").reason === "old-schema", "P2-C7: 旧 schema（nodes 无 source 列）→ old-schema（与坏库可区分）");
+  // 截断：22 个邻居 → MAX_NB=20 + note
+  const wideNodes = [{ type: "person", name: "中心", ref: { match_names: ["中心"], mention_count: 1 }, source: "llm" }];
+  const wideEdges = [];
+  for (let i = 1; i <= 22; i++) {
+    wideNodes.push({ type: "person", name: `邻${i}`, ref: { match_names: [`邻${i}`], mention_count: i }, source: "llm" });
+    wideEdges.push({ src: "中心", src_type: "person", dst: `邻${i}`, kind: "relation", ref: `关系${i}` });
+  }
+  const pWide = makeDb(libC, "wide.db", { chunks: [{ id: 1, text: "占位" }], nodes: wideNodes, edges: wideEdges });
+  const rWide = expandNeighborhood(pWide, "中心");
+  ok(rWide.neighbors_total === 22 && rWide.truncated === true && rWide.neighbors.length === 20 && !!rWide.note,
+    `P2-C8: MAX_NB=20 截断带说明（共 ${rWide.neighbors_total} 显示 ${rWide.neighbors.length}：${rWide.note}）`);
+  ok(rWide.neighbors[0].name === "邻22",
+    `P2-C8b: 截断取"出场最多的 20 个"（首位=邻22，count=${rWide.neighbors[0].mention_count}）`);
+  safeRm(tmpC);
 }
 
 console.log();

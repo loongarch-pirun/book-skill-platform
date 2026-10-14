@@ -6,7 +6,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
-import { validateResult, loadCatalogSignal, rollbackCatalog, buildPromptText, getPersonDetail, getThemeDetail } from "../src/lib/catalog.mjs";
+import { validateResult, loadCatalogSignal, rollbackCatalog, buildPromptText, getPersonDetail, getThemeDetail, expandNeighborhood } from "../src/lib/catalog.mjs";
 import { generateSkillScaffold } from "../src/lib/catalog-skill.mjs";
 
 let failed = 0;
@@ -133,6 +133,20 @@ assert(th.representative_chunks.length === Math.min(5, th.chunks)
   && th.representative_chunks.every(c => c.chunk && c.preview), "主题深查: 代表块带块号与预览");
 const thMiss = getThemeDetail(ppDb, "不存在的主题");
 assert(thMiss.error === "theme-not-found" && thMiss.available.length === 12, "主题深查: 名字未命中返回候选清单");
+
+// 7e) 图邻域展开（P2）：伊丽莎白一跳邻居网——8 个邻居按出场降序，每个带关系描述 + 代表块
+const nb = expandNeighborhood(ppDb, "Elizabeth Bennet");
+assert(nb.cataloged === true && nb.person === "Elizabeth Bennet" && nb.matched_by === "exact"
+  && nb.neighbors.length === 8 && nb.neighbors[0].name === "Fitzwilliam Darcy"
+  && nb.neighbors.every((n, i, a) => i === 0 || a[i - 1].mention_count >= n.mention_count)
+  && nb.neighbors.every(n => n.note && n.representative_chunks.length === Math.min(3, n.mention_count)
+    && n.representative_chunks.every(c => c.chunk && c.preview && c.loc !== undefined)),
+  `图邻域: ${nb.person} 邻居 ${nb.neighbors.length} 个（前排 ${nb.neighbors.slice(0, 3).map(n => n.name + "×" + n.mention_count).join("、")}）`);
+const nb2 = expandNeighborhood(ppDb, "Elizabeth Bennet", { perNeighbor: 2 });
+assert(nb2.neighbors.every(n => n.representative_chunks.length === Math.min(2, n.mention_count)),
+  `图邻域: perNeighbor=2 每邻居代表块 ≤2（抽样 ${nb2.neighbors[0].representative_chunks.map(c => "#" + c.chunk).join(",")}）`);
+const nbMiss = expandNeighborhood(ppDb, "Zaphod Beeblebrox");
+assert(nbMiss.error === "person-not-found" && nbMiss.available.length === 25, "图邻域: 名字未命中返回候选清单");
 db.close();
 
 // 8) 回滚演练（临时副本上）：rollbackCatalog 整批删 llm 层，rule 层与原文不动

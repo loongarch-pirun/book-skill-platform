@@ -28,7 +28,7 @@ for (const id of Object.keys(beforeState).filter((id) => beforeState[id] === fal
 // 1. 工具清单
 const tools = await client.listTools();
 const names = tools.tools.map(t => t.name).sort();
-assert(JSON.stringify(names) === JSON.stringify(["get_person", "get_theme", "list_books", "list_catalog", "list_skills", "query_book", "query_library", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 10 个工具: ${names.join(", ")}`);
+assert(JSON.stringify(names) === JSON.stringify(["expand", "get_person", "get_theme", "list_books", "list_catalog", "list_skills", "query_book", "query_library", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 11 个工具: ${names.join(", ")}`);
 
 // 2. list_books
 const lb = await client.callTool({ name: "list_books", arguments: {} });
@@ -175,10 +175,24 @@ const sc3 = await client.callTool({ name: "similar_chunks", arguments: { book: "
 const sc3R = JSON.parse(sc3.content[0].text);
 assert(sc3R.error === "missing-query", "similar_chunks: 未给参照（chunk_id/text 皆空）→ missing-query");
 
+// 11. expand 图邻域（P2）：给一个人物，沿关系边一跳拉出邻居网——「还有谁牵涉其中」的顺藤摸瓜
+const ex = await client.callTool({ name: "expand", arguments: { book: "pride", name: "Elizabeth", perNeighbor: 2 } });
+const exR = JSON.parse(ex.content[0].text);
+assert(exR.cataloged === true && exR.person === "Elizabeth Bennet" && exR.matched_by === "fuzzy"
+  && exR.neighbors.length >= 5 && exR.neighbors.every((n, i, a) => i === 0 || a[i - 1].mention_count >= n.mention_count)
+  && exR.neighbors.every(n => n.representative_chunks.length === Math.min(2, n.mention_count)
+    && n.representative_chunks.every(c => c.chunk !== undefined && c.loc !== undefined && c.preview)),
+  `expand 邻居网: ${exR.person} 拉到 ${exR.neighbors?.length} 个邻居（前排 ${exR.neighbors?.slice(0, 3).map(n => n.name + "×" + n.mention_count).join("、")}）`);
+
+// 11b. expand 名字未命中 → 候选清单（智能体换个写法再来）
+const ex2 = await client.callTool({ name: "expand", arguments: { book: "pride", name: "Zaphod" } });
+const ex2R = JSON.parse(ex2.content[0].text);
+assert(ex2R.error === "person-not-found" && ex2R.available?.length === 25, "expand 名字未命中返回候选清单");
+
 fs.rmSync(E2E_DIR, { recursive: true, force: true });  // 临时技能测完即删
 for (const [id, v] of Object.entries(beforeState)) setSkillEnabled(LIB_DIR, id, v !== false);  // 还原用户开关，夹具不留痕
 
 console.log("\n===== 阶段3 验收结果 =====");
 if (failed > 0) { console.log(`${failed} 项 FAIL`); process.exit(1); }
-console.log("全部 PASS：标准 MCP 协议接入成功，十工具可用（编目浏览/人物主题深查/相似检索/技能落盘），自动挑书路由正确，引用可回源");
+console.log("全部 PASS：标准 MCP 协议接入成功，十一工具可用（编目浏览/人物主题深查/图邻域展开/相似检索/技能落盘），自动挑书路由正确，引用可回源");
 process.exit(0);

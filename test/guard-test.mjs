@@ -230,10 +230,10 @@ const copyDb = (src) => {
   const indexSrc = readSrc("src", "index.html");
   ok(indexSrc.includes('id="cloudChip"'), "静态: index.html 带 cloudChip 节点（C4）");
 
-  // ⑧ 技能×编目融合：新增三工具必须注册（MCP 7→10）；新能力走独立文件，检索层不许被碰
+  // ⑧ 技能×编目融合：新增四工具必须注册（MCP 7→11）；新能力走独立文件，检索层不许被碰
   const toolsSrc = readSrc("src", "lib", "register-tools.mjs");
-  ok(["get_person", "get_theme", "similar_chunks"].every(t => toolsSrc.includes(`"${t}"`)),
-    "静态: register-tools 注册 get_person/get_theme/similar_chunks（MCP 7→10）");
+  ok(["get_person", "get_theme", "similar_chunks", "expand"].every(t => toolsSrc.includes(`"${t}"`)),
+    "静态: register-tools 注册 get_person/get_theme/similar_chunks/expand（MCP 7→11）");
   ok(readSrc("src", "lib", "skill-store.mjs").includes("catalog\\.json"),
     "静态: skill-store 白名单放行 catalog.json（P-A 皮骨同包）");
   const catSkillSrc = readSrc("src", "lib", "catalog-skill.mjs");

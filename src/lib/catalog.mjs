@@ -676,11 +676,12 @@ function matchNode(rows, name) {
 }
 
 // 代表块：均匀抽样（首/25%/50%/75%/末）——覆盖全书弧线，比"取前 5 块"信息量大；
-// 确定性无随机（同输入同输出，测试可断言）
+// 确定性无随机（同输入同输出，测试可断言）；n=1 时取第一块（原公式 (n-1) 除零 → 静默空数组，
+// expand 的 perNeighbor=1 暴露）
 function representativeChunks(db, ids, n = REP_CHUNKS) {
   const sorted = [...new Set(ids)].sort((a, b) => a - b);
   const picks = sorted.length <= n ? sorted
-    : Array.from({ length: n }, (_, i) => sorted[Math.round((i * (sorted.length - 1)) / (n - 1))]);
+    : Array.from({ length: n }, (_, i) => sorted[Math.round((i * (sorted.length - 1)) / Math.max(1, n - 1))]);
   const get = db.prepare("SELECT id, chapter, page, text FROM chunks WHERE id = ?");
   const out = [];
   for (const id of picks) {
@@ -724,6 +725,59 @@ export function getPersonDetail(dbPath, name) {
   } catch {
     // V2-D06：垃圾文件/损坏库——new Database 打开不抛，首次查询才抛 SQLITE_NOTADB，
     // 老逻辑裸崩英文堆栈（D-11 家族复发）。整面包 try，人话 reason。
+    return { cataloged: false, reason: "db-broken", note: "书库文件损坏或不是有效数据库——重新导入这本书" };
+  } finally { db.close(); }
+}
+
+// 图邻域扩展（MCP expand 工具）：给定人物，沿 relation 边拉一跳邻居网——
+// 每个邻居带关系描述 + 出场块数 + 代表原文块。**纯浏览查询，绝不喂检索管线**
+// （图扩散喂检索实测噪声、BSP_EXPAND 默认关的教训；"要不要顺藤摸瓜"的选择权交回智能体）。
+// 一跳固定（多跳由智能体对邻居再调本工具驱动）；MAX_NB=20 截断防爆上下文。
+// 边口径与 getPersonDetail/loadCatalogSignal 三处统一：kind='relation' AND source='llm'
+// （R4 实测：person↔person 关系边只在 llm 层，rule 层只有 similar/about/tree）。
+// 防御：自环跳过、多边 note 合并 " / "、悬空边（对端人物节点不存在）丢弃。
+const MAX_NB = 20;
+export function expandNeighborhood(dbPath, name, { perNeighbor = 3 } = {}) {
+  const per = Math.min(Math.max(1, Math.floor(Number(perNeighbor) || 3)), 5);  // 双层防呆：zod 1..5 + 此处兜底（0/NaN 落默认 3，与 clampTopN 同款语义）
+  let db;
+  try { db = new Database(dbPath, { readonly: true }); } catch { return { cataloged: false, reason: "db-broken" }; }
+  try {
+    const g = catalogGuard(db);
+    if (g) return g;
+    const persons = db.prepare("SELECT name, ref FROM nodes WHERE type='person' AND source='llm' ORDER BY rowid").all();
+    if (!persons.length) return { cataloged: false, reason: "no-such-type", note: "这本书还没有编目（可运行 catalog-export / catalog-import 流程）" };
+    const m = matchNode(persons, name);
+    if (!m) return { cataloged: true, error: "person-not-found", name: String(name ?? ""), matched_by: null, available: persons.map(x => x.name) };
+    const p = m.node;
+    const rows = db.prepare("SELECT src, dst, ref FROM edges WHERE kind='relation' AND source='llm' AND (src=? OR dst=?)").all(p.name, p.name);
+    const merged = new Map();  // 邻居名 -> [notes]
+    for (const e of rows) {
+      const other = e.src === p.name ? e.dst : e.src;
+      if (other === p.name) continue;  // 自环不产生邻居
+      if (!persons.some(x => x.name === other)) continue;  // 悬空边：对端人物节点不存在 → 丢弃
+      const arr = merged.get(other) || [];
+      const note = String(e.ref || "").trim();
+      if (note && !arr.includes(note)) arr.push(note);
+      merged.set(other, arr);
+    }
+    const infoOf = (n) => { try { return JSON.parse(persons.find(x => x.name === n)?.ref || "{}"); } catch { return {}; } };
+    const mentionEdge = db.prepare("SELECT src FROM edges WHERE kind='mention' AND dst_type='person' AND dst=? AND source='llm'");
+    let neighbors = [...merged.entries()].map(([n, notes]) => {
+      const info = infoOf(n);
+      const ids = mentionEdge.all(n).map(r => +r.src);
+      return {
+        name: n, note: notes.join(" / "),
+        mention_count: info.mention_count || 0,
+        representative_chunks: representativeChunks(db, ids, per),
+      };
+    }).sort((a, b) => b.mention_count - a.mention_count);
+    const total = neighbors.length;
+    if (neighbors.length > MAX_NB) neighbors = neighbors.slice(0, MAX_NB);
+    const out = { cataloged: true, person: p.name, matched_by: m.matched_by, neighbors_total: total, truncated: total > MAX_NB, neighbors };
+    if (total > MAX_NB) out.note = `邻居较多，只显示出场最多的 ${MAX_NB} 个（共 ${total} 个）`;
+    return out;
+  } catch {
+    // 与 getPersonDetail 同款：坏库（打开层不抛、查询才抛 SQLITE_NOTADB）整包兜
     return { cataloged: false, reason: "db-broken", note: "书库文件损坏或不是有效数据库——重新导入这本书" };
   } finally { db.close(); }
 }
