@@ -34,6 +34,7 @@ global.location = { reload() {} };
 
 // ---------- window.study IPC stub（记录调用，返回约定形状） ----------
 const ipcCalls = [];
+let chatSummaryCalls = 0;
 const reply = (data) => Promise.resolve({ ok: true, data });
 const studyStub = {
   configGet: () => { ipcCalls.push("configGet"); return reply({ dirs: {}, firstRun: false, packaged: false }); },
@@ -49,11 +50,13 @@ const studyStub = {
   jobsCancel: () => reply({}),
   jobsPickResult: () => reply(null),
   jobsResumeCatalog: () => reply({}),
-  ask: () => { ipcCalls.push("ask"); return reply({ mode: "book", results: [] }); },
+  ask: () => { ipcCalls.push("ask"); return reply({ mode: "book", results: [{ id: 1, book: "测试书", bookId: "t.docx", loc: "第一章", text: "學而時習之", rerank: 0.9 }] }); },
   llmConfigGet: () => { ipcCalls.push("llmConfigGet"); return reply({ baseUrl: "", model: "", hasKey: false, keyTail: null, encryption: "unknown", warning: null }); },
   llmConfigSet: () => reply({ baseUrl: "https://x", model: "m", hasKey: true, keyTail: "…test", encryption: "safeStorage", warning: null }),
   llmTest: () => reply({ reply: "收到" }),
-  chatSummary: () => reply({ answer: "测试总结", citations: [], dropped: 0 }),
+  chatSummary: () => { chatSummaryCalls++; return chatSummaryCalls === 2
+    ? reply({ degraded: true, error: "云端引用核验失败，已降级为原文片段", results: [{ book: "测试书", bookId: "t.docx", id: 1, loc: "第一章", text: "本地原文甲" }], mode: "book", book: "测试书" })
+    : reply({ answer: "测试总结", citations: [], dropped: 0, segments: 6, book: "测试书", mode: "book" }); },
   chapters: () => { ipcCalls.push("chapters"); return reply({ book: "测试书", chapters: [{ name: "第一章", blocks: 3 }] }); },
   block: () => { ipcCalls.push("block"); return reply({ book: "测试书", chapter: "第一章", blocks: [{ n: 1, id: 1, page: null, text: "學而時習之" }] }); },
   locate: () => reply({ chapter: "第一章" }),
@@ -131,6 +134,26 @@ click("llmclose", {});
 await sleep(10);
 assert(!mainEl.innerHTML.includes("云端 AI 配置"), "配置卡收起（llmclose 接线）");
 
+// ---------- 5b-2) 保存配置 + 云端错误内嵌条（A3）：失败 → 持久错误条 + 重试入口 ----------
+getEl("#llmBase").value = "https://api.deepseek.com/v1";
+getEl("#llmModel").value = "deepseek-chat";
+getEl("#llmKey").value = "sk-test";
+click("llmedit", {});
+await sleep(10);
+click("llmsave", {});
+await sleep(20);
+assert(app.state.llm.config?.hasKey === true, "问一问：保存配置后 hasKey 落地（llmsave 接线）");
+getEl("#askQ").value = "测试问题";
+click("askgo", {});
+await sleep(20);
+const realChatSummary = studyStub.chatSummary;
+studyStub.chatSummary = () => Promise.resolve({ ok: false, error: { message: "模拟云端炸了" } });
+click("clsummary", {});
+await sleep(20);
+assert(mainEl.innerHTML.includes("模拟云端炸了") && mainEl.innerHTML.includes("重新总结"),
+  "问一问：云端错误进内嵌条（持久可见 + 重试入口，A3）");
+studyStub.chatSummary = realChatSummary;
+
 // ---------- 5c) 对话窗口（V2 P3）：发消息 → 消息流入列 ----------
 app.show("chat");
 await sleep(10);
@@ -140,9 +163,31 @@ click("chatgo", {});
 await sleep(30);
 assert(app.state.chat.messages.length === 2 && app.state.chat.messages[1].content === "测试总结", "对话：发送 → user+assistant 入列（chatSummary 接线）");
 assert(mainEl.innerHTML.includes("什么是真正的强大？") && mainEl.innerHTML.includes("测试总结"), "对话：消息流双气泡渲染");
+assert(mainEl.innerHTML.includes("取材 6 段原文") && mainEl.innerHTML.includes("《测试书》"), "对话：AI 回答带取材 meta 行（A4）");
+// A1：第二次调用走降级通道（云端失败不丢本地原文）——错误气泡挂「本地原文」折叠区
+getEl("#chatQ").value = "再问一句";
+click("chatgo", {});
+await sleep(30);
+assert(app.state.chat.messages.length === 4 && app.state.chat.messages[3].error?.includes("降级") && app.state.chat.messages[3].results?.length === 1,
+  "对话：云端失败 → error 消息携带本地检索结果（A1 降级通道）");
+assert(mainEl.innerHTML.includes("看本地检索到的 1 段原文") && mainEl.innerHTML.includes("本地原文甲") && mainEl.innerHTML.includes('class="deglist hidden"'),
+  "对话：错误气泡挂本地原文折叠区（引用可跳，A1）");
 click("chatclear", {});
 await sleep(10);
 assert(app.state.chat.messages.length === 0, "对话：清空接线");
+
+// ---------- 5d) 书全关引导（A2）：问一问/对话两页空态都给「去开书」按钮 ----------
+const savedEnabled = app.state.books.map((b) => b.skillEnabled);
+app.state.books.forEach((b) => { b.skillEnabled = false; });
+app.show("ask");
+await sleep(10);
+assert(mainEl.innerHTML.includes("去「技能开关」打开"), "问一问：书全关时显示去开书引导（A2）");
+app.show("chat");
+await sleep(10);
+assert(mainEl.innerHTML.includes("去「技能开关」打开"), "对话：书全关时显示去开书引导（A2）");
+app.state.books.forEach((b, i) => { b.skillEnabled = savedEnabled[i]; });
+app.show("shelf");
+await sleep(10);
 
 // ---------- 6) jobs 进度事件 → 书架横幅 ----------
 app.show("shelf");

@@ -265,3 +265,16 @@ body {
   border: 1px solid var(--line); border-radius: 10px; background: var(--card);
   resize: vertical; font: inherit;
 }
+
+/* 云端错误内嵌条（A3）：问一问页云端错误持久可见 + 重试入口，替代 toast 一闪而过 */
+.cloudans.errbox { background: #fdf6f4; border-color: #e8cfc9; }
+.cloudans .clouderr { color: var(--bad); font-size: 13px; line-height: 1.6; }
+/* 对话·失败降级区（A1）：错误气泡下挂本地原文，可折叠，引用可跳 */
+.msg .bubble.err .degfold { margin-top: 8px; }
+.msg .bubble.err .deglist { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.degitem { background: #fffdf7; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.deghead { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin-bottom: 4px; }
+.degbook { font-size: 12px; font-weight: 700; color: var(--wood); }
+.degtext { font-family: Georgia, "Songti SC", "SimSun", serif; font-size: 13px; line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
+/* 对话·取材 meta 行（A4）：交代答案翻的是哪几段/哪本书 */
+.msg .chatmeta { margin-top: 6px; font-size: 11px; color: var(--muted); }

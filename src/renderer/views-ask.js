@@ -1,15 +1,19 @@
 // 视图三/四：问一问（双模式 + 技能包参考 + 引用跳转）+ 技能开关（每本书开关 + 技能包查看器）。
 // 铁律同 views.js：顶层不碰 DOM，事件绑定走 bindAskEvents()。
-import { $, state, call, toast, refresh } from "./app.js";
+import { $, state, call, toast, refresh, show } from "./app.js";
 import { esc } from "./views.js";
 
 // ---------- ③ 问一问 ----------
 export function renderAsk() {
   const a = state.ask;
   const active = state.books.filter((b) => b.skillEnabled); // 关掉 skill 的书不可问（H3 桌面路径）
+  // 书全关时不只显示空下拉——给「去开书」按钮，指路技能开关页（A2，与对话页同款引导）
+  const noBookGuide = '<span class="chip">没有可问的书</span><button class="ghost sm" data-action="goskills">去「技能开关」打开</button>';
   const sel = a.mode === "book"
-    ? `<select class="booksel" id="askBook">${active.map((b) => `<option value="${esc(b.id)}" ${b.id === a.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("") || '<option value="">（没有可问的书）</option>'}</select>`
-    : `<span class="chip">全库模式：引擎自动挑最相关的书</span>`;
+    ? (active.length
+        ? `<select class="booksel" id="askBook">${active.map((b) => `<option value="${esc(b.id)}" ${b.id === a.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("")}</select>`
+        : noBookGuide)
+    : (active.length ? `<span class="chip">全库模式：引擎自动挑最相关的书</span>` : noBookGuide);
   const pkgs = state.skills.packages;
   return `
     <div class="view-title">问一问</div>
@@ -100,6 +104,9 @@ function cloudAnswerHtml(r) {
   const L = state.llm;
   const c = L.config || {};
   if (!c.hasKey) return ""; // 未配置不显示按钮（上方状态条有引导）
+  if (L.error) return `
+    <div class="cloudans errbox"><div class="clouderr">${esc(L.error)}</div>
+      <div class="cfoot"><button class="ghost sm" data-action="clsummary">重新总结</button></div></div>`;
   if (L.loading) return `
     <div class="cloudans"><div class="cskel">云端 AI 正在写作（基于上面 ${r.results.length} 段原文，约几秒到半分钟）…</div></div>`;
   if (L.answer) {
@@ -123,7 +130,7 @@ async function submitAsk() {
   const a = state.ask;
   const q = ($("#askQ")?.value || "").trim();
   if (!q) return;
-  state.llm.answer = null; // 新问题：上一次的云端总结失效，清掉
+  state.llm.answer = null; state.llm.error = null; // 新问题：上一次的云端总结/错误失效，清掉
   a.question = q;
   a.bookId = a.mode === "book" ? ($("#askBook")?.value || a.bookId) : null;
   a.skillSlug = $("#useSkill")?.checked ? ($("#skillSel")?.value || null) : null;
@@ -236,6 +243,7 @@ export function bindAskEvents() {
     if (act === "mode") { state.ask.mode = el.dataset.mode; state.ask.result = null; refresh(); }
     else if (act === "askgo") submitAsk();
     // ---------- 云端问答（V2 P2） ----------
+    else if (act === "goskills") show("skills"); // 书全关引导（A2）
     else if (act === "llmedit") { state.llm.editing = true; refresh(); }
     else if (act === "llmclose") { state.llm.editing = false; refresh(); }
     else if (act === "llmsave") {
@@ -246,6 +254,7 @@ export function bindAskEvents() {
         const cfg = await call(window.study.llmConfigSet({ baseUrl, model, apiKey }));
         state.llm.config = cfg;
         state.llm.editing = false;
+        state.llm.error = null;
         toast("云端 AI 配置已保存" + (cfg.keyTail ? `（key 尾号 ${cfg.keyTail}）` : ""));
       } catch (err) { toast("保存失败：" + err.message); }
       refresh();
@@ -271,7 +280,8 @@ export function bindAskEvents() {
           skillSlug: state.ask.skillSlug,
         }));
         state.llm.answer = r;
-      } catch (err) { toast(err.message); }
+        state.llm.error = null;
+      } catch (err) { state.llm.error = err.message; } // A3：云端错误进内嵌条（持久可见 + 重试入口），不再 toast 一闪而过
       state.llm.loading = false;
       refresh();
     }

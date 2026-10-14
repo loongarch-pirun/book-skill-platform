@@ -8,9 +8,12 @@ import { esc } from "./views.js";
 export function renderChat() {
   const c = state.chat;
   const active = state.books.filter((b) => b.skillEnabled);
+  const noBookGuide = '<span class="chip">没有可问的书</span><button class="ghost sm" data-action="goskills">去「技能开关」打开</button>';
   const sel = c.mode === "book"
-    ? `<select class="booksel" id="chatBook">${active.map((b) => `<option value="${esc(b.id)}" ${b.id === c.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("") || '<option value="">（没有可问的书）</option>'}</select>`
-    : '<span class="chip">全库模式：引擎自动挑最相关的书</span>';
+    ? (active.length
+        ? `<select class="booksel" id="chatBook">${active.map((b) => `<option value="${esc(b.id)}" ${b.id === c.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("")}</select>`
+        : noBookGuide)
+    : (active.length ? '<span class="chip">全库模式：引擎自动挑最相关的书</span>' : noBookGuide);
   const pkgs = state.skills.packages;
   const cfg = state.llm.config || {};
   return `
@@ -45,14 +48,31 @@ function chatMsgsHtml() {
 
 function msgHtml(m) {
   if (m.role === "user") return `<div class="msg user"><div class="bubble">${esc(m.content)}</div></div>`;
-  if (m.error) return `<div class="msg ai"><div class="bubble err">${esc(m.error)}</div></div>`;
+  if (m.error) {
+    const deg = (m.results || []).length
+      ? `<div class="degfold"><button class="ghost sm" data-action="degtoggle">看本地检索到的 ${m.results.length} 段原文</button>
+      <div class="deglist hidden">${m.results.map(degItemHtml).join("")}</div></div>`
+      : "";
+    return `<div class="msg ai"><div class="bubble err">${esc(m.error)}${deg}</div></div>`;
+  }
   const cites = (m.citations || []).map((x) =>
     `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${x.id ?? ""}">${esc(x.book || "")} · ${esc(x.loc || "定位")} · 跳原文</span>`).join("");
+  const meta = m.segments ? `<div class="chatmeta">取材 ${m.segments} 段原文${m.book ? " · 《" + esc(m.book) + "》" : ""}${m.mode === "library" ? " · 全库模式" : ""}</div>` : "";
   return `<div class="msg ai"><div class="bubble">
     <div class="atext">${esc(m.content)}</div>
+    ${meta}
     ${cites ? `<div class="cacites">${cites}</div>` : ""}
     ${m.dropped ? `<div class="dropwarn">${m.dropped} 条引用未通过核验已隐藏</div>` : ""}
   </div></div>`;
+}
+
+// 降级原文条目（A1）：与问一问结果卡同规格，引用徽标可跳原文核对
+function degItemHtml(x) {
+  return `<div class="degitem">
+    <div class="deghead"><span class="degbook">${esc(x.book || "")}</span>
+      <span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${x.id ?? ""}">${esc(x.loc || "定位")} · 跳原文</span></div>
+    <div class="degtext">${esc(x.text || "")}</div>
+  </div>`;
 }
 
 // 渲染完滚到底部（由 app.js renderMain 在赋值 innerHTML 后调用）
@@ -90,7 +110,8 @@ async function sendChat() {
       skillSlug: c.skillSlug,
       history,
     }));
-    c.messages.push({ role: "assistant", content: r.answer, citations: r.citations || [], dropped: r.dropped || 0 });
+    if (r.degraded) c.messages.push({ role: "assistant", error: r.error, results: r.results || [] }); // A1：降级通道，错误消息携带本地原文
+    else c.messages.push({ role: "assistant", content: r.answer, citations: r.citations || [], dropped: r.dropped || 0, segments: r.segments, book: r.book, mode: r.mode });
   } catch (e) {
     c.messages.push({ role: "assistant", error: e.message });
   }
@@ -108,6 +129,8 @@ export function bindChatEvents() {
     else if (act === "chatgo") sendChat();
     else if (act === "chatclear") { state.chat.messages = []; refresh(); }
     else if (act === "chatcfg") { state.llm.editing = true; show("ask"); } // 去问一页展开配置卡
+    else if (act === "goskills") show("skills"); // 书全关时的引导（A2）
+    else if (act === "degtoggle") { const box = el.closest(".degfold")?.querySelector(".deglist"); if (box) box.classList.toggle("hidden"); } // 折叠降级原文（A1）
   });
   $("#main").addEventListener("keydown", (e) => {
     if (e.target.id === "chatQ" && e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }

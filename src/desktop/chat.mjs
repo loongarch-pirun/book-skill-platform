@@ -57,6 +57,10 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
     config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model },
     question: q, results, skillChapters, history: sanitizeHistory(history),
   });
-  if (!r.ok) throw new UserError(r.message);
-  return { answer: r.answer, citations: r.citations, dropped: r.dropped, usage: r.usage, mode: base.mode, book: base.book || null };
+  if (!r.ok) {
+    // 降级通道（UI 对齐 A1）：云端失败不丢本地果实——已检索到的原文一并回给 UI，
+    // 对话页在错误气泡下挂「本地原文」折叠区；问一问页本地结果本就在下方，天然降级。
+    return { degraded: true, error: r.message, results, mode: base.mode, book: base.book || null };
+  }
+  return { answer: r.answer, citations: r.citations, dropped: r.dropped, usage: r.usage, segments: raw.length, mode: base.mode, book: base.book || null };
 }
