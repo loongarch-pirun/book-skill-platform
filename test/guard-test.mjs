@@ -213,6 +213,22 @@ const copyDb = (src) => {
   const ipcRegSrc = readSrc("src", "desktop", "ipc.mjs");
   ok(ipcRegSrc.includes("chat:archiveList") && ipcRegSrc.includes("purgeArchives"),
     "静态: ipc.mjs 注册存档通道 + books:delete 删书联动（P4）");
+
+  // ⑥ C5：云端配置卡单一实现——cloudBarHtml 只在 views-ask.js 定义，对话页必须 import 复用，
+  //    不许各页复制一份（配置卡漂移=两页保存行为不一致）；且对话页不许再出现跳页配置入口
+  ok(/export function cloudBarHtml/.test(askViewSrc)
+    && chatViewSrc.includes("cloudBarHtml")
+    && !stripComments(chatViewSrc).includes("chatcfg"),
+    "静态: 配置卡单一实现（C5：对话页复用 ask 页 cloudBarHtml，无第二份）");
+
+  // ⑦ C4：顶栏云端 chip 必须接线——boot 里 bindCloudChip + 拉配置后 paintCloudChip；
+  //    chip 只回显模型名/尾号，不许回显 key 全文（llm-config 红线在 UI 侧的落点）
+  const appSrc = readSrc("src", "renderer", "app.js");
+  ok(appSrc.includes("bindCloudChip") && appSrc.includes("paintCloudChip")
+    && /paintCloudChip\(\)/.test(appSrc),
+    "静态: 顶栏云端 chip 接线（C4：bind + boot 后 paint）");
+  const indexSrc = readSrc("src", "index.html");
+  ok(indexSrc.includes('id="cloudChip"'), "静态: index.html 带 cloudChip 节点（C4）");
 }
 
 // ========== 收尾 ==========

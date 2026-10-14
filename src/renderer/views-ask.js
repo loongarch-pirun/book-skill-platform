@@ -1,6 +1,6 @@
 // 视图三/四：问一问（双模式 + 技能包参考 + 引用跳转）+ 技能开关（每本书开关 + 技能包查看器）。
 // 铁律同 views.js：顶层不碰 DOM，事件绑定走 bindAskEvents()。
-import { $, state, call, toast, refresh, show, RETRIEVE_TOPN } from "./app.js";
+import { $, state, call, toast, refresh, show, RETRIEVE_TOPN, paintCloudChip } from "./app.js";
 import { esc } from "./views.js";
 
 // ---------- ③ 问一问 ----------
@@ -71,7 +71,9 @@ function skillCtxHtml(s) {
 
 // ---------- 云端问答（V2 P2）：状态条 / 配置卡 / 云端总结区 ----------
 // 状态条：未配置→引导填 key；已配置→显示模型与 key 尾号（key 永不回显全文）
-function cloudBarHtml() {
+// C5：本组件导出给对话页共用（配置卡全站一份实现）——对话页 llmedit/llmsave/llmtest/llmclose
+// 处理器由 bindAskEvents 提供（#main 监听全局存活，同 id 元素天然被服务）
+export function cloudBarHtml() {
   const L = state.llm;
   const c = L.config || {};
   if (L.editing) {
@@ -255,6 +257,7 @@ export function bindAskEvents() {
         state.llm.config = cfg;
         state.llm.editing = false;
         state.llm.error = null;
+        paintCloudChip(); // C4：保存成功即刷顶栏云端 chip（换 key/换模型立即可见）
         toast("云端 AI 配置已保存" + (cfg.keyTail ? `（key 尾号 ${cfg.keyTail}）` : ""));
       } catch (err) { toast("保存失败：" + err.message); }
       refresh();

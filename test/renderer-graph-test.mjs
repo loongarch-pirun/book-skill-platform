@@ -98,6 +98,7 @@ assert(mainEl.innerHTML.includes("书架"), "boot 后渲染出书架视图");
 assert(ipcCalls.includes("booksList") && ipcCalls.includes("jobsScanPending") && ipcCalls.includes("jobsStatus") && ipcCalls.includes("skillsList") && ipcCalls.includes("llmConfigGet"),
   `boot 拨通 booksList/jobsScanPending/jobsStatus/skillsList/llmConfigGet（实际：${[...new Set(ipcCalls)].join(",")}）`);
 assert(mainEl.innerHTML.includes("测试书"), "书架显示书卡（booksList 数据落地）");
+assert(getEl("#cloudChip").textContent.includes("云端 AI 未配置"), "C4：boot 后顶栏云端 chip 显示未配置态（与 modelChip 并列）");
 
 // ---------- 3) 翻书视图：点卡片进翻书（open 委托）+ loadReader 接线 ----------
 const click = (action, data = {}) => {
@@ -110,6 +111,12 @@ const fireChange = (sel, value) => { // 模拟 <select> 换书（B6 断言用）
   el.id = sel.replace("#", "");
   el.value = value;
   for (const fn of mainEl.listeners.change || []) fn({ target: el });
+};
+const fireInput = (sel, value) => { // 模拟输入（C2 草稿同步断言用）
+  const el = getEl(sel);
+  el.id = sel.replace("#", "");
+  el.value = value;
+  for (const fn of mainEl.listeners.input || []) fn({ target: el });
 };
 click("open", { bid: "t.docx" }); // 模拟点书架卡片
 await sleep(30);
@@ -127,6 +134,9 @@ assert(getEl("#blockList").innerHTML.includes("人物出場塊"), "人物筛选�
 click("askthis", { bid: 5 }); // 问这段
 await sleep(10);
 assert(app.state.ask.question.includes("人物出場塊"), "「问这段」把原文带进问一问");
+click("askthischat", { bid: 5 }); // C2：带去对话
+await sleep(10);
+assert(app.state.chat.draft?.includes("人物出場塊"), "C2：「带去对话」把原文带进对话输入草稿（不自动发问，给人改的机会）");
 app.show("skills");
 await sleep(30);
 assert(mainEl.innerHTML.includes("每本书的 skill 开关"), "技能面板渲染开关区");
@@ -156,6 +166,8 @@ await sleep(10);
 click("llmsave", {});
 await sleep(20);
 assert(app.state.llm.config?.hasKey === true, "问一问：保存配置后 hasKey 落地（llmsave 接线）");
+assert(getEl("#cloudChip").textContent.includes("已就绪") && getEl("#cloudChip").textContent.includes("尾号"),
+  "C4：保存配置后顶栏云端 chip 刷为就绪态（模型名+尾号，不回显全文）");
 getEl("#askQ").value = "测试问题";
 click("askgo", {});
 await sleep(20);
@@ -171,12 +183,28 @@ studyStub.chatSummary = realChatSummary;
 app.show("chat");
 await sleep(10);
 assert(mainEl.innerHTML.includes("多轮问答"), "对话视图渲染（P3 导航接线）");
+// C2：带去对话的草稿透传进输入框（第一次发送前 draft 还在）
+assert(mainEl.innerHTML.includes("人物出場塊"), "C2：对话输入框渲染草稿（带去对话的原文，可改可直接发）");
+// C5：对话页内嵌云端状态条/配置卡——与问一问共用 cloudBarHtml 单一实现
+assert(mainEl.innerHTML.includes("云端 AI 已就绪") && mainEl.innerHTML.includes("换配置"),
+  "C5：对话页内嵌云端状态条（ask 页同款 cloudBarHtml，配置入口不再要跳页）");
+click("llmedit", {});
+await sleep(10);
+assert(mainEl.innerHTML.includes("云端 AI 配置") && app.state.view === "chat",
+  "C5：对话页就地展开配置卡（llmedit 不跳页，bindAskEvents 处理器服务两页）");
+click("llmclose", {});
+await sleep(10);
+assert(!mainEl.innerHTML.includes("云端 AI 配置"), "C5：对话页配置卡收起");
 getEl("#chatQ").value = "什么是真正的强大？";
 click("chatgo", {});
 await sleep(30);
 assert(app.state.chat.messages.length === 2 && app.state.chat.messages[1].content === "测试总结", "对话：发送 → user+assistant 入列（chatSummary 接线）");
 assert(mainEl.innerHTML.includes("什么是真正的强大？") && mainEl.innerHTML.includes("测试总结"), "对话：消息流双气泡渲染");
 assert(mainEl.innerHTML.includes("取材 6 段原文") && mainEl.innerHTML.includes("《测试书》"), "对话：AI 回答带取材 meta 行（A4）");
+// C2：input 委托实时同步草稿——用户接着打字，draft 回写，任何 refresh 都不会把输入打回旧值
+fireInput("#chatQ", "这段和老子说的关系");
+await sleep(5);
+assert(app.state.chat.draft === "这段和老子说的关系", "C2：输入委托实时同步草稿（refresh 不打回）");
 // A1：第二次调用走降级通道（云端失败不丢本地原文）——错误气泡挂「本地原文」折叠区
 getEl("#chatQ").value = "再问一句";
 click("chatgo", {});
@@ -226,6 +254,11 @@ fireChange("chatBook", "t.docx");
 await sleep(10);
 assert(app.state.chat.bookId === "t.docx" && app.state.chat.skillSlug === null,
   "B6：对话换书同步 bookId 并清技能包");
+// C2：草稿生命周期收尾——发送成功后清空（消息已入列，输入框回到空白）
+fireInput("#chatQ", "草稿收尾测试");
+click("chatgo", {});
+await sleep(30);
+assert(app.state.chat.draft === "", "C2：发送成功后草稿清空（draft 生命周期闭环）");
 
 // ---------- 5f) P4 云端回答存档：开关接线 / 快照渲染 / 引用徽标 / 清空 ----------
 app.show("chat");

@@ -125,7 +125,7 @@ function renderBlocks(blocks, label) {
   $("#blockList").innerHTML = (blocks.length ? blocks : [{ id: 0, n: 0, page: null, text: "（这个筛选下没有块）" }]).map((x) => `
     <div class="block ${x.id === r.highlightId ? "hl" : ""}" id="blk-${x.id}">
       <div class="loc">${esc(label)} · 第 ${x.n} 块${x.page ? " · 第 " + x.page + " 页" : ""}
-        ${x.id ? `<button class="askthis" data-action="askthis" data-bid="${x.id}">问这段</button>` : ""}</div>
+        ${x.id ? `<button class="askthis" data-action="askthis" data-bid="${x.id}">问这段</button><button class="askthis" data-action="askthischat" data-bid="${x.id}">带去对话</button>` : ""}</div>
       <div class="text">${esc(x.text)}</div>
     </div>`).join("");
 }
@@ -165,6 +165,17 @@ function askAboutBlock(chunkId) {
   toast("已把这段原文带进问一问——可以改写成你的问题，或直接问");
 }
 
+// 「带去对话」（C2）→ 原文进对话页输入框草稿：用户改写成自己的问题，或直接回车发送。
+// 与问一问同款语义（带进去=给人改的机会），不自动发问——对话是多轮上下文，自动发会污染 history
+function askAboutBlockChat(chunkId) {
+  const r = state.reader;
+  const blk = r.blocks.find((x) => x.id === chunkId);
+  if (!blk) { toast("找不到这段原文了"); return; }
+  state.chat.draft = blk.text;
+  show("chat");
+  toast("已把这段原文带进对话——改写成你的问题，或直接回车发送");
+}
+
 // ---------- 事件绑定（boot() 里调用） ----------
 export function bindReaderEvents() {
   $("#main").addEventListener("click", async (e) => {
@@ -176,5 +187,6 @@ export function bindReaderEvents() {
     else if (act === "person") loadPersonBlocks(el.dataset.p);
     else if (act === "backchap") loadChapter(state.reader.chapter || state.reader.chapters[0]?.name);
     else if (act === "askthis") askAboutBlock(+el.dataset.bid);
+    else if (act === "askthischat") askAboutBlockChat(+el.dataset.bid); // C2：带去对话
   });
 }

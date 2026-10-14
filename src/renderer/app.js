@@ -16,7 +16,7 @@ export const state = {
   reader: { bookId: null, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false },
   ask: { mode: "book", bookId: null, question: "", loading: false, result: null, skillSlug: null },
   llm: { config: null, answer: null, error: null, loading: false, editing: false }, // 云端问答（V2 P2）：配置/回答/错误/状态
-  chat: { mode: "book", bookId: null, skillSlug: null, messages: [], loading: false, archive: { open: false, items: [], loaded: false, busy: false } }, // 对话窗口（V2 P3）+ 云端回答存档面板（P4）
+  chat: { mode: "book", bookId: null, skillSlug: null, draft: "", messages: [], loading: false, archive: { open: false, items: [], loaded: false, busy: false } }, // 对话窗口（V2 P3）+ 输入草稿（C2「问这段→带去对话」）+ 云端回答存档面板（P4）
   skills: { packages: [], loaded: false, viewing: null, detail: null, chapter: null, chapterContent: null, busy: false },
   model: { ready: false, text: "模型加载中…" },
   config: null,
@@ -103,6 +103,28 @@ function bindModelChip() {
   $("#sideFoot").textContent = "模型加载中…（首次约 700MB）";
 }
 
+// ---------- 云端 AI 状态 chip（C4）：与 modelChip 并列，书架/翻书时也看得见 ----------
+// 只回显模型名与 key 尾号（llm-config 的红线）；点击 → 跳问一问并展开配置卡
+export function paintCloudChip() {
+  const chip = $("#cloudChip");
+  if (!chip) return; // 冒烟测试环境无顶栏 DOM，静默跳过
+  const c = state.llm.config || {};
+  if (c.hasKey) {
+    chip.textContent = `云端 AI 已就绪 · ${c.model || ""} · 尾号 ${c.keyTail || ""}`;
+    chip.className = "chip ok";
+  } else {
+    chip.textContent = "云端 AI 未配置";
+    chip.className = "chip";
+  }
+}
+
+function bindCloudChip() {
+  $("#cloudChip")?.addEventListener("click", () => {
+    state.llm.editing = true; // show → renderMain → cloudBarHtml 读 editing 展开配置卡
+    show("ask");
+  });
+}
+
 // ---------- 导入管线进度：书架卡片横幅（阶段切换才刷书架列表，节流防抖） ----------
 function bindJobsProgress() {
   let lastPaint = 0;
@@ -134,6 +156,7 @@ async function boot() {
     window.dispatchEvent(new CustomEvent("ask:submit"));
   });
   bindModelChip();
+  bindCloudChip();
   bindJobsProgress();
   bindShelfEvents();
   bindReaderEvents();
@@ -149,6 +172,7 @@ async function boot() {
     state.jobs = await call(window.study.jobsStatus());
     state.skills.packages = await call(window.study.skillsList()); // 问一问的技能包选择器要用
     state.llm.config = await call(window.study.llmConfigGet()); // 云端问答（P2）：配置状态（不含明文 key）
+    paintCloudChip(); // C4：顶栏云端 chip 就位（未配置态也要显示，点击可去配）
   } catch (e) { toast("启动失败：" + e.message); }
   renderMain();
   window.__studyBooted = true; // 冒烟脚本的启动完成信号（test/desktop-smoke-main.js）

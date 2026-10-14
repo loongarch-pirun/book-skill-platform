@@ -2,6 +2,7 @@
 // 铁律同其它视图：顶层不碰 DOM（ESM 循环导入防 TDZ）；事件绑定走 bindChatEvents()；
 // 对话历史放渲染层（主进程无状态），每次发送带上近几轮（净化在主进程边界做）。
 import { $, state, call, toast, refresh, show, RETRIEVE_TOPN } from "./app.js";
+import { cloudBarHtml } from "./views-ask.js"; // C5：云端状态条/配置卡与问一问共用一份实现
 import { esc } from "./views.js";
 
 // ---------- 渲染 ----------
@@ -15,7 +16,6 @@ export function renderChat() {
         : noBookGuide)
     : (active.length ? '<span class="chip">全库模式：引擎自动挑最相关的书</span>' : noBookGuide);
   const pkgs = state.skills.packages;
-  const cfg = state.llm.config || {};
   return `
     <div class="view-title">对话</div>
     <div class="view-sub">多轮问答 · 本地检索找依据 · 云端写回答 · 引用点跳原文</div>
@@ -31,10 +31,10 @@ export function renderChat() {
         <button class="ghost sm" data-action="chatclear">清空对话</button>
       </div>
       ${c.archive.open ? archivePanelHtml() : ""}
-      ${!cfg.hasKey ? '<div class="cloudrow"><span class="chip">云端 AI 未配置——对话需要一把 API key</span><button class="ghost sm" data-action="chatcfg">去「问一问」配置</button></div>' : ""}
+      ${cloudBarHtml()}
       <div id="chatMsgs" class="chatmsgs">${chatMsgsHtml()}</div>
       <div class="chatinput">
-        <textarea id="chatQ" placeholder="问吧——比如「什么是真正的强大？」（回车发送，Shift+回车换行）"></textarea>
+        <textarea id="chatQ" placeholder="问吧——比如「什么是真正的强大？」（回车发送，Shift+回车换行）">${esc(c.draft)}</textarea>
         <button class="primary" id="chatGo" data-action="chatgo" ${c.loading ? "disabled" : ""}>${c.loading ? "思考中…" : "发送"}</button>
       </div>
     </div>`;
@@ -157,6 +157,7 @@ async function sendChat() {
     c.messages.push({ role: "assistant", error: e.message });
   }
   c.loading = false;
+  c.draft = ""; // 已发送：草稿随消息入列，输入框清空（C2 draft 生命周期）
   refresh();
 }
 
@@ -169,7 +170,8 @@ export function bindChatEvents() {
     if (act === "chatmode") { state.chat.mode = el.dataset.mode; state.chat.skillSlug = null; refresh(); } // 切模式清技能包（B6）
     else if (act === "chatgo") sendChat();
     else if (act === "chatclear") { state.chat.messages = []; refresh(); }
-    else if (act === "chatcfg") { state.llm.editing = true; show("ask"); } // 去问一页展开配置卡
+    // 云端配置（C5）：状态条/配置卡用 ask 页同款 cloudBarHtml，llmedit/llmsave/llmtest/llmclose
+    // 处理器在 bindAskEvents（#main 监听全局存活）——这里不再需要跳页的 chatcfg
     else if (act === "goskills") show("skills"); // 书全关时的引导（A2）
     else if (act === "degtoggle") { const box = el.closest(".degfold")?.querySelector(".deglist"); if (box) box.classList.toggle("hidden"); } // 折叠降级原文（A1）
     // ---------- 云端回答存档（P4） ----------
@@ -196,5 +198,11 @@ export function bindChatEvents() {
   // 换书同步 + 清技能包（B6）：同问一问页——技能包属于某一本书，切书即清，要参考就重新勾
   $("#main").addEventListener("change", (e) => {
     if (e.target.id === "chatBook") { state.chat.bookId = e.target.value; state.chat.skillSlug = null; refresh(); }
+  });
+
+  // 输入同步草稿（C2）：refresh 会按 draft 重画输入框——不实时回写的话，
+  // 用户输到一半触发的任何重画都会把输入打回旧草稿（带去对话的原文就是这么进来的）
+  $("#main").addEventListener("input", (e) => {
+    if (e.target.id === "chatQ") state.chat.draft = e.target.value;
   });
 }
