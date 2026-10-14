@@ -22,7 +22,8 @@ engine.init({ packaged: false });
 
 const EXPECTED = ["config:get", "config:set", "config:pickLibDir", "books:list", "books:catalog", "books:delete",
   "ask:query", "reader:chapters", "reader:block", "reader:locate", "skills:list", "skills:read", "skills:toggle",
-  "engine:status", "engine:warmup", "llm:configGet", "llm:configSet", "llm:test", "chat:summary"];
+  "engine:status", "engine:warmup", "llm:configGet", "llm:configSet", "llm:test", "chat:summary",
+  "chat:archiveList", "chat:archiveClear"];
 ok(EXPECTED.every((ch) => handlers.has(ch)), `关键通道全部注册（期望子集 ${EXPECTED.length} 条 / 实际注册 ${handlers.size} 条）`);
 
 const invoke = async (ch, ...args) => handlers.get(ch)({}, ...args);

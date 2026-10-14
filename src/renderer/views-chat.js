@@ -1,7 +1,7 @@
 // 视图五：对话（V2 P3）——多轮问答：本地检索找依据，云端写回答，引用点跳原文。
 // 铁律同其它视图：顶层不碰 DOM（ESM 循环导入防 TDZ）；事件绑定走 bindChatEvents()；
 // 对话历史放渲染层（主进程无状态），每次发送带上近几轮（净化在主进程边界做）。
-import { $, state, call, refresh, show, RETRIEVE_TOPN } from "./app.js";
+import { $, state, call, toast, refresh, show, RETRIEVE_TOPN } from "./app.js";
 import { esc } from "./views.js";
 
 // ---------- 渲染 ----------
@@ -27,8 +27,10 @@ export function renderChat() {
         ${pkgs.length ? `<label class="skillpick"><input type="checkbox" id="chatUseSkill" ${c.skillSlug ? "checked" : ""}> 用技能包</label>
           <select id="chatSkillSel" class="booksel">${pkgs.map((p) => `<option value="${esc(p.slug)}" ${p.slug === c.skillSlug ? "selected" : ""}>${esc(p.title)}</option>`).join("")}</select>` : ""}
         <span class="spacer"></span>
+        <button class="ghost sm" data-action="archtoggle">${c.archive.open ? "收起存档" : c.archive.loaded ? `存档 ${c.archive.items.length}` : "存档"}</button>
         <button class="ghost sm" data-action="chatclear">清空对话</button>
       </div>
+      ${c.archive.open ? archivePanelHtml() : ""}
       ${!cfg.hasKey ? '<div class="cloudrow"><span class="chip">云端 AI 未配置——对话需要一把 API key</span><button class="ghost sm" data-action="chatcfg">去「问一问」配置</button></div>' : ""}
       <div id="chatMsgs" class="chatmsgs">${chatMsgsHtml()}</div>
       <div class="chatinput">
@@ -81,6 +83,42 @@ export function scrollChatBottom() {
   if (el && typeof el.scrollTop !== "undefined") el.scrollTop = el.scrollHeight;
 }
 
+// ---------- 云端回答存档面板（P4）：快照新→旧，引用徽标走全局 cite → jumpTo ----------
+function fmtTs(ts) {
+  try { return new Date(ts).toLocaleString("zh-CN", { hour12: false }); } catch { return String(ts || ""); }
+}
+
+function archivePanelHtml() {
+  const a = state.chat.archive;
+  const head = `<div class="archhead">云端回答存档 · 新→旧<span class="spacer"></span>
+    <button class="ghost sm" data-action="archclear">清空存档</button>
+    <button class="ghost sm" data-action="archtoggle">收起</button></div>`;
+  if (a.busy) return `<div class="archpanel"><div class="skeleton">存档读取中…</div></div>`;
+  if (!a.items.length) return `<div class="archpanel">${head}<div class="empty">还没有存档——每有一条云端回答，这里就留一份：问题、依据片段、回答，引用可点回原文</div></div>`;
+  const items = a.items.map((e) => `
+    <div class="architem">
+      <div class="archmeta">${esc(fmtTs(e.ts))} · ${e.mode === "library" ? "全库模式" : "《" + esc(e.book || "?") + "》"} · ${esc(e.model || "")}${e.dropped ? ` · ${e.dropped} 条引用未过核验已隐藏` : ""}</div>
+      <div class="archq">问：${esc(e.question || "")}</div>
+      <div class="archa">${esc(e.answer || "")}</div>
+      ${(e.citations || []).length ? `<div class="cacites">${e.citations.map((x) => `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${x.id ?? ""}">${esc(x.book || "")} · ${esc(x.loc || "定位")} · 跳原文</span>`).join("")}</div>` : ""}
+    </div>`).join("");
+  return `<div class="archpanel">${head}<div class="archlist">${items}</div></div>`;
+}
+
+// 首次打开拉一次（loaded 守卫防重复拨 IPC）；新回答入库后由 sendChat 重置 loaded 再拉
+async function loadArchive() {
+  const a = state.chat.archive;
+  if (a.loaded || a.busy) return;
+  a.busy = true;
+  refresh();
+  try {
+    a.items = await call(window.study.chatArchiveList({ limit: 100 }));
+    a.loaded = true;
+  } catch (e) { toast("存档读取失败：" + e.message); }
+  a.busy = false;
+  refresh();
+}
+
 // ---------- 发送（每轮：本地检索 → 云端写作 → 引用校验；历史带近 6 条） ----------
 function buildHistory() {
   const out = [];
@@ -111,7 +149,10 @@ async function sendChat() {
       history,
     }));
     if (r.degraded) c.messages.push({ role: "assistant", error: r.error, results: r.results || [] }); // A1：降级通道，错误消息携带本地原文
-    else c.messages.push({ role: "assistant", content: r.answer, citations: r.citations || [], dropped: r.dropped || 0, segments: r.segments, book: r.book, mode: r.mode });
+    else {
+      c.messages.push({ role: "assistant", content: r.answer, citations: r.citations || [], dropped: r.dropped || 0, segments: r.segments, book: r.book, mode: r.mode });
+      if (c.archive.open) { c.archive.loaded = false; loadArchive(); } // P4：存档面板开着，就地刷进新快照
+    }
   } catch (e) {
     c.messages.push({ role: "assistant", error: e.message });
   }
@@ -131,6 +172,22 @@ export function bindChatEvents() {
     else if (act === "chatcfg") { state.llm.editing = true; show("ask"); } // 去问一页展开配置卡
     else if (act === "goskills") show("skills"); // 书全关时的引导（A2）
     else if (act === "degtoggle") { const box = el.closest(".degfold")?.querySelector(".deglist"); if (box) box.classList.toggle("hidden"); } // 折叠降级原文（A1）
+    // ---------- 云端回答存档（P4） ----------
+    else if (act === "archtoggle") {
+      state.chat.archive.open = !state.chat.archive.open;
+      if (state.chat.archive.open) loadArchive(); // 开着就拉一次（loaded 守卫防重复）
+      refresh();
+    }
+    else if (act === "archclear") {
+      if (!confirm("清空全部云端回答存档？此操作不可恢复（书库和技能包不受影响）")) return;
+      try {
+        await call(window.study.chatArchiveClear());
+        state.chat.archive.items = [];
+        state.chat.archive.loaded = true;
+        toast("存档已清空");
+      } catch (e) { toast("清空失败：" + e.message); }
+      refresh();
+    }
   });
   $("#main").addEventListener("keydown", (e) => {
     if (e.target.id === "chatQ" && e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }

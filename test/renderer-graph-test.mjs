@@ -31,12 +31,15 @@ global.document = {
 };
 global.CustomEvent = global.CustomEvent || class CustomEvent { constructor(t) { this.type = t; } };
 global.location = { reload() {} };
+global.confirm = () => true; // 删书/清存档确认框（views.js del、views-chat.js archclear）——桩里一律放行
 
 // ---------- window.study IPC stub（记录调用，返回约定形状） ----------
 const ipcCalls = [];
 let chatSummaryCalls = 0;
 let askTopN = null;
 const chatSummaryArgs = [];
+const archiveCalls = [];
+let archiveCleared = false;
 const reply = (data) => Promise.resolve({ ok: true, data });
 const studyStub = {
   configGet: () => { ipcCalls.push("configGet"); return reply({ dirs: {}, firstRun: false, packaged: false }); },
@@ -59,6 +62,8 @@ const studyStub = {
   chatSummary: (payload) => { chatSummaryCalls++; chatSummaryArgs.push(payload); return chatSummaryCalls === 2
     ? reply({ degraded: true, error: "云端引用核验失败，已降级为原文片段", results: [{ book: "测试书", bookId: "t.docx", id: 1, loc: "第一章", text: "本地原文甲" }], mode: "book", book: "测试书" })
     : reply({ answer: "测试总结", citations: [], dropped: 0, segments: 6, book: "测试书", mode: "book" }); },
+  chatArchiveList: (payload) => { archiveCalls.push(payload); return reply([{ ts: "2026-10-14T08:00:00.000Z", question: "存档里的旧问题", answer: "存档里的旧回答", mode: "book", book: "测试书", model: "deepseek-chat", dropped: 0, citations: [{ n: 1, book: "测试书", bookId: "t.docx", id: 1, loc: "第一章", quote: "學而時習之", text: "學而時習之" }] }]); },
+  chatArchiveClear: () => { archiveCleared = true; return reply({ cleared: true }); },
   chapters: () => { ipcCalls.push("chapters"); return reply({ book: "测试书", chapters: [{ name: "第一章", blocks: 3 }] }); },
   block: () => { ipcCalls.push("block"); return reply({ book: "测试书", chapter: "第一章", blocks: [{ n: 1, id: 1, page: null, text: "學而時習之" }] }); },
   locate: () => reply({ chapter: "第一章" }),
@@ -221,6 +226,22 @@ fireChange("chatBook", "t.docx");
 await sleep(10);
 assert(app.state.chat.bookId === "t.docx" && app.state.chat.skillSlug === null,
   "B6：对话换书同步 bookId 并清技能包");
+
+// ---------- 5f) P4 云端回答存档：开关接线 / 快照渲染 / 引用徽标 / 清空 ----------
+app.show("chat");
+await sleep(10);
+assert(mainEl.innerHTML.includes("存档") && !mainEl.innerHTML.includes("云端回答存档"), "P4：对话页带存档开关（默认收起）");
+click("archtoggle", {});
+await sleep(20);
+assert(mainEl.innerHTML.includes("云端回答存档") && mainEl.innerHTML.includes("存档里的旧问题") && mainEl.innerHTML.includes("存档里的旧回答"),
+  "P4：存档面板打开并渲染快照（问题+回答+书名+模型）");
+assert(mainEl.innerHTML.includes("跳原文") && archiveCalls.length === 1, "P4：快照引用徽标可跳原文（chatArchiveList 拨通一次）");
+click("archclear", {});
+await sleep(20);
+assert(archiveCleared === true && app.state.chat.archive.items.length === 0, "P4：清空存档接线（chatArchiveClear + items 归零）");
+click("archtoggle", {});
+await sleep(10);
+assert(!mainEl.innerHTML.includes("云端回答存档"), "P4：存档面板收起");
 
 // ---------- 6) jobs 进度事件 → 书架横幅 ----------
 app.show("shelf");

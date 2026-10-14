@@ -90,6 +90,16 @@ for (const dbPath of checkpointLibraries()) {
   copyIfExists(dbPath + "-wal", base + "-wal");
 }
 
+// P4：云端回答存档跟书库一起备（<libDir>/chat-archive/archive.jsonl，小文件）——
+// 答案丢了能重问，但"当初引用了哪段原文"的快照补不回来，值得进备份
+{
+  const archSrc = path.join(LIB, "chat-archive", "archive.jsonl");
+  if (fs.existsSync(archSrc)) {
+    fs.mkdirSync(path.join(dest, "chat-archive"), { recursive: true });
+    copyIfExists(archSrc, "chat-archive/archive.jsonl");
+  }
+}
+
 // ---------- 3. git bundle（全部代码 + 历史，单文件可 clone） ----------
 let bundleNote = "（未生成：不是 git 仓库或 git 不可用）";
 try {
@@ -120,6 +130,8 @@ const manifest = [
   `  2. cd 项目名 && npm install`,
   `  3. 把本目录的 *.db 拷进 项目名/library/（目录不存在就新建），跑 npm test 验收`,
   `     （迁过书库的用户：书库在自定义目录，用 BSP_LIB_DIR 指过去，别拷进项目 library/）`,
+  `     （有 chat-archive/ 的话一并拷进书库目录——云端回答存档，P4；丢了大不了重问，`,
+  `      但"当初引用了哪段原文"的快照补不回来）`,
   ``,
   `提醒：这份备份躺在项目目录里，等于没离开这台电脑。`,
   `请把整个 bsp-backup-* 文件夹拷到 U 盘 / 网盘，才算真备份。`,

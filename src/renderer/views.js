@@ -138,9 +138,10 @@ export function bindShelfEvents() {
       e.stopPropagation();
       if (!confirm(`删除《${el.dataset.bid}》的书库？\n只删书库文件，books/ 里的原始书保留，之后可以重新导入。`)) return;
       try {
-        await call(window.study.deleteBook(el.dataset.bid));
+        const r = await call(window.study.deleteBook(el.dataset.bid));
         state.books = await call(window.study.booksList());
         refresh();
+        if (r?.note) toast(r.note); // P4：note 可能带"已连 N 条云端回答存档一起删除"（删书联动）
       } catch (err) { toast("删除失败：" + err.message); }
     }
     else if (act === "cite") jumpTo(el.dataset.bid, el.dataset.cid);

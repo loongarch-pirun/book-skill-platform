@@ -5,9 +5,10 @@
 //   - 云端只碰生成：把检索片段交给 llm.askCloud，回答必须过引用回源校验（不过的引用剔除，
 //     全不过则 QUOTE_FAIL 降级——UI 展示"请直接看下方原文"）；
 //   - 错误全部抛 UserError 人话（IPC 层统一包装，UI toast 直接展示）。
-import { ask, UserError } from "./engine.mjs";
+import { ask, UserError, dirs } from "./engine.mjs";
 import { loadLlmConfig, readLlmKey, saveLlmConfig } from "./llm-config.mjs";
 import { askCloud, chat, sanitizeHistory } from "../lib/llm.mjs";
+import { appendArchive, listArchive, purgeBook, clearArchive } from "./chat-archive.mjs";
 
 // ---------- 配置读写（给 UI；get 不含明文 key，set 不落半成品） ----------
 export function configGet() {
@@ -62,5 +63,43 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
     // 对话页在错误气泡下挂「本地原文」折叠区；问一问页本地结果本就在下方，天然降级。
     return { degraded: true, error: r.message, results, mode: base.mode, book: base.book || null };
   }
+  // P4 引用快照：每次成功回答落一份（问题 + 引用片段原文 + 回答）——失败不落（没答案可存）。
+  // citations 的 n 是 1 基片段编号，回填整段 text：书哪天没了，存档里仍留着当初的依据。
+  // 存档失败绝不能炸掉回答——try 兜底静默（快照是锦上添花，回答才是本体）。
+  try {
+    appendArchive(dirs().libDir, {
+      question: q,
+      answer: r.answer,
+      mode: base.mode,
+      book: base.book || null,
+      model: cfg.model,
+      segments: raw.length,
+      dropped: r.dropped || 0,
+      usage: r.usage || null,
+      citations: (r.citations || []).map((c) => {
+        const src = results[c.n - 1] || {}; // n 越界/缺页都退空串，不炸
+        return { n: c.n, book: c.book, bookId: c.bookId, id: c.id, loc: c.loc, quote: c.quote, text: src.text || "" };
+      }),
+    });
+  } catch { /* 存档失败不影响回答 */ }
   return { answer: r.answer, citations: r.citations, dropped: r.dropped, usage: r.usage, segments: raw.length, mode: base.mode, book: base.book || null };
+}
+
+// ---------- P4 存档：列表 / 删书联动 / 清空（UI 消费；libDir 取不到时安全退化） ----------
+export function archiveList({ limit } = {}) {
+  const libDir = dirs()?.libDir;
+  return libDir ? listArchive(libDir, { limit }) : [];
+}
+
+// 删书联动：清掉引用了这本书的全部存档，返回条数。清理失败不挡删书本体（返回 0）。
+export function purgeArchives(bookId) {
+  const libDir = dirs()?.libDir;
+  if (!libDir) return 0;
+  try { return purgeBook(libDir, bookId); } catch { return 0; }
+}
+
+export function archiveClear() {
+  const libDir = dirs()?.libDir;
+  if (libDir) clearArchive(libDir);
+  return { cleared: true };
 }

@@ -25,7 +25,13 @@ export async function registerIpc({ ipcMain, app, dialog, getWin }) {
   // 书架
   handle("books:list", (eng) => eng.booksList());
   handle("books:catalog", (eng, bookId) => eng.bookCatalog(bookId));
-  handle("books:delete", (eng, bookId) => eng.deleteBook(bookId));
+  // P4 删书联动：删书连引用这本书的云端回答存档一起清——不给"删除残留"添新尾巴；
+  // 清了几条回进 note，UI toast 告知（清理失败不挡删书本体，purgeArchives 内部已兜底）
+  handle("books:delete", async (eng, bookId) => {
+    const r = eng.deleteBook(bookId);
+    const purged = chat.purgeArchives(bookId);
+    return purged > 0 ? { ...r, note: `${r.note}；已连 ${purged} 条引用了这本书的云端回答存档一起删除` } : r;
+  });
   // 导入管线（4.6：H1 直调 lib 四函数 / H2 require 复用 + spawn 显式传参）
   handle("books:import", (eng, filePath) => jobs.startImport(filePath));
   handle("jobs:status", () => jobs.jobsStatus());
@@ -50,6 +56,9 @@ export async function registerIpc({ ipcMain, app, dialog, getWin }) {
   handle("llm:configSet", (eng, patch) => chat.configSet(patch));
   handle("llm:test", () => chat.testConnection());
   handle("chat:summary", (eng, payload) => chat.cloudSummary(payload));
+  // 云端回答存档（V2 P4）：列表（翻历史）/ 清空；删书联动在 books:delete（连引该书存档一起清）
+  handle("chat:archiveList", (eng, payload) => chat.archiveList(payload));
+  handle("chat:archiveClear", () => chat.archiveClear());
 
   // 翻书
   handle("reader:chapters", (eng, bookId) => eng.readerChapters(bookId));

@@ -16,7 +16,7 @@ export const state = {
   reader: { bookId: null, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false },
   ask: { mode: "book", bookId: null, question: "", loading: false, result: null, skillSlug: null },
   llm: { config: null, answer: null, error: null, loading: false, editing: false }, // 云端问答（V2 P2）：配置/回答/错误/状态
-  chat: { mode: "book", bookId: null, skillSlug: null, messages: [], loading: false }, // 对话窗口（V2 P3）
+  chat: { mode: "book", bookId: null, skillSlug: null, messages: [], loading: false, archive: { open: false, items: [], loaded: false, busy: false } }, // 对话窗口（V2 P3）+ 云端回答存档面板（P4）
   skills: { packages: [], loaded: false, viewing: null, detail: null, chapter: null, chapterContent: null, busy: false },
   model: { ready: false, text: "模型加载中…" },
   config: null,

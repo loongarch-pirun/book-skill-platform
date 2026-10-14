@@ -283,3 +283,14 @@ body {
 .degtext { font-family: Georgia, "Songti SC", "SimSun", serif; font-size: 13px; line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
 /* 对话·取材 meta 行（A4）：交代答案翻的是哪几段/哪本书 */
 .msg .chatmeta { margin-top: 6px; font-size: 11px; color: var(--muted); }
+
+/* 对话·云端回答存档面板（P4）：快照新→旧，引用徽标可跳原文 */
+.archpanel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; max-height: 320px; overflow-y: auto; }
+.archhead { display: flex; gap: 8px; align-items: baseline; font-size: 13px; font-weight: 700; color: var(--wood); margin-bottom: 8px; }
+.archhead .spacer { flex: 1; }
+.archlist { display: flex; flex-direction: column; gap: 10px; }
+.architem { background: var(--ai-bg); border: 1px solid var(--ai-line); border-radius: 10px; padding: 10px 12px; }
+.archmeta { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.archq { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.archa { font-size: 13px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.architem .cacites { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }

@@ -29,6 +29,9 @@ contextBridge.exposeInMainWorld("study", {
   llmConfigSet: (patch) => ipcRenderer.invoke("llm:configSet", patch),
   llmTest: () => ipcRenderer.invoke("llm:test"),
   chatSummary: (payload) => ipcRenderer.invoke("chat:summary", payload),
+  // 云端回答存档（V2 P4）：翻历史 / 清空（删书联动走 books:delete，无需新 API）
+  chatArchiveList: (payload) => ipcRenderer.invoke("chat:archiveList", payload),
+  chatArchiveClear: () => ipcRenderer.invoke("chat:archiveClear"),
   // 翻书
   chapters: (bookId) => ipcRenderer.invoke("reader:chapters", bookId),
   block: (bookId, chapter) => ipcRenderer.invoke("reader:block", bookId, chapter),

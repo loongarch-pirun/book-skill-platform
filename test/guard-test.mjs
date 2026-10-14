@@ -205,6 +205,14 @@ const copyDb = (src) => {
   ok(askViewSrc.includes("RETRIEVE_TOPN") && chatViewSrc.includes("RETRIEVE_TOPN")
     && !/topN:\s*\d/.test(stripComments(askViewSrc)) && !/topN:\s*\d/.test(stripComments(chatViewSrc)),
     "静态: 渲染层 topN 统一走 RETRIEVE_TOPN（B1，两页同段数）");
+
+  // ⑤ P4：云端回答存档链路——成功路径落 appendArchive；删书联动必须串在 books:delete 上
+  //    （删书不残留"引用了这本书"的存档——用户删书时期待的就是数据跟着没）
+  ok(chatSrc.includes("appendArchive") && chatSrc.includes("purgeBook"),
+    "静态: chat.mjs 接线存档（appendArchive + purgeBook）");
+  const ipcRegSrc = readSrc("src", "desktop", "ipc.mjs");
+  ok(ipcRegSrc.includes("chat:archiveList") && ipcRegSrc.includes("purgeArchives"),
+    "静态: ipc.mjs 注册存档通道 + books:delete 删书联动（P4）");
 }
 
 // ========== 收尾 ==========
