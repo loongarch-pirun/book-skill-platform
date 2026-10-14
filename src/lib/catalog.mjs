@@ -7,6 +7,7 @@ const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 import { z } from "zod";
 import { cosine, getEmbedder, assertEngine, DEFAULT_EMBED } from "./models.mjs";
+import { questionKeywords, convS2T } from "./keywords.mjs";
 
 // ---------- 词频统计（与 embed-book.js 规则图谱同一套停用词，保持一致） ----------
 const EN_STOP = new Set(("the a an and or of to in is are was were be been being on for with as at by from this that these those it its their his her hers him them himself herself whom whose not but they we you he she which what if then than so such can could will would may might must have has had do does did our your i me my mine mr mrs said one two more most other no nor only own same too very just also into over under again further once here there when where why how all any both each few shall should ought per chapter volume".split(" ")));
@@ -423,14 +424,91 @@ export async function importCatalog(db, task, result, { dryRun = false } = {}) {
 }
 
 // ---------- 6) 检索端编目信号（人物 literal + 关系扩散 + 主题语义） ----------
-// 人物路：问题词边界匹配 match_names → mention 边取块，IDF 衰减（低频人物强信号）
+// 词法实体链接（纯函数）：问题文本 × 人物名表（match_names 书内写法 + aliases_zh 中文译名）逐名匹配。
+//   CJK 名——简繁双形（qLow 原文 / convS2T 简转繁；孟子库 match_names 繁体"齊宣王"vs 简体提问的实证盲区）；
+//   英文名——\b 词边界正则（"Anne" 子串教训，防误命中 Catherine/Anne 内嵌）。
+// 返回命中人物 [{name, factor, match_names}]（按 nodes rowid 序）；factor = IDF 衰减 min(1, 30/mention_count)。
+// 匹配逻辑只此一份，供 loadCatalogSignal（检索信号）与 entityAliasTerms（字面腿别名注入）共用防漂移；
+// 纯匹配不查 mention 块；未编目/表缺失抛 SqliteError 由调用方 catch。
+export function linkEntities(db, q) {
+  const qLow = String(q || "").toLowerCase();
+  const qT = convS2T(qLow);  // 简体提问 → 繁体形，与繁体 match_names 对上
+  const persons = db.prepare("SELECT name, ref FROM nodes WHERE type='person' AND source='llm'").all();
+  const out = [];
+  for (const p of persons) {
+    let info = {};
+    try { info = JSON.parse(p.ref || "{}"); } catch { }
+    const names = [...(info.match_names || []), ...(info.aliases_zh || [])];
+    const isMatched = names.some(n => {
+      if (!n) return false;
+      const nl = String(n).toLowerCase();
+      return /[\u4e00-\u9fff]/.test(nl)
+        ? (qLow.includes(nl) || qT.includes(nl))
+        : new RegExp(`\\b${nl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(qLow);
+    });
+    if (!isMatched) continue;
+    out.push({ name: p.name, factor: Math.min(1, 30 / Math.max(1, info.mention_count || 1)), match_names: info.match_names || [] });
+  }
+  return out;
+}
+
+// 字面腿别名注入词（P1 词法实体链接的出口）：把命中人物的书内真实写法（match_names；
+// 不含 aliases_zh 译名——译名书里没有，注入 FTS 白占词盘）转成可进字面腿的检索词：
+//   英文写法 → 多词只取末词（姓）+ questionKeywords 抽词；中文写法 → convS2T 后切 2-gram。
+// 两条防污染剪枝（都是实测教训）：
+//   ① 多词写法只取末词："George Wickham" 的"george"会拉进版权页"George Allen"/序言
+//      "George Saintsbury"短块（高密度 bm25 尖峰扰动归一化）——实测把 lydia/wickham 题的
+//      gardiner 答案块挤出复试窗（eval 87<88）。姓（wickham）已够召回全名文本，首名只留
+//      单词写法（"Lizzy"/"Elizabeth"是独立 match_name，照常注入）。
+//   ② 跨实体子串遮蔽：注入词若是「别的」人物书内写法的子串就丢弃——trigram 字面腿是子串
+//      匹配，"william"⊂"Fitzwilliam"、"miss"⊂"Miss Bingley"、"bennet"⊂"Lydia Bennet"，
+//      会连带拉进别人物/别处的块。判据只用他人 name+match_names（书内可能出现的字），
+//      不含自身（"george"⊂自己全名属正常）；不含 aliases_zh（译名不在书内，无遮蔽风险）。
+// cap：en≤8 / cjk≤16，Set 去重（命中多人物取并集）——24 词总盘里别名占前排永不落榜，防词串膨胀。
+// 未编目/坏库/旧 schema → 返回空（字面腿行为与旧版一致）；只吞 SqliteError，非 SQL 错误原样抛（铁律）。
+export function entityAliasTerms(db, q) {
+  const en = [], cjk = [];
+  try {
+    const matched = linkEntities(db, q);
+    if (!matched.length) return { en: [], cjk: [] };
+    const others = db.prepare("SELECT name, ref FROM nodes WHERE type='person' AND source='llm'").all();
+    const shadowOf = (selfName) => others.filter(p => p.name !== selfName).map(p => {
+      let info = {}; try { info = JSON.parse(p.ref || "{}"); } catch { }
+      return [p.name, ...(info.match_names || [])].join("\u0001");
+    }).join("\u0001").toLowerCase();
+    for (const m of matched) {
+      const shadow = shadowOf(m.name);
+      for (const n of m.match_names) {
+        const clean = String(n || "").replace(/"/g, "");  // 去 " 防 FTS MATCH 语法破坏（search.mjs 对 q 同款处理）
+        if (!clean) continue;
+        if (/[\u4e00-\u9fff]/.test(clean)) {
+          const t = convS2T(clean.toLowerCase());
+          for (let i = 0; i + 2 <= t.length; i++) {
+            const gram = t.slice(i, i + 2);
+            if (!shadow.includes(gram)) cjk.push(gram);
+          }
+        } else {
+          const words = clean.split(/\s+/);  // 剪枝①：多词写法只取末词
+          for (const w of questionKeywords(words.length > 1 ? words[words.length - 1] : clean).en)
+            if (!shadow.includes(w)) en.push(w);  // 剪枝②：跨实体子串遮蔽
+        }
+      }
+    }
+  } catch (e) {
+    const isSql = e && (e.name === "SqliteError" || String(e.code || "").startsWith("SQLITE_"));
+    if (!isSql) throw e;  // 吞掉自家 bug 比降级更糟
+    return { en: [], cjk: [] };
+  }
+  return { en: [...new Set(en)].slice(0, 8), cjk: [...new Set(cjk)].slice(0, 16) };
+}
+
+// 人物路：词法实体链接命中 → mention 边取块，IDF 衰减（低频人物强信号）
 //   同块信号求和封顶 1：同时提及多个"问题点名人物"的块累加优势（人物关系题的答案块特征）
 // 关系扩散：问题点名的名字沿 relation 边一跳找相关人物（如问题提 Jane+Bingley → 扩散到 Caroline），
 //   其 mention 块按 0.5 衰减加成——关系边在这里兑现检索价值
 // 主题路：cos(qv, theme_vecs) 相对 margin 命中 → belongs 边取块；引擎不一致时自动跳过
 export function loadCatalogSignal(db, q, qv, embedKey) {
   const hit = new Map();  // chunkId -> { w, tag }
-  const qLow = String(q || "").toLowerCase();
   const add = (id, w, tag) => {
     const prev = hit.get(id);
     if (!prev) hit.set(id, { w: Math.min(1, w), tag });
@@ -438,27 +516,17 @@ export function loadCatalogSignal(db, q, qv, embedKey) {
   };
   const mentionEdge = db.prepare("SELECT src FROM edges WHERE kind='mention' AND dst_type='person' AND dst=?");
   try {
-    const persons = db.prepare("SELECT name, ref FROM nodes WHERE type='person' AND source='llm'").all();
-    const infoOf = (p) => { try { return JSON.parse(p.ref || "{}"); } catch { return {}; } };
-    const matched = new Map();  // name -> factor
-    for (const p of persons) {
-      const info = infoOf(p);
-      const names = info.match_names || [];
-      const isMatched = names.some(n => {
-        if (!n) return false;
-        return /[\u4e00-\u9fff]/.test(n)
-          ? qLow.includes(n.toLowerCase())
-          : new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(qLow);
-      });
-      if (!isMatched) continue;
-      const factor = Math.min(1, 30 / Math.max(1, info.mention_count || 1));
-      matched.set(p.name, factor);
-      for (const row of mentionEdge.all(p.name)) add(+row.src, factor, "person");
+    const matched = new Map();  // name -> factor（linkEntities 纯函数，匹配逻辑与其共用一份）
+    for (const m of linkEntities(db, q)) {
+      matched.set(m.name, m.factor);
+      for (const row of mentionEdge.all(m.name)) add(+row.src, m.factor, "person");
     }
     // 关系一跳扩散（默认关，BSP_EXPAND=1 开；扩散权重随点名人物的因子衰减）
     // 实测矩阵结论：扩散在当前金标准上是纯噪声（把"达西"扇出到冷门人物重掷骰子），
     // 且关掉后三道关键题全过——关系边的主要价值在 list_catalog 浏览，不在检索信号
     if (matched.size && process.env.BSP_EXPAND === "1") {
+      const persons = db.prepare("SELECT name, ref FROM nodes WHERE type='person' AND source='llm'").all();
+      const infoOf = (p) => { try { return JSON.parse(p.ref || "{}"); } catch { return {}; } };
       const minFactor = Math.min(...matched.values());
       const expanded = new Map();  // 相关人物名 -> factor
       for (const e of db.prepare("SELECT src, dst FROM edges WHERE kind='relation' AND source='llm'").all()) {

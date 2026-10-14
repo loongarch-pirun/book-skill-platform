@@ -10,7 +10,7 @@ const Database = require("better-sqlite3");
 import { getEmbedder, getReranker, cosine, assertEngine } from "./models.mjs";
 import { questionKeywords, buildFtsQuery, cjkLikeScores, capFtsHits } from "./keywords.mjs";
 import { getMatrix, matrixScores } from "./vec-cache.mjs";
-import { loadCatalogSignal } from "./catalog.mjs";
+import { loadCatalogSignal, entityAliasTerms } from "./catalog.mjs";
 import { loadSkillState } from "./skill-state.mjs";
 export { getEmbedder, cosine };
 
@@ -79,7 +79,11 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
     let ftsW = Math.min(+(process.env.BSP_FTS_W || 0.5), 0.5);
     if (q.length >= 3 && FTS_KW) {
       const kws = questionKeywords(q);
-      const ftsQ = buildFtsQuery(kws);
+      // P1 词法实体链接别名注入（BSP_ENTITY_LINK=0 关 = 旧行为）：命中人物的书内真实写法
+      // 补进字面腿词盘——问一种写法搜全写法（Lizzy↔Elizabeth）、中文提问链到书内写法。
+      // 别名排问题词前（24 词封顶盘上别名永不落榜）；只加词不改分——打分/权重/复试官零改动
+      const alias = process.env.BSP_ENTITY_LINK !== "0" ? entityAliasTerms(db, q) : { en: [], cjk: [] };
+      const ftsQ = buildFtsQuery({ en: [...alias.en, ...kws.en] });
       if (ftsQ) {
         try {
           const hits = new Map();
@@ -88,8 +92,9 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
           for (const [id, s] of capFtsHits(hits)) ftsScores.set(id, s);
         } catch { /* 词面意外 → 落中文 LIKE */ }
       }
-      if (!ftsScores.size && kws.cjk.length)
-        for (const [id, n] of capFtsHits(cjkLikeScores(db, kws.cjk))) ftsScores.set(id, n);
+      const cjkAll = [...kws.cjk, ...alias.cjk];
+      if (!ftsScores.size && cjkAll.length)
+        for (const [id, n] of capFtsHits(cjkLikeScores(db, cjkAll))) ftsScores.set(id, n);
     } else if (q.length >= 3) {
       try {
         for (const r of db.prepare(`SELECT c.id id, bm25(chunks_fts) rank FROM chunks_fts f JOIN chunks c ON c.id=f.rowid WHERE chunks_fts MATCH ?`).all(`"${q}"`))

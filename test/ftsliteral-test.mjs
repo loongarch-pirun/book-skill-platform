@@ -1,8 +1,10 @@
-// 字面腿关键词化验收：关键词腿真的干活了 + 不打扰会做的题 + 开关退回旧行为
+// 字面腿关键词化验收：关键词腿真的干活了 + 不打扰会做的题 + 开关退回旧行为 + P1 实体链接别名注入
 // 跑法: node test/ftsliteral-test.mjs
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -10,6 +12,7 @@ const Database = require("better-sqlite3");
 
 import { hybridSearch } from "../src/lib/search.mjs";
 import { questionKeywords, buildFtsQuery, cjkLikeScores, capFtsHits, convS2T, ftsWeightFor, FTS_TOPK } from "../src/lib/keywords.mjs";
+import { linkEntities, entityAliasTerms } from "../src/lib/catalog.mjs";
 
 const LIB = path.join(__dirname, "..", "library");
 const ATT = path.join(LIB, "attention-is-all-you-need-en.pdf.db");
@@ -105,6 +108,101 @@ const assert = (cond, msg, extra = "") => {
   assert(Array.isArray(a) && Array.isArray(b), "短查询/纯符号返回数组不崩溃");
   assert(ftsWeightFor(0.01) === 0.5 && ftsWeightFor(0.05) === 0.4 && ftsWeightFor(0.08) === 0.35 && ftsWeightFor(0.5) === 0.3,
     "质量阶梯函数边界正确（保留给实验用，当前主路径用提名封顶）");
+}
+
+// ===== 7) P1 词法实体链接：别名注入字面腿（BSP_ENTITY_LINK 默认开）=====
+// 目标：命中人物的书内真实写法（match_names）补进字面腿词盘——问一种写法搜全写法 +
+// 简体问句链到繁体原文。只加词不改分（打分/权重/复试官零改动），eval-gate 两道门守红线。
+{
+  const PP = path.join(LIB, "pride-and-prejudice-en.epub.db");
+  const MZ = path.join(LIB, "mengzi-zh.docx.db");
+  const Q7 = "what does lizzy think about marriage";
+
+  // ① linkEntities：匹配逻辑从 loadCatalogSignal 抽出后，真库英文照常命中
+  const pp = new Database(PP, { readonly: true });
+  const hitPnp = linkEntities(pp, "what does darcy say about pride");
+  assert(hitPnp.some(m => /Darcy/.test(m.name) && m.factor > 0),
+    `实体链接: P&P 英文命中 Darcy（${hitPnp.map(m => m.name).join("/") || "无命中"}）`);
+
+  // ② 简繁双形：简体问「齐宣王」命中繁体人物（S2T_MAP 补字 + convS2T 双形匹配——既有盲区修复）
+  const mz = new Database(MZ, { readonly: true });
+  const hitMz = linkEntities(mz, "齐宣王问政于孟子");
+  assert(hitMz.some(m => m.name === "齊宣王"), `实体链接: 简体「齐宣王」命中繁体人物（${hitMz.map(m => m.name).join("/") || "无命中"}）`);
+  assert(hitMz.some(m => m.name === "孟子"), "实体链接: 同一问句同时命中「孟子」（多人物并集）");
+
+  // ③ entityAliasTerms：问一个写法注入全写法；中文转繁切 gram；cap/去重
+  const aPnp = entityAliasTerms(pp, Q7);
+  assert(aPnp.en.includes("elizabeth") && aPnp.en.includes("lizzy"),
+    `别名: 问「lizzy」注入全写法（en=${aPnp.en.join(",")}）`);
+  const aMz = entityAliasTerms(mz, "齐宣王问政于孟子");
+  assert(aMz.cjk.includes("齊宣") && aMz.cjk.includes("孟軻"),
+    `别名: 简体问句注入繁体 gram（cjk=${aMz.cjk.join(" ")}）`);
+  assert(aPnp.en.length <= 8 && aMz.cjk.length <= 16 && new Set(aMz.cjk).size === aMz.cjk.length,
+    "别名: cap 8/16 + 去重（无重复词）");
+  // 防污染双剪枝（eval 87<88 回归的修复实证）：
+  const aG = entityAliasTerms(pp, "who finds lydia and wickham in london");
+  assert(!aG.en.includes("george"),
+    `剪枝①: 多词写法只取末词（George Wickham 不带出 george——版权页 George Allen 短块污染实测；en=${aG.en.join(",")}）`);
+  const aJ = entityAliasTerms(pp, "who tries to separate jane and bingley");
+  assert(!aJ.en.includes("bennet") && aJ.en.includes("charles"),
+    `剪枝②: 跨实体子串遮蔽（bennet⊂"Lydia Bennet" 被丢、书中单字写法 charles 保留；en=${aJ.en.join(",")}）`);
+
+  // ④ 只用 match_names：aliases_zh 译名（P1.5）只参与匹配、不进注入词盘——合成库
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "entlink-"));
+  const fdb = new Database(path.join(tmpDir, "fake.db"));
+  fdb.exec("CREATE TABLE nodes(id TEXT, type TEXT, name TEXT, ref TEXT, source TEXT)");
+  fdb.prepare("INSERT INTO nodes VALUES(?,?,?,?,?)").run("p1", "person", "Elizabeth Bennet",
+    JSON.stringify({ match_names: ["Elizabeth", "Lizzy", "Eliza", "Beth", "Bess", "Ellie", "Liza", "Libby", "Lizbeth", "Bitsy"], aliases_zh: ["伊丽莎白"], mention_count: 623 }), "llm");
+  const aZh = entityAliasTerms(fdb, "伊丽莎白是个怎样的人");  // 只经 aliases_zh 命中
+  assert(aZh.en.includes("elizabeth") && aZh.en.length === 8 && !aZh.en.includes("bitsy"),
+    `别名: 命中后注入 match_names 全写法且 cap=8（en=${aZh.en.length} 个）`);
+  assert(aZh.cjk.length === 0, "别名: 译名只匹配不注入（cjk 为空，书里没有的词不进 FTS）");
+  fdb.close();
+
+  // ⑤ 安全：无 nodes 表库（空 sqlite）与有表无编目库都返回空词、不崩
+  const bare = path.join(tmpDir, "bare.db");
+  new Database(bare).close();  // 造一个连表都没有的空库
+  const bdb = new Database(bare, { readonly: true });
+  const aBare = entityAliasTerms(bdb, "任何问题");
+  bdb.close();
+  const dd = new Database(DD, { readonly: true });
+  const aDd = entityAliasTerms(dd, "治理大国");
+  dd.close();
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+  assert(aBare.en.length === 0 && aBare.cjk.length === 0, "安全: 无 nodes 表库返回空词（SqliteError 被吞、不崩）");
+  assert(aDd.en.length === 0 && aDd.cjk.length === 0, "安全: 有表无编目（llm 层空）返回空词");
+  pp.close(); mz.close();
+
+  // ⑥ 合并词盘：别名排问题词前（24 词盘永不落榜）；封顶逻辑照旧
+  const k7 = questionKeywords(Q7);
+  const fq7 = buildFtsQuery({ en: [...aPnp.en, ...k7.en] });
+  assert(fq7.startsWith('"elizabeth"') && fq7.indexOf('"marriage"') > fq7.indexOf('"elizabeth"'),
+    `注入序: 别名排问题词前（${fq7}）`);
+  assert((buildFtsQuery({ en: [...Array(30)].map((_, i) => "word" + i) }).match(/"/g) || []).length === 48,
+    "注入盘: 总词封顶 24（30 词输入只留 24）");
+
+  // ⑦ 开关对照（子进程，仿第 5 节）：默认开有实际作用、=0 退回旧行为（词串构造与旧版逐字节一致）
+  const searchUrl = pathToFileURL(path.join(__dirname, "..", "src", "lib", "search.mjs")).href;
+  const script7 = `
+    const { hybridSearch } = await import(${JSON.stringify(searchUrl)});
+    process.env.BSP_ENTITY_LINK = "0";
+    const a = await hybridSearch(${JSON.stringify(PP)}, ${JSON.stringify(Q7)}, 20, { rerank: false });
+    delete process.env.BSP_ENTITY_LINK;
+    const b = await hybridSearch(${JSON.stringify(PP)}, ${JSON.stringify(Q7)}, 20, { rerank: false });
+    console.log("PROBE " + JSON.stringify({ off: a.map(r => r.id), on: b.map(r => r.id) }));
+  `;
+  const p7 = spawnSync(process.execPath, ["--input-type=module", "-e", script7], { encoding: "utf8", env: { ...process.env }, timeout: 180000 });
+  const line7 = (p7.stdout || "").split(/\r?\n/).find(l => l.startsWith("PROBE"));
+  const probe7 = line7 ? JSON.parse(line7.slice(6)) : null;
+  assert(probe7 && probe7.off.length > 0 && probe7.on.length > 0,
+    `开关: BSP_ENTITY_LINK 关/开两模式都正常产出${probe7 ? "" : "（子进程失败: " + (p7.stderr || "").slice(0, 120) + "）"}`);
+  assert(probe7 && JSON.stringify(probe7.off) !== JSON.stringify(probe7.on),
+    "开关: 关/开结果序列不同（别名注入有实际作用，不是死代码）");
+
+  // ⑧ 端到端：简体问孟子 → 繁体原文块带着字面分进池（S2T 桥兑现）
+  const rsMz = await hybridSearch(MZ, "齐宣王问政于孟子", 20, { rerank: false });
+  const hitMz2 = rsMz.find(r => /齊宣王/.test(r.text));
+  assert(hitMz2 && hitMz2.fts > 0, `端到端: 简体问句命中繁体原文块（id=${hitMz2?.id} fts=${hitMz2?.fts ? hitMz2.fts.toFixed(2) : "无"}）`);
 }
 
 console.log("\n===== 字面腿关键词化验收结果 =====");
