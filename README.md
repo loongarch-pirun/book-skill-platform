@@ -101,8 +101,10 @@ npm test            # 全部（fast + slow）
 **自动测试（CI）**：每次推送或 PR，GitHub Actions（`.github/workflows/ci.yml`）会自动跑
 `npm run lint` + `npm run test:ci`（先造一本样例书，再跑检查）。
 
-`test:ci` 只含**不依赖本地书库与模型**的检查：格式保真、渲染层图、解析 fuzz、路径守卫、技能包质检。
-依赖真书库向量/编目数据的测试（`guard` / `ftsliteral` / `catalog` / `ipc`）与全部 `test:slow`
+`test:ci` 只含**不依赖本地书库与模型**的检查：格式保真、渲染层图、解析 fuzz、路径守卫、技能包质检、
+云端问答配置与提示词、生成层防幻觉 fuzz、云端回答存档、存档/配置爆破 fuzz。
+依赖真书库向量/编目数据的测试（`guard` / `ftsliteral` / `catalog` / `catalog-fuzz` / `ipc`）与全部 `test:slow`
+（含 `similar-fuzz` 相似块查询、`chat-fuzz` 云端编排端到端、`eval-gate` 检索金标准门）
 只在本地跑——它们需要 `library/*.db`（未入库）并会下载约 700MB 模型。
 `stage1`（切片抽查）也需要完整真书库（含 PDF 流水线、固定切片数），同样只在本地跑。
 

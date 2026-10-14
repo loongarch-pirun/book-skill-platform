@@ -7,9 +7,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-# 说明：CI 只跑「不依赖本地书库、不依赖 700MB 模型」的检查。
+# 说明：CI 只跑「不依赖本地书库、不依赖 700MB 模型」的检查——与 package.json 的
+# test:ci 清单逐条对应（V2 融合轮 P5 同步：llm-test/llm-fuzz/chat-archive-test/
+# archive-config-fuzz 四套补入，ci.yml 与 test:ci 不再各自漂移）。
 # 以下测试需要 library/*.db（建好的书库，未入 git）或向量/编目数据，只在本地跑：
-#   guard-test / ftsliteral-test / catalog-test / ipc-test / 全部 test:slow
+#   guard-test / ftsliteral-test / catalog-test / catalog-fuzz / ipc-test / 全部 test:slow
 # 详见 README「测试」章节。
 
 jobs:
@@ -39,7 +41,8 @@ jobs:
 
       # 逐个跑而不是一条 npm run test:ci：
       # 这样哪个测试挂了，在 Actions 界面上一眼就能看到（而不是只知道"测试步骤失败"）。
-      # 清单与 package.json 的 test:ci 保持一致。
+      # 清单与 package.json 的 test:ci 保持一致（catalog-fuzz 除外——它用真库只读拷贝，
+      # CI 没有 library/，见头部说明，只在本地跑）。
       - name: 测试 · 格式保真 (stage0)
         run: node test/stage0-format-test.mjs
 
@@ -62,3 +65,15 @@ jobs:
 
       - name: 测试 · 技能包质检
         run: node test/skill-store-test.mjs
+
+      - name: 测试 · 云端问答配置与提示词 (llm)
+        run: node test/llm-test.mjs
+
+      - name: 测试 · 生成层防幻觉 fuzz (P0)
+        run: node test/llm-fuzz.mjs
+
+      - name: 测试 · 云端回答存档
+        run: node test/chat-archive-test.mjs
+
+      - name: 测试 · 存档/配置爆破 fuzz (P1)
+        run: node test/archive-config-fuzz.mjs
