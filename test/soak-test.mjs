@@ -14,6 +14,14 @@ const ok = (cond, msg) => { console.log((cond ? "PASS" : "FAIL") + " - " + msg);
 const obs = (msg) => { console.log("OBSERVE - " + msg); observe++; };
 const rss = () => Math.round(process.memoryUsage().rss / 1024 / 1024);
 
+// 夹具：用户可能在客户端把某本书的 skill 收起（H3 过滤会让 listBooks 查不到它——书全关时
+// 返回 0 本，P3-3a 会假红）。本套压的是稳定性不是开关策略，临时全开、末尾还原
+// （guard-test 第 7 节 / stage3-mcp-test 同款做法）
+const LIB_DIR = path.join(ROOT, "library");
+const { loadSkillState, setSkillEnabled } = await import("../src/lib/skill-state.mjs");
+const beforeState = loadSkillState(LIB_DIR);
+for (const id of Object.keys(beforeState).filter((id) => beforeState[id] === false)) setSkillEnabled(LIB_DIR, id, true);
+
 // ---------- 1) 连续导入 3 本书不重启进程：内存粗线 ----------
 console.log("===== 1) 连导 3 本书（同进程不重启） =====");
 {
@@ -102,6 +110,7 @@ console.log("===== 4) 检索延迟对账 =====");
 }
 
 // ---------- 汇总 ----------
+for (const [id, v] of Object.entries(beforeState)) setSkillEnabled(LIB_DIR, id, v !== false); // 还原用户开关，夹具不留痕
 console.log(`\n===== P3 稳定性汇总：${pass} PASS / ${fail} FAIL / ${observe} OBSERVE =====`);
 if (failures.length) { console.log("失败项："); failures.forEach(f => console.log("  ✗ " + f)); }
 process.exit(fail ? 1 : 0);
