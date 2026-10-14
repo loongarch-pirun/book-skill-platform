@@ -229,6 +229,20 @@ const copyDb = (src) => {
     "静态: 顶栏云端 chip 接线（C4：bind + boot 后 paint）");
   const indexSrc = readSrc("src", "index.html");
   ok(indexSrc.includes('id="cloudChip"'), "静态: index.html 带 cloudChip 节点（C4）");
+
+  // ⑧ 技能×编目融合：新增三工具必须注册（MCP 7→10）；新能力走独立文件，检索层不许被碰
+  const toolsSrc = readSrc("src", "lib", "register-tools.mjs");
+  ok(["get_person", "get_theme", "similar_chunks"].every(t => toolsSrc.includes(`"${t}"`)),
+    "静态: register-tools 注册 get_person/get_theme/similar_chunks（MCP 7→10）");
+  ok(readSrc("src", "lib", "skill-store.mjs").includes("catalog\\.json"),
+    "静态: skill-store 白名单放行 catalog.json（P-A 皮骨同包）");
+  const catSkillSrc = readSrc("src", "lib", "catalog-skill.mjs");
+  const similarSrc = readSrc("src", "lib", "similar.mjs");
+  ok(!/hybridSearch|loadCatalogSignal/.test(stripComments(catSkillSrc))
+    && !/hybridSearch|loadCatalogSignal/.test(stripComments(similarSrc)),
+    "静态: 骨架生成器/相似查询不碰检索算法（检索层零改动红线）");
+  ok(catSkillSrc.includes("GROUP BY chapter") && catSkillSrc.includes("MAX_CHUNK_IDS"),
+    "静态: 骨架章节表从 chunks 实查 + 锚点封顶（永不吹牛）");
 }
 
 // ========== 收尾 ==========

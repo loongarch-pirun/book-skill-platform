@@ -17,10 +17,18 @@ const client = new Client({ name: "test-agent", version: "1.0.0" });
 const [cT, sT] = InMemoryTransport.createLinkedPair();
 await Promise.all([server.connect(sT), client.connect(cT)]);
 
+// 夹具：用户可能在客户端把某本书的 skill 收起（H3 过滤会让所有工具查不到它——书全关时
+// list_books 返回 0）。本套测的是工具协议与数据链路，临时全开、末尾还原，
+// 不让用户的开关状态左右验收结论（guard-test 第 7 节同款做法）
+const LIB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "library");
+const { loadSkillState, setSkillEnabled } = await import("../src/lib/skill-state.mjs");
+const beforeState = loadSkillState(LIB_DIR);
+for (const id of Object.keys(beforeState).filter((id) => beforeState[id] === false)) setSkillEnabled(LIB_DIR, id, true);
+
 // 1. 工具清单
 const tools = await client.listTools();
 const names = tools.tools.map(t => t.name).sort();
-assert(JSON.stringify(names) === JSON.stringify(["list_books", "list_catalog", "list_skills", "query_book", "query_library", "read_skill", "save_skill"]), `智能体能看到 7 个工具: ${names.join(", ")}`);
+assert(JSON.stringify(names) === JSON.stringify(["get_person", "get_theme", "list_books", "list_catalog", "list_skills", "query_book", "query_library", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 10 个工具: ${names.join(", ")}`);
 
 // 2. list_books
 const lb = await client.callTool({ name: "list_books", arguments: {} });
@@ -129,9 +137,48 @@ const rd = await client.callTool({ name: "read_skill", arguments: { slug: "e2e-c
 const rdR = JSON.parse(rd.content[0].text);
 assert(rdR.content && rdR.content.includes("上善若水"), "read_skill 按 chapter 按需取章");
 
+// 8. get_person 人物深查（P-D）：关系网从"看得到"变"摸得到原文块"
+const gp = await client.callTool({ name: "get_person", arguments: { book: "pride", name: "Caroline Bingley" } });
+const gpR = JSON.parse(gp.content[0].text);
+assert(gpR.cataloged === true && gpR.person === "Caroline Bingley" && gpR.mention_chunks > 10
+  && gpR.relations.some(r => r.other === "Jane Bennet" && /拆散|拆开/.test(r.note))
+  && gpR.representative_chunks.every(c => c.chunk && c.loc !== undefined && c.preview),
+  `get_person 深查: ${gpR.person} 出场 ${gpR.mention_chunks} 块 / 关系 ${gpR.relations?.length} 条 / 代表块 ${gpR.representative_chunks?.map(c => "#" + c.chunk).join(",")}`);
+
+// 8b. 名字未命中 → 给候选清单（智能体换个写法再来，不必瞎猜）
+const gp2 = await client.callTool({ name: "get_person", arguments: { book: "pride", name: "Zaphod" } });
+const gp2R = JSON.parse(gp2.content[0].text);
+assert(gp2R.error === "person-not-found" && gp2R.available?.length === 25, "get_person 名字未命中返回候选清单");
+
+// 9. get_theme 主题深查（P-D）：覆盖块数 + 章节分布 + 代表块
+const gt = await client.callTool({ name: "get_theme", arguments: { book: "pride", name: "pemberley" } });
+const gtR = JSON.parse(gt.content[0].text);
+assert(gtR.cataloged === true && gtR.chunks > 0 && gtR.chapters?.length > 0
+  && gtR.representative_chunks?.length === Math.min(5, gtR.chunks),
+  `get_theme 深查: ${gtR.theme} 覆盖 ${gtR.chunks} 块 / 章节分布 ${gtR.chapters?.map(c => c.chapter + "×" + c.n).join(" ")}`);
+
+// 10. similar_chunks 以块找块（P-E）：块入口零模型、排除自身、按余弦降序
+const sc = await client.callTool({ name: "similar_chunks", arguments: { book: "pride", chunk_id: 243, topN: 3 } });
+const scR = JSON.parse(sc.content[0].text);
+assert(scR.results?.length === 3 && scR.query?.chunk === 243 && scR.results.every(r => r.id !== 243)
+  && scR.results.every((r, i, a) => i === 0 || a[i - 1].score >= r.score),
+  `similar_chunks 块入口: ${scR.results?.length} 条、不含自身 #243、降序（首位 #${scR.results?.[0]?.id} 分 ${scR.results?.[0]?.score}）`);
+
+// 10b. text 入口（现场编码查询：引擎不一致直接报错而不是给垃圾分）
+const sc2 = await client.callTool({ name: "similar_chunks", arguments: { book: "pride", text: "Mr Darcy wrote a letter to explain his conduct", topN: 4 } });
+const sc2R = JSON.parse(sc2.content[0].text);
+assert(sc2R.results?.length === 4 && !!sc2R.embed_model && sc2R.results.every(r => r.text && r.loc !== undefined),
+  `similar_chunks text 入口: ${sc2R.results?.length} 条（引擎 ${sc2R.embed_model}，带定位 + 原文可引用）`);
+
+// 10c. 两个入口都不给 → 明确报错（不静默返回空结果骗人）
+const sc3 = await client.callTool({ name: "similar_chunks", arguments: { book: "pride", topN: 3 } });
+const sc3R = JSON.parse(sc3.content[0].text);
+assert(sc3R.error === "missing-query", "similar_chunks: 未给参照（chunk_id/text 皆空）→ missing-query");
+
 fs.rmSync(E2E_DIR, { recursive: true, force: true });  // 临时技能测完即删
+for (const [id, v] of Object.entries(beforeState)) setSkillEnabled(LIB_DIR, id, v !== false);  // 还原用户开关，夹具不留痕
 
 console.log("\n===== 阶段3 验收结果 =====");
 if (failed > 0) { console.log(`${failed} 项 FAIL`); process.exit(1); }
-console.log("全部 PASS：标准 MCP 协议接入成功，七工具可用（含编目浏览与技能落盘），自动挑书路由正确，引用可回源");
+console.log("全部 PASS：标准 MCP 协议接入成功，十工具可用（编目浏览/人物主题深查/相似检索/技能落盘），自动挑书路由正确，引用可回源");
 process.exit(0);

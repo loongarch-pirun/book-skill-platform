@@ -567,3 +567,101 @@ export function getCatalogSummary(dbPath, themeFilter) {
     return out;
   } finally { db.close(); }
 }
+
+// ---------- 9) 图谱深查（MCP get_person / get_theme 用，P-D） ----------
+// 与 getCatalogSummary 同层的只读查询：把"看一眼全图"升级成"按人/按主题摸到原文块"。
+// 检索层零改动——这两个函数是浏览接口，不是检索信号（loadCatalogSignal 一行不动）。
+const REP_CHUNKS = 5;
+function catalogGuard(db) {
+  const tables = db.prepare("SELECT name FROM sqlite_master WHERE name IN ('nodes','edges')").all().map(r => r.name);
+  if (!tables.includes("nodes") || !tables.includes("edges")) return { cataloged: false };
+  const nodeCols = db.prepare("PRAGMA table_info(nodes)").all().map(c => c.name);
+  if (!nodeCols.includes("source")) return { cataloged: false, note: "这本书还没有编目（可运行 catalog-export / catalog-import 流程）" };
+  return null;
+}
+
+// 节点名匹配：精确 → 忽略大小写 → 片段包含（片段命中时给出候选清单，避免智能体猜错名字白跑一趟）
+function matchNode(rows, name) {
+  const q = String(name || "").trim().toLowerCase();
+  return rows.find(x => x.name === name)
+    || rows.find(x => x.name.toLowerCase() === q)
+    || rows.find(x => x.name.toLowerCase().includes(q))
+    || null;
+}
+
+// 代表块：均匀抽样（首/25%/50%/75%/末）——覆盖全书弧线，比"取前 5 块"信息量大；
+// 确定性无随机（同输入同输出，测试可断言）
+function representativeChunks(db, ids, n = REP_CHUNKS) {
+  const sorted = [...new Set(ids)].sort((a, b) => a - b);
+  const picks = sorted.length <= n ? sorted
+    : Array.from({ length: n }, (_, i) => sorted[Math.round((i * (sorted.length - 1)) / (n - 1))]);
+  const get = db.prepare("SELECT id, chapter, page, text FROM chunks WHERE id = ?");
+  const out = [];
+  for (const id of picks) {
+    const c = get.get(id);
+    if (!c) continue;
+    out.push({
+      chunk: id, chapter: c.chapter || "", page: c.page ?? null,
+      loc: c.page ? `第${c.page}页` : (c.chapter || ""), preview: (c.text || "").slice(0, 80),
+    });
+  }
+  return out;
+}
+
+// 人物深查：身份 / 书中写法 / 出场块数 / 关系边 / 提到他她的代表原文块
+export function getPersonDetail(dbPath, name) {
+  let db;
+  try { db = new Database(dbPath, { readonly: true }); } catch { return { cataloged: false }; }
+  try {
+    const g = catalogGuard(db);
+    if (g) return g;
+    const persons = db.prepare("SELECT name, ref FROM nodes WHERE type='person' AND source='llm' ORDER BY rowid").all();
+    if (!persons.length) return { cataloged: false, note: "这本书还没有编目（可运行 catalog-export / catalog-import 流程）" };
+    const p = matchNode(persons, name);
+    if (!p) return { cataloged: true, error: "person-not-found", name: String(name || ""), available: persons.map(x => x.name) };
+    let info = {};
+    try { info = JSON.parse(p.ref || "{}"); } catch { }
+    const mentionIds = db.prepare("SELECT src FROM edges WHERE kind='mention' AND dst_type='person' AND dst=? AND source='llm'")
+      .all(p.name).map(r => +r.src);
+    const relations = db.prepare("SELECT src, dst, ref FROM edges WHERE kind='relation' AND source='llm' AND (src=? OR dst=?)")
+      .all(p.name, p.name).map(e => ({
+        a: e.src, b: e.dst, note: e.ref || "",
+        other: e.src === p.name ? e.dst : e.src, // 关系另一头（智能体追问"那还有谁"用得上）
+      }));
+    return {
+      cataloged: true, person: p.name, note: info.note || "",
+      match_names: info.match_names || [], mention_count: info.mention_count || 0,
+      mention_chunks: mentionIds.length,
+      relations, representative_chunks: representativeChunks(db, mentionIds),
+    };
+  } finally { db.close(); }
+}
+
+// 主题深查：说明 / 覆盖块数 / 章节分布 / 代表原文块
+export function getThemeDetail(dbPath, name) {
+  let db;
+  try { db = new Database(dbPath, { readonly: true }); } catch { return { cataloged: false }; }
+  try {
+    const g = catalogGuard(db);
+    if (g) return g;
+    const themes = db.prepare("SELECT name, ref FROM nodes WHERE type='theme' AND source='llm' ORDER BY rowid").all();
+    if (!themes.length) return { cataloged: false, note: "这本书还没有编目（可运行 catalog-export / catalog-import 流程）" };
+    const t = matchNode(themes, name);
+    if (!t) return { cataloged: true, error: "theme-not-found", name: String(name || ""), available: themes.map(x => x.name) };
+    let note = "";
+    try { note = JSON.parse(t.ref || "{}").note || ""; } catch { }
+    const belongsIds = db.prepare("SELECT src FROM edges WHERE kind='belongs' AND dst=? AND source='llm'")
+      .all(t.name).map(r => +r.src);
+    // 章节分布（封顶 8：代表性分布，与 getCatalogSummary 的 chMap 同语义）
+    const chRows = db.prepare(`SELECT c.chapter ch, COUNT(*) n FROM edges e JOIN chunks c ON c.id = +e.src
+      WHERE e.kind='belongs' AND e.source='llm' AND e.dst=? AND c.chapter IS NOT NULL AND c.chapter != ''
+      GROUP BY c.chapter ORDER BY n DESC`).all(t.name);
+    return {
+      cataloged: true, theme: t.name, note,
+      chunks: belongsIds.length,
+      chapters: chRows.slice(0, 8).map(r => ({ chapter: r.ch, n: r.n })),
+      chapters_total: chRows.length,
+      representative_chunks: representativeChunks(db, belongsIds),
+    };
+  } finally { db.close(); }
+}

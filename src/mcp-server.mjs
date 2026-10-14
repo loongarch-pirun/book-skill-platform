@@ -12,4 +12,4 @@ registerServerTools(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-log("book-skill MCP server ready (tools: list_books, list_catalog, query_book, query_library, save_skill, read_skill, list_skills)");
+log("book-skill MCP server ready (tools: list_books, list_catalog, get_person, get_theme, query_book, query_library, similar_chunks, save_skill, read_skill, list_skills)");

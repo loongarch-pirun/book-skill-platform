@@ -1,7 +1,8 @@
 // MCP 工具注册（stdio server 与测试客户端共用同一份注册逻辑）
 import { z } from "zod";
 import { listBooks, hybridSearch, routeAndSearch } from "./search.mjs";
-import { getCatalogSummary } from "./catalog.mjs";
+import { getCatalogSummary, getPersonDetail, getThemeDetail } from "./catalog.mjs";
+import { similarChunks } from "./similar.mjs";
 import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
 
 // 按 book 片段找书（与 query_book 同一套匹配；找不到返回 null 和可选书目）
@@ -43,6 +44,38 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
+  server.registerTool("get_person", {
+    title: "人物深查",
+    description: "按人物名深查某本书的编目：身份说明、书中写法（match_names）、出场块数、关系边（和谁什么关系），以及提到他/她的代表原文块（带章节/页码 + 80 字预览）。推荐动线：list_catalog 看全图 → get_person 摸到原文块 → query_book 取完整原文。",
+    inputSchema: {
+      book: z.string().describe("书名或书名片段，如 pride、论语"),
+      name: z.string().describe("人物名或名字片段，如 Elizabeth、达西"),
+    },
+  }, async ({ book, name }) => {
+    const matches = matchBook(book);
+    if (!matches.length)
+      return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
+    const out = getPersonDetail(matches[0].db, name);
+    out.book = matches[0].title;
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  server.registerTool("get_theme", {
+    title: "主题深查",
+    description: "按主题名深查某本书的编目：主题说明、覆盖块数、章节分布（这块主题集中在哪几章）、代表原文块（带章节/页码 + 80 字预览）。推荐动线：list_catalog 看全图 → get_theme 摸到原文块 → query_book 取完整原文。",
+    inputSchema: {
+      book: z.string().describe("书名或书名片段，如 pride、论语"),
+      name: z.string().describe("主题名或名字片段，如 pemberley、婚礼"),
+    },
+  }, async ({ book, name }) => {
+    const matches = matchBook(book);
+    if (!matches.length)
+      return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
+    const out = getThemeDetail(matches[0].db, name);
+    out.book = matches[0].title;
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
   server.registerTool("query_book", {
     title: "单书检索",
     description: "在指定的某一本书里检索。回答带页码（PDF）或章节（epub/docx）定位，原文一字不改。book 参数可用书名片段匹配。人物关系类问题建议先用 list_catalog 看人物表和关系网。",
@@ -79,13 +112,31 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
+  server.registerTool("similar_chunks", {
+    title: "相似块查询（以块找块）",
+    description: "给一个块号或一句话，用向量找全书最相似的 N 块——回答「这段话还有哪里讲过类似的事」。chunk_id 入口纯库内余弦（零模型、最快）；text 入口需现场编码查询，引擎与书库不一致时直接报错而不是给垃圾分。结果带章节/页码，可直接引用。",
+    inputSchema: {
+      book: z.string().describe("书名或书名片段，如 pride、论语"),
+      chunk_id: z.number().int().optional().describe("参照块号（query_book 结果里的 id）"),
+      text: z.string().optional().describe("参照的一段话（与 chunk_id 二选一）"),
+      topN: TOPN_SCHEMA,
+    },
+  }, async ({ book, chunk_id, text, topN }) => {
+    const matches = matchBook(book);
+    if (!matches.length)
+      return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
+    const out = await similarChunks(matches[0].db, { chunkId: chunk_id, text, topN: clampTopN(topN) });
+    out.book = matches[0].title;
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
   server.registerTool("save_skill", {
     title: "技能落盘",
     description: "把蒸馏好的技能文件集写入 skills/ 目录（SKILL.md + chapters/ + 可选 glossary/patterns/cheatsheet）。整包提交（幂等覆盖）。落盘前做两道校验：结构校验（slug/路径白名单/frontmatter）+ 引用回源验证——blockquote 里的「〔书名·章节〕」引文会到 library 原文比对，造假整包拒收并指出造假位置。更新已有技能：先 read_skill 取全文，修改后整包重交。引用规则：原文照抄检索结果（繁体照抄），行尾加〔别名·章节〕，别名必须是 SKILL.md frontmatter sources 里声明的映射。",
     inputSchema: {
       slug: z.string().describe("技能标识，小写字母/数字/连字符，如 daodejing；中文写进 frontmatter title"),
       files: z.array(z.object({
-        path: z.string().describe("相对路径：SKILL.md | chapters/chNN-小写连字符.md | glossary.md | patterns.md | cheatsheet.md"),
+        path: z.string().describe("相对路径：SKILL.md | chapters/chNN-小写连字符.md | glossary.md | patterns.md | cheatsheet.md | catalog.json"),
         content: z.string().describe("完整文件内容（markdown）"),
       })).min(1).max(120).describe("整包文件集，必须包含 SKILL.md"),
     },

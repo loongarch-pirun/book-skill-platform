@@ -6,7 +6,8 @@ import path from "node:path";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
-import { validateResult, loadCatalogSignal, rollbackCatalog, buildPromptText } from "../src/lib/catalog.mjs";
+import { validateResult, loadCatalogSignal, rollbackCatalog, buildPromptText, getPersonDetail, getThemeDetail } from "../src/lib/catalog.mjs";
+import { generateSkillScaffold } from "../src/lib/catalog-skill.mjs";
 
 let failed = 0;
 const assert = (cond, msg) => { console.log((cond ? "PASS" : "FAIL") + " - " + msg); if (!cond) failed++; };
@@ -89,6 +90,49 @@ assert(sigNone.hit.size === 0, `无关问题零误伤: 命中 ${sigNone.hit.size
 const now = db.prepare("SELECT COUNT(*) n, IFNULL(SUM(LENGTH(text)),0) b FROM chunks").get();
 assert(now.n === +meta.catalog_chunk_count && now.b === +meta.catalog_text_bytes,
   `原文保真: ${now.n} 块 / ${now.b} 字节 == 入库基线`);
+
+// 7b) 骨架自动生成（技能×编目融合 P-B）：章节表/主题/人物全从库里查出——查出来的是真值，手写的才吹牛
+const realChapters = db.prepare("SELECT COUNT(*) n FROM chunks WHERE chapter IS NOT NULL AND chapter != '' GROUP BY chapter").all().length;
+const scaf = generateSkillScaffold("pride");
+assert(scaf.cataloged === true && scaf.chunks_total === +meta.chunk_count && scaf.chapters_total === realChapters,
+  `骨架: ${scaf.chapters_total} 章 / ${scaf.chunks_total} 块 == 库里实际值（真值，不靠手写）`);
+const cat = JSON.parse(scaf.files.find(f => f.path === "catalog.json").content);
+assert(cat.themes.length === 12 && cat.persons.length === 25 && cat.relations.length === 26,
+  `骨架 catalog.json: ${cat.themes.length} 主题 / ${cat.persons.length} 人物 / ${cat.relations.length} 关系（与库一致）`);
+assert(cat.chapters.length === realChapters && cat.chapters.every(c => c.chunks > 0),
+  `骨架: 章节表 ${cat.chapters.length} 行全从 chunks 查出（每章带真实块数）`);
+assert(cat.chapters.every(c => /^ch\d{2}-[a-z0-9-]+\.md$/.test(c.suggested_file)), "骨架: 建议文件名合规（chNN-slug.md）");
+const bigPerson = cat.persons.find(p => p.mention_count > 50);
+assert(!!bigPerson && bigPerson.chunk_ids.length === 50,
+  `骨架: 人物 chunk 锚点封顶 50（${bigPerson?.name} 出场 ${bigPerson?.mention_count} 块 → 只存 ${bigPerson?.chunk_ids.length} 个锚点，防撑爆包）`);
+const scafMd = scaf.files.find(f => f.path === "SKILL.md").content;
+assert(scafMd.includes("sources:") && scafMd.includes(scaf.book_id), "骨架 SKILL.md: frontmatter sources 填真值");
+assert(!/ch\d{2}-[a-z0-9-]+\.md/.test(scafMd),
+  "骨架 SKILL.md: 章节表不写 .md 文件名（否则撞 coverageCheck 的 broken-reference 校验——文件名只在 catalog.json 里）");
+const scafMiss = generateSkillScaffold("不存在的书");
+assert(scafMiss.error === "book-not-found" && Array.isArray(scafMiss.available), "骨架: 书名未命中返回错误 + 书目清单");
+
+// 7c) 人物深查（P-D）：卡罗琳——身份/书中写法/关系边/提到她代表原文块
+const car = getPersonDetail(ppDb, "Caroline Bingley");
+assert(car.cataloged === true && car.person === "Caroline Bingley" && car.match_names.length >= 1 && car.mention_chunks > 10,
+  `人物深查: ${car.person} 出场 ${car.mention_chunks} 块 / 书中写法 ${car.match_names.join("、")}`);
+assert(car.relations.some(r => r.other === "Jane Bennet" && /拆散|拆开/.test(r.note)),
+  `人物深查: 关系边可查（与 ${car.relations[0]?.other}：${car.relations[0]?.note}）`);
+assert(car.representative_chunks.length === Math.min(5, car.mention_chunks)
+  && car.representative_chunks.every(c => c.chunk && c.preview && c.loc !== undefined),
+  `人物深查: 代表块 ${car.representative_chunks.map(c => "#" + c.chunk).join(",")}（均匀抽样，带定位+预览）`);
+const carMiss = getPersonDetail(ppDb, "Zaphod Beeblebrox");
+assert(carMiss.error === "person-not-found" && carMiss.available.length === 25, "人物深查: 名字未命中返回候选清单");
+
+// 7d) 主题深查（P-D）
+const tName = db.prepare("SELECT name FROM nodes WHERE type='theme' AND source='llm' ORDER BY rowid LIMIT 1").get().name;
+const th = getThemeDetail(ppDb, tName);
+assert(th.cataloged === true && th.theme === tName && th.chunks > 0 && th.chapters.length > 0,
+  `主题深查: ${tName} 覆盖 ${th.chunks} 块 / 章节分布 ${th.chapters.map(c => c.chapter + "×" + c.n).join(" ")}`);
+assert(th.representative_chunks.length === Math.min(5, th.chunks)
+  && th.representative_chunks.every(c => c.chunk && c.preview), "主题深查: 代表块带块号与预览");
+const thMiss = getThemeDetail(ppDb, "不存在的主题");
+assert(thMiss.error === "theme-not-found" && thMiss.available.length === 12, "主题深查: 名字未命中返回候选清单");
 db.close();
 
 // 8) 回滚演练（临时副本上）：rollbackCatalog 整批删 llm 层，rule 层与原文不动
