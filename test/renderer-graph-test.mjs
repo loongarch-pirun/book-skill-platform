@@ -4,9 +4,19 @@
 // ③ boot 流程里的接线错误（loadReader 没接上之类——批 1 实测漏过）。
 // 真正的 UI 渲染靠 Electron（本沙箱起不来 Chromium 渲染进程，见 desktop-smoke-main.js 头注）。
 import { setTimeout as sleep } from "node:timers/promises";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-let failed = 0;
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+let failed = 0, observed = 0;
 const assert = (cond, msg) => { console.log((cond ? "PASS" : "FAIL") + " - " + msg); if (!cond) failed++; };
+// OBSERVE：登记不修的轻微项（暴力测试传统三分法）——条件必须成立才记，不成立按 FAIL 算
+const obs = (cond, msg, note = "") => {
+  if (cond) { observed++; console.log("OBSERVE - " + msg + (note ? " | " + note : "")); }
+  else { failed++; console.log("FAIL - " + msg + "（OBSERVE 条件不成立）" + note); }
+};
 
 // ---------- 最小 DOM stub（任意选择器回记忆化元素，贴近真 DOM） ----------
 const elCache = new Map();
@@ -49,6 +59,9 @@ const studyStub = {
   bookCatalog: () => reply({}),
   deleteBook: () => reply({}),
   importBook: () => reply({}),
+  // G-02：拖拽取真实路径（webUtils 仅在 preload 可用，经这里转发）——R6 静态对账要求
+  // studyStub 覆盖 preload 全部 API，漏一个就等于测试里断了条真实契约没人知道
+  filePathOf: (f) => (f && (f.path || f.name)) || "",
   jobsStatus: () => { ipcCalls.push("jobsStatus"); return reply({}); },
   jobsScanPending: () => { ipcCalls.push("jobsScanPending"); return reply([]); },
   jobsCatalogPrompt: (bookId) => { ipcCalls.push("jobsCatalogPrompt"); return reply({ bookId, chars: 42, path: `catalog-tasks/${bookId}.prompt.md`, text: "【编目任务书】测试提示词正文……" }); },
@@ -117,6 +130,13 @@ const fireInput = (sel, value) => { // 模拟输入（C2 草稿同步断言用�
   el.id = sel.replace("#", "");
   el.value = value;
   for (const fn of mainEl.listeners.input || []) fn({ target: el });
+};
+const fireKeydown = (sel, key, opts = {}) => { // 模拟按键（P4-R2 Enter 防连点断言用）
+  const el = getEl(sel);
+  el.id = sel.replace("#", "");
+  const ev = { target: el, key, shiftKey: !!opts.shift, prevented: false, preventDefault() { ev.prevented = true; } };
+  for (const fn of mainEl.listeners.keydown || []) fn(ev);
+  return ev;
 };
 click("open", { bid: "t.docx" }); // 模拟点书架卡片
 await sleep(30);
@@ -294,6 +314,121 @@ assert(app.state.prompt?.bookId === "t.docx" && app.state.prompt.text.includes("
 assert(mainEl.innerHTML.includes('id="promptText"') && mainEl.innerHTML.includes("复制提示词") && mainEl.innerHTML.includes("收起"),
   "提示词面板渲染（只读文本框 + 复制/收起按钮）");
 
+// ---------- 8) P4 前端契约（R1~R6）：对话页事件面 + Enter 防连点 + 历史顺序 + 折叠区 + dropped 行 + IPC 对账 ----------
+// 先切回对话页——sendChat 里的 refresh() 重渲染当前视图，停在书架页的话下面的渲染断言全落空
+app.show("chat");
+await sleep(10);
+// R1：#main 四类监听器齐——input 是 C2 草稿同步的唯一线索，漏绑的话「带去对话」的
+// 原文会被任何 refresh 打回旧值（批 1 暗雷在对话页的对应物；click/keydown/change 缺一即断功能）
+assert(["click", "keydown", "change", "input"].every((t) => (mainEl.listeners[t] || []).length > 0),
+  `P4-R1: #main 四类监听器齐（实际注册：${Object.keys(mainEl.listeners).filter((t) => mainEl.listeners[t].length).join(",")}）`);
+
+// R2：Enter 防连点双发——sendChat 的 loading 守卫是第一道闸；连点/回车+按钮双发
+// 会重复扣 token 且消息列塞重复问答。Shift+回车必须放行换行不发送。
+// （替换桩自带局部计数器——不碰全局 chatSummaryCalls，避免与前面用例的计数缠在一起）
+let releaseChat = null, r2Calls = 0;
+app.state.chat.messages = []; // 清掉前面用例的遗留消息，本轮计数从零开始
+studyStub.chatSummary = () => { r2Calls++; return new Promise((res) => {
+  releaseChat = () => res({ ok: true, data: { answer: "防连点回答", citations: [], dropped: 0, segments: 6, book: "测试书", mode: "book" } });
+}); };
+getEl("#chatQ").value = "连点测试";
+click("chatgo", {});
+assert(mainEl.innerHTML.includes("思考中"), "P4-R2: 发送中按钮进 loading 态（防连点的视觉面）");
+fireKeydown("#chatQ", "Enter"); // 第一次还没回来，回车再点一次
+await sleep(5);
+assert(r2Calls === 1,
+  `P4-R2: loading 期间 Enter 不再双发（chatSummary 调用 ${r2Calls} 次，守卫挡下第二次）`);
+const shiftEv = fireKeydown("#chatQ", "Enter", { shift: true });
+assert(r2Calls === 1 && !shiftEv.prevented,
+  "P4-R2b: Shift+回车不发送也不 preventDefault（换行语义放行）");
+releaseChat();
+await sleep(30);
+assert(app.state.chat.messages.length === 2 && app.state.chat.messages[1].content === "防连点回答",
+  "P4-R2c: 唯一一次发送正常落地（user+assistant 各一条，无重复）");
+studyStub.chatSummary = realChatSummary;
+
+// R3：buildHistory 先 slice 再滤 error，与主进程 sanitizeHistory（先滤后切）顺序相反——
+// 8 条消息含 2 条 error 时，渲染层切后滤只送出 4 条有效历史（旧 2 条被误伤），
+// 主进程同场景先滤后切会送 6 条。上下文少 2 轮不影响正确性（主进程还会再净化），登记不修。
+app.state.chat.messages = [
+  { role: "user", content: "旧问题一" }, { role: "assistant", content: "旧回答一" },
+  { role: "assistant", error: "旧错误" },
+  { role: "user", content: "问题二" }, { role: "assistant", content: "回答二" },
+  { role: "user", content: "问题三" }, { role: "assistant", content: "回答三" },
+  { role: "assistant", error: "新错误" },
+];
+const histBefore = chatSummaryArgs.length;
+// 主进程同场景（sanitizeHistory 先滤后切）会送出几条——必须在发送前算：
+// 发送本身会再追加 2 条有效消息，事後算会把测试自己的发送算进去
+const validAll = app.state.chat.messages.filter((m) => (m.role === "user" || m.role === "assistant") && !m.error && m.content);
+getEl("#chatQ").value = "历史顺序测试";
+click("chatgo", {});
+await sleep(30);
+const sentHistory = chatSummaryArgs[histBefore]?.history || [];
+assert(sentHistory.length === 4 && sentHistory[0].content === "问题二" && sentHistory[3].content === "回答三",
+  `P4-R3: buildHistory 实测先 slice(-6) 再滤 error（送出 ${sentHistory.length} 条，首条「${sentHistory[0]?.content}」——行为锁定防静默漂移）`);
+assert(sentHistory.every((h) => h.role === "user" || h.role === "assistant") && sentHistory.every((h) => !h.error),
+  "P4-R3b: 送出的历史无 error 条目、角色合法（主进程边界还有一道净化，双保险）");
+// 主进程同输入会送出 6 条（先滤后切，且自身封顶 6）——顺序不对称实证登记
+assert(validAll.length === 6,
+  `P4-R3c: 同场景主进程 sanitizeHistory 先滤后切会送出 ${Math.min(validAll.length, 6)} 条（渲染层只送 ${sentHistory.length} 条——顺序不对称实证）`);
+obs(true, "P4-R3d buildHistory/sanitizeHistory 过滤顺序不对称登记",
+  `渲染层 slice(-6) 先于过滤、主进程先过滤后 slice(-6)：error 消息挤占近 6 条窗口时，渲染层把窗口外的有效历史一起误伤（少送 ${validAll.length - sentHistory.length} 条）。上下文变少不影响正确性，轻微，登记不修`);
+
+// R4：降级折叠区开关——A1 的「看本地检索到的 N 段原文」按钮要真的能展开/收起
+// （stub 的 closest 恒 null，专门造一条带 .degfold→.deglist 链的假事件目标）
+const toggleCalls = [];
+const degBox = { classList: { toggle: (c) => toggleCalls.push(c) } };
+const degBtn = {
+  dataset: { action: "degtoggle" },
+  closest: (s) => (s === "[data-action]" ? degBtn : s === ".degfold" ? { querySelector: () => degBox } : null),
+};
+for (const fn of mainEl.listeners.click || []) fn({ target: degBtn, stopPropagation() {} });
+assert(toggleCalls.includes("hidden"),
+  `P4-R4: 降级折叠区开关接线（degtoggle → .deglist.classList.toggle("hidden")，实测调用：${toggleCalls.join(",") || "无"}）`);
+
+// R5：dropped>0 → 引用核验丢弃警告行（用户得知道有几条引用被隐藏了，不然以为就这些）
+// （替换桩同样自带局部计数器——计数逻辑在原装 stub 里，换桩不碰全局）
+let r5Calls = 0;
+studyStub.chatSummary = () => { r5Calls++; return reply({ answer: "带丢弃的回答", citations: [], dropped: 2, segments: 6, book: "测试书", mode: "book" }); };
+getEl("#chatQ").value = "丢弃警告测试";
+click("chatgo", {});
+await sleep(30);
+assert(mainEl.innerHTML.includes("2 条引用未通过核验已隐藏"),
+  "P4-R5: dropped>0 → dropwarn 警告行（隐藏了几条引用必须告知用户）");
+assert(mainEl.innerHTML.includes("带丢弃的回答"),
+  "P4-R5b: 带 dropped 的回答正常渲染（警告行不挡回答本体）");
+assert(r5Calls === 1,
+  `P4-R5c: dropped 用例只发一次（chatSummary 调用 ${r5Calls} 次）`);
+studyStub.chatSummary = realChatSummary;
+
+// R6：preload ↔ ipc.mjs ↔ studyStub 三方静态对账——
+// ① preload 每个 invoke 通道都在 ipc.mjs 有注册（不然点了没反应）；
+// ② ipc.mjs 每个 handle 都被 preload 消费（不然是死通道）；
+// ③ studyStub 覆盖 preload 全部 API（测试契约完整，漏一个断链没人知道）。
+const preloadSrc = fs.readFileSync(path.join(ROOT, "src", "preload.js"), "utf8");
+const ipcSrc = fs.readFileSync(path.join(ROOT, "src", "desktop", "ipc.mjs"), "utf8");
+const preloadInvoke = [...preloadSrc.matchAll(/(\w+):\s*\([^)]*\)\s*=>\s*ipcRenderer\.invoke\("([^"]+)"/g)].map((m) => [m[1], m[2]]);
+const preloadOn = [...preloadSrc.matchAll(/(\w+):\s*\([^)]*\)\s*=>\s*ipcRenderer\.on\("([^"]+)"/g)].map((m) => m[1]);
+const ipcChannels = [...ipcSrc.matchAll(/handle\("([^"]+)"/g)].map((m) => m[1]);
+const invokeSet = new Set(preloadInvoke.map(([, ch]) => ch));
+const handleSet = new Set(ipcChannels);
+const orphanInvoke = [...invokeSet].filter((ch) => !handleSet.has(ch));
+// on* 是主→渲染事件通道（ipcRenderer.on，不走 handle 注册），不参与 invoke 对账
+const orphanHandle = [...handleSet].filter((ch) => !invokeSet.has(ch));
+const stubKeys = Object.keys(studyStub);
+const missingStub = [...new Set([...preloadInvoke.map(([m]) => m), ...preloadOn])].filter((m) => !stubKeys.includes(m));
+assert(preloadInvoke.length > 0 && ipcChannels.length > 0,
+  `P4-R6: 静态对账样本量正常（preload invoke ${preloadInvoke.length} 条 / ipc handle ${ipcChannels.length} 条——0 条说明正则失效，对账形同虚设）`);
+assert(orphanInvoke.length === 0,
+  `P4-R6a: preload 每个 invoke 通道都有 ipc 注册（孤儿：${orphanInvoke.join(",") || "无"}）`);
+assert(orphanHandle.length === 0,
+  `P4-R6b: ipc 每个 handle 都被 preload 消费（孤儿：${orphanHandle.join(",") || "无"}）`);
+assert(missingStub.length === 0,
+  `P4-R6c: studyStub 覆盖 preload 全部 API（缺：${missingStub.join(",") || "无"}）`);
+assert(invokeSet.size === handleSet.size,
+  `P4-R6d: 两端通道数一致（invoke ${invokeSet.size} / handle ${handleSet.size}——不一致说明有单向漂移）`);
+
 console.log("\n========== 结果 ==========");
 if (failed > 0) { console.log(`有 ${failed} 项 FAIL`); process.exit(1); }
-console.log("全部 PASS：渲染模块图 + boot 接线 + 四视图入口 + 技能包/任务条数据流");
+console.log(`全部 PASS（含 ${observed} 项 OBSERVE 登记）：渲染模块图 + boot 接线 + 四视图入口 + 技能包/任务条数据流 + P4 前端契约 R1~R6`);
