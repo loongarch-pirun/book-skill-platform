@@ -572,21 +572,36 @@ export function getCatalogSummary(dbPath, themeFilter) {
 // 与 getCatalogSummary 同层的只读查询：把"看一眼全图"升级成"按人/按主题摸到原文块"。
 // 检索层零改动——这两个函数是浏览接口，不是检索信号（loadCatalogSignal 一行不动）。
 const REP_CHUNKS = 5;
+// V2-D06 族（暴力测试 P2 修）：catalogGuard 与深查主体的失败返回统一带 reason——
+// 坏库（查询抛 SQLITE_NOTADB）/ 无 nodes 表 / 旧 schema / 无对应类型节点四种情况
+// 老逻辑部分同形 {cataloged:false}，调用方无法区分「库坏了」与「没编目」。
 function catalogGuard(db) {
-  const tables = db.prepare("SELECT name FROM sqlite_master WHERE name IN ('nodes','edges')").all().map(r => r.name);
-  if (!tables.includes("nodes") || !tables.includes("edges")) return { cataloged: false };
+  let tables;
+  try {
+    tables = db.prepare("SELECT name FROM sqlite_master WHERE name IN ('nodes','edges')").all().map(r => r.name);
+  } catch { return { cataloged: false, reason: "db-broken" }; }
+  if (!tables.includes("nodes") || !tables.includes("edges")) return { cataloged: false, reason: "no-nodes-table" };
   const nodeCols = db.prepare("PRAGMA table_info(nodes)").all().map(c => c.name);
-  if (!nodeCols.includes("source")) return { cataloged: false, note: "这本书还没有编目（可运行 catalog-export / catalog-import 流程）" };
+  if (!nodeCols.includes("source")) return { cataloged: false, reason: "old-schema", note: "这本书还没有编目（可运行 catalog-export / catalog-import 流程）" };
   return null;
 }
 
-// 节点名匹配：精确 → 忽略大小写 → 片段包含（片段命中时给出候选清单，避免智能体猜错名字白跑一趟）
+// 节点名匹配：精确 → 忽略大小写 → 片段包含。
+// V2-D01（暴力测试 P2 修，本轮最严重）：空名字（""/纯空白/null/undefined）在第三级
+// includes("") 恒真 → 稳定返回第一个人/主题——防幻觉工具变幻幻入口。空名直接不匹配。
+// V2-D14（暴力测试 P2 修）：模糊命中必须告知（matched_by），否则智能体以为精确命中、
+// 注释里承诺的候选清单也没兑现——文档/代码不符。
 function matchNode(rows, name) {
-  const q = String(name || "").trim().toLowerCase();
-  return rows.find(x => x.name === name)
-    || rows.find(x => x.name.toLowerCase() === q)
-    || rows.find(x => x.name.toLowerCase().includes(q))
-    || null;
+  const raw = String(name ?? "").trim();
+  if (!raw) return null;
+  const q = raw.toLowerCase();
+  const exact = rows.find(x => x.name === raw);
+  if (exact) return { node: exact, matched_by: "exact" };
+  const lower = rows.find(x => x.name.toLowerCase() === q);
+  if (lower) return { node: lower, matched_by: "case-insensitive" };
+  const fuzzy = rows.find(x => x.name.toLowerCase().includes(q));
+  if (fuzzy) return { node: fuzzy, matched_by: "fuzzy" };
+  return null;
 }
 
 // 代表块：均匀抽样（首/25%/50%/75%/末）——覆盖全书弧线，比"取前 5 块"信息量大；
@@ -611,14 +626,15 @@ function representativeChunks(db, ids, n = REP_CHUNKS) {
 // 人物深查：身份 / 书中写法 / 出场块数 / 关系边 / 提到他她的代表原文块
 export function getPersonDetail(dbPath, name) {
   let db;
-  try { db = new Database(dbPath, { readonly: true }); } catch { return { cataloged: false }; }
+  try { db = new Database(dbPath, { readonly: true }); } catch { return { cataloged: false, reason: "db-broken" }; }
   try {
     const g = catalogGuard(db);
     if (g) return g;
     const persons = db.prepare("SELECT name, ref FROM nodes WHERE type='person' AND source='llm' ORDER BY rowid").all();
-    if (!persons.length) return { cataloged: false, note: "这本书还没有编目（可运行 catalog-export / catalog-import 流程）" };
-    const p = matchNode(persons, name);
-    if (!p) return { cataloged: true, error: "person-not-found", name: String(name || ""), available: persons.map(x => x.name) };
+    if (!persons.length) return { cataloged: false, reason: "no-such-type", note: "这本书还没有编目（可运行 catalog-export / catalog-import 流程）" };
+    const m = matchNode(persons, name);
+    if (!m) return { cataloged: true, error: "person-not-found", name: String(name ?? ""), matched_by: null, available: persons.map(x => x.name) };
+    const p = m.node;
     let info = {};
     try { info = JSON.parse(p.ref || "{}"); } catch { }
     const mentionIds = db.prepare("SELECT src FROM edges WHERE kind='mention' AND dst_type='person' AND dst=? AND source='llm'")
@@ -629,39 +645,50 @@ export function getPersonDetail(dbPath, name) {
         other: e.src === p.name ? e.dst : e.src, // 关系另一头（智能体追问"那还有谁"用得上）
       }));
     return {
-      cataloged: true, person: p.name, note: info.note || "",
+      cataloged: true, person: p.name, note: info.note || "", matched_by: m.matched_by,
       match_names: info.match_names || [], mention_count: info.mention_count || 0,
       mention_chunks: mentionIds.length,
       relations, representative_chunks: representativeChunks(db, mentionIds),
     };
+  } catch {
+    // V2-D06：垃圾文件/损坏库——new Database 打开不抛，首次查询才抛 SQLITE_NOTADB，
+    // 老逻辑裸崩英文堆栈（D-11 家族复发）。整面包 try，人话 reason。
+    return { cataloged: false, reason: "db-broken", note: "书库文件损坏或不是有效数据库——重新导入这本书" };
   } finally { db.close(); }
 }
 
 // 主题深查：说明 / 覆盖块数 / 章节分布 / 代表原文块
 export function getThemeDetail(dbPath, name) {
   let db;
-  try { db = new Database(dbPath, { readonly: true }); } catch { return { cataloged: false }; }
+  try { db = new Database(dbPath, { readonly: true }); } catch { return { cataloged: false, reason: "db-broken" }; }
   try {
     const g = catalogGuard(db);
     if (g) return g;
     const themes = db.prepare("SELECT name, ref FROM nodes WHERE type='theme' AND source='llm' ORDER BY rowid").all();
-    if (!themes.length) return { cataloged: false, note: "这本书还没有编目（可运行 catalog-export / catalog-import 流程）" };
-    const t = matchNode(themes, name);
-    if (!t) return { cataloged: true, error: "theme-not-found", name: String(name || ""), available: themes.map(x => x.name) };
+    if (!themes.length) return { cataloged: false, reason: "no-such-type", note: "这本书还没有编目（可运行 catalog-export / catalog-import 流程）" };
+    const m = matchNode(themes, name);
+    if (!m) return { cataloged: true, error: "theme-not-found", name: String(name ?? ""), matched_by: null, available: themes.map(x => x.name) };
+    const t = m.node;
     let note = "";
     try { note = JSON.parse(t.ref || "{}").note || ""; } catch { }
-    const belongsIds = db.prepare("SELECT src FROM edges WHERE kind='belongs' AND dst=? AND source='llm'")
+    // V2-D11（暴力测试 P2 修）：belongs 查询补 dst_type='theme'——老逻辑不过滤，
+    // 边表若混入其他 dst_type 的 belongs 边（dst 恰好是主题名）块数虚高。
+    // 与 getPersonDetail 的 mention 查询（带 dst_type='person'）对称。
+    const belongsIds = db.prepare("SELECT src FROM edges WHERE kind='belongs' AND dst_type='theme' AND dst=? AND source='llm'")
       .all(t.name).map(r => +r.src);
-    // 章节分布（封顶 8：代表性分布，与 getCatalogSummary 的 chMap 同语义）
+    // 章节分布（封顶 8：代表性分布，与 getCatalogSummary 的 chMap 同语义；dst_type 同步补）
     const chRows = db.prepare(`SELECT c.chapter ch, COUNT(*) n FROM edges e JOIN chunks c ON c.id = +e.src
-      WHERE e.kind='belongs' AND e.source='llm' AND e.dst=? AND c.chapter IS NOT NULL AND c.chapter != ''
+      WHERE e.kind='belongs' AND e.dst_type='theme' AND e.source='llm' AND e.dst=? AND c.chapter IS NOT NULL AND c.chapter != ''
       GROUP BY c.chapter ORDER BY n DESC`).all(t.name);
     return {
-      cataloged: true, theme: t.name, note,
+      cataloged: true, theme: t.name, note, matched_by: m.matched_by,
       chunks: belongsIds.length,
       chapters: chRows.slice(0, 8).map(r => ({ chapter: r.ch, n: r.n })),
       chapters_total: chRows.length,
       representative_chunks: representativeChunks(db, belongsIds),
     };
+  } catch {
+    // V2-D06：同 getPersonDetail——损坏库人话化不裸崩
+    return { cataloged: false, reason: "db-broken", note: "书库文件损坏或不是有效数据库——重新导入这本书" };
   } finally { db.close(); }
 }

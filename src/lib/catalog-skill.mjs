@@ -16,8 +16,11 @@ const MAX_CHAPTERS_PER_THEME = 8;
 // 按书名片段找书（与 register-tools.matchBook 同语义；独立实现避免循环依赖）
 // includeDisabled:true——骨架生成是本地创作工具（人/智能体给自己的书写包），不是问答检索：
 // 用户在「技能开关」关掉某本书（H3）不应挡住给它生成骨架，否则开关关一圈连脚手架都出不来
+// V2-D10（暴力测试 P2 修）：空 query 时 includes("") 恒真 → 命中全部书，matches[0]
+// 取决于 readdirSync 顺序，结果不确定。空 query 直接不匹配，走 book-not-found 候选清单。
 function matchBook(book, libDir) {
-  const q = String(book).toLowerCase();
+  const q = String(book ?? "").trim().toLowerCase();
+  if (!q) return [];
   return listBooks(libDir, { includeDisabled: true }).filter(b => b.id.toLowerCase().includes(q) || b.title.toLowerCase().includes(q));
 }
 
@@ -35,9 +38,15 @@ function chapterSlug(chapter, i) {
 export function generateSkillScaffold(bookQuery, { libDir } = {}) {
   const matches = matchBook(bookQuery, libDir);
   if (!matches.length)
-    return { error: "book-not-found", available: listBooks(libDir).map(b => b.title) };
+    // V2-D13（暴力测试 P2 修）：available 与 matchBook 同口径带 includeDisabled——
+    // 老逻辑默认过滤，被关书「匹配可见、建议隐身」自相矛盾
+    return { error: "book-not-found", available: listBooks(libDir, { includeDisabled: true }).map(b => b.title) };
   const b = matches[0];
-  const db = new Database(b.db, { readonly: true });
+  let db;
+  // V2-D06（暴力测试 P2 修）：new Database 对垃圾文件打开不抛、首次查询才抛
+  // SQLITE_NOTADB（D-11 家族）——打开与主体双重兜底，人话 error 不裸崩
+  try { db = new Database(b.db, { readonly: true }); }
+  catch { return { error: "book-db-broken", book: b.id, hint: "书库文件损坏或无法打开——重新导入这本书" }; }
   try {
     // 章节表：从 chunks 实际值 GROUP BY（真值源头，不是手写）
     const hasPage = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name).includes("page");
@@ -64,7 +73,9 @@ export function generateSkillScaffold(bookQuery, { libDir } = {}) {
       relations = db.prepare("SELECT src, dst, ref FROM edges WHERE kind='relation' AND source='llm' ORDER BY rowid").all()
         .map(e => ({ a: e.src, b: e.dst, note: e.ref || "" }));
       // belongs/mention 边 → 主题/人物的 chunk 锚点（封顶）与主题章节分布
-      for (const r of db.prepare("SELECT dst theme, src FROM edges WHERE kind='belongs' AND source='llm'").all()) {
+    // V2-D11（暴力测试 P2 修）：belongs 查询补 dst_type='theme'，与 getThemeDetail 对称——
+    // 边表混入异类型 belongs 边（dst 恰好是主题名）会污染主题锚点
+      for (const r of db.prepare("SELECT dst theme, src FROM edges WHERE kind='belongs' AND dst_type='theme' AND source='llm'").all()) {
         if (!belongsByTheme.has(r.theme)) belongsByTheme.set(r.theme, []);
         belongsByTheme.get(r.theme).push(+r.src);
       }
@@ -156,6 +167,13 @@ blockquote 引用原文时照抄检索结果（繁体照抄，勿自行简转繁
       ],
       next: "填 description/使用建议 → 按需建 chapters/chNN-*.md（含引文）→ save_skill 提交（三道质检）",
     };
+  } catch (e) {
+    // V2-D06（暴力测试 P2 修）：坏库/缺表的失败形态是「打开不抛、首次 prepare 才抛」
+    // （SQLITE_NOTADB / no such table）——打开层 try 兜不住，主体整包再兜一层：
+    // SqliteError 转人话 book-db-broken；非 SQL 错误是真 bug，原样抛出不留案底
+    if (e?.name === "SqliteError" || String(e?.code || "").startsWith("SQLITE_"))
+      return { error: "book-db-broken", book: b.id, hint: "书库结构不完整或无法读取——重新导入这本书" };
+    throw e;
   } finally {
     db.close();
   }
