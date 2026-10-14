@@ -15,6 +15,7 @@ const ROOT = path.join(__dirname, "..");
 const Database = require("better-sqlite3");
 
 const { getPersonDetail, getThemeDetail, validateResult, importCatalog, linkEntities, entityAliasTerms, expandNeighborhood } = await import("../src/lib/catalog.mjs");
+const { lookupEntry } = await import("../src/lib/lookup.mjs");
 const { assertEngine, DEFAULT_EMBED } = await import("../src/lib/models.mjs");
 const { generateSkillScaffold, MAX_CHUNK_IDS } = await import("../src/lib/catalog-skill.mjs");
 
@@ -433,6 +434,76 @@ console.log("\n--- P2-C expandNeighborhood ---");
   safeRm(tmpC);
 }
 
+// ========== P4 lookup 工作资料寻址（MCP lookup 工具，纯浏览不喂检索） ==========
+console.log("\n--- P4 lookupEntry ---");
+{
+  const tmpL = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-p4-"));
+  const libL = path.join(tmpL, "library");
+  fs.mkdirSync(libL, { recursive: true });
+  // 合成"错误码表"：一级标题=错误码（每码 2 块），含前缀歧义对（E1001 vs E10010）+ 一个大章（截断用）
+  const chunksL = [
+    { id: 1, chapter: "E1001 连接超时", page: 3, text: "E1001：与服务器建立连接超时。请检查网络后重试。" },
+    { id: 2, chapter: "E1001 连接超时", page: 3, text: "处置：确认代理配置；若持续超时联系运维。" },
+    { id: 3, chapter: "E1002 参数缺失", page: 4, text: "E1002：请求缺少必填参数。" },
+    { id: 4, chapter: "E1002 参数缺失", page: 4, text: "处置：核对接口文档的参数表。" },
+    { id: 5, chapter: "E10010 连接被拒", page: 5, text: "E10010：目标端口拒绝连接。" },
+    { id: 6, chapter: "3.2 安装步骤", page: 6, text: "3.2 安装步骤：先解压，再执行 setup。" },
+    { id: 7, chapter: null, page: 7, text: "无章节正文。" },
+    { id: 8, chapter: "", page: 8, text: "空串章节正文。" },
+  ];
+  for (let i = 20; i < 65; i++) chunksL.push({ id: i, chapter: "BULK 大章", text: `批量块${i}` });
+  const pL = makeDb(libL, "errcodes.db", { chunks: chunksL });
+  const lk1 = lookupEntry(pL, "E1001 连接超时");
+  ok(lk1.matched_chapter === "E1001 连接超时" && lk1.match_level === "exact" && lk1.total === 2
+    && lk1.blocks.length === 2 && lk1.blocks[0].id === 1 && lk1.blocks[1].id === 2 && lk1.blocks[0].page === 3
+    && lk1.note === undefined,
+    `P4-1: 精确命中（${lk1.total} 块、id 升序、page 透传、单命中无 note）`);
+  const lk2 = lookupEntry(pL, "E1001");
+  ok(lk2.matched_chapter === "E1001 连接超时" && lk2.match_level === "prefix" && /命中 2 个章节/.test(lk2.note || ""),
+    `P4-2: 前缀命中含歧义对（E1001/E10010）→ 已选第一个 + note：${lk2.note}`);
+  const lk3 = lookupEntry(pL, "安装步骤");
+  ok(lk3.matched_chapter === "3.2 安装步骤" && lk3.match_level === "includes",
+    "P4-3: 包含命中（'安装步骤' ⊂ '3.2 安装步骤'）");
+  const lk4 = lookupEntry(pL, "e1002");
+  ok(lk4.matched_chapter === "E1002 参数缺失" && lk4.match_level === "prefix",
+    "P4-4: 大小写不敏感（'e1002' → 'E1002 参数缺失'，错误码场景刚需）");
+  const lk5 = lookupEntry(pL, "不存在的码");
+  ok(lk5.error === "not-found" && lk5.available.length === 5 && lk5.available_total === 5 && lk5.available[0] === "E1001 连接超时",
+    `P4-5: 未命中 → not-found + ${lk5.available?.length} 个候选章节（目录导航，按文档序）`);
+  const lk6 = lookupEntry(pL, "   ");
+  ok(lk6.error === "not-found" && lk6.available.length === 5,
+    "P4-6: 空白 key → not-found（D01 家族：空串 includes(\"\") 恒真守卫在 lookup 上不复发）");
+  const lk7 = lookupEntry(pL, "BULK 大章");
+  ok(lk7.blocks.length === 20 && lk7.total === 45 && /共 45 块/.test(lk7.note || ""),
+    `P4-7: 默认 maxBlocks=20 截断带说明（45→20：${lk7.note}）`);
+  ok(lookupEntry(pL, "BULK 大章", { maxBlocks: 99 }).blocks.length === 40
+    && lookupEntry(pL, "BULK 大章", { maxBlocks: 0 }).blocks.length === 20,
+    "P4-7b: maxBlocks 上夹 40（99→40）/ 0→默认 20（与 clampTopN 同款语义）");
+  // PDF 型（chapter 全 NULL/空串）→ no-chapters 指引改走 query_book
+  const pPdf = makeDb(libL, "pdf.db", { chunks: [
+    { id: 1, chapter: null, page: 1, text: "PDF 页 1" },
+    { id: 2, chapter: "", page: 2, text: "空串章" },
+  ] });
+  const lk8 = lookupEntry(pPdf, "任意");
+  ok(lk8.error === "no-chapters" && /query_book/.test(lk8.hint || ""),
+    `P4-8: chapter 全 NULL/空串 → no-chapters + hint（PDF 定位靠页码，指引改走 query_book）`);
+  const badL = path.join(libL, "bad.db");
+  fs.writeFileSync(badL, "definitely not a sqlite database");
+  ok(lookupEntry(badL, "x").error === "db-broken", "P4-9: 垃圾文件库 → db-broken（人话，不裸崩）");
+  // 未编目库（无 nodes/edges 表）也要能寻址——lookup 只依赖 chunks，与编目解耦
+  const bareL = path.join(libL, "bare.db");
+  {
+    const b = new Database(bareL);
+    b.exec("CREATE TABLE chunks(id INTEGER PRIMARY KEY, chapter TEXT, page INTEGER, text TEXT); CREATE TABLE meta(key TEXT, value TEXT);");
+    b.prepare("INSERT INTO chunks(id, chapter, page, text) VALUES(1, '1 概述', 1, '概述正文。')").run();
+    b.close();
+  }
+  const lk10 = lookupEntry(bareL, "1 概述");
+  ok(lk10.matched_chapter === "1 概述" && lk10.blocks.length === 1 && lk10.blocks[0].text === "概述正文。",
+    "P4-10: 未编目库（无 nodes/edges 表）也能寻址——lookup 只依赖 chunks（与编目解耦）");
+  safeRm(tmpL);
+}
+
 console.log();
-console.log(`=== catalog-fuzz(P2): ${pass} pass / ${fail} fail / ${observe} observe ===`);
+console.log(`=== catalog-fuzz(演进轮 P1.5/P2/P4): ${pass} pass / ${fail} fail / ${observe} observe ===`);
 process.exit(fail > 0 ? 1 : 0);

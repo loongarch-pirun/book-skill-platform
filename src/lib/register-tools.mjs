@@ -3,6 +3,7 @@ import { z } from "zod";
 import { listBooks, hybridSearch, routeAndSearch } from "./search.mjs";
 import { getCatalogSummary, getPersonDetail, getThemeDetail, expandNeighborhood } from "./catalog.mjs";
 import { similarChunks } from "./similar.mjs";
+import { lookupEntry } from "./lookup.mjs";
 import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
 
 // 按 book 片段找书（与 query_book 同一套匹配；找不到返回 null 和可选书目）
@@ -89,6 +90,23 @@ export function registerServerTools(server) {
     if (!matches.length)
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
     const out = expandNeighborhood(matches[0].db, name, { perNeighbor });
+    out.book = matches[0].title;
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  server.registerTool("lookup", {
+    title: "章节直达（工作资料寻址）",
+    description: "按章节标题/编号精确直达某章节的全部原文块（精确→前缀→包含三级匹配，如查错误码 E1001、条款号 3.2、流程步骤标题）。分工：查错误码/条款号/流程步骤标题用它精确直达；查概念/情节/术语解释用 query_book。文档需按 # 标题 约定导入才有章节可查（PDF 无章节、EPUB 章节值不可靠）。",
+    inputSchema: {
+      book: z.string().describe("书名或书名片段，如 员工手册、mengzi"),
+      key: z.string().describe("章节标题或编号，如 E1001、3.2 安装步骤、第一章"),
+      maxBlocks: z.number().int().min(1).max(40).optional().describe("本章最多返回的块数，默认 20，最多 40"),
+    },
+  }, async ({ book, key, maxBlocks }) => {
+    const matches = matchBook(book);
+    if (!matches.length)
+      return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
+    const out = lookupEntry(matches[0].db, key, { maxBlocks });
     out.book = matches[0].title;
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });

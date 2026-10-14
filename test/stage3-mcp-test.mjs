@@ -28,7 +28,7 @@ for (const id of Object.keys(beforeState).filter((id) => beforeState[id] === fal
 // 1. 工具清单
 const tools = await client.listTools();
 const names = tools.tools.map(t => t.name).sort();
-assert(JSON.stringify(names) === JSON.stringify(["expand", "get_person", "get_theme", "list_books", "list_catalog", "list_skills", "query_book", "query_library", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 11 个工具: ${names.join(", ")}`);
+assert(JSON.stringify(names) === JSON.stringify(["expand", "get_person", "get_theme", "list_books", "list_catalog", "list_skills", "lookup", "query_book", "query_library", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 12 个工具: ${names.join(", ")}`);
 
 // 2. list_books
 const lb = await client.callTool({ name: "list_books", arguments: {} });
@@ -189,10 +189,28 @@ const ex2 = await client.callTool({ name: "expand", arguments: { book: "pride", 
 const ex2R = JSON.parse(ex2.content[0].text);
 assert(ex2R.error === "person-not-found" && ex2R.available?.length === 25, "expand 名字未命中返回候选清单");
 
+// 12. lookup 章节直达（P4）：按标题/编号精确直达——错误码/条款号/流程步骤的正门
+const lk = await client.callTool({ name: "lookup", arguments: { book: "mengzi", key: "梁惠王上·1" } });
+const lkR = JSON.parse(lk.content[0].text);
+assert(lkR.matched_chapter === "梁惠王上·1" && lkR.match_level === "exact" && lkR.total === 2
+  && lkR.blocks.length === 2 && lkR.blocks[0].id < lkR.blocks[1].id && lkR.blocks.every(b => b.text),
+  `lookup 章节直达: 「${lkR.matched_chapter}」${lkR.total} 块（${lkR.match_level} 命中，id 升序带原文）`);
+
+// 12b. PDF 型无章节 → no-chapters 指引改走 query_book（不静默给错东西）
+const lk2 = await client.callTool({ name: "lookup", arguments: { book: "lunyu-xueer-zh.pdf", key: "第一章" } });
+const lk2R = JSON.parse(lk2.content[0].text);
+assert(lk2R.error === "no-chapters" && /query_book/.test(lk2R.hint || ""), `lookup: PDF 无章节 → no-chapters + 指引（${lk2R.error}）`);
+
+// 12c. 未命中 → 章节清单（cap 30）供智能体目录导航
+const lk3 = await client.callTool({ name: "lookup", arguments: { book: "mengzi", key: "不存在的章" } });
+const lk3R = JSON.parse(lk3.content[0].text);
+assert(lk3R.error === "not-found" && lk3R.available?.length === 30 && lk3R.available_total === 261,
+  `lookup: 未命中 → ${lk3R.available?.length}/${lk3R.available_total} 章候选清单（目录导航）`);
+
 fs.rmSync(E2E_DIR, { recursive: true, force: true });  // 临时技能测完即删
 for (const [id, v] of Object.entries(beforeState)) setSkillEnabled(LIB_DIR, id, v !== false);  // 还原用户开关，夹具不留痕
 
 console.log("\n===== 阶段3 验收结果 =====");
 if (failed > 0) { console.log(`${failed} 项 FAIL`); process.exit(1); }
-console.log("全部 PASS：标准 MCP 协议接入成功，十一工具可用（编目浏览/人物主题深查/图邻域展开/相似检索/技能落盘），自动挑书路由正确，引用可回源");
+console.log("全部 PASS：标准 MCP 协议接入成功，十二工具可用（编目浏览/人物主题深查/图邻域展开/章节直达/相似检索/技能落盘），自动挑书路由正确，引用可回源");
 process.exit(0);
