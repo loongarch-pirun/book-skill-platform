@@ -53,7 +53,10 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
   const raw = base.results || [];
   if (!raw.length) throw new UserError("这次检索没有找到相关内容，云端总结跳过——换个问法试试");
   // 单书检索的 result 不带 book（UI 里由卡片上下文体现）——云端提示词需要一个明确的书名标题
-  const results = raw.map((r) => ({ ...r, book: r.book || base.book || "" }));
+  // V2-D30（暴力测试 P4-E2E 修，规划外新发现）：bookId 也要同步补——老逻辑只补 book 名，
+  // verifyAnswer 从片段取 bookId 得 null，UI 引用徽标 data-bid 为空、跳原文断链
+  // （全库模式的结果本就带 bookId，两道都补：r.bookId || base.bookId）
+  const results = raw.map((r) => ({ ...r, book: r.book || base.book || "", bookId: r.bookId || base.bookId || null }));
   const skillChapters = (base.skill?.matched || []).map((m) => ({ title: m.title, content: m.content }));
 
   // 2) 云端生成 + 引用校验（防幻觉延伸到生成层；历史净化后随请求带上）
