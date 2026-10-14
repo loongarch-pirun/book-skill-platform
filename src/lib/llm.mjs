@@ -15,7 +15,10 @@ export function normalizeLlmConfig({ baseUrl, apiKey, model } = {}) {
   const base = String(baseUrl || "").trim().replace(/\/+$/, "");
   const key = String(apiKey || "").trim();
   const mdl = String(model || "").trim();
-  if (!/^https?:\/\//i.test(base)) return { error: "接口地址要以 http(s):// 开头（例如 https://api.deepseek.com/v1）" };
+  // V2-D18（暴力测试 P0 修）：老正则只查 http(s):// 前缀，"https://a b"（中间空白主机）
+  // 能过校验但 fetch 时 URL 非法抛 TypeError，误报成 NETWORK「连不上模型服务」——用户去查
+  // 网络而不是改地址。现加空白拒查（正常地址不含空白，尾斜杠已在上一步剥掉）。
+  if (!/^https?:\/\//i.test(base) || /\s/.test(base)) return { error: "接口地址要以 http(s):// 开头（例如 https://api.deepseek.com/v1）" };
   if (!key) return { error: "请填 API key" };
   if (!mdl) return { error: "请填模型名（例如 deepseek-chat）" };
   return { baseUrl: base, apiKey: key, model: mdl };
@@ -102,17 +105,18 @@ export async function chat({ baseUrl, apiKey, model, messages, timeoutMs = 60000
 }
 
 // ---------- 宽容解析（容忍 ```json 围栏 / 前后夹带文字） ----------
+// V2-D02（暴力测试 P0 修）：老逻辑对"以 { 开头"的文本跳过截断，模型输出
+// 「JSON + 一句解释」（真实高频）时 JSON.parse 遇尾部文字必败 → 无辜降级。
+// 现统一为对称截断：无论前后是否夹带，一律取首 { 到尾 } 之间再 parse。
+// 双 JSON 连写（{"a"}{"b"}）仍解析失败返回 null——模型极少此形态，拒收安全（登记 OBSERVE）。
 export function parseAnswer(text) {
   let t = String(text || "").trim();
   const fence = t.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   if (fence) t = fence[1].trim();
-  if (!t.startsWith("{")) {
-    const s = t.indexOf("{"), e = t.lastIndexOf("}");
-    if (s < 0 || e <= s) return null;
-    t = t.slice(s, e + 1);
-  }
+  const s = t.indexOf("{"), e = t.lastIndexOf("}");
+  if (s < 0 || e <= s) return null;
   try {
-    const d = JSON.parse(t);
+    const d = JSON.parse(t.slice(s, e + 1));
     if (typeof d.answer !== "string" || !d.answer.trim()) return null;
     if (!Array.isArray(d.citations)) d.citations = [];
     return { answer: d.answer.trim(), citations: d.citations };
@@ -137,7 +141,10 @@ function quoteClauses(quote) {
 function hitRate(srcText, quote) {
   const src = normalize(stripAnnotations(srcText));
   const cls = quoteClauses(quote);
-  if (!cls.length) return { ok: false, hits: 0, total: 0 };
+  // V2-D03（暴力测试 P0 修）：子句归一化后全 <4 字被踢出分母时 total=0，
+  // 老逻辑 0/0>=0.6=false 把"短引文"误报成 quote-not-found（幻觉罪名）。
+  // 现以 tooShort 标记区分「引文太短无法核验」与「核验未过」两种语义。
+  if (!cls.length) return { ok: false, hits: 0, total: 0, tooShort: true };
   const hits = cls.filter(c => src.includes(c)).length;
   return { ok: hits / cls.length >= 0.6, hits, total: cls.length };
 }
@@ -147,8 +154,11 @@ function hitRate(srcText, quote) {
 export function verifyAnswer(parsed, results) {
   const p = parsed || { answer: "", citations: [] };
   const list = Array.isArray(results) ? results : [];
+  // V2-D16（暴力测试 P0 修）：citations 非数组（数字/对象）时 for..of 抛 TypeError，
+  // 直接调用方（非 askCloud 链路）会崩——入参防御一行。
+  const cites = Array.isArray(p.citations) ? p.citations : [];
   const passed = [], dropped = [];
-  for (const c of p.citations) {
+  for (const c of cites) {
     const n = Number(c?.n);
     const quote = String(c?.quote || "").trim();
     const target = Number.isInteger(n) && n >= 1 && n <= list.length ? list[n - 1] : null;
@@ -158,7 +168,7 @@ export function verifyAnswer(parsed, results) {
     if (r.ok) {
       passed.push({ n, quote, book: target.book || "", bookId: target.bookId || null, id: target.id ?? null, loc: target.loc || "" });
     } else {
-      dropped.push({ n, quote, reason: "quote-not-found", hits: r.hits, total: r.total });
+      dropped.push({ n, quote, reason: r.tooShort ? "quote-too-short" : "quote-not-found", hits: r.hits, total: r.total });
     }
   }
   return { answer: p.answer, citations: passed, dropped };

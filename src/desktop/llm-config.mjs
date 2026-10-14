@@ -68,13 +68,17 @@ export function saveLlmConfig({ baseUrl, model, apiKey } = {}) {
   if (!llmConfigReady()) return { ok: false, error: "未配置存储目录" };
   const raw = readRaw();
   const next = {
-    baseUrl: baseUrl !== undefined ? String(baseUrl).trim() : String(raw.baseUrl || ""),
+    // 与 llm.mjs normalizeLlmConfig 对齐：trim + 去尾斜杠在**校验前**完成——
+    // V2-D18 连带修：老代码校验用未去斜杠的原值，"https://" 能过正则而 normalize 侧被拒（双拷贝漂移）
+    baseUrl: baseUrl !== undefined ? String(baseUrl).trim().replace(/\/+$/, "") : String(raw.baseUrl || ""),
     model: model !== undefined ? String(model).trim() : String(raw.model || ""),
   };
   const keyToSet = typeof apiKey === "string" && apiKey.trim() ? apiKey.trim() : null;
   const haveKey = !!keyToSet || !!decodeKey(raw);
 
-  if (!/^https?:\/\//i.test(next.baseUrl)) return { ok: false, error: "接口地址要以 http(s):// 开头（例如 https://api.deepseek.com/v1）" };
+  // 与 llm.mjs normalizeLlmConfig 同款校验（双拷贝，F2 漂移探测器常驻盯一致）——
+  // V2-D18 修：含空白主机的地址拒收（否则 fetch 抛 TypeError 误报 NETWORK）
+  if (!/^https?:\/\//i.test(next.baseUrl) || /\s/.test(next.baseUrl)) return { ok: false, error: "接口地址要以 http(s):// 开头（例如 https://api.deepseek.com/v1）" };
   if (!next.model) return { ok: false, error: "请填模型名（例如 deepseek-chat）" };
   if (!haveKey) return { ok: false, error: "请填 API key" };
 
