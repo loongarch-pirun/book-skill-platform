@@ -1,7 +1,7 @@
 // 视图五：对话（V2 P3）——多轮问答：本地检索找依据，云端写回答，引用点跳原文。
 // 铁律同其它视图：顶层不碰 DOM（ESM 循环导入防 TDZ）；事件绑定走 bindChatEvents()；
 // 对话历史放渲染层（主进程无状态），每次发送带上近几轮（净化在主进程边界做）。
-import { $, state, call, refresh, show } from "./app.js";
+import { $, state, call, refresh, show, RETRIEVE_TOPN } from "./app.js";
 import { esc } from "./views.js";
 
 // ---------- 渲染 ----------
@@ -32,7 +32,7 @@ export function renderChat() {
       ${!cfg.hasKey ? '<div class="cloudrow"><span class="chip">云端 AI 未配置——对话需要一把 API key</span><button class="ghost sm" data-action="chatcfg">去「问一问」配置</button></div>' : ""}
       <div id="chatMsgs" class="chatmsgs">${chatMsgsHtml()}</div>
       <div class="chatinput">
-        <textarea id="chatQ" placeholder="问吧——比如「什么是真正的强大？」（Enter 发送，Shift+Enter 换行）"></textarea>
+        <textarea id="chatQ" placeholder="问吧——比如「什么是真正的强大？」（回车发送，Shift+回车换行）"></textarea>
         <button class="primary" id="chatGo" data-action="chatgo" ${c.loading ? "disabled" : ""}>${c.loading ? "思考中…" : "发送"}</button>
       </div>
     </div>`;
@@ -106,7 +106,7 @@ async function sendChat() {
     const r = await call(window.study.chatSummary({
       bookId: c.mode === "book" ? c.bookId : null,
       question: q,
-      topN: 6,
+      topN: RETRIEVE_TOPN,
       skillSlug: c.skillSlug,
       history,
     }));
@@ -125,7 +125,7 @@ export function bindChatEvents() {
     const el = e.target.closest("[data-action]");
     if (!el) return;
     const act = el.dataset.action;
-    if (act === "chatmode") { state.chat.mode = el.dataset.mode; refresh(); }
+    if (act === "chatmode") { state.chat.mode = el.dataset.mode; state.chat.skillSlug = null; refresh(); } // 切模式清技能包（B6）
     else if (act === "chatgo") sendChat();
     else if (act === "chatclear") { state.chat.messages = []; refresh(); }
     else if (act === "chatcfg") { state.llm.editing = true; show("ask"); } // 去问一页展开配置卡
@@ -134,5 +134,10 @@ export function bindChatEvents() {
   });
   $("#main").addEventListener("keydown", (e) => {
     if (e.target.id === "chatQ" && e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  });
+
+  // 换书同步 + 清技能包（B6）：同问一问页——技能包属于某一本书，切书即清，要参考就重新勾
+  $("#main").addEventListener("change", (e) => {
+    if (e.target.id === "chatBook") { state.chat.bookId = e.target.value; state.chat.skillSlug = null; refresh(); }
   });
 }

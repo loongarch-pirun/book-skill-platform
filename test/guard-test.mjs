@@ -188,7 +188,7 @@ const copyDb = (src) => {
   const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
 
   // ① 渲染层禁止直连外部 API——网络调用只能经 IPC → 主进程（云端问答上线后的新红线）
-  const hits = ["views.js", "views-ask.js", "views-reader.js", "app.js"]
+  const hits = ["views.js", "views-ask.js", "views-chat.js", "views-reader.js", "app.js"]
     .filter((f) => /\bfetch\s*\(/.test(stripComments(readSrc("src", "renderer", f))));
   ok(hits.length === 0, `静态: 渲染层无直连 fetch（防绕过 IPC 调外部 API；命中: ${hits.join(",") || "无"}）`);
 
@@ -198,6 +198,13 @@ const copyDb = (src) => {
 
   // ③ main.js 必须注入 safeStorage（llm-config 的加密来源，缺了 key 会退化成明文）
   ok(readSrc("src", "main.js").includes("safeStorage"), "静态: main.js 注入 safeStorage（key 加密链）");
+
+  // ④ B1：渲染层检索段数三处同源——问一问/对话两页只许引用 app.js 的 RETRIEVE_TOPN，不许字面量漂移
+  const askViewSrc = readSrc("src", "renderer", "views-ask.js");
+  const chatViewSrc = readSrc("src", "renderer", "views-chat.js");
+  ok(askViewSrc.includes("RETRIEVE_TOPN") && chatViewSrc.includes("RETRIEVE_TOPN")
+    && !/topN:\s*\d/.test(stripComments(askViewSrc)) && !/topN:\s*\d/.test(stripComments(chatViewSrc)),
+    "静态: 渲染层 topN 统一走 RETRIEVE_TOPN（B1，两页同段数）");
 }
 
 // ========== 收尾 ==========

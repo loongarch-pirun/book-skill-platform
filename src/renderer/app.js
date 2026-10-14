@@ -1,5 +1,5 @@
 // 渲染进程外壳：全局状态、导航、启动、首启向导、toast、IPC 包装。
-// 四个视图的渲染分散在 views.js（书架）/ views-reader.js（翻书）/ views-ask.js（问一问+技能开关），
+// 五个视图的渲染分散在 views.js（书架）/ views-reader.js（翻书）/ views-ask.js（问一问+技能开关）/ views-chat.js（对话），
 // 本文件只做"壳"。事件绑定由各视图模块的 bindXxxEvents() 在 boot() 里统一调用——
 // 视图模块顶层绝不碰 DOM（ESM 循环导入下 app.js 的 const 绑定尚未初始化，会 TDZ 崩掉整个渲染层）。
 import { renderShelf, bindShelfEvents } from "./views.js";
@@ -9,7 +9,7 @@ import { renderChat, scrollChatBottom, bindChatEvents } from "./views-chat.js";
 
 export const $ = (s, r = document) => r.querySelector(s);
 export const state = {
-  view: "shelf",              // shelf | reader | ask | skills
+  view: "shelf",              // shelf | reader | ask | chat | skills
   books: [],                  // booksList 全量（含关掉 skill 的）
   jobs: {},                   // 导入管线任务状态（bookId → {stage,label,detail,error}）
   prompt: null,               // 待编目一键提示词面板（书架）：{bookId, text, chars, path} | null
@@ -21,6 +21,11 @@ export const state = {
   model: { ready: false, text: "模型加载中…" },
   config: null,
 };
+
+// 检索段数三处共用（B1 对齐）：问一问本地检索 / 问一问云端总结 / 对话窗口——
+// 同一个问题，两页喂给云端、展示给用户的都是同样段数，答案质量可比；
+// 后端 chat.mjs 的 topN 默认值同为 6（兜底，IPC 契约不变）
+export const RETRIEVE_TOPN = 6;
 
 // IPC 包装：统一 {ok,data} → 抛错由调用方 toast
 export async function call(p) {

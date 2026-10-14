@@ -1,6 +1,6 @@
 // 视图三/四：问一问（双模式 + 技能包参考 + 引用跳转）+ 技能开关（每本书开关 + 技能包查看器）。
 // 铁律同 views.js：顶层不碰 DOM，事件绑定走 bindAskEvents()。
-import { $, state, call, toast, refresh, show } from "./app.js";
+import { $, state, call, toast, refresh, show, RETRIEVE_TOPN } from "./app.js";
 import { esc } from "./views.js";
 
 // ---------- ③ 问一问 ----------
@@ -25,7 +25,7 @@ export function renderAsk() {
         ${sel}
       </div>
       <div class="askinput">
-        <textarea id="askQ" placeholder="输入问题，回车提交（Shift+回车换行）">${esc(a.question)}</textarea>
+        <textarea id="askQ" placeholder="输入问题，回车发送（Shift+回车换行）">${esc(a.question)}</textarea>
         <button class="primary" id="askGo" data-action="askgo" ${a.loading ? "disabled" : ""}>${a.loading ? "检索中…" : "问"}</button>
       </div>
       <div class="skillpickrow">
@@ -37,7 +37,7 @@ export function renderAsk() {
       </div>
       ${cloudBarHtml()}
     </div>
-    <div id="askOut">${a.loading ? '<div class="skeleton">引擎检索中（平均约 3 秒，首次要先下模型）…</div>' : askResultHtml(a.result)}</div>`;
+    <div id="askOut">${a.loading ? '<div class="skeleton">正在检索书库（平均约 3 秒，首次要先下模型）…</div>' : askResultHtml(a.result)}</div>`;
 }
 
 function askResultHtml(r) {
@@ -137,7 +137,7 @@ async function submitAsk() {
   a.loading = true;
   refresh();
   try {
-    a.result = await call(window.study.ask({ bookId: a.bookId, question: q, topN: 4, skillSlug: a.skillSlug }));
+    a.result = await call(window.study.ask({ bookId: a.bookId, question: q, topN: RETRIEVE_TOPN, skillSlug: a.skillSlug }));
   } catch (e) { toast("检索失败：" + e.message); a.result = null; }
   a.loading = false;
   refresh();
@@ -240,7 +240,7 @@ export function bindAskEvents() {
     const el = e.target.closest("[data-action]");
     if (!el) return;
     const act = el.dataset.action;
-    if (act === "mode") { state.ask.mode = el.dataset.mode; state.ask.result = null; refresh(); }
+    if (act === "mode") { state.ask.mode = el.dataset.mode; state.ask.result = null; state.ask.skillSlug = null; refresh(); } // 切模式清技能包（B6：单书包不默认挂到全库模式）
     else if (act === "askgo") submitAsk();
     // ---------- 云端问答（V2 P2） ----------
     else if (act === "goskills") show("skills"); // 书全关引导（A2）
@@ -276,7 +276,7 @@ export function bindAskEvents() {
         const r = await call(window.study.chatSummary({
           bookId: state.ask.mode === "book" ? state.ask.bookId : null,
           question: q,
-          topN: 6,
+          topN: RETRIEVE_TOPN,
           skillSlug: state.ask.skillSlug,
         }));
         state.llm.answer = r;
@@ -328,6 +328,12 @@ export function bindAskEvents() {
 
   $("#main").addEventListener("keydown", (e) => {
     if (e.target.id === "askQ" && e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitAsk(); }
+  });
+
+  // 换书同步 + 清技能包（B6）：技能包属于某一本书——切书后不默认挂着旧包的"辅助理解"，
+  // 要跨书参考就重新勾选（引用校验只认 results，这里是整洁性不是安全性）
+  $("#main").addEventListener("change", (e) => {
+    if (e.target.id === "askBook") { state.ask.bookId = e.target.value; state.ask.skillSlug = null; refresh(); }
   });
 
   // 顶栏全局搜索 → 切全库模式直接问

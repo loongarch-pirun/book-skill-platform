@@ -35,6 +35,8 @@ global.location = { reload() {} };
 // ---------- window.study IPC stub（记录调用，返回约定形状） ----------
 const ipcCalls = [];
 let chatSummaryCalls = 0;
+let askTopN = null;
+const chatSummaryArgs = [];
 const reply = (data) => Promise.resolve({ ok: true, data });
 const studyStub = {
   configGet: () => { ipcCalls.push("configGet"); return reply({ dirs: {}, firstRun: false, packaged: false }); },
@@ -50,11 +52,11 @@ const studyStub = {
   jobsCancel: () => reply({}),
   jobsPickResult: () => reply(null),
   jobsResumeCatalog: () => reply({}),
-  ask: () => { ipcCalls.push("ask"); return reply({ mode: "book", results: [{ id: 1, book: "测试书", bookId: "t.docx", loc: "第一章", text: "學而時習之", rerank: 0.9 }] }); },
+  ask: (payload) => { ipcCalls.push("ask"); askTopN = payload?.topN; return reply({ mode: "book", results: [{ id: 1, book: "测试书", bookId: "t.docx", loc: "第一章", text: "學而時習之", rerank: 0.9 }] }); },
   llmConfigGet: () => { ipcCalls.push("llmConfigGet"); return reply({ baseUrl: "", model: "", hasKey: false, keyTail: null, encryption: "unknown", warning: null }); },
   llmConfigSet: () => reply({ baseUrl: "https://x", model: "m", hasKey: true, keyTail: "…test", encryption: "safeStorage", warning: null }),
   llmTest: () => reply({ reply: "收到" }),
-  chatSummary: () => { chatSummaryCalls++; return chatSummaryCalls === 2
+  chatSummary: (payload) => { chatSummaryCalls++; chatSummaryArgs.push(payload); return chatSummaryCalls === 2
     ? reply({ degraded: true, error: "云端引用核验失败，已降级为原文片段", results: [{ book: "测试书", bookId: "t.docx", id: 1, loc: "第一章", text: "本地原文甲" }], mode: "book", book: "测试书" })
     : reply({ answer: "测试总结", citations: [], dropped: 0, segments: 6, book: "测试书", mode: "book" }); },
   chapters: () => { ipcCalls.push("chapters"); return reply({ book: "测试书", chapters: [{ name: "第一章", blocks: 3 }] }); },
@@ -97,6 +99,12 @@ const click = (action, data = {}) => {
   const el = { dataset: { action, ...data } };
   const ev = { target: { closest: (s) => (s === "[data-action]" ? el : null) }, stopPropagation() {} };
   for (const fn of mainEl.listeners.click || []) fn(ev);
+};
+const fireChange = (sel, value) => { // 模拟 <select> 换书（B6 断言用）
+  const el = getEl(sel);
+  el.id = sel.replace("#", "");
+  el.value = value;
+  for (const fn of mainEl.listeners.change || []) fn({ target: el });
 };
 click("open", { bid: "t.docx" }); // 模拟点书架卡片
 await sleep(30);
@@ -188,6 +196,31 @@ assert(mainEl.innerHTML.includes("去「技能开关」打开"), "对话：书�
 app.state.books.forEach((b, i) => { b.skillEnabled = savedEnabled[i]; });
 app.show("shelf");
 await sleep(10);
+
+// ---------- 5e) B 档对齐：topN 三处同源 / 换书清技能包 / 文案口吻统一 ----------
+app.show("ask");
+await sleep(10);
+getEl("#askQ").value = "段数对齐测试";
+click("askgo", {});
+await sleep(20);
+assert(askTopN === 6, `B1：问一问本地检索 topN 走共享常量 RETRIEVE_TOPN（实际 ${askTopN}）`);
+click("clsummary", {});
+await sleep(20);
+assert(chatSummaryArgs.length > 0 && chatSummaryArgs.every((a) => a?.topN === 6),
+  `B1：云端总结两页 topN 一致为 6（实际 ${chatSummaryArgs.map((a) => a?.topN).join(",")}）`);
+assert(mainEl.innerHTML.includes("回车发送"), "B2：问一问输入提示统一为「回车发送」");
+app.state.ask.skillSlug = "t"; // 模拟已勾选技能包
+fireChange("askBook", "t.docx");
+await sleep(10);
+assert(app.state.ask.skillSlug === null, "B6：问一问换书清技能包（技能包不跨书挂载）");
+app.show("chat");
+await sleep(10);
+assert(mainEl.innerHTML.includes("回车发送"), "B2：对话输入提示统一为「回车发送」");
+app.state.chat.skillSlug = "t";
+fireChange("chatBook", "t.docx");
+await sleep(10);
+assert(app.state.chat.bookId === "t.docx" && app.state.chat.skillSlug === null,
+  "B6：对话换书同步 bookId 并清技能包");
 
 // ---------- 6) jobs 进度事件 → 书架横幅 ----------
 app.show("shelf");
