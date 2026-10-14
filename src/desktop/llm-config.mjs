@@ -18,8 +18,12 @@ function cfgPath() { return path.join(_env.userData, "llm.json"); }
 function readRaw() {
   try {
     const d = JSON.parse(fs.readFileSync(cfgPath(), "utf8"));
-    return d && typeof d === "object" ? d : {};
-  } catch { return {}; }
+    // V2-D07（暴力测试 P1 修）：顶层非对象（数组/null/标量）也按损坏处理——老逻辑
+    // typeof [] === "object" 漏网，静默按空配置走，用户反复重填永远不知道是文件坏了。
+    // 解析失败同理：返回 __broken 标记，与"从未配置"区分（loadLlmConfig 透出 warning）。
+    if (!d || typeof d !== "object" || Array.isArray(d)) return { __broken: true };
+    return d;
+  } catch { return { __broken: true }; }
 }
 
 function decodeKey(raw) {
@@ -27,7 +31,13 @@ function decodeKey(raw) {
   if (typeof enc !== "string" || !enc) return null;
   try {
     if (enc.startsWith("enc:")) return _env.decrypt(Buffer.from(enc.slice(4), "base64"));
-    if (enc.startsWith("plain:")) return Buffer.from(enc.slice(6), "base64").toString("utf8");
+    if (enc.startsWith("plain:")) {
+      const s = Buffer.from(enc.slice(6), "base64").toString("utf8");
+      // V2-D09（暴力测试 P1 修）：Buffer.from 对坏 base64 宽容解析成垃圾串——老逻辑
+      // hasKey:true 但 key 无效，用户每次调用都 401 却查不到原因。往返校验：
+      // 重新编码必须与原文一致，否则按无 key 处理。
+      return Buffer.from(s, "utf8").toString("base64") === enc.slice(6) ? s : null;
+    }
   } catch { /* 加密器/数据异常按无 key 处理 */ }
   return null;
 }
@@ -46,13 +56,16 @@ export function loadLlmConfig() {
   if (!llmConfigReady()) return { baseUrl: "", model: "", hasKey: false, keyTail: null, encryption: "unknown", warning: null };
   const raw = readRaw();
   const key = decodeKey(raw);
+  const broken = !!raw.__broken; // V2-D07：配置损坏态透出（不再是静默的「没配置」）
   return {
     baseUrl: String(raw.baseUrl || ""),
     model: String(raw.model || ""),
     hasKey: !!key,
     keyTail: key ? "…" + key.slice(-4) : null,
     encryption: _env.available ? "safeStorage" : "plain",
-    warning: _env.available ? null : "系统加密不可用，key 以本机可读形式保存（不推荐）",
+    warning: broken
+      ? "配置文件已损坏，已按未配置处理——重新填写并保存即可修复"
+      : (_env.available ? null : "系统加密不可用，key 以本机可读形式保存（不推荐）"),
   };
 }
 
@@ -66,6 +79,9 @@ export function readLlmKey() {
 // 合并后做完整性校验，不完整直接拒收（不落盘半成品）。
 export function saveLlmConfig({ baseUrl, model, apiKey } = {}) {
   if (!llmConfigReady()) return { ok: false, error: "未配置存储目录" };
+  // V2-D08（暴力测试 P1 修）：apiKey 传了但非字符串（如数字 123）——老逻辑 typeof
+  // 检查不过被静默忽略，返回 ok:true 但 key 没存，调用方以为存成功了。现显式拒收。
+  if (apiKey !== undefined && typeof apiKey !== "string") return { ok: false, error: "API key 格式不对（应是文本）" };
   const raw = readRaw();
   const next = {
     // 与 llm.mjs normalizeLlmConfig 对齐：trim + 去尾斜杠在**校验前**完成——

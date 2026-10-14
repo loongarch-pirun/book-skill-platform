@@ -26,6 +26,9 @@ export async function testConnection() {
   const cfg = loadLlmConfig();
   const key = readLlmKey();
   if (!key) throw new UserError("还没配置 API key——先填上再测");
+  // V2-D15（暴力测试 P1 修）：空 baseUrl 时 fetch 相对 URL "/chat/completions" 抛
+  // TypeError，被误报成 NETWORK「连不上模型服务」——用户去查网络而不是填地址。
+  if (!String(cfg.baseUrl || "").trim()) throw new UserError("还没配置接口地址——先填上再测");
   const r = await chat({
     baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model,
     messages: [{ role: "user", content: "只回复两个字：收到" }],

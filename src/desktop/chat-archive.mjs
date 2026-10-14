@@ -26,10 +26,20 @@ function writeLines(libDir, lines) {
 
 // 追加一条快照（entry 由调用方备料：question/answer/mode/book/model/segments/dropped/usage/citations）；
 // 超上限自动砍最旧。写失败会抛——调用方（chat.mjs）必须 try 兜底：存档失败绝不能炸掉回答。
+// V2-D04（暴力测试 P1 修）：老逻辑 read-modify-write 全量重写，多进程并发追加时
+// 后写者覆盖先写者（实测 4 子进程×25 条只剩 4 条）。改快路：appendFileSync 单行追加，
+// O_APPEND 下小写由 OS 保证原子；仅总量超 MAX_ENTRIES 才读全量重写砍最旧
+// （残留交叠窗口：并发+超上限同时发生仍可能互覆，上界 500 守住，登记 OBSERVE）。
 export function appendArchive(libDir, entry) {
+  const p = archivePath(libDir);
+  const line = JSON.stringify({ ts: new Date().toISOString(), ...entry });
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  // 半行保护：上次崩溃可能留下无换行结尾的半行——先补 \n，防止新旧行粘连成一条坏行
+  const existing = fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "";
+  const sep = existing && !existing.endsWith("\n") ? "\n" : "";
+  fs.appendFileSync(p, sep + line + "\n", "utf8");
   const lines = readLines(libDir);
-  lines.push(JSON.stringify({ ts: new Date().toISOString(), ...entry }));
-  writeLines(libDir, lines.slice(-MAX_ENTRIES));
+  if (lines.length > MAX_ENTRIES) writeLines(libDir, lines.slice(-MAX_ENTRIES));
 }
 
 // 列表：新 → 旧，limit 封顶（UI 翻历史用）。坏行跳过不挡好数据。
@@ -44,7 +54,10 @@ export function listArchive(libDir, { limit = 100 } = {}) {
 
 // 删书联动：清掉 citations 引用了这本书的全部条目，返回清了几条（0 = 没动文件）。
 // 坏行保守保留（解析不了的不敢删，防误杀）；一条都不匹配时不重写文件。
+// V2-D07 族（暴力测试 P1 修）：bookId 非非空字符串时老逻辑 c.bookId===bookId 会误删
+// citations 里缺 bookId 字段的条目（purgeBook(undefined) 实测误删）——直接不动。
 export function purgeBook(libDir, bookId) {
+  if (typeof bookId !== "string" || !bookId) return 0;
   const lines = readLines(libDir);
   const kept = lines.filter((l) => {
     try {
