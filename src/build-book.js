@@ -408,6 +408,28 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
 
+  // 语义分块（BSP_SEMANTIC=1，默认关——存量行为零变化）：本地 e5 零成本，先并后切——
+  // ① merge：同章/同页相邻小块并到 ~400 字符（本语料块长 p50≈40~113，检索每问只取 6 段，
+  //    块太小则上下文稀薄；相邻块余弦实测 p10≈0.84，阈值 0.72 是安全阀不是主力）；
+  // ② split：并完仍超长的块（单句超 900 的长段落资料）在相邻句余弦突变处补切。
+  // 两向都只动块边界不动字：并块以 "\n" 相接、切块按偏移切片，拼回逐字保真。
+  if (process.env.BSP_SEMANTIC === "1") {
+    try {
+      const { semanticMergeChunks, semanticSplitChunks } = await import("./lib/semantic-chunk.mjs");
+      const { configureModels, getEmbedder } = await import("./lib/models.mjs");
+      configureModels({ modelsDir: path.join(__dirname, "..", ".models") });
+      const emb = await getEmbedder();
+      const embed = (t) => emb.embedPassages(t);
+      const before = parsed.chunks.length;
+      parsed.chunks = await semanticMergeChunks(parsed.chunks, { embed });
+      parsed.chunks = await semanticSplitChunks(parsed.chunks, { embed });
+      const after = parsed.chunks.length;
+      if (after !== before) console.log(`  语义分块: ${before} → ${after} 块（相邻小块先并到 ~400 字符，超长块余弦突变处补切）`);
+    } catch (e) {
+      console.error(`语义切分失败，按未切分继续（${e.message}）`);
+    }
+  }
+
   // 书名：--title 优先；目录书默认取上级目录名（凤凰架构/fenix → 凤凰架构）；
   // 单文件仍取文件名去后缀（行为零变化）
   const title = titleArg || (isDir ? path.basename(path.dirname(path.resolve(file)))
