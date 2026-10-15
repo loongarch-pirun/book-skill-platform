@@ -4,6 +4,7 @@ import { listBooks, hybridSearch, routeAndSearch } from "./search.mjs";
 import { getCatalogSummary, getPersonDetail, getThemeDetail, expandNeighborhood } from "./catalog.mjs";
 import { similarChunks } from "./similar.mjs";
 import { lookupEntry } from "./lookup.mjs";
+import { readChapter, readRange } from "./browse.mjs";
 import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
 
 // 按 book 片段找书（与 query_book 同一套匹配；找不到返回 null 和可选书目）
@@ -111,6 +112,41 @@ export function registerServerTools(server) {
     if (!matches.length)
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
     const out = lookupEntry(matches[0].db, key, { maxBlocks });
+    out.book = matches[0].title;
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  server.registerTool("get_chapter", {
+    title: "整章通读",
+    description: "按章节名取某本书一章的完整原文（比 lookup 上限更高，为「通读/摘录全文」设计；三级匹配精确→前缀→包含，命中多章取文档序第一个）。读长章被截断时按 note 里的提示用 read_range 续读。PDF 无章节时报 no-chapters——改用 query_book 或 read_range。",
+    inputSchema: {
+      book: z.string().describe("书名或书名片段，如 pride、mengzi"),
+      chapter: z.string().describe("章节名（或前缀/包含匹配），如 梁惠王上、Chapter 8"),
+      maxBlocks: z.number().int().min(1).max(60).optional().describe("最多返回块数，默认 60"),
+    },
+  }, async ({ book, chapter, maxBlocks }) => {
+    const matches = matchBook(book);
+    if (!matches.length)
+      return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
+    const out = readChapter(matches[0].db, chapter, { maxBlocks });
+    out.book = matches[0].title;
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  server.registerTool("read_range", {
+    title: "原文区间读",
+    description: "按块号区间连续读某本书的原文（from/to 都是 query_book/lookup/get_chapter 结果里的 id）。适合「把这一段完整读给我」「从第 X 块接着往下读」。区间过宽会截断并给续读游标；区间为空会报本书块号范围。",
+    inputSchema: {
+      book: z.string().describe("书名或书名片段，如 pride、mengzi"),
+      from: z.number().int().min(1).describe("起始块号（含）"),
+      to: z.number().int().min(1).describe("结束块号（含）"),
+      maxBlocks: z.number().int().min(1).max(80).optional().describe("最多返回块数，默认 80"),
+    },
+  }, async ({ book, from, to, maxBlocks }) => {
+    const matches = matchBook(book);
+    if (!matches.length)
+      return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
+    const out = readRange(matches[0].db, from, to, { maxBlocks });
     out.book = matches[0].title;
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });

@@ -13,7 +13,7 @@
 - **翻书**：按「主题分区 / 人物表 / 问这段」三种方式浏览一本书的结构与关系网。
 - **技能包（Skill）**：把书中可复用的方法、观点蒸馏成带「引用回源」的技能文件，知识写进文件即免费存取。
 - **导入自己的书**：支持 txt / epub / pdf / docx，自动切片、向量化、编目（主题 / 人物 / 关系）。
-- **MCP 接口**：同时暴露 12 个工具（`query_book` / `query_library` / `list_catalog` / `get_person` / `expand` / `lookup` / `similar_chunks` / `save_skill` 等），可供 AI 智能体直接调取。`expand` 拉人物关系邻居网，`lookup` 按章节标题/编号精确直达（工作资料寻址）。
+- **MCP 接口**：同时暴露 14 个工具（`query_book` / `query_library` / `list_catalog` / `get_person` / `expand` / `lookup` / `get_chapter` / `read_range` / `similar_chunks` / `save_skill` 等），可供 AI 智能体直接调取。`expand` 拉人物关系邻居网，`lookup` 按章节标题/编号精确直达（工作资料寻址），`get_chapter`/`read_range` 供智能体通读原文。
 
 ### 内置书目（6 部作品，7 个书库条目）
 

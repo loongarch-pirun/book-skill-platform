@@ -29,6 +29,8 @@ contextBridge.exposeInMainWorld("study", {
   llmConfigSet: (patch) => ipcRenderer.invoke("llm:configSet", patch),
   llmTest: () => ipcRenderer.invoke("llm:test"),
   chatSummary: (payload) => ipcRenderer.invoke("chat:summary", payload),
+  // 对话记忆压缩（V3-R6）：旧轮次 → 要点记忆（渲染层持有；BSP_MEMORY=0 时主进程优雅跳过）
+  chatCompact: (payload) => ipcRenderer.invoke("chat:compact", payload),
   // 云端回答存档（V2 P4）：翻历史 / 清空（删书联动走 books:delete，无需新 API）
   chatArchiveList: (payload) => ipcRenderer.invoke("chat:archiveList", payload),
   chatArchiveClear: () => ipcRenderer.invoke("chat:archiveClear"),

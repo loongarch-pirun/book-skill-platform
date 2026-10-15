@@ -62,6 +62,7 @@ const studyStub = {
   // G-02：拖拽取真实路径（webUtils 仅在 preload 可用，经这里转发）——R6 静态对账要求
   // studyStub 覆盖 preload 全部 API，漏一个就等于测试里断了条真实契约没人知道
   filePathOf: (f) => (f && (f.path || f.name)) || "",
+  chatCompact: () => reply({ ok: false, skipped: true }), // V3-R6：对账要求 stub 覆盖全部 preload API（真行为由主进程测）
   jobsStatus: () => { ipcCalls.push("jobsStatus"); return reply({}); },
   jobsScanPending: () => { ipcCalls.push("jobsScanPending"); return reply([]); },
   jobsCatalogPrompt: (bookId) => { ipcCalls.push("jobsCatalogPrompt"); return reply({ bookId, chars: 42, path: `catalog-tasks/${bookId}.prompt.md`, text: "【编目任务书】测试提示词正文……" }); },
@@ -347,9 +348,8 @@ assert(app.state.chat.messages.length === 2 && app.state.chat.messages[1].conten
   "P4-R2c: 唯一一次发送正常落地（user+assistant 各一条，无重复）");
 studyStub.chatSummary = realChatSummary;
 
-// R3：buildHistory 先 slice 再滤 error，与主进程 sanitizeHistory（先滤后切）顺序相反——
-// 8 条消息含 2 条 error 时，渲染层切后滤只送出 4 条有效历史（旧 2 条被误伤），
-// 主进程同场景先滤后切会送 6 条。上下文少 2 轮不影响正确性（主进程还会再净化），登记不修。
+// R3：buildHistory 窗口 6→12（V3-R6 政策）——8 条消息含 2 条 error 时，窗口全包、
+// 先滤 error 后送出 6 条有效历史；主进程 sanitizeHistory 同步 12/3000。行为锁定防静默漂移。
 app.state.chat.messages = [
   { role: "user", content: "旧问题一" }, { role: "assistant", content: "旧回答一" },
   { role: "assistant", error: "旧错误" },
@@ -365,13 +365,13 @@ getEl("#chatQ").value = "历史顺序测试";
 click("chatgo", {});
 await sleep(30);
 const sentHistory = chatSummaryArgs[histBefore]?.history || [];
-assert(sentHistory.length === 4 && sentHistory[0].content === "问题二" && sentHistory[3].content === "回答三",
-  `P4-R3: buildHistory 实测先 slice(-6) 再滤 error（送出 ${sentHistory.length} 条，首条「${sentHistory[0]?.content}」——行为锁定防静默漂移）`);
+assert(sentHistory.length === 6 && sentHistory[0].content === "旧问题一" && sentHistory[5].content === "回答三",
+  `P4-R3: buildHistory 窗口 6→12（V3-R6）：全量滤 error 后送出 ${sentHistory.length} 条，首条「${sentHistory[0]?.content}」——行为锁定防静默漂移`);
 assert(sentHistory.every((h) => h.role === "user" || h.role === "assistant") && sentHistory.every((h) => !h.error),
   "P4-R3b: 送出的历史无 error 条目、角色合法（主进程边界还有一道净化，双保险）");
-// 主进程同输入会送出 6 条（先滤后切，且自身封顶 6）——顺序不对称实证登记
+// 主进程 sanitizeHistory 同步 12/3000（V3-R6）——同场景两侧一致，旧「顺序不对称」场景不再触发，登记保留
 assert(validAll.length === 6,
-  `P4-R3c: 同场景主进程 sanitizeHistory 先滤后切会送出 ${Math.min(validAll.length, 6)} 条（渲染层只送 ${sentHistory.length} 条——顺序不对称实证）`);
+  `P4-R3c: 同场景主进程 sanitizeHistory（12/3000）会送出 ${Math.min(validAll.length, 12)} 条（渲染层送 ${sentHistory.length} 条——两侧一致）`);
 obs(true, "P4-R3d buildHistory/sanitizeHistory 过滤顺序不对称登记",
   `渲染层 slice(-6) 先于过滤、主进程先过滤后 slice(-6)：error 消息挤占近 6 条窗口时，渲染层把窗口外的有效历史一起误伤（少送 ${validAll.length - sentHistory.length} 条）。上下文变少不影响正确性，轻微，登记不修`);
 

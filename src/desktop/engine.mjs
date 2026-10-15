@@ -97,7 +97,8 @@ export async function ask({ bookId, question, topN = 4, skillSlug = null }) {
 // 技能包参考：读技能索引 → 用问题词给章节打分（与字面腿同一套抽词，不另起炉灶）→ 取 top2。
 // 注意边界：这是"附加参考区"，不是新的检索腿——检索算法一行不碰，skill 匹配不上时
 // 普通检索结果原样返回（matched 为空数组），UI 明示"技能包无匹配章节"。
-async function attachSkill(base, slug, question) {
+// V3 导出：chat.mjs 的改写多路路径绕过 ask()，技能参考由编排层显式补挂。
+export async function attachSkill(base, slug, question) {
   const skill = readSkill(slug);
   if (skill.error) throw new UserError(`技能包「${slug}」不存在（可去技能开关面板看有哪些）`);
   const { en, cjk } = questionKeywords(question);

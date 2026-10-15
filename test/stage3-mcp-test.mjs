@@ -28,7 +28,7 @@ for (const id of Object.keys(beforeState).filter((id) => beforeState[id] === fal
 // 1. 工具清单
 const tools = await client.listTools();
 const names = tools.tools.map(t => t.name).sort();
-assert(JSON.stringify(names) === JSON.stringify(["expand", "get_person", "get_theme", "list_books", "list_catalog", "list_skills", "lookup", "query_book", "query_library", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 12 个工具: ${names.join(", ")}`);
+assert(JSON.stringify(names) === JSON.stringify(["expand", "get_chapter", "get_person", "get_theme", "list_books", "list_catalog", "list_skills", "lookup", "query_book", "query_library", "read_range", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 14 个工具: ${names.join(", ")}`);
 
 // 2. list_books
 const lb = await client.callTool({ name: "list_books", arguments: {} });
@@ -220,5 +220,5 @@ for (const [id, v] of Object.entries(beforeState)) setSkillEnabled(LIB_DIR, id, 
 
 console.log("\n===== 阶段3 验收结果 =====");
 if (failed > 0) { console.log(`${failed} 项 FAIL`); process.exit(1); }
-console.log("全部 PASS：标准 MCP 协议接入成功，十二工具可用（编目浏览/人物主题深查/图邻域展开/章节直达/相似检索/技能落盘），自动挑书路由正确，引用可回源");
+console.log("全部 PASS：标准 MCP 协议接入成功，十四工具可用（编目浏览/人物主题深查/图邻域展开/章节直达/整章通读/区间读/相似检索/技能落盘），自动挑书路由正确，引用可回源");
 process.exit(0);

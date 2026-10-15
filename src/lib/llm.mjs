@@ -25,13 +25,14 @@ export function normalizeLlmConfig({ baseUrl, apiKey, model } = {}) {
 }
 
 // ---------- 历史净化（IPC 边界防御：渲染层传来的对话历史不可信） ----------
-// 白名单角色 / 丢空内容与非字符串 / 只留最近 6 条（3 轮）/ 单条截断 2000 字（控 token）
-export function sanitizeHistory(history) {
+// 白名单角色 / 丢空内容与非字符串 / 只留最近 keep 条 / 单条截断 maxLen 字（控 token）
+// V3-R6 参数化：默认 6/2000 保持 V2 契约（llm-fuzz 断言不变）；对话窗口传 {keep:12, maxLen:3000}
+export function sanitizeHistory(history, { keep = 6, maxLen = 2000 } = {}) {
   if (!Array.isArray(history)) return [];
   return history
     .filter((h) => h && (h.role === "user" || h.role === "assistant") && typeof h.content === "string" && h.content.trim())
-    .slice(-6)
-    .map((h) => ({ role: h.role, content: h.content.trim().slice(0, 2000) }));
+    .slice(-keep)
+    .map((h) => ({ role: h.role, content: h.content.trim().slice(0, maxLen) }));
 }
 
 // ---------- 提示词 ----------
@@ -50,7 +51,8 @@ const SYSTEM = `你是一个严谨的读书助手：用户提问后，你会收�
 - 没有可用引用时 citations 为 []。`;
 
 // 组装 messages：system 在首、历史居中、问题+新鲜片段收尾（每轮检索都是新鲜的）
-export function buildMessages({ question, results, skillChapters = [], history = [] }) {
+// V3-R6：memory = 滚动对话记忆（渲染层压缩旧轮次得来），作为独立要点块钉在问题前
+export function buildMessages({ question, results, skillChapters = [], history = [], memory = "" }) {
   const q = String(question || "").trim();
   const passages = (results || []).map((r, i) =>
     `[${i + 1}] 《${r.book || "?"}》${r.loc ? "· " + r.loc : ""}：\n${r.text || ""}`);
@@ -59,6 +61,7 @@ export function buildMessages({ question, results, skillChapters = [], history =
     skillChapters.length
       ? `## 技能包参考章节（辅助理解，引用仍以上面片段为准）\n${skillChapters.map((s) => `【${s.title || "章节"}】\n${s.content || ""}`).join("\n\n")}`
       : "",
+    memory ? `## 此前对话要点（更早轮次的记忆压缩，回答时可衔接但引用仍以上面片段为准）\n${memory}` : "",
     `## 问题\n${q}`,
   ].filter(Boolean);
   return [
@@ -179,11 +182,11 @@ export function verifyAnswer(parsed, results) {
 // 重试策略（retryOnQuoteFail 默认开）：QUOTE_FAIL / BADRESP 先自动重试一次（附加加强提醒）——
 // 实测模型偶发把繁体引文写成简体（字形漂移）或 JSON 崩坏；重试后的输出仍须过同一道校验，
 // 防线强度不变，只是把"偶发抽风"与"真幻觉"区分开。
-export async function askCloud({ config, question, results, skillChapters, history, timeoutMs, temperature, maxTokens, retryOnQuoteFail = true } = {}) {
+export async function askCloud({ config, question, results, skillChapters, history, memory = "", timeoutMs, temperature, maxTokens, retryOnQuoteFail = true } = {}) {
   const norm = normalizeLlmConfig(config);
   if (norm.error) return llmErr("CONFIG", norm.error);
   const once = async (retryNote) => {
-    const messages = buildMessages({ question, results, skillChapters, history });
+    const messages = buildMessages({ question, results, skillChapters, history, memory });
     if (retryNote) messages[messages.length - 1].content += `\n\n补充要求：${retryNote}`;
     const r = await chat({ ...norm, messages, timeoutMs, temperature, maxTokens });
     if (!r.ok) return r;

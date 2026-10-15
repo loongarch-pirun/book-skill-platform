@@ -113,11 +113,15 @@ function cloudAnswerHtml(r) {
     <div class="cloudans"><div class="cskel">云端 AI 正在写作（基于上面 ${r.results.length} 段原文，约几秒到半分钟）…</div></div>`;
   if (L.answer) {
     const a = L.answer;
+    // V3-R7/R1：引用为空 = 大概率书里没有（诚实标注）；改写变体 chips = 换个问法一键重试
+    const noHit = (a.citations || []).length === 0 ? ` · <span class="dropwarn">书里可能没有相关内容——换个问法试试</span>` : "";
+    const chips = (a.rewrite && a.rewrite.used && Array.isArray(a.rewrite.variants) ? a.rewrite.variants.slice(1) : []);
     return `
       <div class="cloudans">
-        <div class="chead">云端总结 · ${esc(c.model || "")}${a.book ? " · 取材《" + esc(a.book) + "》" : ""}${a.dropped ? ` · <span class="dropwarn">${a.dropped} 条引用未通过核验已隐藏</span>` : ""}</div>
+        <div class="chead">云端总结 · ${esc(c.model || "")}${a.book ? " · 取材《" + esc(a.book) + "》" : ""}${a.dropped ? ` · <span class="dropwarn">${a.dropped} 条引用未通过核验已隐藏</span>` : ""}${noHit}</div>
         <div class="catext">${esc(a.answer)}</div>
         ${a.citations?.length ? `<div class="cacites">${a.citations.map((x) => `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${x.id ?? ""}">${esc(x.book)} · ${esc(x.loc || "定位")} · 跳原文</span>`).join("")}</div>` : ""}
+        ${chips.length ? `<div class="cacites"><span class="chip">换个问法试试：</span>${chips.map((v) => `<button class="ghost sm" data-action="askre" data-q="${esc(v)}">${esc(v)}</button>`).join("")}</div>` : ""}
         <div class="cfoot"><button class="ghost sm" data-action="clsummary">重新总结</button></div>
       </div>`;
   }
@@ -268,6 +272,12 @@ export function bindAskEvents() {
         const r = await call(window.study.llmTest());
         toast(`连接成功——模型回复「${r.reply}」`);
       } catch (err) { toast("连接失败：" + err.message); }
+    }
+    else if (act === "askre") { // 换个问法 chips（V3-R1）：填回问题框重新检索+总结
+      const q = el.dataset.q || "";
+      const box = $("#askQ");
+      if (box) box.value = q;
+      submitAsk();
     }
     else if (act === "clsummary") {
       const q = (state.ask.question || "").trim();

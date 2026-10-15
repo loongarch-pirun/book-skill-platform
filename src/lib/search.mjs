@@ -239,6 +239,38 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
   }
 }
 
+// ---------- 多问法检索（V3-R1）：改写变体各跑一路快检索 → 合并去重 → 原句一次 rerank 终审 ----------
+// 设计：变体路径全部 rerank:false（快，FTS+向量），变体只负责「把候选捞进池子」；
+// 排序权威仍然是用户原话（questions[0]）——原句一次 rerank 终审。
+// 变体数封顶 4、单路收宽 min(topN×2,12)、合并池封顶 30（复试官 ~3.6s 预算）。
+// 不碰 hybridSearch 内部：本函数是 hybridSearch 的编排层。
+export async function multiVariantSearch(dbPath, questions, topN = 6) {
+  const variants = [...new Set((Array.isArray(questions) ? questions : [questions])
+    .map(q => String(q || "").trim()).filter(Boolean))].slice(0, 4);
+  if (!variants.length) return [];
+  const per = Math.min(Math.max(topN * 2, 8), 12);
+  const merged = new Map();
+  for (const v of variants) {
+    for (const r of await hybridSearch(dbPath, v, per, { rerank: false })) {
+      const prev = merged.get(r.id);
+      if (!prev) merged.set(r.id, { ...r, hitVariants: 1 });
+      else {
+        prev.hitVariants++;  // 多路共识计数：仅展示/调试用，不参与打分
+        if (r.score > prev.score) { prev.score = r.score; prev.fts = r.fts; prev.sem = r.sem; }
+      }
+    }
+  }
+  let final = [...merged.values()].sort((a, b) => b.score - a.score).slice(0, 30);
+  if (final.length > 1) {
+    const rerankFn = await getReranker();
+    if (rerankFn) {
+      const scores = await rerankFn(variants[0], final.map(r => r.text));
+      final = final.map((r, i) => ({ ...r, rerank: +scores[i].toFixed(4) })).sort((a, b) => b.rerank - a.rerank);
+    }
+  }
+  return final.slice(0, topN);
+}
+
 // ---------- 动态挑书路由（总入口：临时技能包） ----------
 export async function routeAndSearch(question, { topN = 4, maxBooks = 2, libDir = currentLibDir() } = {}) {
   const books = listBooks(libDir);

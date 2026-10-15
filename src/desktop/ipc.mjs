@@ -59,6 +59,8 @@ export async function registerIpc({ ipcMain, app, dialog, getWin }) {
   // 云端回答存档（V2 P4）：列表（翻历史）/ 清空；删书联动在 books:delete（连引该书存档一起清）
   handle("chat:archiveList", (eng, payload) => chat.archiveList(payload));
   handle("chat:archiveClear", () => chat.archiveClear());
+  // 对话记忆压缩（V3-R6）：渲染层历史变长时调用，旧轮次 → ≤200 字要点（BSP_MEMORY=0 关）
+  handle("chat:compact", (eng, payload) => chat.compactHistory(payload || {}));
 
   // 翻书
   handle("reader:chapters", (eng, bookId) => eng.readerChapters(bookId));

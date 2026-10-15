@@ -50,22 +50,35 @@ function chatMsgsHtml() {
 
 function msgHtml(m) {
   if (m.role === "user") return `<div class="msg user"><div class="bubble">${esc(m.content)}</div></div>`;
+  if (m.role === "note") return `<div class="chatmeta">${esc(m.content || "")}</div>`;
   if (m.error) {
     const deg = (m.results || []).length
       ? `<div class="degfold"><button class="ghost sm" data-action="degtoggle">看本地检索到的 ${m.results.length} 段原文</button>
       <div class="deglist hidden">${m.results.map(degItemHtml).join("")}</div></div>`
       : "";
-    return `<div class="msg ai"><div class="bubble err">${esc(m.error)}${deg}</div></div>`;
+    return `<div class="msg ai"><div class="bubble err">${esc(m.error)}${variantChipsHtml(m.rewrite)}${deg}</div></div>`;
   }
   const cites = (m.citations || []).map((x) =>
     `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${x.id ?? ""}">${esc(x.book || "")} · ${esc(x.loc || "定位")} · 跳原文</span>`).join("");
-  const meta = m.segments ? `<div class="chatmeta">取材 ${m.segments} 段原文${m.book ? " · 《" + esc(m.book) + "》" : ""}${m.mode === "library" ? " · 全库模式" : ""}</div>` : "";
+  // V3-R7：引用为空 = 大概率书里没有——诚实标注而不是让用户猜
+  const noHit = (m.citations || []).length === 0 ? ` · <span class="dropwarn">书里可能没有相关内容——换个问法试试</span>` : "";
+  const meta = m.segments ? `<div class="chatmeta">取材 ${m.segments} 段原文${m.book ? " · 《" + esc(m.book) + "》" : ""}${m.mode === "library" ? " · 全库模式" : ""}${noHit}</div>` : "";
   return `<div class="msg ai"><div class="bubble">
     <div class="atext">${esc(m.content)}</div>
     ${meta}
     ${cites ? `<div class="cacites">${cites}</div>` : ""}
+    ${variantChipsHtml(m.rewrite)}
     ${m.dropped ? `<div class="dropwarn">${m.dropped} 条引用未通过核验已隐藏</div>` : ""}
   </div></div>`;
+}
+
+// 改写变体 chips（V3-R1）：云端改写出的「书里可能的说法」——点按即以该问法重新提问
+// 跳过第一条（原句就是用户刚问的）；挂在成功气泡与错误气泡下都出现
+function variantChipsHtml(rw) {
+  const vs = (rw && rw.used && Array.isArray(rw.variants) ? rw.variants : []).slice(1);
+  if (!vs.length) return "";
+  return `<div class="cacites"><span class="chip">换个问法试试：</span>${vs.map((v) =>
+    `<button class="ghost sm" data-action="askchip" data-q="${esc(v)}">${esc(v)}</button>`).join("")}</div>`;
 }
 
 // 降级原文条目（A1）：与问一问结果卡同规格，引用徽标可跳原文核对
@@ -119,14 +132,40 @@ async function loadArchive() {
   refresh();
 }
 
-// ---------- 发送（每轮：本地检索 → 云端写作 → 引用校验；历史带近 6 条） ----------
+// ---------- 发送（每轮：本地检索 → 云端写作 → 引用校验；历史带近 12 条 + 滚动记忆 V3-R6） ----------
 function buildHistory() {
   const out = [];
-  for (const m of state.chat.messages.slice(-6)) {
+  for (const m of state.chat.messages.slice(-12)) {
     if (m.role === "user" && m.content) out.push({ role: "user", content: m.content });
     else if (m.role === "assistant" && !m.error && m.content) out.push({ role: "assistant", content: m.content });
   }
   return out;
+}
+
+// 滚动对话记忆（V3-R6）：历史变长自动把旧轮次压成 ≤200 字要点（主进程云端压缩），
+// 存进 state.chat.memory 随每轮钉进上下文；显示列表同步折叠并留提示行。
+// 压缩失败静默——对话继续，只是记忆没更新；BSP_MEMORY=0 时主进程优雅跳过。
+function histOf(msgs) {
+  return msgs
+    .filter((m) => (m.role === "user" && m.content) || (m.role === "assistant" && !m.error && m.content))
+    .map((m) => ({ role: m.role, content: m.content }));
+}
+async function maybeCompact() {
+  const c = state.chat;
+  if (c.memoryBusy) return;
+  const usable = histOf(c.messages);
+  if (usable.length < 14) return; // 7 轮起压
+  c.memoryBusy = true;
+  try {
+    const old = usable.slice(0, usable.length - 6);
+    const r = await call(window.study.chatCompact({ history: old, prevMemory: c.memory || "" }));
+    if (r && r.ok && r.memory) {
+      c.memory = r.memory;
+      c.messages = c.messages.slice(-6);
+      c.messages.unshift({ role: "note", content: "更早的对话已折叠为记忆（要点仍在本轮上下文里）" });
+    }
+  } catch { /* 静默：记忆失败不影响对话 */ }
+  c.memoryBusy = false;
 }
 
 async function sendChat() {
@@ -147,11 +186,13 @@ async function sendChat() {
       topN: RETRIEVE_TOPN,
       skillSlug: c.skillSlug,
       history,
+      memory: c.memory || "", // V3-R6：滚动对话记忆随轮携带
     }));
-    if (r.degraded) c.messages.push({ role: "assistant", error: r.error, results: r.results || [] }); // A1：降级通道，错误消息携带本地原文
+    if (r.degraded) c.messages.push({ role: "assistant", error: r.error, results: r.results || [], rewrite: r.rewrite }); // A1：降级通道，错误消息携带本地原文 + 换法建议
     else {
-      c.messages.push({ role: "assistant", content: r.answer, citations: r.citations || [], dropped: r.dropped || 0, segments: r.segments, book: r.book, mode: r.mode });
+      c.messages.push({ role: "assistant", content: r.answer, citations: r.citations || [], dropped: r.dropped || 0, segments: r.segments, book: r.book, mode: r.mode, rewrite: r.rewrite });
       if (c.archive.open) { c.archive.loaded = false; loadArchive(); } // P4：存档面板开着，就地刷进新快照
+      maybeCompact(); // V3-R6：异步不阻塞（压缩失败静默）
     }
   } catch (e) {
     c.messages.push({ role: "assistant", error: e.message });
@@ -169,7 +210,8 @@ export function bindChatEvents() {
     const act = el.dataset.action;
     if (act === "chatmode") { state.chat.mode = el.dataset.mode; state.chat.skillSlug = null; refresh(); } // 切模式清技能包（B6）
     else if (act === "chatgo") sendChat();
-    else if (act === "chatclear") { state.chat.messages = []; refresh(); }
+    else if (act === "chatclear") { state.chat.messages = []; state.chat.memory = ""; refresh(); } // 清空连记忆一起清（V3-R6）
+    else if (act === "askchip") { state.chat.draft = el.dataset.q || ""; refresh(); sendChat(); } // 换个问法 chips（V3-R1）
     // 云端配置（C5）：状态条/配置卡用 ask 页同款 cloudBarHtml，llmedit/llmsave/llmtest/llmclose
     // 处理器在 bindAskEvents（#main 监听全局存活）——这里不再需要跳页的 chatcfg
     else if (act === "goskills") show("skills"); // 书全关时的引导（A2）
