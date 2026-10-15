@@ -67,7 +67,8 @@ npm run dist       # 生成 Windows 安装包（需联网下载打包组件）
    npm run ingest        # 切片 + 向量化，生成 library/*.db
    ```
 3. （可选）编目：用 `src/catalog-export.mjs` 产出任务书 → 智能体产出 JSON → `src/catalog-import.mjs` 入库。
-4. 维基文库书籍可用 `src/fetch-wikisource.mjs` 抓取干净纯文本。
+4. （可选，V3 洗数据）给每块原文生成「前置/标签/假设问题/摘要」：`src/enrich-book.mjs <书库.db>` 带 key 跑批（或 `--export` 出任务书交给外部智能体）→ `src/enrich-import.mjs <书库.db>` 入库；`--audit` 可随时复查回源率与覆盖率。
+5. 维基文库书籍可用 `src/fetch-wikisource.mjs` 抓取干净纯文本。
 
 ---
 
@@ -81,10 +82,13 @@ books/          内置书目源文件（公版内容）
 skills/         已落盘的技能包（如《道德经》）
 catalog-tasks/  编目任务书（中间产物）
 catalog-results/ 编目结果（中间产物）
+enrich-tasks/   洗数据任务书（中间产物）
+enrich-results/ 洗数据结果（中间产物，入库后可由库侧复查再生）
 ```
 
 > 以下目录**默认不入库**（见 `.gitignore`）：`.models/`（模型缓存）、`library/`（书库数据库）、
-> `node_modules/`、`release/`、`release-new/`（打包产物）、`backup/`。
+> `node_modules/`、`release/`、`release-new/`（打包产物）、`backup/`、
+> `books/_work/`（语料暂存区）、`enrich-tasks/`、`enrich-results/`（洗数据中间产物，含书库内容派生数据）。
 
 ---
 
