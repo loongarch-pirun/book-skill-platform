@@ -1,0 +1,11 @@
+{
+  "note": "失败样本集（V3-R8）：真机失败问句随测随录；test/samples-run.mjs 逐条跑检索出对照报告。expected 只写「应该在哪儿」不写标准答案全文。",
+  "samples": [
+    { "id": "S01", "book": "mengzi-zh.docx", "question": "孟子和齐宣王聊霸道那段", "expected": "梁惠王上·齐桓晋文之事章", "got": "（合成样例）字面腿口语不匹配，语义腿不稳", "source": "合成", "date": "2026-10-15" },
+    { "id": "S02", "book": "mengzi-zh.docx", "question": "五十步笑百步是在说什么场景", "expected": "梁惠王上·寡人之于国也章", "got": "（合成样例）", "source": "合成", "date": "2026-10-15" },
+    { "id": "S03", "book": "lunyu-xueer-zh.docx", "question": "孔子觉得什么样算好学", "expected": "学而/哀公问弟子章（敏而好学不耻下问等）", "got": "（合成样例）", "source": "合成", "date": "2026-10-15" },
+    { "id": "S04", "book": "pride-and-prejudice-en.epub", "question": "Darcy 第一次求婚是怎么说的", "expected": "vol2/ch11 附近（in vain have I struggled）", "got": "（合成样例）", "source": "合成", "date": "2026-10-15" },
+    { "id": "S05", "book": "frankenstein-en.epub", "question": "怪物是怎么学会说话的", "expected": "creature 隐居 De Lacey 家观察学习诸块", "got": "（合成样例）", "source": "合成", "date": "2026-10-15" },
+    { "id": "S06", "book": "daodejing-zh.docx", "question": "无为到底是什么意思", "expected": "第二章/第三十七章等无为诸块", "got": "（合成样例）", "source": "合成", "date": "2026-10-15" }
+  ]
+}
