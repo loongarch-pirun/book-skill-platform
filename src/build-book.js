@@ -24,6 +24,57 @@ const sentenceSplit = (text, maxLen = 900) => {
   return out;
 };
 
+// ---------- 新增：结构识别工具（中文序号/短行标题/表格/L1 去噪） ----------
+// 纯页码行（L1 去噪）："12" / "第 12 页" / "第12页"
+const PAGE_ONLY = /^第?\s*\d+\s*页?$/;
+// 中文序号标题行：一、/ （一） / 1. / 1.1 / 1、（行本身要短，长行是正文不是标题）
+const CN_NUM_HEADING = /^([一二三四五六七八九十百]+、|（[一二三四五六七八九十百]+）|\d+(?:\.\d+)*[、．.]\s+\S)/;
+// 句读标点：出现即认定是正文行（标题不带句读；含全角冒号——"输出："是标签不是标题）
+const SENT_PUNCT = /[。，；！？、,.;:!?…~：]/;
+// 图注/表注行：永远不是标题（"图1  螺旋式熔断器实物图"）
+const CAPTION_LINE = /^(图|表|附图|公式|式)\s*\d+|^(fig(ure)?|table)\s*\d+/i;
+// 短行无标点标题候选（启发式）：短、无句读、有实质字符、非纯数字、非列表符、
+// 非残留语法（#注释/反引号/竖线/尖括号——围栏漏网代码与 HTML 组件的行迹）
+const isShortHeadingCandidate = (t) =>
+  t.length <= 20 &&
+  !SENT_PUNCT.test(t) &&
+  !/^\d+$/.test(t) &&
+  !/^[-*+•·]/.test(t) &&
+  !CAPTION_LINE.test(t) &&
+  !/^[#`|<>]/.test(t) &&
+  !/[<>]/.test(t) &&
+  /[\u4e00-\u9fffA-Za-z]/.test(t);
+// 标题行长度上限（中文序号/短行两种规则共用）：超长行是正文
+const HEADING_MAX = 30;
+
+// w:tbl 内容 → 文本行（每行 "a | b | c"）。OOXML 表格经 mammoth 转 <table>，
+// 老 tagRe 只吃 h/p → 表格内容整块丢弃（自产样例 docx 坐实：2 表 72 格全丢）。
+const tableToText = (inner) => {
+  const out = [];
+  for (const tr of inner.split(/<\/tr>/i)) {
+    const cells = tr.split(/<\/t[dh]>/i)
+      .map(td => collapse(decodeHtml(td.replace(/<[^>]+>/g, ""))))
+      .filter((c, i, arr) => !(i === arr.length - 1 && c === ""));  // 劈出尾部空串
+    if (cells.some(c => c !== "")) out.push(cells.join(" | "));
+  }
+  return out;
+};
+
+// 无 Word 标题样式时的章节提升：中文序号行（一、/（一）/1.）+ 短行无标点标题
+// （下一段明显更长才认，防止把图注/短列表项误升）。表格行不参与（单元格不是标题）。
+// 返回新数组（不改入参）。
+const promotePlainHeadings = (items) => items.map((it, i) => {
+  if (it.tag !== "p" || it.fromTable || it.text.length > HEADING_MAX) return it;
+  // 中文序号行也要无句读（检验去掉序号前缀后的部分——"一、"自带顿号不能算）：
+  // "2. 针对……的工作。"是带序号的句子不是标题
+  if (CN_NUM_HEADING.test(it.text) && !SENT_PUNCT.test(it.text.replace(CN_NUM_HEADING, ""))) return { ...it, heading: true };
+  if (!isShortHeadingCandidate(it.text)) return it;
+  const next = items[i + 1];
+  const need = Math.max(30, it.text.length * 2);
+  if (next && next.tag === "p" && next.text.length >= need) return { ...it, heading: true };
+  return it;
+});
+
 // ---------- PDF：按页提取，识别重复页眉页脚 ----------
 async function parsePdf(file) {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
@@ -86,8 +137,7 @@ function parseEpub(file) {
   const spine = [...opf.getElementsByTagName("itemref")].map(r => manifest.get(r.getAttribute("idref")));
   const opfDir = path.dirname(opfPath).replaceAll("\\", "/");
 
-  const chunks = [];
-  let chapterNo = 0;
+  const files = [];
   for (const href of spine) {
     if (!/\.x?html?$/i.test(href)) continue;
     const entry = zip.getEntry(path.posix.join(opfDir, href).replaceAll("\\", "/"));
@@ -101,42 +151,170 @@ function parseEpub(file) {
       const tag = el.tagName.toLowerCase();
       if (!/^(p|h[1-6]|blockquote|li)$/.test(tag)) continue;
       const t = collapse(el.textContent || "");
-      if (t.length >= 8) paras.push(t);
+      // L1 去噪：纯页码行（"12"/"第 12 页"）是排版残留不是内容
+      if (t.length >= 8 && !PAGE_ONLY.test(t)) paras.push(t);
     }
     if (!paras.length) continue;
+    files.push({ title, paras });
+  }
+
+  // L1 去噪：跨章重复短行 = 跑页眉（出现在 >40% 章节、≤20 字、至少 3 章）。
+  // 只删「重复」不删「首次」——章节标题各章不同不会误伤；PDF 路径早有同款逻辑。
+  const lineFreq = new Map();
+  for (const f of files) {
+    for (const k of new Set(f.paras.map(normLine).filter(k => k.length > 0 && k.length <= 20)))
+      lineFreq.set(k, (lineFreq.get(k) || 0) + 1);
+  }
+  const runningJunk = new Set([...lineFreq.entries()]
+    .filter(([, n]) => n >= 3 && n > files.length * 0.4).map(([k]) => k));
+
+  const chunks = [];
+  let chapterNo = 0;
+  for (const f of files) {
+    const kept = f.paras.filter(t => !runningJunk.has(normLine(t)));
+    if (!kept.length) continue;
     chapterNo++;
-    const chapter = title || `章节 ${chapterNo}`;
+    const chapter = f.title || `章节 ${chapterNo}`;
     // 长段落也要过 sentenceSplit（900 字上限）：单个大段落直接入块会让向量质量和 FTS 定位双输
-    for (const t of paras)
+    for (const t of kept)
       for (const seg of sentenceSplit(t))
         chunks.push({ chapter, page: null, text: seg });
   }
-  return { format: "epub", chapters: chapterNo, chunks, cleanedJunk: [] };
+  return { format: "epub", chapters: chapterNo, chunks, cleanedJunk: [...runningJunk] };
 }
 
-// ---------- DOCX：mammoth 转 HTML，标题 → 章节 ----------
+// ---------- DOCX：mammoth 转 HTML，标题 → 章节；表格 → 文本行；无样式标题 → 中文序号/短行启发式 ----------
 const decodeHtml = (s) => s
   .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
   .replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'");
 async function parseDocx(file) {
   const { value: html } = await mammoth.convertToHtml({ path: file });
-  const chunks = [];
-  let chapter = "前言";
-  let chapterNo = 0;
-  const tagRe = /<(h[1-6]|p)[^>]*>([\s\S]*?)<\/\1>/gi;
+  // 第一遍：按文档顺序收集块级元素（h1-6 / p / table→文本行），不过滤
+  const items = [];
+  const tagRe = /<(h[1-6]|p|table)[^>]*>([\s\S]*?)<\/\1>/gi;
   let m;
   while ((m = tagRe.exec(html)) !== null) {
     const tag = m[1].toLowerCase();
+    if (tag === "table") {
+      for (const row of tableToText(m[2])) items.push({ tag: "p", text: row, fromTable: true });
+      continue;
+    }
     const t = collapse(decodeHtml(m[2].replace(/<[^>]+>/g, "")));
-    if (!t) continue;
-    if (/^h[1-6]$/.test(tag)) { chapterNo++; chapter = t; continue; }
-    const cm = t.match(/^(第[0-9一二三四五六七八九十百]+章)\s*(.*)$/);
+    // L1 去噪：纯页码行（docx 正文里偶有手打页码）；整行就是个 HTML 组件标签
+    // （<br/>/<TitleInfos />——转 docx 时逃过标签剥离的模板残留，不是内容）
+    if (!t || PAGE_ONLY.test(t) || /^<[^>]*>$/.test(t)) continue;
+    // md 转 docx 的产物标题会带 "# " 前缀（章节名是元数据，剥掉不影响原文块）
+    items.push({ tag, text: /^h[1-6]$/.test(tag) ? t.replace(/^#+\s*/, "") : t });
+  }
+  // 第二遍：无 Word 标题样式时，用中文序号/短行启发式补章节（皮润作业式纯段落文档）
+  const withHeadings = items.some(it => /^h[1-6]$/.test(it.tag))
+    ? items
+    : promotePlainHeadings(items);
+
+  const chunks = [];
+  let chapter = "前言";
+  let chapterNo = 0;
+  for (const it of withHeadings) {
+    if (it.heading) { chapterNo++; chapter = it.text; continue; }
+    if (/^h[1-6]$/.test(it.tag)) { chapterNo++; chapter = it.text; continue; }
+    const cm = it.text.match(/^(第[0-9一二三四五六七八九十百]+章)\s*(.*)$/);
     if (cm) { chapterNo++; chapter = cm[1]; }
     // 长段落也要过 sentenceSplit（同 epub，900 字上限）
-    for (const seg of sentenceSplit(t))
+    for (const seg of sentenceSplit(it.text))
       chunks.push({ chapter, page: null, text: seg });
   }
   return { format: "docx", chapters: chapterNo, chunks, cleanedJunk: [] };
+}
+
+// ---------- MD：单文件或目录（一章一文件），markdown 语法剥离，标题 → 章节 ----------
+const mdInline = (t) => t
+  .replace(/!\[[^\]]*\]\([^)]*\)/g, "")        // 图片（地址无检索价值）
+  .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")     // 行内链接留文字
+  .replace(/\[([^\]]*)\]\[[^\]]*\]/g, "$1")    // 引用链接留文字
+  .replace(/<[^>]+>/g, "")                     // HTML 标签/居中容器
+  .replace(/\$/g, "");                         // 数学定界符（内容保留）
+
+// 一个 md 文件 → 块级元素列表（heading/text）。代码围栏整段去：
+// 围栏内 `# 注释`/`| 表格`/`> 引用` 会被误判结构，且多语言 tab 重复三遍纯属噪声。
+// 围栏识别用状态机（不用全文正则）：blockquote 里的 ```bash、未闭合围栏、
+// ~~~ 围栏都能正确处理；正则方案在这三种情况下会漏（凤凰架构 setup-docker.md 坐实）。
+function parseMdFile(file) {
+  let raw = fs.readFileSync(file, "utf8").replace(/^\uFEFF/, "");
+  raw = raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "");   // front matter
+  raw = raw.replace(/<!--[\s\S]*?-->/g, "");                 // HTML 注释
+
+  const items = [];
+  let droppedCode = 0;
+  let fence = null;   // { char, len } 围栏开启中
+  for (const line of raw.split(/\r?\n/)) {
+    const bare = line.replace(/^\s*(?:>\s*)+/, "");         // 先剥 blockquote 标记
+    const fm = bare.match(/^\s*(`{3,}|~{3,})(.*)$/);        // info 串可带空格（python title=""）
+    if (fm) {
+      const [mark, info] = [fm[1], fm[2].trim()];
+      if (!fence) { fence = { char: mark[0], len: mark.length }; droppedCode++; continue; }
+      if (mark[0] === fence.char && mark.length >= fence.len && !info) fence = null;
+      continue;                                             // 围栏内行一律丢
+    }
+    if (fence) continue;
+    const hm = bare.match(/^(#{1,6})\s+(.*?)\s*#*\s*$/);
+    if (hm) {
+      const ht = collapse(mdInline(hm[2]));
+      if (/[\u4e00-\u9fffA-Za-z]/.test(ht)) items.push({ tag: "h", text: ht });
+      continue;
+    }
+    if (/^\s*\|.*\|\s*$/.test(bare)) {                      // 表格行 → 文本行
+      const cells = bare.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+      if (cells.every(c => /^:?-{2,}:?$/.test(c))) continue; // 分隔行
+      const row = cells.join(" | ");
+      if (row.replace(/\|/g, "").trim()) items.push({ tag: "p", text: row, fromTable: true });
+      continue;
+    }
+    if (/^\s*(?:={3,}|-{3,}|\*{3,}|:{3,}|={2,}\s*".*")\s*$/.test(bare)) continue; // 分隔线/mkdocs tab
+    let t = bare
+      .replace(/^\s*(?:[-*+]|\d+[.)])\s+/, "")               // 列表标记
+      .replace(/^\s{4,}(?=\S)/, "");                         // 缩进代码块标记
+    t = collapse(mdInline(t));
+    if (t) items.push({ tag: "p", text: t });
+  }
+  return { items, droppedCode };
+}
+
+// 目录 → 一书：md 文件按自然序拼接，无标题文件用文件名补一章
+function parseMd(file) {
+  const stat = fs.statSync(file);
+  const files = stat.isDirectory()
+    ? walkMd(file).sort((a, b) => a.localeCompare(b, "zh", { numeric: true }))
+    : [file];
+  const items = [];
+  let droppedCode = 0;
+  for (const f of files) {
+    const { items: fitems, droppedCode: dc } = parseMdFile(f);
+    droppedCode += dc;
+    if (!fitems.some(it => it.tag === "h")) {
+      items.push({ tag: "h", text: path.basename(f).replace(/\.md$/i, "") });
+    }
+    items.push(...fitems);
+  }
+  const withHeadings = promotePlainHeadings(items);
+  const chunks = [];
+  let chapter = "前言";
+  let chapterNo = 0;
+  for (const it of withHeadings) {
+    if (it.tag === "h" || it.heading) { chapterNo++; chapter = it.text; continue; }
+    for (const seg of sentenceSplit(it.text))
+      chunks.push({ chapter, page: null, text: seg });
+  }
+  return { format: "md", chapters: chapterNo, chunks, cleanedJunk: [], droppedCode, files: files.length };
+}
+
+function walkMd(dir) {
+  const out = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) out.push(...walkMd(p));
+    else if (/\.md$/i.test(e.name)) out.push(p);
+  }
+  return out;
 }
 
 // ---------- 建库：一书一 .db ----------
@@ -158,7 +336,7 @@ function buildDb(file, outPath, parsed) {
     `);
     const totalChars = parsed.chunks.reduce((a, c) => a + c.text.length, 0);
     const setMeta = db.prepare("INSERT INTO meta(key,value) VALUES (?,?)");
-    setMeta.run("title", path.basename(file).replace(/\.[^.]+$/, ""));
+    setMeta.run("title", parsed.title || path.basename(file).replace(/\.[^.]+$/, ""));
     setMeta.run("source_file", path.resolve(file));
     setMeta.run("format", parsed.format);
     setMeta.run("built_at", new Date().toISOString());
@@ -167,6 +345,8 @@ function buildDb(file, outPath, parsed) {
     setMeta.run("chunk_count", String(parsed.chunks.length));
     setMeta.run("total_chars", String(totalChars));
     setMeta.run("content_hash", contentHash(file));
+    if (parsed.files) setMeta.run("md_files", String(parsed.files));
+    if (parsed.droppedCode) setMeta.run("dropped_code", String(parsed.droppedCode));
 
     const tx = db.transaction(() => {
       const ins = db.prepare("INSERT INTO chunks(chapter, page, text) VALUES (?,?,?)");
@@ -182,20 +362,31 @@ function buildDb(file, outPath, parsed) {
   }
 }
 
-const contentHash = (file) =>
-  crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex").slice(0, 16);
+const contentHash = (target) => {
+  const h = crypto.createHash("sha256");
+  if (fs.statSync(target).isDirectory()) {
+    // 目录书：按相对路径序把每个 md 的名字+内容喂进哈希（增删改任一篇都会变）
+    for (const f of walkMd(target).sort((a, b) => a.localeCompare(b, "zh", { numeric: true })))
+      h.update(path.relative(target, f)).update(fs.readFileSync(f));
+  } else {
+    h.update(fs.readFileSync(target));
+  }
+  return h.digest("hex").slice(0, 16);
+};
 
 // ---------- 主流程（可被测试以 main(argv) 调用；直接运行时走 CLI） ----------
 async function main(argv = process.argv.slice(2)) {
   const file = argv[0];
   if (!file || !fs.existsSync(file)) {
-    console.error("用法: node build-book.js <book文件> [-o 输出.db] [--force]");
+    console.error("用法: node build-book.js <book文件|md目录> [-o 输出.db] [--force] [--title 书名]");
     process.exitCode = 1;
     return;
   }
   const force = argv.includes("--force");
+  const titleArg = argv.includes("--title") ? argv[argv.indexOf("--title") + 1] : null;
   const outArg = argv.includes("-o") ? argv[argv.indexOf("-o") + 1] : null;
-  const ext = path.extname(file).toLowerCase();
+  const isDir = fs.statSync(file).isDirectory();
+  const ext = isDir ? ".md" : path.extname(file).toLowerCase();
 
   // 解析：每种格式单独接错（损坏文件/伪装扩展名在这里现形，而不是蹦一屏英文堆栈）
   let parsed;
@@ -203,7 +394,8 @@ async function main(argv = process.argv.slice(2)) {
     if (ext === ".pdf") parsed = await parsePdf(file);
     else if (ext === ".epub") parsed = parseEpub(file);
     else if (ext === ".docx") parsed = await parseDocx(file);
-    else { console.error("不支持的格式: " + ext + "（支持 .pdf/.epub/.docx）"); process.exitCode = 1; return; }
+    else if (ext === ".md" || ext === ".markdown") parsed = parseMd(file);
+    else { console.error("不支持的格式: " + ext + "（支持 .pdf/.epub/.docx/.md，或 md 目录）"); process.exitCode = 1; return; }
   } catch (e) {
     console.error(`解析失败（${ext}）: ${e.message}`);
     console.error("文件可能损坏或不是真正的 " + ext + " 文件。");
@@ -216,8 +408,14 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
 
+  // 书名：--title 优先；目录书默认取上级目录名（凤凰架构/fenix → 凤凰架构）；
+  // 单文件仍取文件名去后缀（行为零变化）
+  const title = titleArg || (isDir ? path.basename(path.dirname(path.resolve(file)))
+    : path.basename(file).replace(/\.[^.]+$/, ""));
+  parsed.title = title;
+
   const out = outArg || path.join(path.dirname(file), "..", "library",
-    path.basename(file).replace(/\.[^.]+$/, "") + "." + parsed.format + ".db");
+    title + "." + parsed.format + ".db");
   fs.mkdirSync(path.dirname(out), { recursive: true });
 
   // 重灌保护：build-book 会整库重建（切片编号变化 → 编目边作废），三种情况拦住，--force 放行
@@ -264,6 +462,8 @@ async function main(argv = process.argv.slice(2)) {
   console.log(`  格式: ${parsed.format} | 切片: ${chunkCount} 块 | 原文: ${totalChars} 字符`);
   if (parsed.numPages) console.log(`  页数: ${parsed.numPages}`);
   if (parsed.chapters) console.log(`  章节: ${parsed.chapters}`);
+  if (parsed.files) console.log(`  md 文件: ${parsed.files} 篇`);
+  if (parsed.droppedCode) console.log(`  已去代码块: ${parsed.droppedCode} 段`);
   if (parsed.cleanedJunk.length) console.log(`  已去页眉页脚: ${parsed.cleanedJunk.length} 种重复行`);
   return { chunkCount, totalChars };
 }
@@ -274,4 +474,4 @@ if (require.main === module) {
   process.on("unhandledRejection", e => { console.error("未处理的异步错误:", e?.stack || e?.message || e); process.exitCode = 1; });
 }
 
-module.exports = { collapse, normLine, sentenceSplit, decodeHtml, parsePdf, parseEpub, parseDocx, buildDb, main, contentHash };
+module.exports = { collapse, normLine, sentenceSplit, decodeHtml, parsePdf, parseEpub, parseDocx, parseMd, parseMdFile, tableToText, promotePlainHeadings, walkMd, buildDb, main, contentHash };
