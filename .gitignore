@@ -22,3 +22,6 @@ backup/
 # 系统杂物
 Thumbs.db
 .DS_Store
+
+# V3 第二波语料暂存区（公版/开放内容与本地素材，不上开源仓库）
+books/_work/
