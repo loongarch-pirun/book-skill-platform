@@ -75,6 +75,9 @@ console.log("\n--- A. rewriteQuery ---");
 }
 {
   ok((await rewriteQuery({ config: CONFIG, question: "  " })).ok === false, "A8: 空问题短路");
+  // F-V3c 加固（V3 review 轮）：history 含 null/非对象/非字符串内容 → 过滤而非裸抛（原实现在 h.role 处 TypeError）
+  const r = await rewriteQuery({ config: { baseUrl: "http://127.0.0.1:1", apiKey: "k", model: "m" }, question: "口语问法", history: [null, { role: "user" }, 42, { role: "user", content: "合法" }] });
+  ok(r.ok === false && r.fallback === true && r.code === "NETWORK", "A11: 垃圾 history 过滤后照常走请求（连不上=NETWORK fallback，不再 TypeError）");
 }
 {
   const p = parseRewrite(JSON.stringify({ variants: ["甲", "乙"] }), "原句");

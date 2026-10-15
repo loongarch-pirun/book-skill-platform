@@ -202,6 +202,15 @@ const RESULTS = [
   ok(sanitizeHistory(null).length === 0 && sanitizeHistory("x").length === 0, "历史净化: 非数组安全返回空");
   const many = sanitizeHistory(Array.from({ length: 10 }, (_, i) => ({ role: "user", content: "m" + i })));
   ok(many.length === 6 && many[0].content === "m4", "历史净化: 只留最近 6 条");
+  // F-V3a 加固（V3 review 轮）：keep/maxLen 非正数/NaN 一律回落默认——slice(-0) 全量放行、负数清零/反向截断三大陷阱
+  const h8 = Array.from({ length: 8 }, (_, i) => ({ role: "user", content: "n" + i }));
+  ok(sanitizeHistory(h8, { keep: 0 }).length === 6 && sanitizeHistory(h8, { keep: -5 }).length === 6
+    && sanitizeHistory(h8, { keep: NaN }).length === 6, "历史净化: keep=0/-5/NaN 回落默认 6（不静默清零不全量放行）");
+  const longOnly = sanitizeHistory([{ role: "user", content: "长".repeat(5000) }], { keep: 12, maxLen: -1 });
+  ok(longOnly.length === 1 && longOnly[0].content === "长".repeat(2000), "历史净化: maxLen=-1 回落默认 2000（不反向截断丢数据）");
+  const big = buildMessages({ question: "q", results: [{ book: "b", text: "t" }], memory: "M".repeat(5000) });
+  const bigLast = big[big.length - 1].content;
+  ok(bigLast.includes("M".repeat(2000)) && !bigLast.includes("M".repeat(2500)), "F-V3b: memory 5000 字进提示词前截断到 2000（防异常记忆撑爆上下文）");
 }
 
 server.closeAllConnections?.();

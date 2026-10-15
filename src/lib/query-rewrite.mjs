@@ -37,7 +37,10 @@ export async function rewriteQuery({ config, question, history = [], timeoutMs =
   const q = String(question || "").trim();
   if (!q) return { ok: false, code: "EMPTY", fallback: true };
   // 近 4 轮上下文：多轮对话里问题常带代词/省略（「那霸道呢？」），改写器需要看到上文
-  const recent = (Array.isArray(history) ? history : []).slice(-4);
+  // F-V3c 加固（本轮 review）：历史元素防御——null/非对象/非字符串内容一律丢弃（原实现在 h.role 处裸抛）
+  const recent = (Array.isArray(history) ? history : [])
+    .filter((h) => h && (h.role === "user" || h.role === "assistant") && typeof h.content === "string" && h.content.trim())
+    .slice(-4);
   const ctx = recent.length
     ? `\n\n【最近对话（用于理解代词与省略）】\n${recent.map(h => `${h.role === "assistant" ? "答" : "问"}：${h.content}`).join("\n")}`
     : "";

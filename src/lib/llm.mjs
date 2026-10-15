@@ -27,12 +27,16 @@ export function normalizeLlmConfig({ baseUrl, apiKey, model } = {}) {
 // ---------- 历史净化（IPC 边界防御：渲染层传来的对话历史不可信） ----------
 // 白名单角色 / 丢空内容与非字符串 / 只留最近 keep 条 / 单条截断 maxLen 字（控 token）
 // V3-R6 参数化：默认 6/2000 保持 V2 契约（llm-fuzz 断言不变）；对话窗口传 {keep:12, maxLen:3000}
+// F-V3a 加固（本轮 review）：keep=0 会踩 slice(-0) 全量放行陷阱、keep=-5 静默清零、
+// maxLen=-1 反向截断丢数据——非正数/NaN 一律回落默认值，正数向下取整。
+const limitOf = (v, dflt) => { const n = Math.floor(Number(v)); return Number.isFinite(n) && n >= 1 ? n : dflt; };
 export function sanitizeHistory(history, { keep = 6, maxLen = 2000 } = {}) {
   if (!Array.isArray(history)) return [];
+  const k = limitOf(keep, 6), m = limitOf(maxLen, 2000);
   return history
     .filter((h) => h && (h.role === "user" || h.role === "assistant") && typeof h.content === "string" && h.content.trim())
-    .slice(-keep)
-    .map((h) => ({ role: h.role, content: h.content.trim().slice(0, maxLen) }));
+    .slice(-k)
+    .map((h) => ({ role: h.role, content: h.content.trim().slice(0, m) }));
 }
 
 // ---------- 提示词 ----------
@@ -61,7 +65,7 @@ export function buildMessages({ question, results, skillChapters = [], history =
     skillChapters.length
       ? `## 技能包参考章节（辅助理解，引用仍以上面片段为准）\n${skillChapters.map((s) => `【${s.title || "章节"}】\n${s.content || ""}`).join("\n\n")}`
       : "",
-    memory ? `## 此前对话要点（更早轮次的记忆压缩，回答时可衔接但引用仍以上面片段为准）\n${memory}` : "",
+    memory ? `## 此前对话要点（更早轮次的记忆压缩，回答时可衔接但引用仍以上面片段为准）\n${String(memory).slice(0, 2000)}` : "",
     `## 问题\n${q}`,
   ].filter(Boolean);
   return [
