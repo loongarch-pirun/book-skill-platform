@@ -16,10 +16,31 @@ import { runEnrich, buildEnrichTaskFile } from "./lib/enrich.mjs";
 import { resolveDirs } from "./desktop/paths.mjs";
 
 const args = process.argv.slice(2);
-const flag = (name) => { const i = args.indexOf(name); return i >= 0 && args[i + 1] ? args[i + 1] : null; };
+// flag() 支持 "--name value" 与 "--name=value" 两种形式（V3R-D01/D24：等号形式曾静默回落默认）
+const flag = (name) => {
+  const i = args.indexOf(name);
+  if (i >= 0 && args[i + 1]) return args[i + 1];
+  const eq = args.find((a) => a.startsWith(name + "="));
+  return eq ? eq.slice(name.length + 1) : null;
+};
 const num = (name, dflt) => { const v = flag(name); return v != null && +v > 0 ? +v : dflt; };
 const all = args.includes("--all");
 const exportOnly = args.includes("--export");
+// V3R-D01（致命）：带值 flag 的「值」必须连 flag 一起排除，否则 URL/key/数字全被当书路径
+// （实测旧代码 `node enrich-book.js x.db --batch 5` → 「找不到 5」，文档里每种带值用法必炸）
+const VALUE_FLAGS = new Set(["--batch", "--min-chars", "--results-dir", "--user-data", "--base", "--key", "--model"]);
+const positional = (() => {
+  const out = [];
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a.startsWith("--")) {
+      if (VALUE_FLAGS.has(a) && i + 1 < args.length && !args[i + 1].startsWith("--")) i++; // 连值一起吃
+      continue;
+    }
+    out.push(a);
+  }
+  return out;
+})();
 
 // userData 候选：--user-data > BSP_USER_DATA > %APPDATA%/book-skill-platform（打包态默认）> 项目根（dev）
 const projectRoot = resolveDirs({ packaged: false }).projectRoot;
@@ -56,7 +77,7 @@ const config = {
 const libDir = resolveDirs({ packaged: false }).libDir;
 const targets = all
   ? fs.readdirSync(libDir).filter(f => f.endsWith(".db")).map(f => path.join(libDir, f))
-  : args.filter(a => !a.startsWith("--"));
+  : positional;
 if (!targets.length) {
   console.error("用法: node src/enrich-book.js <book.db|--all> [--batch N] [--min-chars N] [--no-summary] [--export] [--results-dir DIR]");
   console.error("      [--user-data DIR] [--base URL --key K --model M]");
@@ -66,10 +87,18 @@ for (const t of targets) if (!fs.existsSync(t)) { console.error(`找不到 ${t}`
 
 if (exportOnly) {
   const outDir = path.join(projectRoot, "enrich-tasks");
+  let failed = 0;
   for (const t of targets) {
-    const { outPath, chunks, skipped, batches } = buildEnrichTaskFile(t, outDir);
+    // V3R-D03/D06/D07：坏库（无 chunks 表/垃圾文件）→ 人话拒绝，不裸 SqliteError 堆栈。
+    // lib 层 buildEnrichTaskFile 契约上不抛；此处双保险（抛异常/返回 {error} 两条都收）。
+    let built;
+    try { built = buildEnrichTaskFile(t, outDir); }
+    catch (e) { console.error(`✗ ${path.basename(t)}: 书库读不了（${e.message}）——不是有效的书库文件？`); failed++; continue; }
+    if (built.error) { console.error(`✗ ${path.basename(t)}: ${built.message}`); failed++; continue; }
+    const { outPath, chunks, skipped, batches } = built;
     console.log(`✓ ${path.basename(outPath)}：${chunks} 块待洗（跳过短块 ${skipped}）| ${batches} 批`);
   }
+  if (failed) process.exit(1);
   console.log(`\n下一步（外部智能体通道）: 按任务书 instructions 产出结果 JSON，存到 enrich-results/<同名>.json，等存储层入库（#137）。`);
   process.exit(0);
 }
@@ -101,8 +130,13 @@ const opts = {
 
 let failed = 0;
 for (const t of targets) {
-  const r = await runEnrich(t, opts);
-  if (!r.ok && (r.code === "CONFIG" || r.code === "NOBOOK" || r.code === "STALE" || r.code === "DBBROKEN")) {
+  // V3R-D07：runEnrich 契约上不抛（lib 层失败一律 return {error}），但坏库/环境边缘仍兜一道——人话拒绝不裸堆栈
+  let r;
+  try { r = await runEnrich(t, opts); }
+  catch (e) { failed++; console.error(`✗ ${path.basename(t)}: 洗数据失败（${e.message}）`); continue; }
+  // V3R-D24：错误码从白名单逐个列举改为通用判断——PARTIAL 有 stats 走 △ 续跑路径，
+  // 其余 !ok 一律按失败处理（旧代码漏列新错误码会踩 r.stats 崩出英文栈）
+  if (!r.ok && r.code !== "PARTIAL") {
     failed++;
     console.error(`✗ ${path.basename(t)}: ${r.message}`);
     continue;
