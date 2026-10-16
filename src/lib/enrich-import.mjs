@@ -128,12 +128,24 @@ ON CONFLICT(scope,ref) DO UPDATE SET summary=excluded.summary, updated_at=exclud
       db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('enrich_at',?)").run(now);
       db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('enrich_entries',?)").run(String(v.entries.length));
       db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('enrich_source',?)").run(path.basename(artifactPath));
-      // ① 运行时保险：事务内复核原文指纹，不一致抛错 → 整个事务回滚（一行都不留）
+      // ① 运行时保险：事务内复核原文指纹，不一致抛错 → 整个事务回滚（一行都不留）；
+      //   抛出后由 tx() 外层 catch 转 {ok:false, code:"TAMPER"} 返回（V3R-D04，绝不穿层）
       const hashAfter = textFingerprint(db);
       if (hashAfter !== hashBefore) throw new Error(`原文指纹变化（${hashBefore} → ${hashAfter}），整单回滚`);
       return { tagsTotal, chapterCount, bookWritten };
     });
-    const written = tx();
+    // V3R-D04（严重）：事务内抛错（指纹保险丝触发/库内既有表 schema 不兼容）→ better-sqlite3 已整单回滚；
+    // lib 铁律：穿层前转 {ok:false}——CLI/桌面拿到人话而非英文栈。指纹不符单列 TAMPER 码（语义精确）。
+    let written;
+    try { written = tx(); }
+    catch (e) {
+      const tamper = String(e?.message || "").includes("原文指纹");
+      return {
+        ok: false,
+        code: tamper ? "TAMPER" : "DBBROKEN",
+        message: tamper ? e.message : `入库写库失败（已整单回滚，一行都没留）：${e?.message || e}`,
+      };
+    }
     onProgress({ phase: "import", done: v.entries.length, total: task.chunks.length });
     return {
       ok: true, code: "OK",

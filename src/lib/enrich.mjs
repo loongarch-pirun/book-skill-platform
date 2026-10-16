@@ -173,15 +173,23 @@ export function matchEntries(rawList, batch) {
 }
 
 // 单批：调云端 → 解析 → 验真。不抛异常（lib 层铁律：失败返回 {ok:false, code}）。
+// V3R-W5-1：chatFn 直接 throw（网络库 bug/测试注入）也按失败批处理——记 failed 可续跑，不穿层。
+// 例外：CANCELLED（桌面取消闸门 guardChat 抛的）必须穿层——取消不是失败，见 enrich-job runPipeline。
 export async function enrichBatch(batch, { chatFn = chat, config, ...opts } = {}) {
   const o = { ...ENRICH_DEFAULTS, ...opts };
-  const r = await chatFn({
-    ...config,
-    temperature: o.temperature,
-    maxTokens: o.maxTokens,
-    timeoutMs: o.timeoutMs,
-    messages: buildEnrichMessages(batch),
-  });
+  let r;
+  try {
+    r = await chatFn({
+      ...config,
+      temperature: o.temperature,
+      maxTokens: o.maxTokens,
+      timeoutMs: o.timeoutMs,
+      messages: buildEnrichMessages(batch),
+    });
+  } catch (e) {
+    if (e?.code === "CANCELLED") throw e;
+    return { ok: false, code: "CHATERR", message: `模型调用抛出异常：${e?.message || e}` };
+  }
   if (!r.ok) return { ok: false, code: r.code || "HTTP", message: r.message || "模型调用失败" };
   const rawList = parseEnrich(r.text);
   if (!rawList) return { ok: false, code: "BADRESP", message: "模型未按 JSON 数组格式返回" };
@@ -207,6 +215,8 @@ export function enrichArtifactPath(resultsDir, dbName) {
 }
 
 // 读缓存：末条覆盖（重跑的批会追加新条）；返回 { entries: Map, failedBatches: number[][], hash }
+// V3R-D09（一般）：除半行损坏（JSON 解析失败）外，形状异常行（null 行/entries:null/条目无 idx/缺 idxs）
+// 同样当坏行跳过——手改或裁剪过的缓存不该让 runEnrich 炸 TypeError 穿层
 export function loadEnrichCache(jsonlPath, contentHash) {
   const out = { entries: new Map(), failedBatches: [], hash: null };
   if (!fs.existsSync(jsonlPath)) return out;
@@ -214,9 +224,16 @@ export function loadEnrichCache(jsonlPath, contentHash) {
     if (!line.trim()) continue;
     let rec;
     try { rec = JSON.parse(line); } catch { continue; }   // 半行损坏（崩溃写入中）→ 跳过
-    if (rec.t === "meta") out.hash = rec.content_hash;
-    else if (rec.t === "ok") for (const e of rec.entries) out.entries.set(e.idx, e);
-    else if (rec.t === "fail") out.failedBatches.push(rec.idxs);
+    if (rec == null || typeof rec !== "object" || Array.isArray(rec)) continue;  // null/标量/数组行 → 跳过
+    if (rec.t === "meta") {
+      if (typeof rec.content_hash === "string") out.hash = rec.content_hash;
+    } else if (rec.t === "ok") {
+      if (Array.isArray(rec.entries)) {
+        for (const e of rec.entries) if (e && Number.isInteger(e.idx)) out.entries.set(e.idx, e);
+      }
+    } else if (rec.t === "fail") {
+      if (Array.isArray(rec.idxs)) out.failedBatches.push(rec.idxs);
+    }
   }
   out.stale = !!contentHash && out.hash != null && out.hash !== contentHash;
   return out;
@@ -261,7 +278,10 @@ export async function runEnrich(dbPath, opts = {}) {
   try { db = new Database(dbPath, { readonly: true }); }
   catch (e) { return { ok: false, code: "DBBROKEN", message: `书库打不开：${e.message}` }; }
   let task;
-  try { task = buildEnrichTasks(db, { minChars: o.minChars }); } finally { db.close(); }
+  // V3R-D02（严重）：坏库（无 chunks 表等）→ DBBROKEN 返回，不裸抛穿层到 CLI/桌面
+  try { task = buildEnrichTasks(db, { minChars: o.minChars }); }
+  catch (e) { return { ok: false, code: "DBBROKEN", message: `书库读不了（${e.message}）——缺 chunks 表或文件损坏` }; }
+  finally { db.close(); }
 
   const dbName = path.basename(dbPath);
   const jsonlPath = enrichResultPath(resultsDir, dbName);
@@ -283,7 +303,7 @@ export async function runEnrich(dbPath, opts = {}) {
   const stats = {
     chunks: task.chunks.length, skipped: task.skipped, chapters: new Set(task.chunks.map(c => c.chapter)).size,
     batches: batches.length, batchesPending: pending.length, batchesFailed: 0,
-    tagsDropped: 0, tagsCapped: 0, calls: 0, usageIn: 0, usageOut: 0,
+    tagsDropped: 0, tagsCapped: 0, calls: 0, usageIn: 0, usageOut: 0, summariesFailed: 0,
   };
   for (const b of pending) {
     const r = await enrichBatch(b, { chatFn, ...o, config: normCfg });
@@ -307,7 +327,11 @@ export async function runEnrich(dbPath, opts = {}) {
   if (o.summaries !== false && cache.entries.size > 0) {
     summaries = await runSummaryPass(task, cache.entries, { chatFn, ...o, config: normCfg, onProgress });
     stats.calls += summaries.calls;
-    if (summaries.usage) { stats.usageIn += summaries.usage.prompt_tokens || 0; stats.usageOut += summaries.usage.completion_tokens || 0; }
+    // V3R-D11：章/书摘要失败数进 stats（artifact.stats 同带）——「失败机器可验」不打折；
+    // usage 逐次累加（旧代码只留最后一次调用，token 少计）
+    stats.summariesFailed = summaries.failed;
+    stats.usageIn += summaries.usageIn;
+    stats.usageOut += summaries.usageOut;
   }
 
   const artifact = compactEnrichArtifact(jsonlPath, jsonPath, {
@@ -340,20 +364,27 @@ export async function runSummaryPass(task, entriesMap, { chatFn = chat, config, 
     byChapter.get(c.chapter).push(e);
   }
   const chapterSummaries = {};
-  let calls = 0, failed = 0, usage = null;
+  let calls = 0, failed = 0, usageIn = 0, usageOut = 0;
   const names = [...byChapter.keys()];
   for (let i = 0; i < names.length; i += chaptersPerCall) {
     const group = names.slice(i, i + chaptersPerCall);
     const list = group.map(ch => `【${ch}】\n${byChapter.get(ch).map(e => e.summary || e.prefix).filter(Boolean).join("\n").slice(0, 4000)}`).join("\n\n");
-    const r = await chatFn({
-      ...config, temperature: 0.2, maxTokens: 2000, timeoutMs: 60000,
-      messages: [
-        { role: "system", content: "你是严谨的读书助手。用户给出一本书若干章节的块摘要，请为每个章节写一段 300 字以内的章节摘要。只输出一个 JSON 数组，不要任何其他内容，格式：[{\"chapter\":\"章节名（原样返回）\",\"summary\":\"…\"}]。铁律：chapter 必须原样返回；只依据给定摘要概括，不引用外部知识。" },
-        { role: "user", content: `书名《${task.book.title || ""}》，共 ${group.length} 章：\n\n${list}` },
-      ],
-    });
+    let r;
+    try {
+      r = await chatFn({
+        ...config, temperature: 0.2, maxTokens: 2000, timeoutMs: 60000,
+        messages: [
+          { role: "system", content: "你是严谨的读书助手。用户给出一本书若干章节的块摘要，请为每个章节写一段 300 字以内的章节摘要。只输出一个 JSON 数组，不要任何其他内容，格式：[{\"chapter\":\"章节名（原样返回）\",\"summary\":\"…\"}]。铁律：chapter 必须原样返回；只依据给定摘要概括，不引用外部知识。" },
+          { role: "user", content: `书名《${task.book.title || ""}》，共 ${group.length} 章：\n\n${list}` },
+        ],
+      });
+    } catch (e) {
+      if (e?.code === "CANCELLED") throw e;   // 取消穿层（同 enrichBatch 例外）
+      failed++; continue;                      // 其余异常按该章批失败降级，不穿层
+    }
     calls++;
-    if (r.usage) usage = r.usage;
+    // V3R-D11：usage 逐次累加（旧代码整体覆盖只留最后一次，token 少计）
+    if (r.usage) { usageIn += r.usage.prompt_tokens || 0; usageOut += r.usage.completion_tokens || 0; }
     if (!r.ok) { failed++; continue; }
     const arr = parseEnrich(r.text);
     if (!arr || arr.length !== group.length) { failed++; continue; }
@@ -372,28 +403,44 @@ export async function runSummaryPass(task, entriesMap, { chatFn = chat, config, 
   let bookSummary = "";
   const chapterList = Object.entries(chapterSummaries).map(([ch, s]) => `【${ch}】${s}`).join("\n").slice(0, ENRICH_DEFAULTS.bookInputMax);
   if (chapterList) {
-    const r = await chatFn({
-      ...config, temperature: 0.2, maxTokens: 800, timeoutMs: 60000,
-      messages: [
-        { role: "system", content: "你是严谨的读书助手。用户给出一本书的全部章节摘要，请写一段 500 字以内的全书摘要（这本书讲什么、覆盖哪些主题）。只依据给定摘要，不引用外部知识。直接输出摘要正文，不要 JSON、不要标题。" },
-        { role: "user", content: `书名《${task.book.title || ""}》：\n\n${chapterList}` },
-      ],
-    });
-    calls++;
-    if (r.usage) usage = r.usage;
-    if (r.ok) bookSummary = cap(String(r.text || "").trim(), ENRICH_DEFAULTS.bookSummaryMax);
-    else failed++;
+    let r;
+    try {
+      r = await chatFn({
+        ...config, temperature: 0.2, maxTokens: 800, timeoutMs: 60000,
+        messages: [
+          { role: "system", content: "你是严谨的读书助手。用户给出一本书的全部章节摘要，请写一段 500 字以内的全书摘要（这本书讲什么、覆盖哪些主题）。只依据给定摘要，不引用外部知识。直接输出摘要正文，不要 JSON、不要标题。" },
+          { role: "user", content: `书名《${task.book.title || ""}》：\n\n${chapterList}` },
+        ],
+      });
+    } catch (e) {
+      if (e?.code === "CANCELLED") throw e;   // 取消穿层（同 enrichBatch 例外）
+      failed++; r = null;                      // 书摘要失败不阻断（块/章摘要在缓存里）
+    }
+    if (r) {
+      calls++;
+      if (r.usage) { usageIn += r.usage.prompt_tokens || 0; usageOut += r.usage.completion_tokens || 0; }
+      if (r.ok) bookSummary = cap(String(r.text || "").trim(), ENRICH_DEFAULTS.bookSummaryMax);
+      else failed++;
+    }
   }
-  return { chapterSummaries, bookSummary, calls, failed, usage };
+  return { chapterSummaries, bookSummary, calls, failed, usageIn, usageOut };
 }
 
 // ---------- 任务书导出（外部智能体通道；不需要 key） ----------
 // 形状与 catalog-tasks 同构：instructions 是唯一真源，智能体照它产出 enrich-results/<同名>.json
+// V3R-D06（严重）：坏库（无 chunks 表/垃圾文件）→ 返回 {error,message,hint}，不裸抛（lib 铁律）
 export function buildEnrichTaskFile(dbPath, outDir) {
   const Database = require("better-sqlite3");
-  const db = new Database(dbPath, { readonly: true });
+  let db;
+  try { db = new Database(dbPath, { readonly: true }); }
+  catch (e) {
+    return { error: true, message: `书库打不开：${e.message}`, hint: "确认这是 book-skill-platform 建的书库（.db 文件），不是随便一个数据库" };
+  }
   let task;
-  try { task = buildEnrichTasks(db); } finally { db.close(); }
+  try { task = buildEnrichTasks(db); }
+  catch (e) {
+    return { error: true, message: `书库读不了：${e.message}`, hint: "缺 chunks 表或文件损坏——先跑 embed-book 建库，或换一个有效的书库" };
+  } finally { db.close(); }
   const dbName = path.basename(dbPath);
   const batches = makeBatches(task.chunks).map(b => b.map(c => ({ idx: c.idx, chapter: c.chapter, text: c.text })));
   const file = {
@@ -413,7 +460,9 @@ export function buildEnrichTaskFile(dbPath, outDir) {
 }
 
 // ---------- 外部结果验真（#137 入库前共用；与跑批通道同一套验真函数） ----------
-// 返回 { entries, stats, errors }；errors 非空 = 拒收（一个字符都不入库）。
+// 返回 { entries, stats, errors }。V3R-D12（一般）：旧注释「errors 非空 = 拒收」与行为不符——
+// errors 实为「提醒级」：importEnrich 把它们当 warnings 照常入库（缺号块留 NULL 报覆盖率、
+// 坏 idx 条目不写、重号按首条），硬拒收只有调用方的 content_hash 不符（STALE）。注释与代码对齐，防误导接班人。
 export function validateEnrichResult(result, task) {
   const errors = [];
   if (!result || typeof result !== "object") return { entries: [], stats: {}, errors: ["结果不是 JSON 对象"] };
