@@ -69,6 +69,11 @@ const studyStub = {
   jobsCancel: () => reply({}),
   jobsPickResult: () => reply(null),
   jobsResumeCatalog: () => reply({}),
+  // 洗数据一键入口（V3 #140）：stub 覆盖 preload 全部 API（漏一个=真实契约在测试里断掉没人知道）
+  enrichStart: (bookId) => { ipcCalls.push("enrichStart"); return reply({ started: true, bookId, estimate: { calls: 4, chunks: 6, chapters: 2 } }); },
+  enrichCancel: () => reply({ cancelled: true, note: "已取消" }),
+  enrichStatus: () => reply({}),
+  enrichAudit: (bookId) => { ipcCalls.push("enrichAudit"); return reply({ ready: false }); },
   ask: (payload) => { ipcCalls.push("ask"); askTopN = payload?.topN; return reply({ mode: "book", results: [{ id: 1, book: "测试书", bookId: "t.docx", loc: "第一章", text: "學而時習之", rerank: 0.9 }] }); },
   llmConfigGet: () => { ipcCalls.push("llmConfigGet"); return reply({ baseUrl: "", model: "", hasKey: false, keyTail: null, encryption: "unknown", warning: null }); },
   llmConfigSet: () => reply({ baseUrl: "https://x", model: "m", hasKey: true, keyTail: "…test", encryption: "safeStorage", warning: null }),
@@ -90,7 +95,7 @@ const studyStub = {
   skillToggle: () => reply({}),
   engineStatus: () => reply({}),
   warmup: () => reply({}),
-  onModelProgress: () => {}, onEngineReady: () => {}, onEngineError: () => {}, onJobsProgress: (cb) => { studyStub.__jobsCb = cb; },
+  onModelProgress: () => {}, onEngineReady: () => {}, onEngineError: () => {}, onJobsProgress: (cb) => { studyStub.__jobsCb = cb; }, onEnrichProgress: () => {},
 };
 global.window = { study: studyStub, addEventListener() {}, dispatchEvent() {} };
 

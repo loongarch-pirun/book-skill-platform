@@ -42,6 +42,32 @@ export function applyConfig(patch) {
 }
 
 // ---------- 书架：全量书（含关掉的）+ 编目摘要 + 开关态 ----------
+// 洗数据摘要（#140 书架徽标）：轻量只读——ctx 列在不在、覆盖率、标签数、三级摘要数。
+// 与 enrich-job 的 auditEnrich 的区别：**不做全库指纹**（书架每次刷新都跑，指纹太贵），
+// 只取徽标要显示的数字；回源率等重活走 enrich:audit 通道按需查。
+function enrichSummary(dbPath) {
+  try {
+    const db = new Database(dbPath, { readonly: true });
+    try {
+      const cols = db.prepare("PRAGMA table_info(chunks)").all().map((c) => c.name);
+      if (!cols.includes("ctx")) return { ready: false }; // 没洗过（ensureEnrichSchema 未跑）
+      const covered = db.prepare("SELECT COUNT(*) c FROM chunks WHERE ctx IS NOT NULL AND ctx != ''").get().c;
+      const eligible = db.prepare("SELECT COUNT(*) c FROM chunks WHERE length(text) >= 40").get().c;
+      const has = (t) => !!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(t);
+      const tags = has("chunk_tags") ? db.prepare("SELECT COUNT(*) c FROM chunk_tags").get().c : 0;
+      const byScope = has("summaries")
+        ? Object.fromEntries(db.prepare("SELECT scope, COUNT(*) c FROM summaries GROUP BY scope").all().map((r) => [r.scope, r.c]))
+        : {};
+      return {
+        ready: true, covered, eligible,
+        pct: eligible ? Math.round((covered / eligible) * 100) : 0,
+        tags,
+        summaries: { chunk: byScope.chunk || 0, chapter: byScope.chapter || 0, book: byScope.book || 0 },
+      };
+    } finally { db.close(); }
+  } catch { return { ready: false }; } // 单本读失败不拖垮整个书架
+}
+
 export function booksList() {
   const libDir = currentLibDir();
   const state = loadSkillState(libDir);
@@ -51,7 +77,7 @@ export function booksList() {
       const s = getCatalogSummary(b.db);
       if (s.cataloged) catalog = { cataloged: true, themes: s.themes.map(t => t.name), persons: s.persons.length };
     } catch { /* 单本编目读失败不拖垮整个书架 */ }
-    return { ...b, skillEnabled: state[b.id] !== false, catalog };
+    return { ...b, skillEnabled: state[b.id] !== false, catalog, enrich: enrichSummary(b.db) };
   });
 }
 

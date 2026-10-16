@@ -213,16 +213,26 @@ export async function loadSkillsView() {
   refresh();
 }
 
-// ---------- 书架任务条动作（取消 / 重试 / 导入编目结果） ----------
+// ---------- 书架任务条动作（取消 / 重试 / 导入编目结果 / 洗数据 #140） ----------
 export async function shelfJobAction(act, bookId) {
   try {
     if (act === "jobcancel") {
       const r = await call(window.study.jobsCancel(bookId));
       toast(r.cancelled ? (r.note || "已取消") : "没有进行中的导入");
+    } else if (act === "enrichcancel") {
+      const r = await call(window.study.enrichCancel(bookId));
+      toast(r.cancelled ? (r.note || "已取消") : "没有进行中的洗数据");
     } else if (act === "jobretry") {
       const job = state.jobs[bookId];
       if (!job?.filePath) { toast("找不到原始文件路径，请重新把书拖进书架"); return; }
       await call(window.study.importBook(job.filePath));
+    } else if (act === "enrich" || act === "enrichretry") {
+      // 一键洗数据：启动即返回（后台跑批），进度走 enrich:progress 事件 → 书架卡片横幅
+      const r = await call(window.study.enrichStart(bookId));
+      const est = r?.estimate;
+      toast(est
+        ? `开始洗数据——约 ${est.calls} 次云端调用（${est.chunks} 块 / ${est.chapters} 章），进度在书架卡片上看，可以离开这个页面`
+        : "开始洗数据——进度在书架卡片上看，可以离开这个页面");
     } else if (act === "catprompt") {
       const r = await call(window.study.jobsCatalogPrompt(bookId));
       state.prompt = { bookId, text: r.text, chars: r.chars, path: r.path };
@@ -235,7 +245,8 @@ export async function shelfJobAction(act, bookId) {
   } catch (e) { toast(e.message); }
   finally {
     state.books = await call(window.study.booksList());
-    state.jobs = await call(window.study.jobsStatus());
+    // 两个任务 Map 汇流（导入 jobs + 洗数据 enrich）——分开注册，书架共用一个 state.jobs
+    state.jobs = { ...(await call(window.study.jobsStatus())), ...(await call(window.study.enrichStatus())) };
     refresh();
   }
 }

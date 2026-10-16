@@ -125,14 +125,22 @@ function bindCloudChip() {
   });
 }
 
-// ---------- 导入管线进度：书架卡片横幅（阶段切换才刷书架列表，节流防抖） ----------
+// ---------- 后台任务进度：导入 jobs + 洗数据 enrich 共用一条汇流（#140） ----------
+// 两个频道推的都是 {bookId, stage, ...}，汇进同一个 state.jobs——书架卡片横幅零改动生效
 function bindJobsProgress() {
   let lastPaint = 0;
-  window.study.onJobsProgress((e) => {
+  const onJobEvent = (e) => {
     if (!e || !e.bookId) return;
     const prev = state.jobs[e.bookId];
     const stageChanged = !prev || prev.stage !== e.stage;
     state.jobs = { ...state.jobs, [e.bookId]: e };
+    // 洗数据是长任务（几分钟到几十分钟）：完成/失败都 toast 一句——用户可能已离开书架页；
+    // 书架页另有持久横幅（failed 态），这里补"不在眼前时也知道结果"
+    if (e.kind === "enrich" && (e.stage === "done" || e.stage === "failed")) {
+      const t = state.books.find((b) => b.id === e.bookId);
+      const name = t?.title || e.bookId;
+      toast(e.stage === "done" ? `《${name}》洗数据完成：${e.detail || ""}` : `《${name}》洗数据失败：${e.error || "未知原因"}`);
+    }
     if (state.view !== "shelf") return;
     const now = Date.now();
     if (stageChanged || now - lastPaint > 1500) {
@@ -141,7 +149,9 @@ function bindJobsProgress() {
         call(window.study.booksList()).then((b) => { state.books = b; refresh(); }).catch(() => refresh());
       } else refresh();
     }
-  });
+  };
+  window.study.onJobsProgress(onJobEvent);
+  window.study.onEnrichProgress(onJobEvent);
 }
 
 // ---------- 启动 ----------
@@ -170,6 +180,8 @@ async function boot() {
     // 覆盖运行时换书库目录 / 主进程那次扫描事件早于页面注册监听而丢失的场景
     await call(window.study.jobsScanPending());
     state.jobs = await call(window.study.jobsStatus());
+    // 洗数据任务恢复（#140）：刷新页面/重启后，进行中与终态任务都从主进程 Map 捞回横幅
+    state.jobs = { ...state.jobs, ...(await call(window.study.enrichStatus())) };
     state.skills.packages = await call(window.study.skillsList()); // 问一问的技能包选择器要用
     state.llm.config = await call(window.study.llmConfigGet()); // 云端问答（P2）：配置状态（不含明文 key）
     paintCloudChip(); // C4：顶栏云端 chip 就位（未配置态也要显示，点击可去配）

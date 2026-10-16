@@ -12,7 +12,7 @@ export function renderShelf() {
   const books = state.books;
   return `
     <div class="view-title">书架</div>
-    <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据</div>
+    <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据 · 「洗数据」给每块产前置/标签/摘要（走云端，检索永远在本机）</div>
     <div class="dropzone" id="dropzone"><b>把书拖到这里</b>（.epub / .docx / .pdf / .txt）<span class="soon">自动切片 → 向量化 → 生成编目任务书（编目结果可稍后导入）</span></div>
     ${promptBoxHTML()}
     <div class="shelf">${books.map((b) => bookCard(b)).join("") || '<div class="empty">书架空空如也——去拖本书进来</div>'}
@@ -36,16 +36,19 @@ function promptBoxHTML() {
     </div>`;
 }
 
-// 书卡片：导入中显示阶段横幅（jobs 状态），失败显示哪一步，待编目给恢复入口
+// 书卡片：导入中显示阶段横幅（jobs 状态），失败显示哪一步，待编目给恢复入口。
+// 洗数据任务（#140）汇进同一个 state.jobs——stage 名落在同一套分支里，kind 区分取消/重试按钮
 function bookCard(b) {
   const job = state.jobs[b.id];
+  const running = job && !["done", "failed", "catalog", "cancelled"].includes(job.stage);
   let badge = "";
-  if (job && !["done", "failed", "catalog", "cancelled"].includes(job.stage)) {
+  if (running) {
     badge = `<div class="jobstrip"><span class="jobstage">${esc(job.label || job.stage)}</span>${job.detail ? `<span class="jobdetail">${esc(job.detail)}</span>` : ""}
-      <button class="ghost sm" data-action="jobcancel" data-bid="${esc(b.id)}">取消</button></div>`;
+      <button class="ghost sm" data-action="${job.kind === "enrich" ? "enrichcancel" : "jobcancel"}" data-bid="${esc(b.id)}">取消</button></div>`;
   } else if (job && job.stage === "failed") {
-    badge = `<div class="jobstrip fail"><span class="jobstage">导入失败</span><span class="jobdetail">${esc(job.error || "未知原因")}</span>
-      <button class="ghost sm" data-action="jobretry" data-bid="${esc(b.id)}">重试</button></div>`;
+    const isEnrich = job.kind === "enrich";
+    badge = `<div class="jobstrip fail"><span class="jobstage">${esc(job.label || "失败")}</span><span class="jobdetail">${esc(job.error || "未知原因")}</span>
+      <button class="ghost sm" data-action="${isEnrich ? "enrichretry" : "jobretry"}" data-bid="${esc(b.id)}">${isEnrich ? "重试洗数据" : "重试"}</button></div>`;
   } else if (job && job.stage === "catalog") {
     badge = `<div class="jobstrip wait"><span class="jobstage">待编目</span><span class="jobdetail">任务书已生成，等编目结果</span>
       <button class="ghost sm" data-action="catprompt" data-bid="${esc(b.id)}">生成提示词</button>
@@ -55,13 +58,21 @@ function bookCard(b) {
     <div class="bookcard" data-action="open" data-bid="${esc(b.id)}">
       <h3>${esc(b.title)}</h3>
       <div class="bookmeta">${esc(b.format || "?")} · ${b.chapters ? b.chapters + " 章" : "未分章"} · ${b.chunks || 0} 块</div>
-      <div class="tags">${b.catalog?.themes?.length ? b.catalog.themes.slice(0, 4).map((t) => `<span class="tag">${esc(t)}</span>`).join("") : '<span class="tag nocat">未编目</span>'}</div>
+      <div class="tags">${b.catalog?.themes?.length ? b.catalog.themes.slice(0, 4).map((t) => `<span class="tag">${esc(t)}</span>`).join("") : '<span class="tag nocat">未编目</span>'}${enrichTag(b)}</div>
       ${badge}
       <div class="cardfoot">
         <span class="skill-dot ${b.skillEnabled ? "" : "off"}">${b.skillEnabled ? "AI 可查" : "skill 已关"}</span>
-        <button class="delbtn" data-action="del" data-bid="${esc(b.id)}">删除</button>
+        <span class="cardbtns">${running ? "" : `<button class="ghost sm" data-action="enrich" data-bid="${esc(b.id)}">洗数据</button>`}<button class="delbtn" data-action="del" data-bid="${esc(b.id)}">删除</button></span>
       </div>
     </div>`;
+}
+
+// 洗数据徽标（#140）：已洗→覆盖率+标签数（悬浮看三级摘要）；未洗→引导（没配 key 点了也有人话提示）
+function enrichTag(b) {
+  const e = b.enrich;
+  if (!e || !e.ready) return '<span class="tag nocat">未洗数据</span>';
+  const s = e.summaries || {};
+  return `<span class="tag enr" title="标签 ${e.tags} 个 · 摘要 ${s.chunk || 0} 块 / ${s.chapter || 0} 章 / ${s.book ? 1 : 0} 全书">已洗 ${e.pct}% · 标签 ${e.tags}</span>`;
 }
 
 // ---------- 拖拽导入（接 jobs.mjs 真管线） ----------
@@ -145,7 +156,8 @@ export function bindShelfEvents() {
       } catch (err) { toast("删除失败：" + err.message); }
     }
     else if (act === "cite") jumpTo(el.dataset.bid, el.dataset.cid);
-    else if (act === "jobcancel" || act === "jobretry" || act === "catimport" || act === "catprompt") {
+    else if (act === "jobcancel" || act === "jobretry" || act === "catimport" || act === "catprompt"
+      || act === "enrich" || act === "enrichretry" || act === "enrichcancel") {
       e.stopPropagation();
       shelfJobAction(act, el.dataset.bid);
     }

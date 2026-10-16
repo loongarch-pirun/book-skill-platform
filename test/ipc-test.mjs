@@ -23,7 +23,9 @@ engine.init({ packaged: false });
 const EXPECTED = ["config:get", "config:set", "config:pickLibDir", "books:list", "books:catalog", "books:delete",
   "ask:query", "reader:chapters", "reader:block", "reader:locate", "skills:list", "skills:read", "skills:toggle",
   "engine:status", "engine:warmup", "llm:configGet", "llm:configSet", "llm:test", "chat:summary",
-  "chat:archiveList", "chat:archiveClear"];
+  "chat:archiveList", "chat:archiveClear",
+  // 洗数据一键入口（V3 第二波 #140）
+  "enrich:start", "enrich:cancel", "enrich:status", "enrich:audit"];
 ok(EXPECTED.every((ch) => handlers.has(ch)), `关键通道全部注册（期望子集 ${EXPECTED.length} 条 / 实际注册 ${handlers.size} 条）`);
 
 const invoke = async (ch, ...args) => handlers.get(ch)({}, ...args);
@@ -62,6 +64,16 @@ const lcfg = await invoke("llm:configGet");
 ok(lcfg.ok && lcfg.data.hasKey === false, "llm:configGet 未注入 safeStorage 时安全默认（hasKey:false）");
 const lset = await invoke("llm:configSet", { baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat", apiKey: "sk-test" });
 ok(lset.ok === false, "llm:configSet 未注入时拒收（不落盘）");
+
+// ---------- 洗数据一键入口（#140）：状态快照 / 无任务取消 / 坏书复查 ----------
+const ejStatus = await invoke("enrich:status");
+ok(ejStatus.ok && typeof ejStatus.data === "object", "enrich:status 返回任务快照对象");
+const ejCancel = await invoke("enrich:cancel", "不存在的书");
+ok(ejCancel.ok && ejCancel.data.cancelled === false, "enrich:cancel 无任务返回说明（不炸）");
+const ejAudit = await invoke("enrich:audit", books.data[0].id);
+ok(ejAudit.ok && typeof ejAudit.data.ready === "boolean", `enrich:audit 真书只读复查（ready=${ejAudit.data.ready}，形状不断言数值）`);
+const ejAuditBad = await invoke("enrich:audit", "不存在的书xyz");
+ok(ejAuditBad.ok === false && ejAuditBad.error.code === "user", "enrich:audit 坏书走错误包装（M3）");
 
 // ---------- 错误包装：坏书名 → {ok:false,error} 不抛 ----------
 const bad = await invoke("books:catalog", "不存在的书xyz");

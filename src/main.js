@@ -50,7 +50,13 @@ async function boot() {
   jobs.onJobsProgress((e) => {
     if (win && !win.isDestroyed()) win.webContents.send("jobs:progress", e);
   });
-  return { engine, jobs };
+  // 洗数据一键入口（V3 #140）：进度事件转发（与 jobs 同款； enrich:start 由用户点击触发，
+  // win 必已就绪，无 G-04 式启动时序问题）
+  const enrichJob = await import(pathToFileURL(path.join(__dirname, "desktop", "enrich-job.mjs")).href);
+  enrichJob.onEnrichProgress((e) => {
+    if (win && !win.isDestroyed()) win.webContents.send("enrich:progress", e);
+  });
+  return { engine, jobs, enrichJob };
 }
 
 app.whenReady().then(async () => {

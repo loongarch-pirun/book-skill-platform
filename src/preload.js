@@ -22,6 +22,11 @@ contextBridge.exposeInMainWorld("study", {
   jobsPickResult: () => ipcRenderer.invoke("jobs:pickResult"),
   jobsResumeCatalog: (bookId, resultPath) => ipcRenderer.invoke("jobs:resumeCatalog", bookId, resultPath || null),
   jobsCatalogPrompt: (bookId) => ipcRenderer.invoke("jobs:catalogPrompt", bookId), // 一键生成编目提示词
+  // 洗数据一键入口（V3 #140）：书架卡片按钮 → 主进程跑批入库（进度走 enrich:progress 事件）
+  enrichStart: (bookId) => ipcRenderer.invoke("enrich:start", bookId),
+  enrichCancel: (bookId) => ipcRenderer.invoke("enrich:cancel", bookId),
+  enrichStatus: () => ipcRenderer.invoke("enrich:status"),
+  enrichAudit: (bookId) => ipcRenderer.invoke("enrich:audit", bookId),
   // 问一问
   ask: (payload) => ipcRenderer.invoke("ask:query", payload),
   // 云端问答（V2 P2）：配置 / 测试连接 / 云端总结
@@ -55,4 +60,5 @@ contextBridge.exposeInMainWorld("study", {
   onEngineReady: (cb) => ipcRenderer.on("engine:ready", (_e, d) => cb(d)),
   onEngineError: (cb) => ipcRenderer.on("engine:error", (_e, d) => cb(d)),
   onJobsProgress: (cb) => ipcRenderer.on("jobs:progress", (_e, d) => cb(d)),
+  onEnrichProgress: (cb) => ipcRenderer.on("enrich:progress", (_e, d) => cb(d)),
 });

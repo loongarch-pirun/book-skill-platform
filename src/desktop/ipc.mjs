@@ -4,6 +4,7 @@
 import * as engine from "./engine.mjs";
 import * as jobs from "./jobs.mjs";
 import * as chat from "./chat.mjs";
+import * as enrichJob from "./enrich-job.mjs";
 
 export async function registerIpc({ ipcMain, app, dialog, getWin }) {
   const handle = (channel, fn) => ipcMain.handle(channel, async (_e, ...args) => {
@@ -47,6 +48,12 @@ export async function registerIpc({ ipcMain, app, dialog, getWin }) {
   });
   handle("jobs:resumeCatalog", (eng, bookId, resultPath) => jobs.resumeCatalog(bookId, resultPath || null));
   handle("jobs:catalogPrompt", (eng, bookId) => jobs.catalogPrompt(bookId));
+
+  // 洗数据一键入口（V3 第二波 #140）：启动/取消/状态/库侧复查（进度走 enrich:progress 事件）
+  handle("enrich:start", (eng, bookId) => enrichJob.startEnrich(bookId));
+  handle("enrich:cancel", (eng, bookId) => enrichJob.cancelEnrich(bookId));
+  handle("enrich:status", () => enrichJob.enrichStatus());
+  handle("enrich:audit", (eng, bookId) => enrichJob.enrichAudit(bookId));
 
   // 问一问
   handle("ask:query", (eng, payload) => eng.ask(payload));

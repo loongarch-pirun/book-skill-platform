@@ -245,6 +245,51 @@ const copyDb = (src) => {
     "静态: 骨架章节表从 chunks 实查 + 锚点封顶（永不吹牛）");
 }
 
+// ========== 12) 静态防回归：洗数据一键入口接线契约（V3 第二波 #140） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  // ① 四通道注册（启动/取消/状态/复查）+ preload 暴露 + 事件订阅口
+  const ipcRegSrc = readSrc("src", "desktop", "ipc.mjs");
+  ok(["enrich:start", "enrich:cancel", "enrich:status", "enrich:audit"].every((ch) => ipcRegSrc.includes(`"${ch}"`)),
+    "静态: ipc.mjs 注册 enrich 四通道（#140）");
+  const preloadSrc = readSrc("src", "preload.js");
+  ok(["enrichStart", "enrichCancel", "enrichStatus", "enrichAudit", "onEnrichProgress"].every((k) => preloadSrc.includes(k)),
+    "静态: preload 暴露 enrich 五口（四调用 + 进度订阅）");
+
+  // ② main.js 转发 enrich:progress（onEnrichProgress 注册 + send 到渲染层）
+  const mainSrc = readSrc("src", "main.js");
+  ok(mainSrc.includes("onEnrichProgress") && mainSrc.includes('"enrich:progress"'),
+    "静态: main.js 转发 enrich:progress 事件（#140）");
+
+  // ③ enrich-job.mjs 不碰检索算法（新能力走独立文件，检索层零改动红线）
+  const ejSrc = stripComments(readSrc("src", "desktop", "enrich-job.mjs"));
+  ok(!/hybridSearch|routeAndSearch|multiVariantSearch/.test(ejSrc),
+    "静态: enrich-job 不碰检索算法（检索层零改动）");
+  // ④ 本层不直接写库——唯一写路是 importEnrich（lib 层有指纹回滚守卫）；禁直接 SQL 写 chunks
+  ok(ejSrc.includes("importEnrich") && !/UPDATE\s+chunks|INSERT\s+INTO\s+chunks/i.test(ejSrc),
+    "静态: enrich-job 只经 importEnrich 写库（不直接 SQL 碰 chunks）");
+  // ⑤ 跑批失败不 throw 穿层：runPipeline 内部 catch 落 failed 态（lib 层铁律同款）
+  ok(/catch[\s\S]*?emit\(id, \{ stage: "failed"/.test(ejSrc),
+    "静态: enrich-job 后台失败落 failed 态不穿层");
+
+  // ⑥ 渲染层洗数据入口走 IPC：书架按钮 + 重试分支 + 汇流订阅，不许渲染层自己跑
+  const viewsSrc = readSrc("src", "renderer", "views.js");
+  const askSrc = readSrc("src", "renderer", "views-ask.js");
+  const appSrc = readSrc("src", "renderer", "app.js");
+  ok(viewsSrc.includes('data-action="enrich"') && askSrc.includes("enrichStart") && askSrc.includes("enrichretry"),
+    "静态: 书架洗数据按钮经 IPC（views 按钮 + ask 页 enrichStart/enrichretry）");
+  ok(appSrc.includes("onEnrichProgress") && appSrc.includes("enrichStatus"),
+    "静态: app.js 汇流 enrich 进度 + boot 恢复任务态（#140）");
+
+  // ⑦ 书架摘要挂载：booksList 带 enrich 字段（轻量只读，不做全库指纹）
+  const engSrc = readSrc("src", "desktop", "engine.mjs");
+  ok(/enrich: enrichSummary/.test(engSrc) && engSrc.includes("function enrichSummary"),
+    "静态: booksList 挂 enrich 摘要（#140 书架徽标）");
+}
+
 // ========== 收尾 ==========
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);
