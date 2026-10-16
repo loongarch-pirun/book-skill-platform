@@ -1,0 +1,243 @@
+{
+  "task_ref": "hello-algo-zh.md.db",
+  "themes": [
+    {
+      "id": "t1",
+      "name": "Data Structures and Data Types",
+      "note": "数据结构基础：数组、链表与数据类型"
+    },
+    {
+      "id": "t2",
+      "name": "Stacks and Queues",
+      "note": "栈与队列"
+    },
+    {
+      "id": "t3",
+      "name": "Hash Tables",
+      "note": "哈希表与冲突处理"
+    },
+    {
+      "id": "t4",
+      "name": "Binary Trees and Traversal",
+      "note": "二叉树与遍历"
+    },
+    {
+      "id": "t5",
+      "name": "Graphs and Traversal",
+      "note": "图论与图的遍历"
+    },
+    {
+      "id": "t6",
+      "name": "Sorting Algorithms",
+      "note": "排序算法：快速、桶、计数与基数排序"
+    },
+    {
+      "id": "t7",
+      "name": "Divide and Conquer",
+      "note": "分治算法"
+    },
+    {
+      "id": "t8",
+      "name": "Heaps",
+      "note": "堆与优先队列"
+    },
+    {
+      "id": "t9",
+      "name": "AVL Trees",
+      "note": "AVL 平衡二叉搜索树"
+    },
+    {
+      "id": "t10",
+      "name": "Recursion and Backtracking",
+      "note": "递归与回溯"
+    },
+    {
+      "id": "t11",
+      "name": "Dynamic Programming",
+      "note": "动态规划"
+    },
+    {
+      "id": "t12",
+      "name": "Complexity and Mathematical Foundations",
+      "note": "复杂度分析与数学基础"
+    },
+    {
+      "id": "t13",
+      "name": "Character Encoding",
+      "note": "字符编码：ASCII、Unicode 与 UTF-8"
+    },
+    {
+      "id": "t14",
+      "name": "Web Interactivity and Code Samples",
+      "note": "Web 交互组件与多语言代码示例"
+    }
+  ],
+  "persons": [
+    {
+      "name": "krahets",
+      "match_names": [
+        "krahets"
+      ],
+      "note": "hello-algo 仓库作者（开源仓库地址出场）"
+    }
+  ],
+  "relations": [],
+  "assignments": [
+    {
+      "cluster": "c001",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c028",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c031",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c034",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c006",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c005",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c033",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c009",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c014",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c025",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c016",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c020",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c037",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c021",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c022",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c024",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c013",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c018",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c017",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c029",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c012",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c023",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c035",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c003",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c008",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c036",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c038",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c007",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c011",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c015",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c019",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c030",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c039",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c027",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c002",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c004",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c010",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c026",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c032",
+      "theme": "t14"
+    }
+  ]
+}

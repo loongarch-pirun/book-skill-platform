@@ -1,0 +1,886 @@
+{
+  "task_ref": "d2l-zh.md.db",
+  "themes": [
+    {
+      "id": "t1",
+      "name": "Introduction to Deep Learning",
+      "note": "前言与深度学习导论"
+    },
+    {
+      "id": "t2",
+      "name": "Data Operations and Preprocessing",
+      "note": "数据操作与预处理"
+    },
+    {
+      "id": "t3",
+      "name": "Preliminaries: Linear Algebra, Calculus and Probability",
+      "note": "预备知识：线性代数、微积分与概率"
+    },
+    {
+      "id": "t4",
+      "name": "Mathematical Formulas and Derivations",
+      "note": "跨章数学公式与推导片段"
+    },
+    {
+      "id": "t5",
+      "name": "Linear Regression and Softmax Regression",
+      "note": "线性回归与 Softmax 回归"
+    },
+    {
+      "id": "t6",
+      "name": "Multilayer Perceptrons and Activation",
+      "note": "多层感知机与激活函数"
+    },
+    {
+      "id": "t7",
+      "name": "Model Training, Regularization and Generalization",
+      "note": "模型训练、正则化与泛化（含批量归一化）"
+    },
+    {
+      "id": "t8",
+      "name": "Deep Learning Computation and Custom Layers",
+      "note": "深度学习计算与自定义层"
+    },
+    {
+      "id": "t9",
+      "name": "Convolutional Neural Networks",
+      "note": "卷积神经网络：卷积、池化与经典架构"
+    },
+    {
+      "id": "t10",
+      "name": "Computer Vision Applications",
+      "note": "计算机视觉应用：增广、检测、分割、风格迁移与实战"
+    },
+    {
+      "id": "t11",
+      "name": "Recurrent Neural Networks",
+      "note": "循环神经网络：RNN、LSTM 与 GRU"
+    },
+    {
+      "id": "t12",
+      "name": "Attention and Sequence to Sequence",
+      "note": "注意力机制与序列到序列学习"
+    },
+    {
+      "id": "t13",
+      "name": "Word Vectors and Language Models",
+      "note": "词向量与语言模型"
+    },
+    {
+      "id": "t14",
+      "name": "NLP Applications and Evaluation",
+      "note": "自然语言处理应用与评测"
+    },
+    {
+      "id": "t15",
+      "name": "Optimization Algorithms",
+      "note": "优化算法：SGD、动量、AdaGrad、RMSProp 与 Adam"
+    },
+    {
+      "id": "t16",
+      "name": "Computing Performance and Hardware",
+      "note": "计算性能与硬件：GPU、多卡与内存"
+    },
+    {
+      "id": "t17",
+      "name": "Kaggle Practice",
+      "note": "Kaggle 竞赛实战"
+    },
+    {
+      "id": "t18",
+      "name": "Reinforcement Learning Primer",
+      "note": "强化学习初步"
+    },
+    {
+      "id": "t19",
+      "name": "Book Engineering and Code Tooling",
+      "note": "书籍工程与代码工具"
+    }
+  ],
+  "persons": [
+    {
+      "name": "Geoffrey Hinton",
+      "match_names": [
+        "Hinton"
+      ],
+      "note": "深度学习先驱，反向传播与深度信念网络"
+    },
+    {
+      "name": "Yann LeCun",
+      "match_names": [
+        "LeCun"
+      ],
+      "note": "卷积神经网络先驱"
+    },
+    {
+      "name": "Yoshua Bengio",
+      "match_names": [
+        "Bengio"
+      ],
+      "note": "深度学习先驱，序列模型研究"
+    },
+    {
+      "name": "Ashish Vaswani",
+      "match_names": [
+        "Vaswani"
+      ],
+      "note": "Transformer 论文第一作者"
+    },
+    {
+      "name": "Tomas Mikolov",
+      "match_names": [
+        "Mikolov"
+      ],
+      "note": "word2vec 词向量提出者"
+    },
+    {
+      "name": "Ilya Sutskever",
+      "match_names": [
+        "Sutskever"
+      ],
+      "note": "序列到序列学习论文作者"
+    },
+    {
+      "name": "Nadaraya",
+      "match_names": [
+        "Nadaraya"
+      ],
+      "note": "Nadaraya-Watson 核回归共同命名者"
+    },
+    {
+      "name": "Watson",
+      "match_names": [
+        "Watson"
+      ],
+      "note": "Nadaraya-Watson 核回归共同命名者"
+    }
+  ],
+  "relations": [
+    {
+      "a": "Nadaraya",
+      "b": "Watson",
+      "note": "共同命名 Nadaraya-Watson 核回归方法"
+    },
+    {
+      "a": "Geoffrey Hinton",
+      "b": "Yann LeCun",
+      "note": "深度学习先驱（图灵奖共同得主，书中并引）"
+    },
+    {
+      "a": "Geoffrey Hinton",
+      "b": "Yoshua Bengio",
+      "note": "深度学习先驱（图灵奖共同得主，书中并引）"
+    },
+    {
+      "a": "Yann LeCun",
+      "b": "Yoshua Bengio",
+      "note": "深度学习先驱（图灵奖共同得主，书中并引）"
+    }
+  ],
+  "assignments": [
+    {
+      "cluster": "c003",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c037",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c040",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c042",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c061",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c066",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c102",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c147",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c080",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c103",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c114",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c120",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c007",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c023",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c029",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c053",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c086",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c097",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c106",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c128",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c143",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c149",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c172",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c001",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c002",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c008",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c011",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c019",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c022",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c041",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c067",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c070",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c096",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c105",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c126",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c133",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c140",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c148",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c027",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c098",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c107",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c125",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c163",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c044",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c093",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c150",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c028",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c060",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c063",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c068",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c081",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c082",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c088",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c099",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c119",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c122",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c123",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c145",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c151",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c072",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c085",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c089",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c158",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c006",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c018",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c026",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c030",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c036",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c047",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c055",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c057",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c091",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c136",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c139",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c141",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c153",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c160",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c171",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c174",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c012",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c015",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c048",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c058",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c077",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c078",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c083",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c087",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c090",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c113",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c127",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c130",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c144",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c156",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c166",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c173",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c016",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c031",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c059",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c115",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c121",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c132",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c142",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c159",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c162",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c168",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c020",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c049",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c071",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c073",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c101",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c112",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c124",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c134",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c004",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c005",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c010",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c013",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c021",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c024",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c046",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c062",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c092",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c100",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c104",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c137",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c146",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c157",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c165",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c176",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c051",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c076",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c108",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c116",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c117",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c135",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c155",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c175",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c025",
+      "theme": "t15"
+    },
+    {
+      "cluster": "c032",
+      "theme": "t15"
+    },
+    {
+      "cluster": "c069",
+      "theme": "t15"
+    },
+    {
+      "cluster": "c074",
+      "theme": "t15"
+    },
+    {
+      "cluster": "c075",
+      "theme": "t15"
+    },
+    {
+      "cluster": "c095",
+      "theme": "t15"
+    },
+    {
+      "cluster": "c131",
+      "theme": "t15"
+    },
+    {
+      "cluster": "c138",
+      "theme": "t15"
+    },
+    {
+      "cluster": "c009",
+      "theme": "t16"
+    },
+    {
+      "cluster": "c035",
+      "theme": "t16"
+    },
+    {
+      "cluster": "c050",
+      "theme": "t16"
+    },
+    {
+      "cluster": "c052",
+      "theme": "t16"
+    },
+    {
+      "cluster": "c084",
+      "theme": "t16"
+    },
+    {
+      "cluster": "c109",
+      "theme": "t16"
+    },
+    {
+      "cluster": "c152",
+      "theme": "t16"
+    },
+    {
+      "cluster": "c169",
+      "theme": "t16"
+    },
+    {
+      "cluster": "c054",
+      "theme": "t17"
+    },
+    {
+      "cluster": "c064",
+      "theme": "t17"
+    },
+    {
+      "cluster": "c110",
+      "theme": "t17"
+    },
+    {
+      "cluster": "c164",
+      "theme": "t17"
+    },
+    {
+      "cluster": "c043",
+      "theme": "t18"
+    },
+    {
+      "cluster": "c154",
+      "theme": "t18"
+    },
+    {
+      "cluster": "c167",
+      "theme": "t18"
+    },
+    {
+      "cluster": "c014",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c017",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c033",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c034",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c038",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c039",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c045",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c056",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c065",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c079",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c094",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c111",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c118",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c129",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c161",
+      "theme": "t19"
+    },
+    {
+      "cluster": "c170",
+      "theme": "t19"
+    }
+  ]
+}
