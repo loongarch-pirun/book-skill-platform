@@ -11,6 +11,7 @@ import { getEmbedder, getReranker, cosine, assertEngine } from "./models.mjs";
 import { questionKeywords, buildFtsQuery, cjkLikeScores, capFtsHits } from "./keywords.mjs";
 import { getMatrix, matrixScores } from "./vec-cache.mjs";
 import { loadCatalogSignal, entityAliasTerms } from "./catalog.mjs";
+import { loadEnrichSignal } from "./enrich-signal.mjs";
 import { loadSkillState } from "./skill-state.mjs";
 export { getEmbedder, cosine };
 
@@ -178,6 +179,15 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
   // 却足以扰动预筛窗口重掷复试官的骰子（实测把 pemberley 英文题从过打到漏）——直接无效化
   for (const [k, v] of cat.hit) if (v.w < 0.15) cat.hit.delete(k);
 
+  // 第四路：洗数据信号（标签/假设问题/摘要命中，只对洗过数据的库生效；V3 第三波-①）
+  // 模式：BSP_ENRICH_NOM=0 关（开发期默认；实验定后改）/ 1 提名制 / 2 加权腿；强度可调 BSP_ENRICH_W
+  const ENRICH_MODE = +(process.env.BSP_ENRICH_NOM || 0);
+  const ENRICH_W = +(process.env.BSP_ENRICH_W || 0.3);
+  const NOM_ENRICH = 6; // 池外提名配额（镜像目录信号的最小扰动原则）
+  const enr = ENRICH_MODE > 0 && q ? loadEnrichSignal(db, q) : { hit: new Map() };
+  // 信号地板（铁律：弱信号不许扰动——单摘要命中 0.12 在这一步被无效化）
+  for (const [k, v] of enr.hit) if (v.w < 0.15) enr.hit.delete(k);
+
   // 候选池：字面/语义全集（字面腿权重 ftsW：关键词模式按质量阶梯，旧模式恒 0.5）
   const pool = new Map();
   for (const id of new Set([...nf.keys(), ...ns.keys()]))
@@ -187,6 +197,11 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
   for (const [cid, sig] of cat.hit) {
     const p = pool.get(+cid);
     if (p) { p.score += CATALOG_W * sig.w; p.cat = sig.tag; p.catW = sig.w; }
+  }
+  // 池内命中（模式 2 加权腿）：洗数据信号加权（镜像编目池内逻辑）
+  if (ENRICH_MODE === 2) for (const [cid, sig] of enr.hit) {
+    const p = pool.get(+cid);
+    if (p) { p.score += ENRICH_W * sig.w; p.enr = sig.tag; p.enrW = sig.w; }
   }
 
   // 池外提名：人物 8 + 主题 4 个命中块保证进复试窗（人物关系题的救命机制——
@@ -206,10 +221,23 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
     }
   }
 
+  // 池外提名（模式 1 提名制）：洗数据信号 top-6 保证进复试窗。
+  // 提名门槛 0.2（tag 0.4/question 0.25 过线；弱组合不过）——乱提名会挤掉凭实力进窗的答案块
+  if (ENRICH_MODE === 1 && enr.hit.size) {
+    const out = [...enr.hit.entries()].map(([id, s]) => ({ id: +id, w: s.w, tag: s.tag }))
+      .filter((x) => !pool.has(x.id) && x.w >= 0.2)
+      .sort((a, b) => b.w - a.w).slice(0, NOM_ENRICH);
+    for (const x of out) {
+      const p = { id: x.id, score: ftsW * (nf.get(x.id) || 0) + (1 - ftsW) * (ns.get(x.id) || 0) + ENRICH_W * x.w, fts: nf.get(x.id) || 0, sem: ns.get(x.id) || 0, enr: x.tag, enrW: x.w, nom: true };
+      pool.set(x.id, p);
+      nominations.push(p);
+    }
+  }
+
   // 初筛：混合分取宽（topN×4 封顶 20），交给复试官精选
-  // 编目信号命中时窗口扩 8 席（封顶 28）：人物关系题的证据块常排在 20 名开外，
-  // 它们的字面/语义分不高但编目证据硬——多给 8 张复试门票，由复试官终审裁决
-  const RECALL = Math.min(Math.max(topN * 4, 12), 20) + (cat.hit.size ? 8 : 0);
+  // 编目/洗数据信号命中时窗口扩 8 席（封顶 28）：证据块常排在 20 名开外，
+  // 它们的字面/语义分不高但独立证据硬——多给 8 张复试门票，由复试官终审裁决
+  const RECALL = Math.min(Math.max(topN * 4, 12), 20) + ((cat.hit.size || enr.hit.size) ? 8 : 0);
   const regular = [...pool.values()].filter(p => !p.nom)
     .sort((a, b) => b.score - a.score)
     .slice(0, Math.max(RECALL - nominations.length, 4));
@@ -222,7 +250,7 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
   });
 
   // 复试官：对（问题, 块原文）逐对精算相关度，重排
-  // 终排 = 复试分 + 0.02×编目信号：复试官主导，编目证据只做近并列裁决
+  // 终排 = 复试分 + 0.02×独立证据权重（编目/洗数据信号）：复试官主导，证据只做近并列裁决
   // （独立证据源线性融合——修复"真答案块 0.6454 惜败无关块 0.6505"这类复试噪声）
   if (rerank && final.length > 1) {
     const rerankFn = await getReranker();
@@ -230,7 +258,7 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
       const scores = await rerankFn(q, final.map(r => r.text));
       const TIE = CATALOG_ON ? +(process.env.BSP_CATALOG_TIE || 0.02) : 0;
       final = final.map((r, i) => ({ ...r, rerank: +scores[i].toFixed(4) }))
-        .sort((a, b) => (b.rerank + TIE * (b.catW || 0)) - (a.rerank + TIE * (a.catW || 0)));
+        .sort((a, b) => (b.rerank + TIE * ((b.catW || 0) + (b.enrW || 0))) - (a.rerank + TIE * ((a.catW || 0) + (a.enrW || 0))));
     }
   }
     return final.slice(0, topN);
