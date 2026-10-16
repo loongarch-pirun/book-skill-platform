@@ -1,208 +1,81 @@
 {
  "task_version": "1",
- "generated_at": "2026-10-12T05:59:52.147Z",
+ "generated_at": "2026-10-16T12:25:50.755Z",
  "book": {
   "db": "frankenstein-en.epub.db",
   "title": "frankenstein-en",
   "lang": "en",
-  "chunks": 803,
+  "chunks": 711,
   "chapters": 30,
-  "total_chars": 419498
+  "total_chars": 418678
  },
  "provenance": {
   "cluster_model": "e5",
-  "cluster_method": "centered-greedy-th0.38-min5",
-  "clustered_at": "2026-10-12T05:59:52.148Z",
-  "clusters": 23,
-  "covered_chunks": 481
+  "cluster_method": "centered-greedy-th0.36-min5",
+  "clustered_at": "2026-10-16T12:25:50.755Z",
+  "clusters": 16,
+  "covered_chunks": 357
  },
  "clusters": [
   {
    "id": "c001",
-   "size": 41,
+   "size": 35,
    "members": [
-    482,
-    341,
-    135,
-    384,
-    361,
-    592,
-    504,
-    684,
-    202,
-    530,
-    554,
-    405,
-    444,
-    96,
-    715,
-    150,
-    322,
-    304,
-    113,
-    84,
-    287,
-    253,
-    642,
-    178,
-    36,
-    45,
-    25,
-    12,
-    70,
-    38,
-    79,
-    743,
-    767,
-    47,
-    8,
-    660,
-    215,
-    191,
-    27,
-    14,
-    11
-   ],
-   "top_terms": [
-    {
-     "t": "letter",
-     "n": 4
-    },
-    {
-     "t": "august",
-     "n": 4
-    },
-    {
-     "t": "geneva",
-     "n": 3
-    },
-    {
-     "t": "march",
-     "n": 2
-    },
-    {
-     "t": "july",
-     "n": 1
-    },
-    {
-     "t": "september",
-     "n": 1
-    },
-    {
-     "t": "frankenstein",
-     "n": 1
-    },
-    {
-     "t": "archangel",
-     "n": 1
-    },
-    {
-     "t": "petersburgh",
-     "n": 1
-    },
-    {
-     "t": "dec",
-     "n": 1
-    },
-    {
-     "t": "contents",
-     "n": 1
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Letter 4",
-     "n": 4
-    },
-    {
-     "ch": "Chapter 24",
-     "n": 3
-    },
-    {
-     "ch": "Chapter 7",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 22",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 6",
-     "n": 2
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 482,
-     "text": "Chapter 17"
-    },
-    {
-     "chunk": 341,
-     "text": "Chapter 12"
-    }
-   ]
-  },
-  {
-   "id": "c002",
-   "size": 37,
-   "members": [
-    269,
-    255,
-    254,
-    295,
-    257,
-    284,
-    266,
-    276,
-    277,
+    244,
+    225,
+    252,
+    245,
     248,
-    645,
-    282,
-    186,
-    272,
-    280,
-    264,
-    242,
-    243,
-    274,
-    271,
+    254,
+    251,
     249,
-    278,
-    288,
-    283,
-    279,
-    185,
-    239,
+    266,
     246,
-    183,
+    232,
+    174,
+    223,
+    221,
     240,
-    286,
-    265,
-    184,
-    262,
-    237,
-    293,
-    697
+    173,
+    253,
+    219,
+    222,
+    227,
+    250,
+    172,
+    198,
+    267,
+    581,
+    226,
+    196,
+    231,
+    170,
+    171,
+    256,
+    169,
+    234,
+    257,
+    195
    ],
    "top_terms": [
     {
      "t": "justine",
-     "n": 50
+     "n": 42
+    },
+    {
+     "t": "elizabeth",
+     "n": 21
     },
     {
      "t": "poor",
      "n": 19
     },
     {
-     "t": "elizabeth",
-     "n": 14
-    },
-    {
      "t": "who",
-     "n": 14
+     "n": 16
     },
     {
-     "t": "upon",
+     "t": "dear",
      "n": 12
     },
     {
@@ -214,38 +87,38 @@
      "n": 11
     },
     {
-     "t": "dear",
-     "n": 10
-    },
-    {
-     "t": "girl",
+     "t": "father",
      "n": 9
     },
     {
-     "t": "even",
+     "t": "innocent",
      "n": 9
     },
     {
-     "t": "horror",
+     "t": "night",
+     "n": 9
+    },
+    {
+     "t": "murder",
      "n": 8
     },
     {
-     "t": "now",
+     "t": "girl",
      "n": 8
     }
    ],
    "chapters": [
     {
      "ch": "Chapter 8",
-     "n": 20
+     "n": 16
     },
     {
      "ch": "Chapter 7",
-     "n": 8
+     "n": 9
     },
     {
      "ch": "Chapter 6",
-     "n": 4
+     "n": 6
     },
     {
      "ch": "Chapter 9",
@@ -258,545 +131,303 @@
    ],
    "samples": [
     {
-     "chunk": 269,
+     "chunk": 244,
      "text": "This was a dire blow to poor Elizabeth, who had relied with firmness upon\nJustine’s innocence. “Alas!” said she. “How shall I ever again believe in human\ngoodness? Justine, whom I loved and esteemed a"
     },
     {
-     "chunk": 255,
-     "text": "The appearance of Justine was calm. She was dressed in mourning, and her\ncountenance, always engaging, was rendered, by the solemnity of her feelings,\nexquisitely beautiful. Yet she appeared confident"
+     "chunk": 225,
+     "text": "We were soon joined by Elizabeth.Time had altered her since I last beheld her;\nit had endowed her with loveliness surpassing the beauty of her childish years.There was the same candour, the same vivac"
     }
    ]
   },
   {
-   "id": "c003",
-   "size": 34,
+   "id": "c002",
+   "size": 35,
    "members": [
-    580,
-    560,
-    52,
+    518,
+    536,
+    534,
+    611,
+    533,
+    549,
+    532,
+    309,
+    34,
+    420,
+    642,
+    655,
+    658,
+    644,
+    651,
+    652,
+    659,
+    122,
+    619,
+    33,
+    306,
+    461,
+    654,
+    505,
+    57,
+    575,
+    433,
+    622,
+    412,
+    620,
+    530,
     578,
-    683,
-    599,
-    685,
-    50,
-    736,
-    740,
-    739,
-    733,
-    724,
-    738,
-    49,
-    723,
-    527,
-    732,
-    597,
-    797,
-    735,
-    581,
-    579,
-    548,
-    561,
-    698,
-    594,
-    19,
-    468,
-    448,
-    155,
-    562,
-    61,
-    598
+    10,
+    657,
+    538
    ],
    "top_terms": [
     {
-     "t": "before",
-     "n": 16
-    },
-    {
      "t": "sea",
-     "n": 14
-    },
-    {
-     "t": "about",
      "n": 13
-    },
-    {
-     "t": "ice",
-     "n": 13
-    },
-    {
-     "t": "felt",
-     "n": 12
-    },
-    {
-     "t": "some",
-     "n": 10
-    },
-    {
-     "t": "hours",
-     "n": 10
     },
     {
      "t": "wind",
      "n": 10
     },
     {
-     "t": "night",
+     "t": "before",
+     "n": 10
+    },
+    {
+     "t": "ice",
+     "n": 10
+    },
+    {
+     "t": "hours",
      "n": 9
     },
     {
-     "t": "saw",
-     "n": 8
+     "t": "night",
+     "n": 9
     },
     {
      "t": "now",
      "n": 8
     },
     {
-     "t": "shore",
+     "t": "place",
      "n": 8
+    },
+    {
+     "t": "myself",
+     "n": 8
+    },
+    {
+     "t": "about",
+     "n": 8
+    },
+    {
+     "t": "after",
+     "n": 8
+    },
+    {
+     "t": "several",
+     "n": 7
     }
    ],
    "chapters": [
     {
      "ch": "Chapter 24",
-     "n": 10
+     "n": 9
     },
     {
      "ch": "Chapter 20",
      "n": 7
     },
     {
-     "ch": "Letter 4",
-     "n": 4
-    },
-    {
-     "ch": "Chapter 21",
-     "n": 4
-    },
-    {
-     "ch": "Chapter 23",
-     "n": 2
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 580,
-     "text": "Some hours passed thus; but by degrees, as the sun declined towards the\nhorizon, the wind died away into a gentle breeze and the sea became free from\nbreakers. But these gave place to a heavy swell; I"
-    },
-    {
-     "chunk": 560,
-     "text": "Several hours passed, and I remained near my window gazing on the sea; it was\nalmost motionless, for the winds were hushed, and all nature reposed under the\neye of the quiet moon. A few fishing vessel"
-    }
-   ]
-  },
-  {
-   "id": "c004",
-   "size": 32,
-   "members": [
-    575,
-    534,
-    197,
-    531,
-    98,
-    505,
-    198,
-    119,
-    160,
-    515,
-    196,
-    545,
-    640,
-    199,
-    541,
-    520,
-    533,
-    101,
-    727,
-    544,
-    537,
-    518,
-    292,
-    700,
-    222,
-    159,
-    638,
-    539,
-    535,
-    514,
-    639,
-    536
-   ],
-   "top_terms": [
-    {
-     "t": "clerval",
-     "n": 26
-    },
-    {
-     "t": "father",
-     "n": 14
-    },
-    {
-     "t": "geneva",
-     "n": 12
-    },
-    {
-     "t": "now",
-     "n": 11
-    },
-    {
-     "t": "some",
-     "n": 11
-    },
-    {
-     "t": "return",
-     "n": 10
-    },
-    {
-     "t": "life",
-     "n": 10
-    },
-    {
-     "t": "yet",
-     "n": 10
-    },
-    {
-     "t": "journey",
-     "n": 9
-    },
-    {
-     "t": "after",
-     "n": 9
-    },
-    {
-     "t": "who",
-     "n": 9
-    },
-    {
-     "t": "passed",
-     "n": 9
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Chapter 19",
-     "n": 10
-    },
-    {
-     "ch": "Chapter 18",
-     "n": 5
-    },
-    {
-     "ch": "Chapter 6",
-     "n": 4
-    },
-    {
      "ch": "Chapter 21",
      "n": 3
     },
     {
-     "ch": "Chapter 2",
-     "n": 2
+     "ch": "Letter 4",
+     "n": 3
+    },
+    {
+     "ch": "Chapter 16",
+     "n": 3
     }
    ],
    "samples": [
     {
-     "chunk": 575,
-     "text": "The sun had far descended, and I still sat on the shore, satisfying my\nappetite, which had become ravenous, with an oaten cake, when I saw a\nfishing-boat land close to me, and one of the men brought m"
+     "chunk": 518,
+     "text": "Several hours passed, and I remained near my window gazing on the sea; it was\nalmost motionless, for the winds were hushed, and all nature reposed under the\neye of the quiet moon. A few fishing vessel"
     },
     {
-     "chunk": 534,
-     "text": "After passing some months in London, we received a letter from a person in\nScotland who had formerly been our visitor at Geneva. He mentioned the beauties\nof his native country and asked us if those w"
+     "chunk": 536,
+     "text": "Some hours passed thus; but by degrees, as the sun declined towards the\nhorizon, the wind died away into a gentle breeze and the sea became free from\nbreakers. But these gave place to a heavy swell; I"
     }
    ]
   },
   {
-   "id": "c005",
-   "size": 31,
+   "id": "c003",
+   "size": 29,
    "members": [
-    663,
-    95,
-    662,
+    121,
+    109,
+    106,
+    116,
+    110,
+    118,
+    108,
+    85,
+    91,
+    123,
+    124,
+    112,
+    107,
+    86,
+    84,
+    92,
+    87,
+    88,
+    117,
+    119,
+    113,
+    80,
     115,
-    510,
-    509,
-    673,
-    671,
-    676,
-    669,
-    667,
-    212,
-    679,
-    270,
-    192,
-    512,
-    572,
-    296,
-    511,
-    516,
-    661,
-    693,
-    655,
-    664,
-    691,
-    681,
-    161,
-    752,
-    657,
-    189,
+    125,
+    127,
+    89,
+    138,
+    111,
     181
    ],
    "top_terms": [
     {
-     "t": "elizabeth",
-     "n": 37
+     "t": "science",
+     "n": 18
     },
     {
-     "t": "yet",
-     "n": 17
+     "t": "natural",
+     "n": 16
     },
     {
-     "t": "love",
-     "n": 12
+     "t": "philosophy",
+     "n": 13
     },
     {
-     "t": "father",
-     "n": 12
+     "t": "modern",
+     "n": 9
     },
     {
-     "t": "dear",
-     "n": 12
+     "t": "studies",
+     "n": 9
     },
     {
-     "t": "cousin",
-     "n": 11
+     "t": "man",
+     "n": 9
+    },
+    {
+     "t": "upon",
+     "n": 9
     },
     {
      "t": "myself",
-     "n": 10
-    },
-    {
-     "t": "happiness",
      "n": 9
     },
     {
-     "t": "victor",
+     "t": "life",
      "n": 9
     },
     {
-     "t": "death",
-     "n": 9
+     "t": "men",
+     "n": 8
     },
     {
-     "t": "union",
-     "n": 9
+     "t": "krempe",
+     "n": 8
     },
     {
-     "t": "day",
+     "t": "waldman",
      "n": 8
     }
    ],
    "chapters": [
     {
-     "ch": "Chapter 22",
+     "ch": "Chapter 3",
      "n": 13
     },
     {
-     "ch": "Chapter 18",
-     "n": 5
-    },
-    {
-     "ch": "Chapter 6",
-     "n": 3
-    },
-    {
-     "ch": "Chapter 23",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 1",
-     "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 663,
-     "text": "In this state of mind I wrote to Elizabeth. My letter was calm and\naffectionate. “I fear, my beloved girl,” I said, “little happiness remains for\nus on earth; yet all that I may one day enjoy is centr"
-    },
-    {
-     "chunk": 95,
-     "text": "Everyone loved Elizabeth. The passionate and almost reverential attachment with\nwhich all regarded her became, while I shared it, my pride and my delight. On\nthe evening previous to her being brought "
-    }
-   ]
-  },
-  {
-   "id": "c006",
-   "size": 26,
-   "members": [
-    131,
-    136,
-    126,
-    137,
-    110,
-    123,
-    128,
-    193,
-    132,
-    104,
-    105,
-    107,
-    124,
-    125,
-    106,
-    103,
-    576,
-    138,
-    142,
-    129,
-    194,
-    133,
-    147,
-    750,
-    144,
-    127
-   ],
-   "top_terms": [
-    {
-     "t": "science",
-     "n": 21
-    },
-    {
-     "t": "natural",
-     "n": 18
-    },
-    {
-     "t": "myself",
-     "n": 16
-    },
-    {
-     "t": "philosophy",
-     "n": 14
-    },
-    {
-     "t": "upon",
-     "n": 12
-    },
-    {
-     "t": "human",
-     "n": 12
-    },
-    {
-     "t": "life",
-     "n": 11
-    },
-    {
-     "t": "made",
-     "n": 11
-    },
-    {
-     "t": "man",
-     "n": 11
-    },
-    {
-     "t": "great",
-     "n": 10
-    },
-    {
-     "t": "never",
-     "n": 10
-    },
-    {
-     "t": "yet",
-     "n": 10
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Chapter 3",
-     "n": 10
+     "ch": "Chapter 2",
+     "n": 9
     },
     {
      "ch": "Chapter 4",
      "n": 6
     },
     {
-     "ch": "Chapter 2",
-     "n": 6
-    },
-    {
      "ch": "Chapter 6",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 20",
      "n": 1
     }
    ],
    "samples": [
     {
-     "chunk": 131,
-     "text": "I closed not my eyes that night. My internal being was in a state of\ninsurrection and turmoil; I felt that order would thence arise, but I had no\npower to produce it. By degrees, after the morning’s d"
+     "chunk": 121,
+     "text": "From this day natural philosophy, and particularly chemistry, in the most\ncomprehensive sense of the term, became nearly my sole occupation.I read with\nardour those works, so full of genius and discri"
     },
     {
-     "chunk": 136,
-     "text": "From this day natural philosophy, and particularly chemistry, in the most\ncomprehensive sense of the term, became nearly my sole occupation. I read with\nardour those works, so full of genius and discr"
+     "chunk": 109,
+     "text": "I returned home not disappointed, for I have said that I had long considered\nthose authors useless whom the professor reprobated; but I returned not at all\nthe more inclined to recur to these studies "
     }
    ]
   },
   {
-   "id": "c007",
-   "size": 26,
+   "id": "c004",
+   "size": 27,
    "members": [
-    301,
-    229,
-    678,
-    225,
-    309,
-    228,
-    682,
-    522,
-    550,
-    299,
-    305,
-    303,
-    307,
-    521,
-    300,
-    306,
-    686,
-    224,
-    540,
-    109,
-    461,
-    680,
-    528,
-    230,
-    302,
-    503
+    273,
+    284,
+    209,
+    607,
+    208,
+    277,
+    480,
+    275,
+    205,
+    507,
+    270,
+    281,
+    279,
+    479,
+    272,
+    610,
+    478,
+    477,
+    282,
+    271,
+    609,
+    313,
+    90,
+    457,
+    5,
+    211,
+    459
    ],
    "top_terms": [
     {
      "t": "mountains",
-     "n": 19
-    },
-    {
-     "t": "scene",
-     "n": 14
-    },
-    {
-     "t": "lake",
-     "n": 12
+     "n": 18
     },
     {
      "t": "mountain",
      "n": 11
     },
     {
-     "t": "saw",
+     "t": "upon",
      "n": 11
     },
     {
-     "t": "beautiful",
-     "n": 10
+     "t": "scene",
+     "n": 11
+    },
+    {
+     "t": "lake",
+     "n": 11
     },
     {
      "t": "mont",
@@ -804,22 +435,26 @@
     },
     {
      "t": "every",
+     "n": 10
+    },
+    {
+     "t": "valley",
      "n": 9
+    },
+    {
+     "t": "saw",
+     "n": 9
+    },
+    {
+     "t": "passed",
+     "n": 8
     },
     {
      "t": "before",
      "n": 8
     },
     {
-     "t": "valley",
-     "n": 8
-    },
-    {
-     "t": "blanc",
-     "n": 8
-    },
-    {
-     "t": "storm",
+     "t": "beautiful",
      "n": 8
     }
    ],
@@ -829,115 +464,118 @@
      "n": 5
     },
     {
-     "ch": "Chapter 7",
+     "ch": "Chapter 10",
      "n": 5
     },
     {
-     "ch": "Chapter 10",
+     "ch": "Chapter 7",
+     "n": 4
+    },
+    {
+     "ch": "Chapter 18",
      "n": 4
     },
     {
      "ch": "Chapter 22",
      "n": 3
-    },
-    {
-     "ch": "Chapter 18",
-     "n": 3
     }
    ],
    "samples": [
     {
-     "chunk": 301,
+     "chunk": 273,
      "text": "I passed the bridge of Pélissier, where the ravine, which the river forms,\nopened before me, and I began to ascend the mountain that overhangs it. Soon\nafter, I entered the valley of Chamounix. This v"
     },
     {
-     "chunk": 229,
-     "text": "I quitted my seat, and walked on, although the darkness and storm increased\nevery minute, and the thunder burst with a terrific crash over my head. It was\nechoed from Salêve, the Juras, and the Alps o"
+     "chunk": 284,
+     "text": "It was nearly noon when I arrived at the top of the ascent.For some time I sat\nupon the rock that overlooks the sea of ice.A mist covered both that and the\nsurrounding mountains.Presently a breeze dis"
     }
    ]
   },
   {
-   "id": "c008",
-   "size": 23,
+   "id": "c005",
+   "size": 26,
    "members": [
-    338,
-    336,
-    335,
-    339,
-    343,
+    321,
+    318,
+    325,
+    322,
+    320,
+    329,
+    328,
+    314,
+    327,
+    415,
+    317,
+    312,
+    316,
+    315,
+    310,
+    307,
+    413,
+    397,
+    319,
     344,
-    337,
-    349,
-    451,
-    333,
-    346,
-    417,
-    332,
-    334,
-    406,
-    449,
-    418,
-    259,
-    479,
-    383,
-    209,
-    256,
-    356
+    382,
+    546,
+    335,
+    506,
+    440,
+    548
    ],
    "top_terms": [
+    {
+     "t": "man",
+     "n": 24
+    },
     {
      "t": "cottage",
      "n": 22
     },
     {
-     "t": "man",
-     "n": 21
-    },
-    {
      "t": "old",
-     "n": 16
+     "n": 19
     },
     {
      "t": "young",
-     "n": 14
-    },
-    {
-     "t": "before",
-     "n": 11
+     "n": 15
     },
     {
      "t": "found",
-     "n": 11
+     "n": 15
     },
     {
      "t": "some",
-     "n": 11
+     "n": 13
     },
     {
-     "t": "night",
-     "n": 11
+     "t": "before",
+     "n": 12
     },
     {
      "t": "cottagers",
-     "n": 9
+     "n": 11
     },
     {
      "t": "woman",
      "n": 8
     },
     {
-     "t": "morning",
+     "t": "youth",
      "n": 8
     },
     {
-     "t": "who",
+     "t": "food",
      "n": 8
+    },
+    {
+     "t": "morning",
+     "n": 7
     }
    ],
    "chapters": [
     {
      "ch": "Chapter 11",
-     "n": 8
+     "n": 12
     },
     {
      "ch": "Chapter 12",
@@ -949,67 +587,409 @@
     },
     {
      "ch": "Chapter 15",
-     "n": 3
+     "n": 2
     },
     {
-     "ch": "Chapter 8",
+     "ch": "Chapter 21",
      "n": 2
     }
    ],
    "samples": [
     {
-     "chunk": 338,
+     "chunk": 321,
      "text": "“The old man had, in the meantime, been pensive, but on the appearance of his\ncompanions he assumed a more cheerful air, and they sat down to eat. The meal\nwas quickly dispatched. The young woman was "
     },
     {
-     "chunk": 336,
-     "text": "“On examining my dwelling, I found that one of the windows of the cottage had\nformerly occupied a part of it, but the panes had been filled up with wood. In\none of these was a small and almost imperce"
+     "chunk": 318,
+     "text": "“On examining my dwelling, I found that one of the windows of the cottage had\nformerly occupied a part of it, but the panes had been filled up with wood.In\none of these was a small and almost impercep"
+    }
+   ]
+  },
+  {
+   "id": "c006",
+   "size": 25,
+   "members": [
+    599,
+    595,
+    73,
+    464,
+    217,
+    463,
+    602,
+    177,
+    605,
+    600,
+    586,
+    97,
+    96,
+    467,
+    608,
+    593,
+    472,
+    587,
+    268,
+    465,
+    625,
+    175,
+    671,
+    192,
+    573
+   ],
+   "top_terms": [
+    {
+     "t": "elizabeth",
+     "n": 30
+    },
+    {
+     "t": "yet",
+     "n": 15
+    },
+    {
+     "t": "father",
+     "n": 14
+    },
+    {
+     "t": "dear",
+     "n": 13
+    },
+    {
+     "t": "love",
+     "n": 10
+    },
+    {
+     "t": "union",
+     "n": 10
+    },
+    {
+     "t": "cousin",
+     "n": 10
+    },
+    {
+     "t": "day",
+     "n": 9
+    },
+    {
+     "t": "victor",
+     "n": 8
+    },
+    {
+     "t": "marriage",
+     "n": 7
+    },
+    {
+     "t": "some",
+     "n": 7
+    },
+    {
+     "t": "myself",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "Chapter 22",
+     "n": 9
+    },
+    {
+     "ch": "Chapter 18",
+     "n": 5
+    },
+    {
+     "ch": "Chapter 7",
+     "n": 2
+    },
+    {
+     "ch": "Chapter 6",
+     "n": 2
+    },
+    {
+     "ch": "Chapter 3",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 599,
+     "text": "Soon after my arrival my father spoke of my immediate marriage with Elizabeth.\nI remained silent.\n“Have you, then, some other attachment?”\n“None on earth. I love Elizabeth and look forward to our unio"
+    },
+    {
+     "chunk": 595,
+     "text": "In this state of mind I wrote to Elizabeth. My letter was calm and\naffectionate. “I fear, my beloved girl,” I said, “little happiness remains for\nus on earth; yet all that I may one day enjoy is centr"
+    }
+   ]
+  },
+  {
+   "id": "c007",
+   "size": 24,
+   "members": [
+    436,
+    706,
+    693,
+    699,
+    702,
+    664,
+    199,
+    290,
+    695,
+    255,
+    675,
+    293,
+    292,
+    153,
+    677,
+    239,
+    2,
+    691,
+    663,
+    114,
+    683,
+    453,
+    633,
+    672
+   ],
+   "top_terms": [
+    {
+     "t": "frankenstein",
+     "n": 22
+    },
+    {
+     "t": "yet",
+     "n": 18
+    },
+    {
+     "t": "who",
+     "n": 15
+    },
+    {
+     "t": "still",
+     "n": 11
+    },
+    {
+     "t": "thou",
+     "n": 10
+    },
+    {
+     "t": "thy",
+     "n": 8
+    },
+    {
+     "t": "towards",
+     "n": 7
+    },
+    {
+     "t": "now",
+     "n": 6
+    },
+    {
+     "t": "friend",
+     "n": 6
+    },
+    {
+     "t": "before",
+     "n": 6
+    },
+    {
+     "t": "against",
+     "n": 5
+    },
+    {
+     "t": "life",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "Chapter 24",
+     "n": 12
+    },
+    {
+     "ch": "Chapter 10",
+     "n": 3
+    },
+    {
+     "ch": "Chapter 8",
+     "n": 2
+    },
+    {
+     "ch": "Chapter 16",
+     "n": 1
+    },
+    {
+     "ch": "Chapter 7",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 436,
+     "text": "“‘Boy, you will never see your father again; you must come with me.’\n“‘Hideous monster! Let me go. My papa is a syndic—he is M. Frankenstein—he will\npunish you. You dare not keep me.’\n“‘Frankenstein! "
+    },
+    {
+     "chunk": 706,
+     "text": "“Farewell! I leave you, and in you the last of humankind whom these eyes will\never behold. Farewell, Frankenstein! If thou wert yet alive and yet cherished a\ndesire of revenge against me, it would be "
+    }
+   ]
+  },
+  {
+   "id": "c008",
+   "size": 24,
+   "members": [
+    151,
+    187,
+    183,
+    81,
+    488,
+    178,
+    200,
+    102,
+    481,
+    697,
+    476,
+    646,
+    570,
+    158,
+    157,
+    104,
+    150,
+    202,
+    179,
+    203,
+    77,
+    163,
+    166,
+    162
+   ],
+   "top_terms": [
+    {
+     "t": "clerval",
+     "n": 30
+    },
+    {
+     "t": "dear",
+     "n": 12
+    },
+    {
+     "t": "who",
+     "n": 10
+    },
+    {
+     "t": "ever",
+     "n": 10
+    },
+    {
+     "t": "saw",
+     "n": 10
+    },
+    {
+     "t": "myself",
+     "n": 10
+    },
+    {
+     "t": "friend",
+     "n": 9
+    },
+    {
+     "t": "friends",
+     "n": 8
+    },
+    {
+     "t": "now",
+     "n": 8
+    },
+    {
+     "t": "long",
+     "n": 7
+    },
+    {
+     "t": "life",
+     "n": 7
+    },
+    {
+     "t": "eyes",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "Chapter 5",
+     "n": 6
+    },
+    {
+     "ch": "Chapter 6",
+     "n": 5
+    },
+    {
+     "ch": "Chapter 7",
+     "n": 3
+    },
+    {
+     "ch": "Chapter 2",
+     "n": 2
+    },
+    {
+     "ch": "Chapter 3",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 151,
+     "text": "Nothing could equal my delight on seeing Clerval; his presence brought back to\nmy thoughts my father, Elizabeth, and all those scenes of home so dear to my\nrecollection.I grasped his hand, and in a mo"
+    },
+    {
+     "chunk": 187,
+     "text": "We passed a fortnight in these perambulations: my health and spirits had long\nbeen restored, and they gained additional strength from the salubrious air I\nbreathed, the natural incidents of our progre"
     }
    ]
   },
   {
    "id": "c009",
-   "size": 22,
+   "size": 23,
    "members": [
-    395,
-    397,
-    401,
-    403,
-    400,
-    393,
-    387,
-    399,
-    388,
-    389,
-    396,
-    392,
-    368,
-    404,
-    394,
-    402,
-    390,
+    373,
     375,
-    459,
+    378,
+    368,
+    380,
+    377,
+    349,
+    366,
     371,
-    455,
-    386
+    372,
+    376,
+    374,
+    381,
+    393,
+    369,
+    423,
+    350,
+    354,
+    379,
+    367,
+    351,
+    417,
+    418
    ],
    "top_terms": [
     {
      "t": "felix",
-     "n": 22
+     "n": 25
     },
     {
      "t": "safie",
-     "n": 19
+     "n": 20
     },
     {
      "t": "who",
-     "n": 12
+     "n": 13
     },
     {
      "t": "father",
-     "n": 11
+     "n": 12
+    },
+    {
+     "t": "some",
+     "n": 9
     },
     {
      "t": "turk",
@@ -1020,51 +1000,51 @@
      "n": 9
     },
     {
-     "t": "paris",
+     "t": "agatha",
      "n": 7
     },
     {
-     "t": "before",
-     "n": 6
-    },
-    {
-     "t": "country",
-     "n": 6
+     "t": "place",
+     "n": 7
     },
     {
      "t": "leghorn",
      "n": 6
     },
     {
-     "t": "some",
+     "t": "before",
      "n": 6
     },
     {
-     "t": "name",
+     "t": "arabian",
      "n": 6
     }
    ],
    "chapters": [
     {
      "ch": "Chapter 14",
-     "n": 17
+     "n": 15
     },
     {
      "ch": "Chapter 13",
-     "n": 3
+     "n": 4
     },
     {
      "ch": "Chapter 16",
-     "n": 2
+     "n": 3
+    },
+    {
+     "ch": "Chapter 15",
+     "n": 1
     }
    ],
    "samples": [
     {
-     "chunk": 395,
-     "text": "“Safie resolved to remain with her father until the moment of his departure,\nbefore which time the Turk renewed his promise that she should be united to his\ndeliverer; and Felix remained with them in "
+     "chunk": 373,
+     "text": "“Felix conducted the fugitives through France to Lyons and across Mont Cenis to\nLeghorn, where the merchant had decided to wait a favourable opportunity of\npassing into some part of the Turkish domini"
     },
     {
-     "chunk": 397,
+     "chunk": 375,
      "text": "“The government of France were greatly enraged at the escape of their victim\nand spared no pains to detect and punish his deliverer. The plot of Felix was\nquickly discovered, and De Lacey and Agatha w"
     }
    ]
@@ -1073,627 +1053,87 @@
    "id": "c010",
    "size": 22,
    "members": [
-    247,
-    438,
-    261,
-    258,
-    241,
-    250,
-    268,
-    484,
-    177,
-    432,
-    252,
-    251,
-    609,
-    63,
-    317,
-    616,
-    281,
-    498,
-    564,
-    273,
-    207,
-    210
-   ],
-   "top_terms": [
-    {
-     "t": "hope",
-     "n": 6
-    },
-    {
-     "t": "innocent",
-     "n": 5
-    },
-    {
-     "t": "see",
-     "n": 4
-    },
-    {
-     "t": "believe",
-     "n": 4
-    },
-    {
-     "t": "god",
-     "n": 3
-    },
-    {
-     "t": "feel",
-     "n": 3
-    },
-    {
-     "t": "judges",
-     "n": 3
-    },
-    {
-     "t": "innocence",
-     "n": 3
-    },
-    {
-     "t": "cousin",
-     "n": 3
-    },
-    {
-     "t": "every",
-     "n": 3
-    },
-    {
-     "t": "begone",
-     "n": 3
-    },
-    {
-     "t": "forbid",
-     "n": 2
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Chapter 7",
-     "n": 7
-    },
-    {
-     "ch": "Chapter 8",
-     "n": 5
-    },
-    {
-     "ch": "Chapter 15",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 17",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 21",
-     "n": 2
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 247,
-     "text": "“If she is, God forbid that she should suffer as guilty. She is to be tried\ntoday, and I hope, I sincerely hope, that she will be acquitted.”"
-    },
-    {
-     "chunk": 438,
-     "text": "“‘Heaven forbid! Even if you were really criminal, for that can only drive you\nto desperation, and not instigate you to virtue. I also am unfortunate; I and\nmy family have been condemned, although inn"
-    }
-   ]
-  },
-  {
-   "id": "c011",
-   "size": 21,
-   "members": [
-    351,
-    367,
-    369,
-    415,
-    365,
+    302,
+    421,
+    303,
+    342,
+    410,
+    395,
+    427,
+    304,
     352,
-    366,
-    443,
-    419,
-    358,
-    380,
-    350,
-    364,
-    357,
-    452,
-    391,
-    370,
-    450,
-    454,
-    377,
-    456
-   ],
-   "top_terms": [
-    {
-     "t": "felix",
-     "n": 24
-    },
-    {
-     "t": "agatha",
-     "n": 18
-    },
-    {
-     "t": "cottage",
-     "n": 13
-    },
-    {
-     "t": "man",
-     "n": 13
-    },
-    {
-     "t": "old",
-     "n": 11
-    },
-    {
-     "t": "words",
-     "n": 9
-    },
-    {
-     "t": "gentle",
-     "n": 8
-    },
-    {
-     "t": "cottagers",
-     "n": 8
-    },
-    {
-     "t": "found",
-     "n": 8
-    },
-    {
-     "t": "father",
-     "n": 8
-    },
-    {
-     "t": "stranger",
-     "n": 8
-    },
-    {
-     "t": "eyes",
-     "n": 7
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Chapter 13",
-     "n": 8
-    },
-    {
-     "ch": "Chapter 12",
-     "n": 5
-    },
-    {
-     "ch": "Chapter 16",
-     "n": 4
-    },
-    {
-     "ch": "Chapter 15",
-     "n": 3
-    },
-    {
-     "ch": "Chapter 14",
-     "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 351,
-     "text": "“I spent the winter in this manner. The gentle manners and beauty of the\ncottagers greatly endeared them to me; when they were unhappy, I felt\ndepressed; when they rejoiced, I sympathised in their joy"
-    },
-    {
-     "chunk": 367,
-     "text": "“I soon perceived that although the stranger uttered articulate sounds and\nappeared to have a language of her own, she was neither understood by nor\nherself understood the cottagers. They made many si"
-    }
-   ]
-  },
-  {
-   "id": "c012",
-   "size": 21,
-   "members": [
-    318,
-    316,
-    487,
-    790,
-    792,
-    791,
-    567,
-    793,
-    776,
-    789,
-    320,
-    489,
-    312,
-    794,
-    378,
-    285,
-    643,
-    263,
-    29,
-    711,
-    496
-   ],
-   "top_terms": [
-    {
-     "t": "who",
-     "n": 20
-    },
-    {
-     "t": "yet",
-     "n": 16
-    },
-    {
-     "t": "man",
-     "n": 14
-    },
-    {
-     "t": "now",
-     "n": 13
-    },
-    {
-     "t": "creature",
-     "n": 11
-    },
-    {
-     "t": "misery",
-     "n": 11
-    },
-    {
-     "t": "feel",
-     "n": 11
-    },
-    {
-     "t": "thy",
-     "n": 10
-    },
-    {
-     "t": "upon",
-     "n": 9
-    },
-    {
-     "t": "even",
-     "n": 9
-    },
-    {
-     "t": "towards",
-     "n": 9
-    },
-    {
-     "t": "still",
-     "n": 9
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Chapter 24",
-     "n": 7
-    },
-    {
-     "ch": "Chapter 10",
-     "n": 4
-    },
-    {
-     "ch": "Chapter 17",
-     "n": 3
-    },
-    {
-     "ch": "Chapter 8",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 20",
-     "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 318,
-     "text": "“How can I move thee? Will no entreaties cause thee to turn a favourable eye\nupon thy creature, who implores thy goodness and compassion? Believe me,\nFrankenstein, I was benevolent; my soul glowed wit"
-    },
-    {
-     "chunk": 316,
-     "text": "“Be calm! I entreat you to hear me before you give vent to your hatred on my\ndevoted head. Have I not suffered enough, that you seek to increase my misery?\nLife, although it may only be an accumulatio"
-    }
-   ]
-  },
-  {
-   "id": "c013",
-   "size": 20,
-   "members": [
-    714,
-    765,
-    602,
-    314,
-    632,
-    485,
-    195,
-    76,
-    784,
-    665,
-    508,
-    721,
-    690,
-    458,
-    506,
-    475,
-    134,
-    716,
-    696,
-    68
-   ],
-   "top_terms": [
-    {
-     "t": "rage",
-     "n": 5
-    },
-    {
-     "t": "state",
-     "n": 4
-    },
-    {
-     "t": "retired",
-     "n": 3
-    },
-    {
-     "t": "some",
-     "n": 3
-    },
-    {
-     "t": "friend",
-     "n": 3
-    },
-    {
-     "t": "carried",
-     "n": 3
-    },
-    {
-     "t": "heart",
-     "n": 3
-    },
-    {
-     "t": "possessed",
-     "n": 3
-    },
-    {
-     "t": "house",
-     "n": 2
-    },
-    {
-     "t": "turned",
-     "n": 2
-    },
-    {
-     "t": "towards",
-     "n": 2
-    },
-    {
-     "t": "almost",
-     "n": 2
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Chapter 24",
-     "n": 4
-    },
-    {
-     "ch": "Chapter 23",
-     "n": 3
-    },
-    {
-     "ch": "Chapter 21",
-     "n": 2
-    },
-    {
-     "ch": "Letter 4",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 18",
-     "n": 2
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 714,
-     "text": "I broke from the house angry and disturbed and retired to meditate on some\nother mode of action."
-    },
-    {
-     "chunk": 765,
-     "text": "They retired and I turned towards my friend, but he was sunk in languor and\nalmost deprived of life."
-    }
-   ]
-  },
-  {
-   "id": "c014",
-   "size": 19,
-   "members": [
-    434,
+    337,
+    305,
+    188,
+    161,
     428,
-    668,
-    772,
-    440,
-    630,
-    426,
-    442,
-    607,
-    588,
-    60,
-    472,
-    569,
-    435,
-    176,
-    614,
-    220,
-    624,
-    54
+    343,
+    425,
+    308,
+    338,
+    300,
+    612,
+    458,
+    326
    ],
    "top_terms": [
     {
-     "t": "friends",
-     "n": 3
-    },
-    {
-     "t": "who",
-     "n": 3
-    },
-    {
-     "t": "come",
-     "n": 3
-    },
-    {
-     "t": "dear",
-     "n": 3
-    },
-    {
-     "t": "stranger",
-     "n": 2
-    },
-    {
-     "t": "suppose",
-     "n": 2
-    },
-    {
-     "t": "god",
-     "n": 2
-    },
-    {
-     "t": "man",
-     "n": 2
-    },
-    {
-     "t": "see",
-     "n": 2
-    },
-    {
-     "t": "henry",
-     "n": 2
-    },
-    {
-     "t": "love",
-     "n": 2
-    },
-    {
-     "t": "reside",
-     "n": 1
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Chapter 15",
-     "n": 6
-    },
-    {
-     "ch": "Chapter 21",
-     "n": 4
-    },
-    {
-     "ch": "Chapter 20",
-     "n": 2
-    },
-    {
-     "ch": "Letter 4",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 22",
-     "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 434,
-     "text": "“‘Where do these friends reside?’"
-    },
-    {
-     "chunk": 428,
-     "text": "“‘Are they Germans?’"
-    }
-   ]
-  },
-  {
-   "id": "c015",
-   "size": 19,
-   "members": [
-    457,
-    325,
-    329,
-    326,
-    446,
-    330,
-    328,
-    462,
-    360,
-    372,
-    327,
-    323,
-    355,
-    347,
-    501,
-    363,
-    331,
-    463,
-    348
-   ],
-   "top_terms": [
-    {
-     "t": "found",
-     "n": 15
-    },
-    {
-     "t": "night",
-     "n": 13
-    },
-    {
-     "t": "wood",
-     "n": 13
-    },
-    {
-     "t": "fire",
-     "n": 12
-    },
-    {
-     "t": "light",
-     "n": 10
+     "t": "became",
+     "n": 11
     },
     {
      "t": "trees",
      "n": 10
     },
     {
-     "t": "day",
-     "n": 10
-    },
-    {
-     "t": "ground",
+     "t": "found",
      "n": 9
     },
     {
+     "t": "day",
+     "n": 9
+    },
+    {
+     "t": "light",
+     "n": 8
+    },
+    {
+     "t": "night",
+     "n": 8
+    },
+    {
+     "t": "wood",
+     "n": 8
+    },
+    {
+     "t": "still",
+     "n": 7
+    },
+    {
      "t": "eyes",
-     "n": 8
+     "n": 7
     },
     {
-     "t": "myself",
-     "n": 8
+     "t": "fire",
+     "n": 7
     },
     {
-     "t": "before",
-     "n": 8
+     "t": "first",
+     "n": 7
     },
     {
-     "t": "came",
+     "t": "time",
      "n": 7
     }
    ],
    "chapters": [
     {
      "ch": "Chapter 11",
-     "n": 8
+     "n": 6
     },
     {
      "ch": "Chapter 16",
-     "n": 4
+     "n": 5
     },
     {
      "ch": "Chapter 12",
@@ -1704,233 +1144,149 @@
      "n": 2
     },
     {
-     "ch": "Chapter 17",
+     "ch": "Chapter 15",
      "n": 1
     }
    ],
    "samples": [
     {
-     "chunk": 457,
-     "text": "“As the night advanced, a fierce wind arose from the woods and quickly\ndispersed the clouds that had loitered in the heavens; the blast tore along\nlike a mighty avalanche and produced a kind of insani"
+     "chunk": 302,
+     "text": "“Soon a gentle light stole over the heavens and gave me a sensation of\npleasure. I started up and beheld a radiant form rise from among the trees.\n[The moon] I gazed with a kind of wonder. It moved sl"
     },
     {
-     "chunk": 325,
-     "text": "“Soon a gentle light stole over the heavens and gave me a sensation of\npleasure. I started up and beheld a radiant form rise from among the trees.\n[The moon] I gazed with a kind of wonder. It moved sl"
+     "chunk": 421,
+     "text": "“As the night advanced, a fierce wind arose from the woods and quickly\ndispersed the clouds that had loitered in the heavens; the blast tore along\nlike a mighty avalanche and produced a kind of insani"
     }
    ]
   },
   {
-   "id": "c016",
-   "size": 17,
+   "id": "c011",
+   "size": 18,
    "members": [
-    474,
-    785,
-    473,
-    787,
-    795,
-    214,
-    217,
-    747,
-    162,
-    313,
-    762,
-    760,
-    617,
-    745,
-    130,
-    621,
-    486
+    28,
+    4,
+    682,
+    32,
+    15,
+    590,
+    191,
+    661,
+    13,
+    14,
+    165,
+    26,
+    585,
+    673,
+    215,
+    443,
+    596,
+    27
    ],
    "top_terms": [
     {
-     "t": "frankenstein",
-     "n": 13
+     "t": "letter",
+     "n": 10
     },
     {
-     "t": "yet",
-     "n": 8
-    },
-    {
-     "t": "thou",
+     "t": "dear",
      "n": 7
     },
     {
-     "t": "now",
+     "t": "england",
+     "n": 6
+    },
+    {
+     "t": "see",
+     "n": 6
+    },
+    {
+     "t": "sister",
+     "n": 5
+    },
+    {
+     "t": "yet",
+     "n": 5
+    },
+    {
+     "t": "elizabeth",
+     "n": 5
+    },
+    {
+     "t": "saville",
      "n": 4
     },
     {
-     "t": "monster",
+     "t": "hear",
      "n": 4
-    },
-    {
-     "t": "eyes",
-     "n": 4
-    },
-    {
-     "t": "still",
-     "n": 4
-    },
-    {
-     "t": "enemy",
-     "n": 3
-    },
-    {
-     "t": "exclaimed",
-     "n": 3
-    },
-    {
-     "t": "miserable",
-     "n": 3
     },
     {
      "t": "before",
-     "n": 3
+     "n": 4
     },
     {
-     "t": "vengeance",
+     "t": "return",
+     "n": 4
+    },
+    {
+     "t": "lost",
      "n": 3
     }
    ],
    "chapters": [
     {
-     "ch": "Chapter 24",
-     "n": 7
+     "ch": "Letter 1",
+     "n": 3
     },
     {
-     "ch": "Chapter 16",
-     "n": 2
+     "ch": "Chapter 24",
+     "n": 3
+    },
+    {
+     "ch": "Letter 2",
+     "n": 3
+    },
+    {
+     "ch": "Chapter 22",
+     "n": 3
     },
     {
      "ch": "Chapter 7",
      "n": 2
-    },
-    {
-     "ch": "Chapter 21",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 5",
-     "n": 1
     }
    ],
    "samples": [
     {
-     "chunk": 474,
-     "text": "“‘Frankenstein! you belong then to my enemy—to him towards whom I have sworn\neternal revenge; you shall be my first victim.’"
+     "chunk": 28,
+     "text": "Letter 3\nTo Mrs. Saville, England.\nJuly 7th, 17—.\nMy dear Sister,"
     },
     {
-     "chunk": 785,
-     "text": "“That is also my victim!” he exclaimed. “In his murder my crimes are\nconsummated; the miserable series of my being is wound to its close! Oh,\nFrankenstein! Generous and self-devoted being! What does i"
+     "chunk": 4,
+     "text": "Letter 1\nTo Mrs. Saville, England.\nSt. Petersburgh, Dec. 11th, 17—.\nYou will rejoice to hear that no disaster has accompanied the commencement of\nan enterprise which you have regarded with such evil f"
     }
    ]
   },
   {
-   "id": "c017",
-   "size": 12,
+   "id": "c012",
+   "size": 18,
    "members": [
-    612,
-    600,
-    625,
-    619,
-    636,
-    634,
-    589,
-    587,
-    613,
-    603,
-    622,
-    703
-   ],
-   "top_terms": [
-    {
-     "t": "kirwin",
-     "n": 12
-    },
-    {
-     "t": "death",
-     "n": 5
-    },
-    {
-     "t": "best",
-     "n": 3
-    },
-    {
-     "t": "prison",
-     "n": 3
-    },
-    {
-     "t": "came",
-     "n": 3
-    },
-    {
-     "t": "every",
-     "n": 3
-    },
-    {
-     "t": "murderer",
-     "n": 3
-    },
-    {
-     "t": "body",
-     "n": 3
-    },
-    {
-     "t": "time",
-     "n": 3
-    },
-    {
-     "t": "found",
-     "n": 3
-    },
-    {
-     "t": "countenance",
-     "n": 3
-    },
-    {
-     "t": "extreme",
-     "n": 2
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Chapter 21",
-     "n": 9
-    },
-    {
-     "ch": "Chapter 20",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 23",
-     "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 612,
-     "text": "These were my first reflections, but I soon learned that Mr. Kirwin had shown\nme extreme kindness. He had caused the best room in the prison to be prepared\nfor me (wretched indeed was the best); and i"
-    },
-    {
-     "chunk": 600,
-     "text": "Mr. Kirwin, on hearing this evidence, desired that I should be taken into the\nroom where the body lay for interment, that it might be observed what effect\nthe sight of it would produce upon me. This i"
-    }
-   ]
-  },
-  {
-   "id": "c018",
-   "size": 11,
-   "members": [
-    216,
-    623,
-    218,
-    168,
-    601,
-    788,
-    631,
-    635,
-    175,
-    165,
-    172
+    490,
+    186,
+    502,
+    503,
+    491,
+    486,
+    484,
+    528,
+    185,
+    492,
+    485,
+    497,
+    498,
+    471,
+    474,
+    103,
+    621,
+    494
    ],
    "top_terms": [
     {
@@ -1938,506 +1294,332 @@
      "n": 12
     },
     {
-     "t": "room",
-     "n": 5
-    },
-    {
-     "t": "letter",
-     "n": 4
-    },
-    {
-     "t": "joy",
-     "n": 4
-    },
-    {
-     "t": "death",
-     "n": 3
-    },
-    {
-     "t": "before",
-     "n": 3
-    },
-    {
-     "t": "eyes",
-     "n": 3
-    },
-    {
-     "t": "agony",
-     "n": 3
-    },
-    {
-     "t": "long",
-     "n": 3
-    },
-    {
-     "t": "remorse",
-     "n": 3
-    },
-    {
-     "t": "heart",
-     "n": 3
-    },
-    {
-     "t": "soon",
-     "n": 3
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Chapter 21",
-     "n": 4
-    },
-    {
-     "ch": "Chapter 5",
-     "n": 4
-    },
-    {
-     "ch": "Chapter 7",
-     "n": 2
-    },
-    {
-     "ch": "Chapter 24",
-     "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 216,
-     "text": "Clerval, who had watched my countenance as I read this letter, was surprised to\nobserve the despair that succeeded the joy I at first expressed on receiving\nnews from my friends. I threw the letter on"
-    },
-    {
-     "chunk": 623,
-     "text": "I know not by what chain of thought the idea presented itself, but it instantly\ndarted into my mind that the murderer had come to mock at my misery and taunt\nme with the death of Clerval, as a new inc"
-    }
-   ]
-  },
-  {
-   "id": "c019",
-   "size": 11,
-   "members": [
-    593,
-    706,
-    704,
-    628,
-    707,
-    595,
-    710,
-    712,
-    244,
-    421,
-    584
-   ],
-   "top_terms": [
-    {
-     "t": "magistrate",
+     "t": "journey",
      "n": 8
     },
     {
-     "t": "man",
-     "n": 4
+     "t": "country",
+     "n": 7
     },
     {
-     "t": "old",
-     "n": 3
+     "t": "london",
+     "n": 6
     },
     {
-     "t": "who",
-     "n": 3
+     "t": "return",
+     "n": 6
     },
     {
-     "t": "manner",
-     "n": 3
+     "t": "native",
+     "n": 5
     },
     {
-     "t": "mind",
-     "n": 3
+     "t": "mountains",
+     "n": 5
     },
     {
-     "t": "soon",
-     "n": 2
+     "t": "latter",
+     "n": 5
     },
     {
-     "t": "introduced",
-     "n": 2
-    },
-    {
-     "t": "upon",
-     "n": 2
+     "t": "away",
+     "n": 5
     },
     {
      "t": "some",
-     "n": 2
+     "n": 4
     },
     {
-     "t": "appeared",
-     "n": 2
+     "t": "months",
+     "n": 4
     },
     {
-     "t": "occasion",
-     "n": 2
+     "t": "geneva",
+     "n": 4
     }
    ],
    "chapters": [
     {
-     "ch": "Chapter 23",
-     "n": 5
+     "ch": "Chapter 19",
+     "n": 9
     },
     {
-     "ch": "Chapter 21",
-     "n": 3
+     "ch": "Chapter 18",
+     "n": 4
     },
     {
-     "ch": "Chapter 7",
-     "n": 1
-    },
-    {
-     "ch": "Chapter 15",
-     "n": 1
+     "ch": "Chapter 6",
+     "n": 2
     },
     {
      "ch": "Chapter 20",
      "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 593,
-     "text": "I was soon introduced into the presence of the magistrate, an old benevolent\nman with calm and mild manners. He looked upon me, however, with some degree of\nseverity, and then, turning towards my cond"
     },
     {
-     "chunk": 706,
-     "text": "The magistrate appeared at first perfectly incredulous, but as I continued he\nbecame more attentive and interested; I saw him sometimes shudder with horror;\nat others a lively surprise, unmingled with"
-    }
-   ]
-  },
-  {
-   "id": "c020",
-   "size": 10,
-   "members": [
-    754,
-    758,
-    769,
-    190,
-    659,
-    742,
-    5,
-    39,
-    3,
-    2
-   ],
-   "top_terms": [
-    {
-     "t": "september",
-     "n": 3
-    },
-    {
-     "t": "elizabeth",
-     "n": 2
-    },
-    {
-     "t": "lavenza",
-     "n": 2
-    },
-    {
-     "t": "walton",
-     "n": 1
-    },
-    {
-     "t": "continuation",
-     "n": 1
-    },
-    {
-     "t": "language",
-     "n": 1
-    },
-    {
-     "t": "english",
-     "n": 1
-    },
-    {
-     "t": "dear",
-     "n": 1
-    },
-    {
-     "t": "sister",
-     "n": 1
-    },
-    {
-     "t": "author",
-     "n": 1
-    },
-    {
-     "t": "mary",
-     "n": 1
-    },
-    {
-     "t": "wollstonecraft",
-     "n": 1
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Chapter 24",
-     "n": 4
-    },
-    {
-     "ch": "Frankenstein;",
-     "n": 3
-    },
-    {
-     "ch": "Chapter 6",
-     "n": 1
-    },
-    {
-     "ch": "Chapter 22",
-     "n": 1
-    },
-    {
-     "ch": "Letter 3",
+     "ch": "Chapter 3",
      "n": 1
     }
    ],
    "samples": [
     {
-     "chunk": 754,
-     "text": "September 2d."
+     "chunk": 490,
+     "text": "After passing some months in London, we received a letter from a person in\nScotland who had formerly been our visitor at Geneva. He mentioned the beauties\nof his native country and asked us if those w"
     },
     {
-     "chunk": 758,
-     "text": "September 5th."
+     "chunk": 186,
+     "text": "The month of May had already commenced, and I expected the letter daily which\nwas to fix the date of my departure, when Henry proposed a pedestrian tour in\nthe environs of Ingolstadt, that I might bid"
     }
    ]
   },
   {
-   "id": "c021",
-   "size": 10,
+   "id": "c013",
+   "size": 16,
    "members": [
-    13,
-    26,
-    37,
-    46,
-    10,
-    798,
-    179,
-    1,
-    651,
-    203
+    347,
+    345,
+    334,
+    346,
+    360,
+    340,
+    408,
+    398,
+    339,
+    332,
+    416,
+    331,
+    370,
+    357,
+    365,
+    414
    ],
    "top_terms": [
     {
-     "t": "saville",
-     "n": 4
+     "t": "felix",
+     "n": 18
     },
     {
-     "t": "england",
-     "n": 4
+     "t": "agatha",
+     "n": 14
     },
     {
-     "t": "following",
-     "n": 3
+     "t": "cottage",
+     "n": 10
     },
     {
-     "t": "letter",
-     "n": 3
+     "t": "man",
+     "n": 10
     },
     {
-     "t": "project",
-     "n": 2
+     "t": "old",
+     "n": 8
     },
     {
-     "t": "gutenberg",
-     "n": 2
+     "t": "cottagers",
+     "n": 7
     },
     {
-     "t": "elizabeth",
-     "n": 2
+     "t": "gentle",
+     "n": 7
     },
     {
-     "t": "mary",
-     "n": 1
+     "t": "before",
+     "n": 6
     },
     {
-     "t": "wollstonecraft",
-     "n": 1
+     "t": "father",
+     "n": 6
     },
     {
-     "t": "godwin",
-     "n": 1
+     "t": "stranger",
+     "n": 5
     },
     {
-     "t": "shelley",
-     "n": 1
+     "t": "saw",
+     "n": 5
     },
     {
-     "t": "full",
-     "n": 1
+     "t": "who",
+     "n": 5
     }
    ],
    "chapters": [
     {
-     "ch": "Frankenstein;",
+     "ch": "Chapter 13",
+     "n": 5
+    },
+    {
+     "ch": "Chapter 12",
+     "n": 5
+    },
+    {
+     "ch": "Chapter 15",
      "n": 2
     },
     {
-     "ch": "Letter 1",
-     "n": 1
+     "ch": "Chapter 16",
+     "n": 2
     },
     {
-     "ch": "Letter 2",
-     "n": 1
-    },
-    {
-     "ch": "Letter 3",
-     "n": 1
-    },
-    {
-     "ch": "Letter 4",
-     "n": 1
+     "ch": "Chapter 14",
+     "n": 2
     }
    ],
    "samples": [
     {
-     "chunk": 13,
-     "text": "To Mrs. Saville, England."
+     "chunk": 347,
+     "text": "“I soon perceived that although the stranger uttered articulate sounds and\nappeared to have a language of her own, she was neither understood by nor\nherself understood the cottagers.They made many sig"
     },
     {
-     "chunk": 26,
-     "text": "To Mrs. Saville, England."
+     "chunk": 345,
+     "text": "“It was a lady on horseback, accompanied by a country-man as a guide. The lady\nwas dressed in a dark suit and covered with a thick black veil. Agatha asked a\nquestion, to which the stranger only repli"
     }
    ]
   },
   {
-   "id": "c022",
-   "size": 8,
+   "id": "c014",
+   "size": 13,
    "members": [
-    652,
-    753,
-    180,
-    24,
-    204,
-    35,
-    9,
-    315
+    242,
+    224,
+    228,
+    237,
+    630,
+    229,
+    241,
+    220,
+    233,
+    628,
+    243,
+    632,
+    544
    ],
    "top_terms": [
     {
-     "t": "dear",
-     "n": 2
+     "t": "upon",
+     "n": 7
     },
     {
-     "t": "affectionate",
-     "n": 2
+     "t": "justine",
+     "n": 6
     },
     {
-     "t": "brother",
-     "n": 2
+     "t": "magistrate",
+     "n": 5
     },
     {
-     "t": "walton",
-     "n": 2
+     "t": "evidence",
+     "n": 4
     },
     {
-     "t": "friend",
-     "n": 1
+     "t": "indeed",
+     "n": 4
     },
     {
-     "t": "beloved",
-     "n": 1
+     "t": "judges",
+     "n": 4
     },
     {
-     "t": "sister",
-     "n": 1
+     "t": "fear",
+     "n": 4
     },
     {
-     "t": "dearest",
-     "n": 1
+     "t": "who",
+     "n": 4
     },
     {
-     "t": "cousin",
-     "n": 1
+     "t": "hope",
+     "n": 4
     },
     {
-     "t": "victor",
-     "n": 1
+     "t": "innocence",
+     "n": 4
     },
     {
-     "t": "robert",
-     "n": 1
+     "t": "horror",
+     "n": 3
     },
     {
-     "t": "modern",
-     "n": 1
+     "t": "myself",
+     "n": 3
     }
    ],
    "chapters": [
     {
-     "ch": "Chapter 22",
-     "n": 1
+     "ch": "Chapter 8",
+     "n": 7
     },
     {
-     "ch": "Chapter 24",
-     "n": 1
-    },
-    {
-     "ch": "Chapter 6",
-     "n": 1
-    },
-    {
-     "ch": "Letter 1",
-     "n": 1
+     "ch": "Chapter 23",
+     "n": 3
     },
     {
      "ch": "Chapter 7",
+     "n": 2
+    },
+    {
+     "ch": "Chapter 21",
      "n": 1
     }
    ],
    "samples": [
     {
-     "chunk": 652,
-     "text": "“My dear Friend,"
+     "chunk": 242,
+     "text": "I cannot pretend to describe what I then felt. I had before experienced\nsensations of horror, and I have endeavoured to bestow upon them adequate\nexpressions, but words cannot convey an idea of the he"
     },
     {
-     "chunk": 753,
-     "text": "My beloved Sister,"
+     "chunk": 224,
+     "text": "This speech calmed me. I was firmly convinced in my own mind that Justine, and\nindeed every human being, was guiltless of this murder. I had no fear,\ntherefore, that any circumstantial evidence could "
     }
    ]
   },
   {
-   "id": "c023",
-   "size": 8,
+   "id": "c015",
+   "size": 12,
    "members": [
-    801,
-    799,
-    800,
-    803,
-    6,
-    802,
-    4,
-    7
+    511,
+    276,
+    74,
+    120,
+    298,
+    579,
+    52,
+    711,
+    709,
+    3,
+    710,
+    1
    ],
    "top_terms": [
     {
      "t": "gutenberg",
-     "n": 11
+     "n": 10
     },
     {
      "t": "project",
      "n": 9
     },
     {
-     "t": "use",
-     "n": 5
-    },
-    {
      "t": "works",
      "n": 4
     },
     {
-     "t": "ebook",
-     "n": 4
+     "t": "royalty",
+     "n": 3
     },
     {
-     "t": "full",
+     "t": "use",
+     "n": 3
+    },
+    {
+     "t": "literary",
+     "n": 3
+    },
+    {
+     "t": "archive",
+     "n": 3
+    },
+    {
+     "t": "foundation",
      "n": 3
     },
     {
@@ -2453,39 +1635,129 @@
      "n": 3
     },
     {
-     "t": "terms",
-     "n": 3
-    },
-    {
-     "t": "royalty",
-     "n": 3
-    },
-    {
-     "t": "literary",
+     "t": "full",
      "n": 3
     }
    ],
    "chapters": [
     {
      "ch": "Chapter 24",
-     "n": 5
+     "n": 3
     },
     {
-     "ch": "Frankenstein;",
-     "n": 3
+     "ch": "Chapter 20",
+     "n": 1
+    },
+    {
+     "ch": "Chapter 10",
+     "n": 1
+    },
+    {
+     "ch": "Chapter 2",
+     "n": 1
+    },
+    {
+     "ch": "Chapter 4",
+     "n": 1
     }
    ],
    "samples": [
     {
-     "chunk": 801,
-     "text": "• You provide a full refund of any money paid by a user who notifies\nyou in writing (or by e-mail) within 30 days of receipt that s/he\ndoes not agree to the terms of the full Project Gutenberg™\nLicens"
+     "chunk": 511,
+     "text": "Chapter 20"
     },
     {
-     "chunk": 799,
-     "text": "This eBook is for the use of anyone anywhere in the United States and most\nother parts of the world at no cost and with almost no restrictions\nwhatsoever. You may copy it, give it away or re-use it un"
+     "chunk": 276,
+     "text": "Chapter 10"
+    }
+   ]
+  },
+  {
+   "id": "c016",
+   "size": 10,
+   "members": [
+    550,
+    559,
+    571,
+    569,
+    566,
+    565,
+    541,
+    560,
+    563,
+    552
+   ],
+   "top_terms": [
+    {
+     "t": "kirwin",
+     "n": 12
+    },
+    {
+     "t": "death",
+     "n": 7
+    },
+    {
+     "t": "every",
+     "n": 5
+    },
+    {
+     "t": "father",
+     "n": 5
+    },
+    {
+     "t": "room",
+     "n": 3
+    },
+    {
+     "t": "body",
+     "n": 3
+    },
+    {
+     "t": "agitation",
+     "n": 3
+    },
+    {
+     "t": "time",
+     "n": 3
+    },
+    {
+     "t": "found",
+     "n": 3
+    },
+    {
+     "t": "prison",
+     "n": 3
+    },
+    {
+     "t": "who",
+     "n": 3
+    },
+    {
+     "t": "came",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "Chapter 21",
+     "n": 9
+    },
+    {
+     "ch": "Chapter 20",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 550,
+     "text": "Mr. Kirwin, on hearing this evidence, desired that I should be taken into the\nroom where the body lay for interment, that it might be observed what effect\nthe sight of it would produce upon me. This i"
+    },
+    {
+     "chunk": 559,
+     "text": "These were my first reflections, but I soon learned that Mr. Kirwin had shown\nme extreme kindness. He had caused the best room in the prison to be prepared\nfor me (wretched indeed was the best); and i"
     }
    ]
   }
  ],
- "instructions": "你是图书馆编目员。请只依据本任务书中的证据（词频、代表块、章节分布）为这本书编目，禁止使用你对该书的既有知识补充证据中不存在的细节。\n\n输出单个 JSON 对象（不要 markdown 围栏、不要解释文字），字段如下：\n{\n  \"task_ref\": \"<原样返回 book.db 字段>\",\n  \"themes\": [ { \"id\": \"t1\", \"name\": \"主题名\", \"note\": \"一句话中文说明\" } ],\n  \"persons\": [ { \"name\": \"人物标准名\", \"match_names\": [\"书中真实出现的写法\", \"...\"], \"note\": \"身份一句话\" } ],\n  \"relations\": [ { \"a\": \"人物名\", \"b\": \"人物名\", \"note\": \"关系一句话\" } ],\n  \"assignments\": [ { \"cluster\": \"c001\", \"theme\": \"t1\" } ]\n}\n\n硬性要求：\n1. assignments 必须覆盖 clusters 里出现的每一个 id，且只允许出现这些 id；每个 cluster 恰好分给一个 theme。\n2. themes 数量建议 5~12 个，每个 theme 至少被一个 cluster 使用。\n3. persons 的 match_names 里每个字符串必须是书中原文真实出现的写法（导入程序会逐一在原文检索验证，任何一条不存在则整批拒绝）。没有把握的写法不要写。\n4. 只有真实出场的人物才列入 persons；relations 的 a/b 必须是 persons 里出现过的名字。\n5. 主题名与人物名用与书中原文一致的语言（英文书用英文，中文书用中文）；说明性文字用中文。"
+ "instructions": "你是图书馆编目员。请只依据本任务书中的证据（词频、代表块、章节分布）为这本书编目，禁止使用你对该书的既有知识补充证据中不存在的细节。\n\n输出单个 JSON 对象（不要 markdown 围栏、不要解释文字），字段如下：\n{\n  \"task_ref\": \"<原样返回 book.db 字段>\",\n  \"themes\": [ { \"id\": \"t1\", \"name\": \"主题名\", \"note\": \"一句话中文说明\" } ],\n  \"persons\": [ { \"name\": \"人物标准名\", \"match_names\": [\"书中真实出现的写法\", \"...\"], \"aliases_zh\": [\"中文译名（可选，仅广为人知时写）\"], \"note\": \"身份一句话\" } ],\n  \"relations\": [ { \"a\": \"人物名\", \"b\": \"人物名\", \"note\": \"关系一句话\" } ],\n  \"assignments\": [ { \"cluster\": \"c001\", \"theme\": \"t1\" } ]\n}\n\n硬性要求：\n1. assignments 必须覆盖 clusters 里出现的每一个 id，且只允许出现这些 id；每个 cluster 恰好分给一个 theme。\n2. themes 数量建议 5~12 个，每个 theme 至少被一个 cluster 使用。\n3. persons 的 match_names 里每个字符串必须是书中原文真实出现的写法（导入程序会逐一在原文检索验证，任何一条不存在则整批拒绝）。没有把握的写法不要写。aliases_zh 是**可选**的中文译名（如 Darcy→达西、Mencius→孟子），仅当该译名广为人知时提供、宁缺毋滥——它不参与书内验真，用于中文提问时链到书内写法。\n4. 只有真实出场的人物才列入 persons；relations 的 a/b 必须是 persons 里出现过的名字。\n5. 主题名与人物名用与书中原文一致的语言（英文书用英文，中文书用中文）；说明性文字用中文。"
 }

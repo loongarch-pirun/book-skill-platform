@@ -150,7 +150,8 @@ console.log("\n--- P2-A getPersonDetail/getThemeDetail ---");
   const repIds = bigPerson.representative_chunks.map((c) => c.chunk);
   ok(repIds.length === 5 && new Set(repIds).size === 5,
     `P2-A9: P&P 实测 Elizabeth Bennet 代表块 5 个无重复（${repIds.join(",")}）`);
-  ok(bigPerson.mention_chunks === 623 && bigPerson.mention_count > 0 && bigPerson.relations.length > 0,
+  // #58 重建后伊丽莎白出场 594 块（旧库布局 623）；改区间断言——人物深查数据完整性与块布局解耦
+  ok(bigPerson.mention_chunks > 500 && bigPerson.mention_count > 0 && bigPerson.relations.length > 0,
     `P2-A9b: 深查数据完整（出场 ${bigPerson.mention_chunks} 块 / 关系 ${bigPerson.relations.length} 条 / match_names ${bigPerson.match_names.length} 个）`);
   const rep = bigPerson.representative_chunks[0];
   ok(rep.preview.length > 0 && rep.chapter !== undefined,

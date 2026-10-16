@@ -25,6 +25,10 @@ const llmNodes = db.prepare("SELECT COUNT(*) n FROM nodes WHERE source='llm'").g
 const ruleNodes = db.prepare("SELECT COUNT(*) n FROM nodes WHERE source='rule'").get().n;
 assert(llmNodes === 37 && ruleNodes > 0, `双层图谱并存: llm 节点 ${llmNodes}(12主题+25人物) / rule 节点 ${ruleNodes}`);
 
+// 任务书提前加载（belongs 边数由它派生——聚类覆盖块数，重建后动态跟随）
+const taskPath = path.join(import.meta.dirname, "..", "catalog-tasks", "pride-and-prejudice-en.epub.json");
+const task = JSON.parse(fs.readFileSync(taskPath, "utf8"));
+
 // 2) 编目完整性：主题/人物/关系/边数量与 meta 溯源
 const themes = db.prepare("SELECT COUNT(*) n FROM nodes WHERE type='theme' AND source='llm'").get().n;
 const persons = db.prepare("SELECT COUNT(*) n FROM nodes WHERE type='person' AND source='llm'").get().n;
@@ -32,14 +36,14 @@ const relations = db.prepare("SELECT COUNT(*) n FROM edges WHERE kind='relation'
 const belongs = db.prepare("SELECT COUNT(*) n FROM edges WHERE kind='belongs' AND source='llm'").get().n;
 const mentions = db.prepare("SELECT COUNT(*) n FROM edges WHERE kind='mention' AND source='llm'").get().n;
 const meta = Object.fromEntries(db.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
-assert(themes === 12 && persons === 25 && relations === 26 && belongs === 1968 && mentions > 2500,
-  `编目完整性: 主题${themes} 人物${persons} 关系${relations} belongs边${belongs} mention边${mentions}`);
+// belongs 边数 == 任务书聚类覆盖块数（#58 重建：旧硬编码 1968 随语义合并作废，改动态派生）
+const covered = task.clusters.reduce((s, c) => s + c.size, 0);
+assert(themes === 12 && persons === 25 && relations === 26 && belongs === covered && mentions > 2500,
+  `编目完整性: 主题${themes} 人物${persons} 关系${relations} belongs边${belongs}(=聚类覆盖${covered}) mention边${mentions}`);
 assert(meta.catalog_model === "e5" && meta.catalog_themes === "12" && !!meta.catalog_at,
   `溯源 meta: catalog_model=${meta.catalog_model} catalog_themes=${meta.catalog_themes} catalog_at=${meta.catalog_at}`);
 
 // 3) 防幻觉负例：假人物 match_names 必须被拒（整批拒绝）
-const taskPath = path.join(import.meta.dirname, "..", "catalog-tasks", "pride-and-prejudice-en.epub.json");
-const task = JSON.parse(fs.readFileSync(taskPath, "utf8"));
 const fakeResult = {
   task_ref: "pride-and-prejudice-en.epub.db",
   themes: [{ id: "t1", name: "假主题" }],
@@ -64,9 +68,13 @@ assert(task.clusters.every(c => promptText.includes(c.id)), `提示词: 覆盖�
 assert(promptText.includes("catalog-results/pride-and-prejudice-en.epub.json") && promptText.includes("导入编目结果"),
   "提示词: 末尾带操作说明（结果存哪 + 回来点哪个按钮）");
 
-// 4) mention 边抽查：已知含 "Caroline Bingley." 签名的块 243 必有 mention 边
-const m243 = db.prepare("SELECT dst FROM edges WHERE src_type='chunk' AND src='243' AND kind='mention' AND source='llm'").all().map(r => r.dst);
-assert(m243.includes("Caroline Bingley") && m243.includes("Charles Bingley"), `mention 抽查: 块243 → [${m243.join(", ")}]`);
+// 4) mention 边抽查：含 "Caroline Bingley." 信件签名的块必同时挂 Caroline+Charles 两人 mention 边
+// （#58 重建：旧固定块 243 在语义合并后块边界变化，改按签名文本动态定位同语义块）
+const sigChunk = db.prepare("SELECT id FROM chunks WHERE text LIKE '%Caroline Bingley%' ORDER BY id LIMIT 1").get();
+const mSig = db.prepare("SELECT dst FROM edges WHERE src_type='chunk' AND src=? AND kind='mention' AND source='llm'")
+  .all(String(sigChunk.id)).map(r => r.dst);
+assert(mSig.includes("Caroline Bingley") && mSig.includes("Charles Bingley"),
+  `mention 抽查: 签名块${sigChunk.id} → [${mSig.join(", ")}]`);
 
 // 5) theme_vecs：12 行、每行 384 维 float32
 const tvs = db.prepare("SELECT name, vec FROM theme_vecs").all();
@@ -75,10 +83,18 @@ assert(tvs.length === 12 && tvs.every(t => t.vec.byteLength === 384 * 4), `theme
 // 6) 检索信号单元测试（人物路+关系扩散，无需向量）：
 //    问题点名 Jane+Bingley → 直配 mention 命中；沿关系边应扩散到 Caroline（拆散关系）
 const sig = loadCatalogSignal(db, "who tries to separate jane and bingley", null, null);
-assert(sig.hit.size > 300, `信号命中块数 ${sig.hit.size}（Jane 237 + Bingley 256 类 mention 并集）`);
-const w856 = sig.hit.get(856)?.w || 0;
-assert(w856 >= 0.2 && w856 <= 0.3,
-  `答案块856 信号 w=${w856.toFixed(3)}（直配 Jane+Bingley 求和 0.24，扩散默认关闭）`);
+assert(sig.hit.size > 300, `信号命中块数 ${sig.hit.size}（Jane+Bingley 的 mention 并集）`);
+// （#58 重建：旧固定答案块 856 所在段被语义合并切到两个块——Jane 与 Bingley 分家各居一块，
+// 单块再拿不到两人直配。改按「同时直配 Jane+Bingley 的块」动态取最低 id，验证同一语义：
+// 直配两人求和 ≈0.24、无关系扩散）
+const directChunk = db.prepare(`
+  SELECT a.src FROM edges a JOIN edges b ON a.src = b.src
+  WHERE a.src_type='chunk' AND b.src_type='chunk' AND a.kind='mention' AND b.kind='mention'
+    AND a.source='llm' AND b.source='llm' AND a.dst='Jane Bennet' AND b.dst='Charles Bingley'
+  ORDER BY CAST(a.src AS INTEGER) LIMIT 1`).get();
+const wDirect = sig.hit.get(+directChunk.src)?.w || 0;
+assert(wDirect >= 0.2 && wDirect <= 0.3,
+  `答案块${directChunk.src} 信号 w=${wDirect.toFixed(3)}（直配 Jane+Bingley 求和 0.24，扩散默认关闭）`);
 //    引擎不匹配 → 主题路跳过（catalog_model=e5，传 zh-small）
 const sigZh = loadCatalogSignal(db, "彭伯利庄园", null, "zh-small");
 assert(![...sigZh.hit.values()].some(s => s.tag.includes("theme")), `引擎不一致时主题路自动跳过`);

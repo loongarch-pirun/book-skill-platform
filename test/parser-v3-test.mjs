@@ -216,8 +216,9 @@ console.log("===== 5) 存量四书零变化 =====");
   await cmp("lunyu docx", b => b.parseDocx(path.join(ROOT, "books/lunyu-xueer-zh.docx")), 16);
   await cmp("attention pdf", b => b.parsePdf(path.join(ROOT, "books/attention-is-all-you-need-en.pdf")), 51);
   await cmp("p&p epub", b => b.parseEpub(path.join(ROOT, "books/pride-and-prejudice-en.epub")), 2400);
-  // 注：library/pride-and-prejudice-en.epub.db 里是 2210 块（旧 epub 文件/旧解析产物，
-  // 与当前 books/ 下的 epub 已不同源）——DB 自洽不动它；这里锁的是「当前源文件解析输出」。
+  // 注：2026-10-16 #58 渐进重建前，library/pride-and-prejudice-en.epub.db 里是 2210 块
+  // （旧 epub 文件/旧解析产物，与当前 books/ 下的 epub 已不同源）——已用当前源文件重建为
+  // 1250 块（语义分块合并），影子库考卷对照打平后替换；这里锁的是「当前源文件解析输出」。
   // 升级时已用 git HEAD 版 build-book 逐块 diff 验证：块数/字符/文本集合全部为零变化。
 }
 

@@ -68,7 +68,7 @@ const runOne = (cacheMb) => {
   };
   const offMs = await bench();
   const onMs = await bench();
-  console.log(`  (真实规模 P&P 2210 块: 缓存关 ${offMs}ms vs 开 ${onMs}ms —— 持平，符合预期)`);
+  console.log(`  (真实规模 P&P 1250 块: 缓存关 ${offMs}ms vs 开 ${onMs}ms —— 持平，符合预期)`);
   process.env.BSP_VEC_CACHE_MB = "0";
   clearVecCache();
 }
