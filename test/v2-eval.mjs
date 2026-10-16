@@ -112,6 +112,22 @@ const GOLDEN = [
   { book: "sherlock-holmes-adventures-en.epub", q: "what is the address of sherlock holmes's london lodgings", g: ["Baker Street", "221B"] },
   { book: "sherlock-holmes-adventures-en.epub", q: "what kind of snake is the deadly serpent in the speckled band", g: ["swamp adder"] },
   { book: "sherlock-holmes-adventures-en.epub", q: "who is the friend and colleague who helps sherlock holmes and narrates the cases", g: ["Watson"] },
+  // ===== V3 第三波-3 论文三篇（2026-10-16 PDF 冷接入；双栏列感知解析后，金词回原文验真+探针实跑才入卷） =====
+  // Dynamo（SOSP 2007；Amazon 高可用键值存储）
+  { book: "dynamo-2007-en.pdf", q: "what partitioning technique does dynamo use to spread its keys across nodes", g: ["consistent hashing"] },
+  { book: "dynamo-2007-en.pdf", q: "what mechanism does dynamo use to capture causality between different versions of the same object", g: ["vector clock"] },
+  { book: "dynamo-2007-en.pdf", q: "what quorum-like technique keeps writes available when some replicas are temporarily down", g: ["sloppy quorum", "hinted handoff"] },
+  { book: "dynamo-2007-en.pdf", q: "what structure is used in anti-entropy to synchronize divergent replicas", g: ["merkle"] },
+  // Lamport（1978；时间、时钟与事件排序，老式排版零星空格丢失属原料特征）
+  { book: "lamport-1978-en.pdf", q: "what relation does lamport define to order events in a distributed system", g: ["happened before"] },
+  { book: "lamport-1978-en.pdf", q: "what does lamport introduce into the system to assign numbers to events", g: ["logical clock"] },
+  { book: "lamport-1978-en.pdf", q: "what must the system of clocks satisfy so events can be ordered by their timestamps", g: ["clock condition"] },
+  { book: "lamport-1978-en.pdf", q: "how are ties broken when two events happen to get the same clock value", g: ["total ordering", "break ties"] },
+  // MapReduce（OSDI 2004；Google 大规模分布式处理）
+  { book: "mapreduce-2004-en.pdf", q: "which functional language inspired the map and reduce primitives", g: ["lisp"] },
+  { book: "mapreduce-2004-en.pdf", q: "what is the primary mechanism mapreduce uses for fault tolerance", g: ["re-execut"] },
+  { book: "mapreduce-2004-en.pdf", q: "what does the master launch to handle straggler machines that slow down completion", g: ["backup task"] },
+  { book: "mapreduce-2004-en.pdf", q: "why does mapreduce schedule map tasks close to the data they process", g: ["locality", "network bandwidth"] },
 ];
 
 const args = process.argv.slice(2);

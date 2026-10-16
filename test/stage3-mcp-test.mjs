@@ -33,7 +33,7 @@ assert(JSON.stringify(names) === JSON.stringify(["expand", "get_chapter", "get_p
 // 2. list_books
 const lb = await client.callTool({ name: "list_books", arguments: {} });
 const books = JSON.parse(lb.content[0].text);
-assert(books.length === 14 && books.every(b => b.title && b.format), `list_books 返回 14 本书: ${books.map(b => b.title).join(" / ")}`);
+assert(books.length === 17 && books.every(b => b.title && b.format), `list_books 返回 17 本书: ${books.map(b => b.title).join(" / ")}`);
 
 // 3. query_book 单书（书名精确匹配到 PDF 版，带页码定位）
 const qb = await client.callTool({ name: "query_book", arguments: { book: "lunyu-xueer-zh.pdf", question: "不患人之不己知", topN: 3 } });

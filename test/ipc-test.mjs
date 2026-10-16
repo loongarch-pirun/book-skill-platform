@@ -35,7 +35,7 @@ const cfg = await invoke("config:get");
 ok(cfg.ok && cfg.data.dirs.libDir.endsWith("library") && cfg.data.firstRun === false, "config:get 返回目录与 firstRun");
 
 const books = await invoke("books:list");
-ok(books.ok && books.data.length === 14 && !!books.data[0].catalog, "books:list 十四本带编目摘要（2026-10-16 V3 第二波 md 书 5 本 + 第三波-3 epub 两本入列）");
+ok(books.ok && books.data.length === 17 && !!books.data[0].catalog, "books:list 十七本带编目摘要（2026-10-16 V3 第二波 md 书 5 本 + 第三波-3 epub 两本/论文三篇入列）");
 const id = books.data[0].id;
 
 const cat = await invoke("books:catalog", id);
@@ -95,7 +95,7 @@ try {
   if (backup === null) fs.rmSync(stateFile, { force: true }); else fs.writeFileSync(stateFile, backup);
 }
 const back = await invoke("books:list");
-ok(back.data.length === 14, "状态复位后十四本回来（finally 保护生效）");
+ok(back.data.length === 17, "状态复位后十七本回来（finally 保护生效）");
 
 console.log(`===== ipc-test: ${pass} PASS / ${fail} FAIL =====`);
 process.exit(fail ? 1 : 0);

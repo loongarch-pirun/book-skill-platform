@@ -3,11 +3,11 @@
   "model": "e5",
   "reranker": "onnx-community/bge-reranker-v2-m3-ONNX",
   "rate": 93,
-  "hits": 74,
-  "total": 80,
+  "hits": 86,
+  "total": 92,
   "rerank": true,
-  "rerankOffRate": 74,
-  "avgLatencyMs": 3104,
+  "rerankOffRate": 77,
+  "avgLatencyMs": 3418,
   "misses": [
     "国家当中什么最贵重，江山和君主哪个轻",
     "再远的路从哪里开始",
@@ -16,5 +16,5 @@
     "what is the famous opening sentence about",
     "达西先生的庄园叫什么名字"
   ],
-  "note": "v2-m3 复试官基线。2026-10-16 V3 第三波-3 epub 两本冷接入（简·爱 jane-eyre-en / 福尔摩斯冒险史 sherlock-holmes-adventures-en，Gutenberg 公版；简爱原档下载截断已重下），考卷 72→80 题（每本 4 题，金词逐一回原文验真 + 候选题探针实跑）。新 8 题复试官开全中（简爱 4/4、福尔摩斯 4/4），旧 72 题逐本零回归，总分 92→93 净提升。漏题清单与上轮完全一致（6 题不变，均非回归）：4 题文言边界 + 2 题语义陷阱块。两本新书入库后完成编目（简爱 12 主题 22 人物 belongs 1065 mention 1600 / 福尔摩斯 16 主题 30 人物 belongs 596 mention 850），编目信号进检索路后复跑仍 93 分、漏题不变。基线更新理由：题集扩充 + 净提升，漏题清单无变化（仍写进 commit message）。基线更新规矩：净提升才允许改，漏题清单变化必须写进 commit message。"
+  "note": "v2-m3 复试官基线。2026-10-16 V3 第三波-3 论文三篇冷接入（Dynamo / Lamport 1978 / MapReduce，学术双栏 PDF——build-book 新增列感知解析后入库），考卷 80→92 题（每篇 4 题，金词逐一回原文验真 + 候选题探针实跑）。新 12 题复试官开全中（Dynamo 4/4、Lamport 4/4、MapReduce 4/4，最快 @1 最慢 @3），复试官关 71/92=77（新题关复试官也全中 @1-2）。旧 80 题逐本零回归，总分 93 与上轮持平（86/92=93.5 对 74/80=92.5 实际微升，进位后同为 93）。漏题清单与上轮完全一致（6 题不变，均非回归）：4 题文言边界 + 2 题语义陷阱块。三篇论文入库后完成编目（Dynamo 6 主题 belongs 63；Lamport/MapReduce 聚类退化 single 按 attention 先例单主题 belongs 53/70；三篇均 0 人物），编目信号进检索路后复跑仍 93 分、漏题不变。基线更新理由：题集扩充（rate 持平、无净降），漏题清单无变化（仍写进 commit message）。基线更新规矩：净提升才允许改，漏题清单变化必须写进 commit message。"
 }
