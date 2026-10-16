@@ -9,6 +9,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const Database = require("better-sqlite3");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -181,6 +184,47 @@ console.log("\n--- P4-E3 存档失败兜底 ---");
   ok(!threw && r?.answer?.includes("往外丢东西"),
     `P4-E3: 存档写入失败（EISDIR）→ 回答照样返回（try 兜底静默，不炸本体；异常：${threw?.message || "无"}）`);
   fs.rmSync(arcFile, { recursive: true, force: true }); // 还原，让收尾清理能走通
+}
+
+// ========== P4-E4 反馈池回写（V3 第三波-③） ==========
+console.log("\n--- P4-E4 反馈池回写 ---");
+{
+  const { listFeedback } = await import("../src/desktop/feedback-pool.mjs");
+  // E4a-c：前面只有 E2a 降级一条失败样本；成功路径（dropped=0）不凑数
+  let pool = listFeedback(libDir, { limit: 50 });
+  ok(pool.length === 1 && pool[0].kind === "degraded" && pool[0].bookId === BOOK_ID,
+    `E4a: 失败样本自动入池：仅降级 1 条（kind=${pool[0]?.kind}，共 ${pool.length} 条）`);
+  ok(pool[0].legs?.[0]?.id === raw[0].id && typeof pool[0].legs[0].fts === "number",
+    `E4b: 腿归因带首段信号快照（#${pool[0]?.legs?.[0]?.id} fts=${pool[0]?.legs?.[0]?.fts}）`);
+  ok(listFeedback(libDir, { kind: "citations-dropped" }).length === 0
+    && listFeedback(libDir, { kind: "no-results" }).length === 0,
+    "E4c: 成功路径不产生失败条目（dropped=0 不凑数）");
+
+  // E4d-e：部分引用被剔（1 好 1 假）→ 成功但 dropped=1 → citations-dropped 入池
+  reply = JSON.stringify({ answer: "答案[1]。", citations: [{ n: 1, quote: QUOTE }, { n: 2, quote: "捏造引文这句原文里没有" }] });
+  const rD = await cloudSummary({ bookId: BOOK_ID, question: Q, topN: 6 });
+  ok(!rD.degraded && rD.dropped === 1, `E4d: 部分引用被剔 → 成功且 dropped=1（实际 ${rD.dropped}）`);
+  pool = listFeedback(libDir, { kind: "citations-dropped" });
+  ok(pool.length === 1 && pool[0].detail?.dropped === 1,
+    `E4e: citations-dropped 条目入池（detail.dropped=${pool[0]?.detail?.dropped}）`);
+
+  // E4f-g：检索空手——复制一本库置空向量 + BSP_CATALOG=0 关编目主题路 → 纯空池 → UserError + no-results 入池
+  const EMPTY_ID = "lunyu-xueer-zh.pdf";
+  const dst = path.join(libDir, `${EMPTY_ID}.db`);
+  fs.copyFileSync(path.join(ROOT, "library", `${EMPTY_ID}.db`), dst);
+  const d = new Database(dst);
+  d.prepare("UPDATE chunks SET emb = NULL").run();
+  d.close();
+  let threw4 = null;
+  process.env.BSP_CATALOG = "0"; // 该库已编目，主题路会凭语义兜出结果——关掉才见纯空池
+  try { await cloudSummary({ bookId: EMPTY_ID, question: "zzz qqq xyz" }); }
+  catch (e) { threw4 = e; }
+  finally { delete process.env.BSP_CATALOG; }
+  ok(threw4 && /没有找到相关内容/.test(threw4.message),
+    `E4f: 检索空手 → UserError「${threw4?.message}」`);
+  pool = listFeedback(libDir, { kind: "no-results" });
+  ok(pool.length === 1 && pool[0].question === "zzz qqq xyz" && pool[0].bookId === EMPTY_ID,
+    "E4g: no-results 条目入池（带问题与书）");
 }
 
 // ---------- 收尾 ----------

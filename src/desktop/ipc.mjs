@@ -31,7 +31,7 @@ export async function registerIpc({ ipcMain, app, dialog, getWin }) {
   handle("books:delete", async (eng, bookId) => {
     const r = eng.deleteBook(bookId);
     const purged = chat.purgeArchives(bookId);
-    return purged > 0 ? { ...r, note: `${r.note}；已连 ${purged} 条引用了这本书的云端回答存档一起删除` } : r;
+    return purged > 0 ? { ...r, note: `${r.note}；已连 ${purged} 条引用这本书的存档/反馈样本一起删除` } : r;
   });
   // 导入管线（4.6：H1 直调 lib 四函数 / H2 require 复用 + spawn 显式传参）
   handle("books:import", (eng, filePath) => jobs.startImport(filePath));

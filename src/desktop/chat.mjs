@@ -9,6 +9,7 @@ import { ask, attachSkill, UserError, dirs } from "./engine.mjs";
 import { loadLlmConfig, readLlmKey, saveLlmConfig } from "./llm-config.mjs";
 import { askCloud, chat, sanitizeHistory } from "../lib/llm.mjs";
 import { appendArchive, listArchive, purgeBook, clearArchive } from "./chat-archive.mjs";
+import { appendFeedback, purgeBook as purgeFeedbackBook } from "./feedback-pool.mjs";
 import { findBook, multiVariantSearch, currentLibDir } from "../lib/search.mjs";
 import { loadSkillState } from "../lib/skill-state.mjs";
 import { rewriteQuery } from "../lib/query-rewrite.mjs";
@@ -66,6 +67,19 @@ export async function askWithRewrite({ bookId, question, topN, skillSlug, histor
 // ---------- 云端总结：本地检索 → 云端生成 → 引用回源校验 ----------
 // topN 默认 6（比桌面默认 4 稍宽：总结要多一点素材；上限 20 由 ask 把关）
 // history：多轮对话历史（渲染层持有传来；净化后透传给云端——白名单/截断/近 6 条）
+// 第三波-③ 腿归因：前 3 段结果的信号快照（哪条腿把候选带进来的）——反馈池 legs 字段
+function legSummary(results) {
+  try {
+    return (results || []).slice(0, 3).map((r) => ({
+      id: r.id,
+      fts: r.fts != null ? +(+r.fts).toFixed(2) : null,
+      sem: r.sem != null ? +(+r.sem).toFixed(2) : null,
+      cat: r.cat || null,
+      enr: r.enr || null,
+      nom: !!r.nom,
+    }));
+  } catch { return null; }
+}
 export async function cloudSummary({ bookId = null, question, topN = 6, skillSlug = null, history = [], memory = "" } = {}) {
   const q = String(question || "").trim();
   if (!q) throw new UserError("先提问再总结");
@@ -80,7 +94,16 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
     config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model },
   });
   const raw = base.results || [];
-  if (!raw.length) throw new UserError("这次检索没有找到相关内容，云端总结跳过——换个问法试试");
+  if (!raw.length) {
+    // 第三波-③：检索空手 = 最高价值失败样本（应查到而没查到）——带上试过的改写变体入池
+    try {
+      appendFeedback(dirs().libDir, {
+        kind: "no-results", question: q, book: base.book || null, bookId: base.bookId || null,
+        mode: base.mode, variants: rewrite && rewrite.used ? rewrite.variants : [],
+      });
+    } catch { /* 回写失败不影响主流程 */ }
+    throw new UserError("这次检索没有找到相关内容，云端总结跳过——换个问法试试");
+  }
   // 单书检索的 result 不带 book（UI 里由卡片上下文体现）——云端提示词需要一个明确的书名标题
   // V2-D30（暴力测试 P4-E2E 修，规划外新发现）：bookId 也要同步补——老逻辑只补 book 名，
   // verifyAnswer 从片段取 bookId 得 null，UI 引用徽标 data-bid 为空、跳原文断链
@@ -95,6 +118,13 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
     history: sanitizeHistory(history, { keep: 12, maxLen: 3000 }), memory,
   });
   if (!r.ok) {
+    // 第三波-③：降级（引用全不过/云端失败）= 失败样本——带腿归因落池
+    try {
+      appendFeedback(dirs().libDir, {
+        kind: "degraded", question: q, book: base.book || null, bookId: base.bookId || null,
+        mode: base.mode, detail: { error: r.message, segments: results.length }, legs: legSummary(results),
+      });
+    } catch { /* 回写失败不影响降级返回 */ }
     // 降级通道（UI 对齐 A1）：云端失败不丢本地果实——已检索到的原文一并回给 UI，
     // 对话页在错误气泡下挂「本地原文」折叠区；问一问页本地结果本就在下方，天然降级。
     return { degraded: true, error: r.message, results, mode: base.mode, book: base.book || null, rewrite };
@@ -118,6 +148,15 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
       }),
     });
   } catch { /* 存档失败不影响回答 */ }
+  // 第三波-③：引用被剔除 = 部分失败样本（回答只依据了部分片段）——dropped>0 才落池
+  if ((r.dropped || 0) > 0) {
+    try {
+      appendFeedback(dirs().libDir, {
+        kind: "citations-dropped", question: q, book: base.book || null, bookId: base.bookId || null,
+        mode: base.mode, detail: { dropped: r.dropped, segments: raw.length }, legs: legSummary(results),
+      });
+    } catch { /* 回写失败不影响回答 */ }
+  }
   return { answer: r.answer, citations: r.citations, dropped: r.dropped, usage: r.usage, segments: raw.length, mode: base.mode, book: base.book || null, rewrite };
 }
 
@@ -131,7 +170,11 @@ export function archiveList({ limit } = {}) {
 export function purgeArchives(bookId) {
   const libDir = dirs()?.libDir;
   if (!libDir) return 0;
-  try { return purgeBook(libDir, bookId); } catch { return 0; }
+  let n = 0;
+  try { n += purgeBook(libDir, bookId); } catch { /* 存档通道失败不挡 */ }
+  // 第三波-③：反馈池同口径联动（删书不留引用残留——隐私红线）
+  try { n += purgeFeedbackBook(libDir, bookId); } catch { /* 反馈池通道失败不挡 */ }
+  return n;
 }
 
 export function archiveClear() {
