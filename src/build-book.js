@@ -85,6 +85,73 @@ const promotePlainHeadings = (items) => items.map((it, i) => {
 });
 
 // ---------- PDF：按页提取，识别重复页眉页脚 ----------
+// 双栏论文重排：扫描中部候选栏界，选「跨越项最少且左右份额均衡」的位置 → 按「通栏行 + 左栏 + 右栏」阅读序重组。
+// 单栏页行文通宽，任何中部栏界都有大量项跨越 → 检测不触发，走原同行 x 序拼接路径，行为零变化
+// （attention 单栏 51 块锁定为证）。
+function reflowPage(items) {
+  const rows = new Map();
+  for (const it of items) {
+    if (!rows.has(it.y)) rows.set(it.y, []);
+    rows.get(it.y).push(it);
+  }
+  const rowArr = [...rows.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([, arr]) => arr.sort((a, b) => a.x - b.x));
+  const plain = () => rowArr.map(r => r.map(o => o.s).join("").trim());
+  if (rowArr.length < 4) return plain();
+
+  const xs = items.map(it => it.x);
+  const minX = Math.min(...xs), extent = Math.max(...xs) - minX;
+  if (extent < 100) return plain();
+  const n = items.length;
+
+  // 栏界扫描：中部 20%~80% 区域 5pt 步进；合法=右栏份额 20%~70% 且跨越项 ≤10%；
+  // 取跨越最少者（双栏页栏间空隙处跨越≈0，单栏页通宽行文处处高跨越→无合法界）；
+  // 多个合法位取最长连续段的中点=栏间空隙中央，离两栏边缘都远，抗宽度估噪
+  let boundary = null, bestCross = Infinity;
+  const cands = [];
+  for (let x = minX + extent * 0.2; x <= minX + extent * 0.8; x += 5) {
+    let cross = 0, right = 0;
+    for (const it of items) {
+      if (it.x < x - 2 && it.xe > x + 2) cross++;
+      else if (it.x >= x) right++;
+    }
+    if (right / n < 0.2 || right / n > 0.7 || cross / n > 0.1) { cands.push(null); continue; }
+    cands.push({ x, cross });
+    if (cross < bestCross) bestCross = cross;
+  }
+  if (bestCross < Infinity) {
+    let runStart = -1, bestRun = null;
+    for (let i = 0; i <= cands.length; i++) {
+      const ok = i < cands.length && cands[i] && cands[i].cross <= bestCross + 1;
+      if (ok && runStart < 0) runStart = i;
+      if (!ok && runStart >= 0) {
+        const run = { a: cands[runStart].x, b: cands[i - 1].x };
+        if (!bestRun || run.b - run.a > bestRun.b - bestRun.a) bestRun = run;
+        runStart = -1;
+      }
+    }
+    if (bestRun) boundary = (bestRun.a + bestRun.b) / 2;
+  }
+  if (boundary === null) return plain();
+
+  // 双栏重排：跨栏界项=通栏行（先落盘并冲刷待写栏）；栏界左=左栏待写，右=右栏待写。
+  // 容差与扫描一致（±2）：估宽误差 ±2pt 内的邻栏界项归邻栏，不误判通栏
+  const out = [];
+  let pendL = [], pendR = [];
+  const flush = () => { for (const l of pendL) out.push(l); for (const l of pendR) out.push(l); pendL = []; pendR = []; };
+  for (const row of rowArr) {
+    const cross = row.filter(it => it.x < boundary - 2 && it.xe > boundary + 2);
+    const left = row.filter(it => it.xe <= boundary + 2);
+    const right = row.filter(it => it.x >= boundary - 2);
+    if (cross.length) { flush(); const t = cross.map(o => o.s).join("").trim(); if (t) out.push(t); }
+    if (left.length) { const t = left.map(o => o.s).join("").trim(); if (t) pendL.push(t); }
+    if (right.length) { const t = right.map(o => o.s).join("").trim(); if (t) pendR.push(t); }
+  }
+  flush();
+  return out;
+}
+
 async function parsePdf(file) {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const doc = await pdfjs.getDocument({
@@ -92,23 +159,18 @@ async function parsePdf(file) {
     isEvalSupported: false, useSystemFonts: false,
   }).promise;
 
-  // 每页先按 y 坐标重组行
+  // 每页：收集带坐标与宽度的文本项 → 组行 → 双栏检测重排（单栏页零变化）
   const pageLines = [];
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
     const tc = await page.getTextContent();
-    const rows = new Map();
+    const items = [];
     for (const it of tc.items) {
       if (!it.str || !it.str.trim()) continue;
-      const y = Math.round(it.transform[5]);
-      if (!rows.has(y)) rows.set(y, []);
-      rows.get(y).push({ x: it.transform[4], s: it.str });
+      const w = typeof it.width === "number" ? it.width : it.str.length * 5;
+      items.push({ y: Math.round(it.transform[5]), x: it.transform[4], xe: it.transform[4] + w, s: it.str });
     }
-    const lines = [...rows.entries()]
-      .sort((a, b) => b[0] - a[0])
-      .map(([, arr]) => arr.sort((a, b) => a.x - b.x).map(o => o.s).join("")
-        .replace(/(?<=[A-Za-z0-9,.]) (?=[A-Za-z0-9])/g, m => m).trim());
-    pageLines.push(lines);
+    pageLines.push(reflowPage(items));
   }
 
   // 重复行（出现在 >35% 页面且较短）视为页眉页脚，丢弃

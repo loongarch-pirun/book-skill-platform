@@ -95,11 +95,14 @@ async function checkOne(dbPath) {
     assert(ftsIds.includes(mid.id), `FTS trigram 命中中间块（短语「${phrase}」，命中 ${ftsIds.length} 块）`);
 
     // 6) 语义冒烟：拿中间块自己的开头当问题，该块必须进全库余弦 top-5
+    // 2026-10-16：前缀 60→150 字符（Dynamo 双栏 PDF 实测：60 字符截断下中间块自分 @8、
+    // 全库最差 @85，全是密集同质正文里前缀信息量不足的伪影；150 字符下 17 本库自分全 @1。
+    // 判别力保留：接线错误的块排名约 n/2，不可能进 top-5）
     if (process.env.SKIP_SEM === "1") {
       warn("SKIP_SEM=1：语义冒烟跳过");
     } else {
       const embed = await getEmbedder();
-      const [qv] = await embed.embedQueries([mid.text.slice(0, 60)]);
+      const [qv] = await embed.embedQueries([mid.text.slice(0, 150)]);
       const all = db.prepare("SELECT id, emb FROM chunks WHERE emb IS NOT NULL").all()
         .map(r => ({ id: r.id, v: new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4) }));
       const { cosine } = await import("../src/lib/models.mjs");
