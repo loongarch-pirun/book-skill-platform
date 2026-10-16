@@ -272,7 +272,7 @@ export async function multiVariantSearch(dbPath, questions, topN = 6) {
 }
 
 // ---------- 动态挑书路由（总入口：临时技能包） ----------
-export async function routeAndSearch(question, { topN = 4, maxBooks = 2, libDir = currentLibDir() } = {}) {
+export async function routeAndSearch(question, { topN = 4, maxBooks = 3, libDir = currentLibDir() } = {}) {
   const books = listBooks(libDir);
   if (!books.length) return { routed_books: [], results: [], note: "书库为空" };
   const embed = await getEmbedder();

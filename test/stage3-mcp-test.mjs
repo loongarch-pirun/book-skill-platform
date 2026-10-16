@@ -33,7 +33,7 @@ assert(JSON.stringify(names) === JSON.stringify(["expand", "get_chapter", "get_p
 // 2. list_books
 const lb = await client.callTool({ name: "list_books", arguments: {} });
 const books = JSON.parse(lb.content[0].text);
-assert(books.length === 7 && books.every(b => b.title && b.format), `list_books 返回 7 本书: ${books.map(b => b.title).join(" / ")}`);
+assert(books.length === 12 && books.every(b => b.title && b.format), `list_books 返回 12 本书: ${books.map(b => b.title).join(" / ")}`);
 
 // 3. query_book 单书（书名精确匹配到 PDF 版，带页码定位）
 const qb = await client.callTool({ name: "query_book", arguments: { book: "lunyu-xueer-zh.pdf", question: "不患人之不己知", topN: 3 } });
@@ -57,11 +57,14 @@ assert(qb3R.results?.length >= 1 && /lunyu/i.test(qb3R.book) && qb3R.note,
 // 注：2026-10-13 孟子入书库后，「和朋友相处要讲信用」会同时路由到孟子(0.865)+论语(0.862)
 // ——两本都正当相关（孟子亦論朋友），最终答案仍由论语块居首。故断言收紧为：
 // 论语必须在路由清单里 + 不许混进英文书，不规定两本中文书谁第一。
+// 2026-10-16 V3 第二波：书库 7→12 本，默认窗口 2→3（2 本时论语被凤凰架构/孟子挤出，
+// 实测语义分 0.86x 三分天下）。现断言：论语在清单 + 不混英文书 + 默认窗口就是 3 本。
 const ql = await client.callTool({ name: "query_library", arguments: { question: "和朋友相处要讲信用", topN: 3 } });
 const qlR = JSON.parse(ql.content[0].text);
 const routedTitles = qlR.routed_books.map(b => b.title);
 assert(qlR.routed_books.length >= 1 && /lunyu/i.test(routedTitles.join(","))
-  && routedTitles.every(t => !/frankenstein|attention|prejudice/i.test(t)),
+  && routedTitles.every(t => !/frankenstein|attention|prejudice/i.test(t))
+  && qlR.routed_books.length === 3,
   `query_library 自动挑书: ${qlR.routed_books.map(b => b.title + "(" + b.best_sim + ")").join(", ")}`);
 assert(qlR.results.length >= 1 && qlR.results.every(r => r.book && r.loc !== undefined), `总入口结果带书的归属 + 定位`);
 
@@ -71,12 +74,13 @@ const ql2R = JSON.parse(ql2.content[0].text);
 assert(/attention/i.test(ql2R.routed_books[0].title), `英文问题自动路由到英文书: ${ql2R.routed_books[0].title}`);
 
 // 4c. maxBooks（P5）：路由窗口可调——同一问题收窄到 1 本只挑最相关的，=2 与默认一致
+// 2026-10-16：默认窗口 2→3 后，ql4（=2）应得默认前三中的前两；ql3（=1）只拿冠军
 const ql3 = await client.callTool({ name: "query_library", arguments: { question: "和朋友相处要讲信用", topN: 3, maxBooks: 1 } });
 const ql3R = JSON.parse(ql3.content[0].text);
 const ql4 = await client.callTool({ name: "query_library", arguments: { question: "和朋友相处要讲信用", topN: 3, maxBooks: 2 } });
 const ql4R = JSON.parse(ql4.content[0].text);
-assert(ql3R.routed_books.length === 1 && ql4R.routed_books.length === qlR.routed_books.length,
-  `query_library maxBooks 收窄/放宽: maxBooks=1 → ${ql3R.routed_books.length} 本，maxBooks=2 → ${ql4R.routed_books.length} 本`);
+assert(ql3R.routed_books.length === 1 && ql4R.routed_books.length === Math.min(2, qlR.routed_books.length),
+  `query_library maxBooks 收窄/放宽: maxBooks=1 → ${ql3R.routed_books.length} 本，maxBooks=2 → ${ql4R.routed_books.length} 本，默认 ${qlR.routed_books.length} 本`);
 
 // 5. 引用完整性：结果文本非空、含原文
 assert(qlR.results.every(r => r.text && r.text.length > 10), `所有结果带原文（可回源核对）`);

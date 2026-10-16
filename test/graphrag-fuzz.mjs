@@ -523,17 +523,19 @@ console.log("\n--- W4 清单缓存对抗 ---");
 // ========== W5 maxBooks + 链路对抗 ==========
 console.log("\n--- W5 maxBooks 链路 ---");
 {
-  // clampMaxBooks 矩阵（0/NaN/null → 默认 2、负 → 1、超 → 8、字符串数字可用）
-  ok(clampMaxBooks(0) === 2 && clampMaxBooks(undefined) === 2 && clampMaxBooks(null) === 2 && clampMaxBooks("abc") === 2
+  // clampMaxBooks 矩阵（0/NaN/null → 默认 3、负 → 1、超 → 8、字符串数字可用）
+  // 2026-10-16：默认 2→3（书库 7→12 本，2 本窗口切掉真相关书）
+  ok(clampMaxBooks(0) === 3 && clampMaxBooks(undefined) === 3 && clampMaxBooks(null) === 3 && clampMaxBooks("abc") === 3
     && clampMaxBooks(-5) === 1 && clampMaxBooks(99) === 8 && clampMaxBooks(5.9) === 5 && clampMaxBooks("7") === 7 && clampMaxBooks(true) === 1,
-    `W5-1: clampMaxBooks 矩阵（0→2/null→2/-5→1/99→8/5.9→5/"7"→7/true→1）`);
+    `W5-1: clampMaxBooks 矩阵（0→3/null→3/-5→1/99→8/5.9→5/"7"→7/true→1）`);
   // zod schema 与处理器夹取双层一致
   const zodOk = MAXBOOKS_SCHEMA.safeParse(8).success && MAXBOOKS_SCHEMA.safeParse(undefined).success
     && !MAXBOOKS_SCHEMA.safeParse(9).success && !MAXBOOKS_SCHEMA.safeParse(0).success && !MAXBOOKS_SCHEMA.safeParse(2.5).success;
   ok(zodOk, "W5-2: MAXBOOKS_SCHEMA zod 层 [1..8] 整数（8✓/undefined✓/9✗/0✗/2.5✗）");
   // 三方 clamp 家族语义一致：0→默认、负→下限 1、超→上限
-  ok(clampMaxBooks(0) === 2 && clampMaxBlocks(0) === 20 && clampMaxBooks(-1) === 1 && clampMaxBlocks(-1) === 1 && MAX_BLOCKS === 40,
-    "W5-3: clamp 家族一致性（maxBooks 默认2/上限8、maxBlocks 默认20/上限40、负→1 全同款语义）");
+  // 2026-10-16：maxBooks 默认 2→3（书库 7→12 本，2 本窗口切掉真相关书）
+  ok(clampMaxBooks(0) === 3 && clampMaxBlocks(0) === 20 && clampMaxBooks(-1) === 1 && clampMaxBlocks(-1) === 1 && MAX_BLOCKS === 40,
+    "W5-3: clamp 家族一致性（maxBooks 默认3/上限8、maxBlocks 默认20/上限40、负→1 全同款语义）");
   // lookup 上限与 zod 1..40 对齐（clampMaxBlocks 夹取 = MAX_BLOCKS）
   ok(clampMaxBlocks(41) === 40 && clampMaxBlocks(MAX_BLOCKS + 1) === MAX_BLOCKS && clampMaxBlocks("39") === 39,
     "W5-4: clampMaxBlocks 上夹=MAX_BLOCKS=40（与 MCP schema 1..40 对齐）");

@@ -29,3 +29,9 @@ books/_work/
 # V3 第二波洗数据产物（任务书/结果含书库块文本的派生内容——私书洗过会落这里，整体隔离；入库后再从库侧看）
 enrich-tasks/
 enrich-results/
+
+# 真实工作资料（隐私类，不跟踪；类工作资料放 books/_work/，真资料按流程放 own/ 后本地用）
+books/皮润作业.docx
+catalog-tasks/皮润作业.docx.json
+# 本机一键启动脚本（路径本机化）
+启动书库软件.cmd

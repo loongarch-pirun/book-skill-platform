@@ -12,7 +12,7 @@
 - **问一问**：对单本书或全库提问，返回带原文引用的答案（可点引用跳到书中对应位置）。
 - **翻书**：按「主题分区 / 人物表 / 问这段」三种方式浏览一本书的结构与关系网。
 - **技能包（Skill）**：把书中可复用的方法、观点蒸馏成带「引用回源」的技能文件，知识写进文件即免费存取。
-- **导入自己的书**：支持 txt / epub / pdf / docx，自动切片、向量化、编目（主题 / 人物 / 关系）。
+- **导入自己的书**：支持 txt / epub / pdf / docx / md，自动切片、向量化、编目（主题 / 人物 / 关系）。
 - **MCP 接口**：同时暴露 14 个工具（`query_book` / `query_library` / `list_catalog` / `get_person` / `expand` / `lookup` / `get_chapter` / `read_range` / `similar_chunks` / `save_skill` 等），可供 AI 智能体直接调取。`expand` 拉人物关系邻居网，`lookup` 按章节标题/编号精确直达（工作资料寻址），`get_chapter`/`read_range` 供智能体通读原文。
 
 ### 内置书目（6 部作品，7 个书库条目）
@@ -25,6 +25,8 @@
 | 《傲慢与偏见》 | 英文 | 公版名著（1813） |
 | 《弗兰肯斯坦》 | 英文 | 公版名著（1818） |
 | 《Attention Is All You Need》 | 英文 | 论文（arXiv） |
+
+> 本地书库还可加入 `books/_work/` 的 md 语料（og-aws / System Design Primer / Hello 算法 / 凤凰架构 / 动手学深度学习）——许可证核对中，仅本地不进仓库。
 
 ---
 
@@ -61,11 +63,12 @@ npm run dist       # 生成 Windows 安装包（需联网下载打包组件）
 
 ## 导入你自己的书
 
-1. 把书的 `txt / epub / pdf / docx` 放进 `books/`。
+1. 把书的 `txt / epub / pdf / docx / md`（或 md 目录）放进 `books/`。
 2. 跑建库流水线：
    ```bash
    npm run ingest        # 切片 + 向量化，生成 library/*.db
    ```
+   md 语料可开 `BSP_SEMANTIC=1` 做语义分块（相邻小块先并后切，块长更均匀）。
 3. （可选）编目：用 `src/catalog-export.mjs` 产出任务书 → 智能体产出 JSON → `src/catalog-import.mjs` 入库。
 4. （可选，V3 洗数据）给每块原文生成「前置/标签/假设问题/摘要」：`src/enrich-book.mjs <书库.db>` 带 key 跑批（或 `--export` 出任务书交给外部智能体）→ `src/enrich-import.mjs <书库.db>` 入库；`--audit` 可随时复查回源率与覆盖率。
 5. 维基文库书籍可用 `src/fetch-wikisource.mjs` 抓取干净纯文本。

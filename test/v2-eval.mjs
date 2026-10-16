@@ -74,6 +74,32 @@ const GOLDEN = [
   { book: "pride-and-prejudice-en.epub", q: "who tries to separate jane and bingley", g: ["caroline", "miss bingley"] },
   { book: "pride-and-prejudice-en.epub", q: "达西先生的庄园叫什么名字", g: ["pemberley"] },
   { book: "pride-and-prejudice-en.epub", q: "what legal arrangement means the estate passes to collins", g: ["entail"] },
+  // ===== V3 第二波新语料（2026-10-16，md 书 5 本冷接入；每题金词逐一回原文验真后进卷） =====
+  // og-aws（英文工程手册；中英混问测跨语言——AZ 题实测中文问句跨不过去，与既有「文言边界」同理登记）
+  { book: "og-aws-en.md", q: "S3 的数据持久性官方数字是多少", g: ["99.999999999"] },
+  { book: "og-aws-en.md", q: "在 S3 里刚创建的对象做列表操作能保证马上出现吗", g: ["eventual consistency"] },
+  { book: "og-aws-en.md", q: "what do AWS regions contain", g: ["availability zones"] },
+  { book: "og-aws-en.md", q: "IAM 角色最好按什么维度来分配", g: ["realm"] },
+  // System Design Primer（英文；库里混排 ja/zh 翻译篇——跨语噪声也是真实分布）
+  { book: "system-design-primer-en.md", q: "what does the CAP theorem say you can only support in a distributed system", g: ["two of the following"] },
+  { book: "system-design-primer-en.md", q: "what is another name for the cache-aside strategy", g: ["lazy loading"] },
+  { book: "system-design-primer-en.md", q: "which caches are mentioned for storing user sessions", g: ["redis", "memcached"] },
+  { book: "system-design-primer-en.md", q: "what does horizontal scaling require of servers", g: ["stateless"] },
+  // Hello 算法（中文；图表+代码混排，代码围栏已去，正文是算法讲解）
+  { book: "hello-algo-zh.md", q: "栈是一种遵循什么原则的数据结构", g: ["先入后出"] },
+  { book: "hello-algo-zh.md", q: "队列遵循什么原则", g: ["先入先出"] },
+  { book: "hello-algo-zh.md", q: "解决哈希冲突的链式方案叫什么名字", g: ["链式地址"] },
+  { book: "hello-algo-zh.md", q: "栈的数组实现扩容时单次入栈的时间复杂度会劣化到多少", g: ["O(n)", "劣化至"] },
+  // 凤凰架构（中文；分布式架构教材）
+  { book: "awesome-fenix-zh.md", q: "微服务中的服务降级熔断异常注入等链路治理需要在几层负载均衡里做", g: ["七层"] },
+  { book: "awesome-fenix-zh.md", q: "Paxos Raft ZAB 这类分布式共识协议被称为什么协议", g: ["强一致性"] },
+  { book: "awesome-fenix-zh.md", q: "Redis 集群从数据一致性角度属于哪种类型", g: ["AP 式"] },
+  { book: "awesome-fenix-zh.md", q: "狭义的刚性 ACID 事务在分布式系统中为什么会矛盾", g: ["CAP 不可兼得"] },
+  // 动手学深度学习（中英混排；d2l-zh 中英双语篇交替）
+  { book: "d2l-zh.md", q: "Fashion-MNIST 的训练集有多少张图像", g: ["60000"] },
+  { book: "d2l-zh.md", q: "Fashion-MNIST 每张图像的高度和宽度是多少", g: ["28像素"] },
+  { book: "d2l-zh.md", q: "用什么方法可以减轻过拟合，比如随机水平翻转图像", g: ["图像增广"] },
+  { book: "d2l-zh.md", q: "在注意力机制中，自主性提示被称为什么", g: ["（query）", "被称为*查询*"] },
 ];
 
 const args = process.argv.slice(2);

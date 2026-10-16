@@ -1,13 +1,13 @@
 {
-  "date": "2026-10-13",
+  "date": "2026-10-16",
   "model": "e5",
   "reranker": "onnx-community/bge-reranker-v2-m3-ONNX",
-  "rate": 88,
-  "hits": 46,
-  "total": 52,
+  "rate": 92,
+  "hits": 66,
+  "total": 72,
   "rerank": true,
-  "rerankOffRate": 67,
-  "avgLatencyMs": 3713,
+  "rerankOffRate": 72,
+  "avgLatencyMs": 3138,
   "misses": [
     "国家当中什么最贵重，江山和君主哪个轻",
     "再远的路从哪里开始",
@@ -16,5 +16,5 @@
     "what is the famous opening sentence about",
     "达西先生的庄园叫什么名字"
   ],
-  "note": "v2-m3 复试官基线。2026-10-13 新书《孟子》冷接入：考卷 43→52 题（孟子 9 题），旧 43 题逐本零回归（lunyu 9/9、daodejing 8/9、attention 9/9、frankenstein 6/8、P&P 6/8，与上轮完全一致），总分持平 88。新增漏题「国家当中什么最贵重，江山和君主哪个轻」（孟子·尽心下·14 民為貴）——e5 语义腿跨不过白话问×文言答，答案块 top-30 外（开关复试官均如此），与「再远的路」同为文言边界类，非回归。基线更新理由：新书入考卷属题集扩充而非能力变化，漏题清单变化已写进 commit message。基线更新规矩：净提升才允许改，漏题清单变化必须写进 commit message。"
+  "note": "v2-m3 复试官基线。2026-10-16 V3 第二波语料启用：md 书 5 本冷接入（og-aws / system-design-primer / hello-algo / 凤凰架构 / d2l-zh），考卷 52→72 题（每本 4 题，金词逐一回原文验真）。新 20 题复试官开全中（og-aws 4/4、SDP 4/4、hello-algo 4/4、凤凰架构 4/4、d2l 4/4），旧 52 题逐本零回归，总分 88→92 净提升。漏题清单与上轮完全一致（6 题不变，均非回归）：4 题文言边界 + 2 题语义陷阱块。复试官关 72 分（上轮 67）——2 道新题（刚性 ACID 事务 / Fashion-MNIST 60000）关复试官漏、开复试官第 1 名命中，属复试官价值区。基线更新理由：题集扩充 + 净提升，漏题清单无变化（仍写进 commit message）。基线更新规矩：净提升才允许改，漏题清单变化必须写进 commit message。"
 }
