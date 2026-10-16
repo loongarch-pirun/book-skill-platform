@@ -21,7 +21,16 @@ const sentenceSplit = (text, maxLen = 900) => {
     else buf += p;
   }
   if (buf) out.push(buf);
-  return out;
+  // V3R-D08（一般）：全文无句末标点（长逗号枚举，中文常见）或单句超长时，parts 只有一段、
+  // buf 为空串使上面 `&& buf` 恒假——整段直通突破 maxLen（实测 2051 字无标点文本原样返 1 块）。
+  // 硬切兜底：任何仍超长的段按 maxLen 平切。切的是块边界、字一个不动（拼回语义不变），
+  // 存量带标点语料每段都 ≤ maxLen，本分支不触发——块数锁定不受影响。
+  const hard = [];
+  for (const p of out) {
+    if (p.length <= maxLen) { hard.push(p); continue; }
+    for (let i = 0; i < p.length; i += maxLen) hard.push(p.slice(i, i + maxLen));
+  }
+  return hard;
 };
 
 // ---------- 新增：结构识别工具（中文序号/短行标题/表格/L1 去噪） ----------

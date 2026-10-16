@@ -54,9 +54,9 @@ async function checkOne(dbPath) {
         warn("全书只有一个「前言」章——txt 转 docx 时没用「# 标题」约定，目录体验会差（检索不受影响）");
     }
 
-    // 2) 块质量：无空块；>3000 才算病态（1500~3000 是英文长句合法溢出，sentenceSplit
-    //    按句边界切、单句超 900 就整句成块）；纯符号块（----/====）是抓取残留的垃圾，
-    //    一条都不该有；docx/epub 章名不允许空（PDF 允许→未分章）
+    // 2) 块质量：无空块；>3000 才算病态（正常块 ≤900：sentenceSplit 按句边界切，
+    //    无标点长文/单句超长也有硬切兜底 V3R-D08；1500~3000 只能是绕过切分的异常路径）；
+    //    纯符号块（----/====）是抓取残留的垃圾，一条都不该有；docx/epub 章名不允许空（PDF 允许→未分章）
     const badEmpty = db.prepare("SELECT COUNT(*) c FROM chunks WHERE text IS NULL OR TRIM(text)=''").get().c;
     const badLong = db.prepare("SELECT COUNT(*) c FROM chunks WHERE LENGTH(text) > 3000").get().c;
     const over1500 = db.prepare("SELECT COUNT(*) c FROM chunks WHERE LENGTH(text) > 1500").get().c;
@@ -67,7 +67,7 @@ async function checkOne(dbPath) {
     assert(junkChunks.length === 0,
       `无纯符号垃圾块（${junkChunks.length}${junkChunks.length ? "，如块 " + junkChunks.slice(0, 3).map(r => r.id + ":" + JSON.stringify(r.text.slice(0, 12))).join(" ") : ""}）`);
     assert(badLong === 0, `无病态超长块 >3000 字（${badLong}）`);
-    if (over1500 > 0) warn(`${over1500} 块超过 1500 字——英文长句合法溢出（单句超 900 字整句成块），非病态`);
+    if (over1500 > 0) warn(`${over1500} 块超过 1500 字——sentenceSplit 正常产出 ≤900，超长即异常路径，需人工看`);
     if (nullChap > 0 && !isPdf) assert(false, `章名非空（${nullChap} 块为空）`);
     else if (nullChap > 0) warn(`PDF ${nullChap} 块章名为空 → 翻书显示「未分章」（既有设计，非病态）`);
 

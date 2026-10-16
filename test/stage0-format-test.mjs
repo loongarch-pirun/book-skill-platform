@@ -63,6 +63,16 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-stage0-"));
   assert(parts.every(p => p.length <= 900), `sentenceSplit 封顶 900（${parts.length} 段，最长 ${Math.max(...parts.map(p => p.length))}）`);
   assert(parts.join("") === longText, "sentenceSplit 拼回 == 原文（保真不丢字）");
   assert(sentenceSplit("短句").length === 1, "短文本单块直出");
+  // V3R-D08 常驻断言：无句末标点长文（长逗号枚举，中文常见）/ 单句超长 → 硬切兜底，
+  // 不再整段直通突破 900（存量带标点语料每段 ≤ maxLen，本兜底不触发——块数锁定不受影响）
+  const noPunct = "甲".repeat(2051);            // 全文无句末标点
+  const p2 = sentenceSplit(noPunct);
+  assert(p2.every(p => p.length <= 900) && p2.join("") === noPunct,
+    `D08：2051 字无标点硬切兜底（${p2.length} 块，最长 ${Math.max(...p2.map(p => p.length))}，拼回一致）`);
+  const oneLong = "甲".repeat(1500) + "。";     // 单句 1501 字（有标点但只有一句）
+  const p3 = sentenceSplit(oneLong);
+  assert(p3.every(p => p.length <= 900) && p3.join("") === oneLong,
+    `D08：1501 字单句硬切兜底（${p3.length} 块，最长 ${Math.max(...p3.map(p => p.length))}）`);
 }
 
 // ===== 损坏文件：伪装扩展名必须抛错（而不是建出一个空库）=====

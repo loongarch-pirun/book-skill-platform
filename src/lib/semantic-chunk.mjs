@@ -37,7 +37,10 @@ export function pickCuts(sims, sentLens, { threshold, minPiece, maxCuts }) {
     const after = cuts.filter(c => c > i);
     const from = before.length ? before[before.length - 1] : 0;
     const to = after.length ? after[0] : sentLens.length;
-    if (acc(from, i) < minPiece || acc(i, to) < minPiece) continue;  // 切出薄片 → 放弃这个点
+    // V3R-D13（一般）：切点 i 的刀下在句 i 末尾——前片是句 [from..i]（含句 i），后片是 [i+1..to-1]。
+    // 旧代码 acc(from,i)/acc(i,to) 把句 i 的长度算进后片，句长均匀时等价、方差大时
+    // 「互不薄于 minPiece」退化为近似（薄片判定失真）。窗口按真实切片边界算。
+    if (acc(from, i + 1) < minPiece || acc(i + 1, to) < minPiece) continue;  // 切出薄片 → 放弃这个点
     cuts.push(i);
   }
   return cuts.sort((a, b) => a - b);
@@ -68,7 +71,12 @@ export async function semanticSplitChunks(chunks, opts = {}) {
   }
   if (!todo.length) return chunks.slice();
 
+  // V3R-D10（一般）：embed 返回数必须与句子数一致——短了 slice 会静默错切（句向量对错位），
+  // 多了静默忽略。真实 e5 逐条 embed 不发生；注入式 embedder 契约破坏就明说，不静默（声称机器可验）。
   const vecs = await embed(todo);
+  if (!vecs || vecs.length !== todo.length) {
+    throw new Error(`embed 返回 ${vecs?.length ?? 0} 个向量，与 ${todo.length} 个句子对不上——拒绝静默错切`);
+  }
   const out = [];
   let cursor = 0;
   for (const { c, spans } of keep) {
@@ -126,7 +134,12 @@ export async function semanticMergeChunks(chunks, opts = {}) {
     if (la && fb) pairs.push({ j, left: la, right: fb });
   }
   if (!pairs.length) return chunks.slice();
-  const vecs = await embed(pairs.flatMap(p => [p.left, p.right]));
+  // V3R-D10（一般）：同 split——边界句 embed 数量不符就明说（旧代码 cosine(vecs[i*2], undefined) 裸抛 TypeError）
+  const want = pairs.flatMap(p => [p.left, p.right]);
+  const vecs = await embed(want);
+  if (!vecs || vecs.length !== want.length) {
+    throw new Error(`embed 返回 ${vecs?.length ?? 0} 个向量，与 ${want.length} 个边界句对不上——拒绝静默合并`);
+  }
   const simAt = new Map(pairs.map((p, i) => [p.j, cosine(vecs[i * 2], vecs[i * 2 + 1])]));
 
   // 第二遍：贪心合并——空块自成一块（不产出前导 "\n"），无边界证据的邻位不并

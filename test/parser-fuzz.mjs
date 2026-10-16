@@ -225,8 +225,10 @@ for (const [name, want, label] of TXT_CASES) {
   if (acc && name === "nopunct.txt") {
     const db = new Database(res.dbPath, { readonly: true });
     const mx = db.prepare("SELECT MAX(LENGTH(text)) m FROM chunks").get().m;
+    const n = db.prepare("SELECT COUNT(*) c FROM chunks").get().c;
     db.close();
-    obs(`nopunct 实际行为：最大块 ${mx} 字（sentenceSplit 无句号可切 → 整段成块；巨块但不断链）`);
+    // V3R-D08 常驻断言：无标点 10 万字不再整段直通——硬切兜底后最大块 ≤ 900（旧行为原样返 1 块 10 万字）
+    ok(mx <= 900, `nopunct 10 万字无标点：最大块 ${mx} 字 ≤ 900（D08 硬切兜底生效，共 ${n} 块）`);
   }
   if (acc && name === "sqli.txt") {
     const db = new Database(res.dbPath, { readonly: true });

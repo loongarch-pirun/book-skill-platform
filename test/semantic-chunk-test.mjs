@@ -76,10 +76,36 @@ const MIXED3 = (FRUIT.join("") + DB.join("")).repeat(3);
     assert(spans.length === 4, `4 个句子跨度（实际 ${spans.length}）`);
     assert(spans.map(([s, e]) => t.slice(s, e)).join("") === t, "跨度切片拼回 == 原文（空白也保真）");
     assert(t.slice(...spans[0]) === "第一句。 ", "首跨度的尾随空白归前句");
-    assert(pickCuts([0.9, 0.1, 0.95], [100, 100, 100, 100], { threshold: 0.72, minPiece: 150, maxCuts: 8 }).length === 0,
-      "pickCuts：唯一切点会切出 100 字符薄片（< minPiece）→ 放弃");
+    // D13 修正后的口径：切点 1 的刀下在句 1 末尾——前片=句[0..1]=200、后片=句[2..3]=200。
+    // minPiece=250 时两片都薄 → 弃（旧代码少算句 1 报 100 字符薄片，同样弃但理由错；
+    // minPiece=150 时 200/200 合法可切——这正是 D13 修正放行的正确切点）
+    assert(pickCuts([0.9, 0.1, 0.95], [100, 100, 100, 100], { threshold: 0.72, minPiece: 250, maxCuts: 8 }).length === 0,
+      "pickCuts：唯一切点两片 200/200 都 < minPiece=250 → 放弃");
+    assert(pickCuts([0.9, 0.1, 0.95], [100, 100, 100, 100], { threshold: 0.72, minPiece: 150, maxCuts: 8 }).join() === "1",
+      "pickCuts D13：minPiece=150 时 200/200 合法可切（旧代码误弃）");
     assert(pickCuts([0.9, 0.1, 0.95], [100, 100, 100, 100], { threshold: 0.72, minPiece: 50, maxCuts: 8 }).join() === "1",
       "pickCuts：minPiece=50 时同一点可切");
+    // V3R-D13 常驻断言：切点 i 的刀下在句 i 末尾——前片是句 [from..i]（含句 i）、后片从 i+1 起。
+    // 旧代码把句 i 算进后片：本例切点 0（前片=句0 独段 200 字）旧代码因 acc(0,0)=0 误弃；
+    // 切点 1 会让句 2（50 字）单独成后片——真薄片，新代码正确弃点。两点行为分叉，锁死。
+    const cuts13 = pickCuts([0.1, 0.1], [200, 300, 50], { threshold: 0.72, minPiece: 150, maxCuts: 8 });
+    assert(cuts13.join() === "0", `pickCuts D13：前片含句 i（切点 0 成立）、后片薄片弃点（切点 1 弃）（实际 [${cuts13}]）`);
+  }
+
+  // ===== 5b) V3R-D10：embed 返回数与文本数不符 → 人话抛错（不静默错切/不裸 TypeError）=====
+  {
+    let msg = "";
+    try { await semanticSplitChunks([{ text: MIXED3 }], { embed: () => Promise.resolve([[0, 0, 1, 0]]) }); } catch (e) { msg = e.message; }
+    assert(/对不上/.test(msg), `split：embed 少返向量 → 人话抛错（${msg.slice(0, 40)}…）`);
+    msg = "";
+    try {
+      await semanticMergeChunks([{ chapter: "c", page: null, text: FRUIT[0] }, { chapter: "c", page: null, text: FRUIT[1] }],
+        { embed: () => Promise.resolve([[0, 0, 1, 0]]) });
+    } catch (e) { msg = e.message; }
+    assert(/对不上/.test(msg), `merge：embed 少返向量 → 人话抛错（${msg.slice(0, 40)}…）`);
+    msg = "";
+    try { await semanticSplitChunks([{ text: MIXED3 }], { embed: () => Promise.resolve([]) }); } catch (e) { msg = e.message; }
+    assert(/对不上/.test(msg), `split：embed 空返 → 人话抛错（${msg.slice(0, 40)}…）`);
   }
 
   // ===== 6) 坏输入人话抛错（不许静默） =====

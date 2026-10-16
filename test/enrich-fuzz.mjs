@@ -194,6 +194,30 @@ const goodBatch = (req) => idxsOf(req).map(i => ({
   assert(s2.failed === 1 && Object.keys(s2.chapterSummaries).length === 0 && s2.bookSummary === "", "章名错位 → 该批作废、书摘要跳过");
 }
 
+// ---------- 7b) V3R-D11：摘要失败进 stats（机器可验）+ usage 逐次累加 ----------
+{
+  const db = makeDb("t7b.db", CHUNKS);
+  const dir = path.join(TMP, "run7b");
+  // 块批正常；第 1 次章批返坏章名（该批作废 failed）；chaptersPerCall=2 → 3 章 = 2 次章批 + 1 次书摘要
+  const chat = fakeChat((req, n) => {
+    const sys = req.messages[0].content;
+    if (sys.includes("章节摘要")) {
+      const chs = [...new Set([...req.messages[1].content.matchAll(/【(.+?)】/g)].map(m => m[1]))];
+      return n === 3 ? [{ chapter: "不存在的章", summary: "x" }] : chs.map(ch => ({ chapter: ch, summary: "章摘要：" + ch }));
+    }
+    if (sys.includes("全书摘要")) return "全书摘要正文";
+    return goodBatch(req);
+  });
+  const r = await runEnrich(db, { config: CFG, chatFn: chat, resultsDir: dir, batchSize: 4, chaptersPerCall: 2 });
+  assert(r.ok && r.stats.batchesFailed === 0, "块批全成 → ok（摘要失败不阻断跑批）");
+  assert(r.stats.summariesFailed === 1, `D11：章摘要失败数进 stats（summariesFailed=${r.stats.summariesFailed}）`);
+  const art = JSON.parse(fs.readFileSync(r.artifactPath, "utf8"));
+  assert(art.stats.summariesFailed === 1, "D11：artifact.stats 同步带 summariesFailed（失败机器可验）");
+  assert(r.stats.calls === 5, `调用数=块2+章2+书1（实际 ${r.stats.calls}）`);
+  // usage 逐次累加：5 次调用各 100/50 = 500/250（旧代码只留最后一次摘要 usage → 300，少计）
+  assert(r.stats.usageIn === 500 && r.stats.usageOut === 250, `D11：usage 逐次累加（in=${r.stats.usageIn} out=${r.stats.usageOut}）`);
+}
+
 // ---------- 8) 任务书导出 + 外部结果验真闭环 ----------
 {
   const dir = path.join(TMP, "tasks");
