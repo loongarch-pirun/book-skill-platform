@@ -26,7 +26,7 @@
 | 《弗兰肯斯坦》 | 英文 | 公版名著（1818） |
 | 《Attention Is All You Need》 | 英文 | 论文（arXiv） |
 
-> 本地书库还可加入 `books/_work/` 的 md 语料（og-aws / System Design Primer / Hello 算法 / 凤凰架构 / 动手学深度学习）——许可证核对中，仅本地不进仓库。
+> 本地书库还可加入 `books/_work/` 的 md 语料（og-aws / System Design Primer / Hello 算法 / 凤凰架构 / 动手学深度学习）与 epub 公版书（《简·爱》/《福尔摩斯冒险史》，Gutenberg 冷接入）——许可证核对中，仅本地不进仓库。
 
 ---
 

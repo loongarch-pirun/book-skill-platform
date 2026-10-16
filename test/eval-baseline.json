@@ -2,12 +2,12 @@
   "date": "2026-10-16",
   "model": "e5",
   "reranker": "onnx-community/bge-reranker-v2-m3-ONNX",
-  "rate": 92,
-  "hits": 66,
-  "total": 72,
+  "rate": 93,
+  "hits": 74,
+  "total": 80,
   "rerank": true,
-  "rerankOffRate": 72,
-  "avgLatencyMs": 3138,
+  "rerankOffRate": 74,
+  "avgLatencyMs": 3104,
   "misses": [
     "国家当中什么最贵重，江山和君主哪个轻",
     "再远的路从哪里开始",
@@ -16,5 +16,5 @@
     "what is the famous opening sentence about",
     "达西先生的庄园叫什么名字"
   ],
-  "note": "v2-m3 复试官基线。2026-10-16 V3 第二波语料启用：md 书 5 本冷接入（og-aws / system-design-primer / hello-algo / 凤凰架构 / d2l-zh），考卷 52→72 题（每本 4 题，金词逐一回原文验真）。新 20 题复试官开全中（og-aws 4/4、SDP 4/4、hello-algo 4/4、凤凰架构 4/4、d2l 4/4），旧 52 题逐本零回归，总分 88→92 净提升。漏题清单与上轮完全一致（6 题不变，均非回归）：4 题文言边界 + 2 题语义陷阱块。复试官关 72 分（上轮 67）——2 道新题（刚性 ACID 事务 / Fashion-MNIST 60000）关复试官漏、开复试官第 1 名命中，属复试官价值区。基线更新理由：题集扩充 + 净提升，漏题清单无变化（仍写进 commit message）。基线更新规矩：净提升才允许改，漏题清单变化必须写进 commit message。"
+  "note": "v2-m3 复试官基线。2026-10-16 V3 第三波-3 epub 两本冷接入（简·爱 jane-eyre-en / 福尔摩斯冒险史 sherlock-holmes-adventures-en，Gutenberg 公版；简爱原档下载截断已重下），考卷 72→80 题（每本 4 题，金词逐一回原文验真 + 候选题探针实跑）。新 8 题复试官开全中（简爱 4/4、福尔摩斯 4/4），旧 72 题逐本零回归，总分 92→93 净提升。漏题清单与上轮完全一致（6 题不变，均非回归）：4 题文言边界 + 2 题语义陷阱块。两本新书入库后完成编目（简爱 12 主题 22 人物 belongs 1065 mention 1600 / 福尔摩斯 16 主题 30 人物 belongs 596 mention 850），编目信号进检索路后复跑仍 93 分、漏题不变。基线更新理由：题集扩充 + 净提升，漏题清单无变化（仍写进 commit message）。基线更新规矩：净提升才允许改，漏题清单变化必须写进 commit message。"
 }

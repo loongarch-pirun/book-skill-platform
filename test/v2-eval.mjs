@@ -100,6 +100,18 @@ const GOLDEN = [
   { book: "d2l-zh.md", q: "Fashion-MNIST 每张图像的高度和宽度是多少", g: ["28像素"] },
   { book: "d2l-zh.md", q: "用什么方法可以减轻过拟合，比如随机水平翻转图像", g: ["图像增广"] },
   { book: "d2l-zh.md", q: "在注意力机制中，自主性提示被称为什么", g: ["（query）", "被称为*查询*"] },
+  // ===== V3 第三波-3 epub 两本（2026-10-16 冷接入；每题金词回原文验真+候选题探针实跑才入卷） =====
+  // 简·爱（Gutenberg pg1260；判分注：金词 "no possibility of taking a walk" 全书仅 1 处=开篇名句，
+  //   top4 命中依赖复试官——与既有 og-aws AZ 题同理登记「英文文学细节题需复试官价值区」）
+  { book: "jane-eyre-en.epub", q: "what was impossible to do on the day the novel opens", g: ["no possibility of taking a walk"] },
+  { book: "jane-eyre-en.epub", q: "what is the name of mr rochester's country estate", g: ["Thornfield"] },
+  { book: "jane-eyre-en.epub", q: "who is rochester's first wife hidden in the attic at thornfield", g: ["Bertha"] },
+  { book: "jane-eyre-en.epub", q: "简爱离开盖茨黑德之后就读的学校叫什么", g: ["Lowood"] },
+  // 福尔摩斯冒险史（Gutenberg pg1661；12 短篇集）
+  { book: "sherlock-holmes-adventures-en.epub", q: "who is the woman who outwits sherlock holmes in a scandal in bohemia", g: ["Irene Adler"] },
+  { book: "sherlock-holmes-adventures-en.epub", q: "what is the address of sherlock holmes's london lodgings", g: ["Baker Street", "221B"] },
+  { book: "sherlock-holmes-adventures-en.epub", q: "what kind of snake is the deadly serpent in the speckled band", g: ["swamp adder"] },
+  { book: "sherlock-holmes-adventures-en.epub", q: "who is the friend and colleague who helps sherlock holmes and narrates the cases", g: ["Watson"] },
 ];
 
 const args = process.argv.slice(2);
