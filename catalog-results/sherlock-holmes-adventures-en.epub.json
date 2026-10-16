@@ -1,0 +1,547 @@
+{
+  "task_ref": "sherlock-holmes-adventures-en.epub.db",
+  "themes": [
+    {
+      "id": "t1",
+      "name": "Holmes on the Scent and Sudden Alarms",
+      "note": "追猎现场与横跨各案的突发惊变"
+    },
+    {
+      "id": "t2",
+      "name": "Consultations at Baker Street",
+      "note": "贝克街寓所的问案与日常"
+    },
+    {
+      "id": "t3",
+      "name": "A Scandal in Bohemia",
+      "note": "波西米亚的丑闻"
+    },
+    {
+      "id": "t4",
+      "name": "The Red-Headed League",
+      "note": "红发会"
+    },
+    {
+      "id": "t5",
+      "name": "A Case of Identity",
+      "note": "身份案"
+    },
+    {
+      "id": "t6",
+      "name": "The Boscombe Valley Mystery",
+      "note": "博斯科姆比溪谷谜案"
+    },
+    {
+      "id": "t7",
+      "name": "The Five Orange Pips",
+      "note": "五个桔核"
+    },
+    {
+      "id": "t8",
+      "name": "The Man with the Twisted Lip",
+      "note": "歪唇男人"
+    },
+    {
+      "id": "t9",
+      "name": "The Adventure of the Blue Carbuncle",
+      "note": "蓝宝石案"
+    },
+    {
+      "id": "t10",
+      "name": "The Adventure of the Speckled Band",
+      "note": "斑点带子案"
+    },
+    {
+      "id": "t11",
+      "name": "The Adventure of the Engineer's Thumb",
+      "note": "工程师拇指案"
+    },
+    {
+      "id": "t12",
+      "name": "The Adventure of the Noble Bachelor",
+      "note": "贵族单身汉案"
+    },
+    {
+      "id": "t13",
+      "name": "The Adventure of the Beryl Coronet",
+      "note": "绿玉王冠案"
+    },
+    {
+      "id": "t14",
+      "name": "The Adventure of the Copper Beeches",
+      "note": "铜山毛榉案"
+    },
+    {
+      "id": "t15",
+      "name": "Lestrade and the Official Police",
+      "note": "雷斯垂德与警方调查"
+    },
+    {
+      "id": "t16",
+      "name": "Front Matter and Edition Notes",
+      "note": "版权页与版本说明"
+    }
+  ],
+  "persons": [
+    {
+      "name": "Sherlock Holmes",
+      "match_names": [
+        "Sherlock Holmes",
+        "Holmes"
+      ],
+      "aliases_zh": [
+        "夏洛克·福尔摩斯"
+      ],
+      "note": "咨询侦探"
+    },
+    {
+      "name": "Dr. Watson",
+      "match_names": [
+        "Dr. Watson",
+        "Watson"
+      ],
+      "aliases_zh": [
+        "华生"
+      ],
+      "note": "挚友与案件记录者"
+    },
+    {
+      "name": "Irene Adler",
+      "match_names": [
+        "Irene Adler"
+      ],
+      "aliases_zh": [
+        "艾琳·艾德勒"
+      ],
+      "note": "波西米亚案中赢过福尔摩斯的女子"
+    },
+    {
+      "name": "Jabez Wilson",
+      "match_names": [
+        "Jabez Wilson"
+      ],
+      "aliases_zh": [
+        "贾贝兹·威尔逊"
+      ],
+      "note": "红发会受雇者"
+    },
+    {
+      "name": "John Clay",
+      "match_names": [
+        "John Clay"
+      ],
+      "aliases_zh": [
+        "约翰·克莱"
+      ],
+      "note": "红发会骗局主谋"
+    },
+    {
+      "name": "Mr. Windibank",
+      "match_names": [
+        "Windibank"
+      ],
+      "note": "身份案的化名骗婚者"
+    },
+    {
+      "name": "Hosmer Angel",
+      "match_names": [
+        "Hosmer Angel"
+      ],
+      "note": "温迪班克的化名身份"
+    },
+    {
+      "name": "James McCarthy",
+      "match_names": [
+        "McCarthy"
+      ],
+      "note": "博斯科姆比案遇害者之子"
+    },
+    {
+      "name": "John Turner",
+      "match_names": [
+        "Turner"
+      ],
+      "note": "博斯科姆比案真凶"
+    },
+    {
+      "name": "John Openshaw",
+      "match_names": [
+        "Openshaw",
+        "John Openshaw"
+      ],
+      "note": "五个桔核案委托人"
+    },
+    {
+      "name": "Neville St. Clair",
+      "match_names": [
+        "Neville St. Clair",
+        "St. Clair"
+      ],
+      "note": "歪唇男人案的失踪者"
+    },
+    {
+      "name": "Hugh Boone",
+      "match_names": [
+        "Hugh Boone",
+        "Boone"
+      ],
+      "note": "圣克莱尔的乞丐伪装"
+    },
+    {
+      "name": "Lestrade",
+      "match_names": [
+        "Lestrade"
+      ],
+      "aliases_zh": [
+        "雷斯垂德"
+      ],
+      "note": "苏格兰场警探"
+    },
+    {
+      "name": "James Ryder",
+      "match_names": [
+        "Ryder"
+      ],
+      "note": "蓝宝石案窃贼"
+    },
+    {
+      "name": "John Horner",
+      "match_names": [
+        "Horner",
+        "John Horner"
+      ],
+      "note": "被诬的水管工"
+    },
+    {
+      "name": "Peterson",
+      "match_names": [
+        "Peterson"
+      ],
+      "note": "警察巡官（鹅与帽的拾得者）"
+    },
+    {
+      "name": "Dr. Grimesby Roylott",
+      "match_names": [
+        "Grimesby Roylott",
+        "Roylott"
+      ],
+      "aliases_zh": [
+        "罗伊洛特"
+      ],
+      "note": "斑点带子案继父"
+    },
+    {
+      "name": "Helen Stoner",
+      "match_names": [
+        "Miss Stoner",
+        "Helen Stoner",
+        "Stoner"
+      ],
+      "aliases_zh": [
+        "海伦·斯托纳"
+      ],
+      "note": "斑点带子案委托人"
+    },
+    {
+      "name": "Colonel Lysander Stark",
+      "match_names": [
+        "Lysander Stark",
+        "Colonel Stark"
+      ],
+      "note": "工程师拇指案雇主"
+    },
+    {
+      "name": "Victor Hatherley",
+      "match_names": [
+        "Hatherley"
+      ],
+      "note": "工程师拇指案工程师"
+    },
+    {
+      "name": "Lord Robert St. Simon",
+      "match_names": [
+        "St. Simon",
+        "Lord Robert St. Simon"
+      ],
+      "note": "贵族单身汉案新郎"
+    },
+    {
+      "name": "Flora Millar",
+      "match_names": [
+        "Flora Millar",
+        "Millar"
+      ],
+      "note": "新郎的旧识舞女"
+    },
+    {
+      "name": "Arthur Holder",
+      "match_names": [
+        "Mr. Holder",
+        "Holder"
+      ],
+      "note": "绿玉王冠案委托人"
+    },
+    {
+      "name": "Mr. Rucastle",
+      "match_names": [
+        "Rucastle"
+      ],
+      "note": "铜山毛榉案雇主"
+    },
+    {
+      "name": "Miss Hunter",
+      "match_names": [
+        "Miss Hunter",
+        "Hunter"
+      ],
+      "note": "铜山毛榉案家庭女教师"
+    },
+    {
+      "name": "Mrs. Toller",
+      "match_names": [
+        "Toller"
+      ],
+      "note": "鲁卡斯尔家仆妇"
+    },
+    {
+      "name": "Mary Sutherland",
+      "match_names": [
+        "Sutherland"
+      ],
+      "note": "身份案委托人"
+    },
+    {
+      "name": "Oakshott",
+      "match_names": [
+        "Oakshott"
+      ],
+      "note": "客栈老板（鹅的来源）"
+    },
+    {
+      "name": "King of Bohemia",
+      "match_names": [
+        "King of Bohemia"
+      ],
+      "note": "波西米亚国王"
+    },
+    {
+      "name": "Godfrey Norton",
+      "match_names": [
+        "Norton"
+      ],
+      "note": "艾德勒的情人"
+    }
+  ],
+  "relations": [
+    {
+      "a": "Sherlock Holmes",
+      "b": "Dr. Watson",
+      "note": "挚友与记录伙伴"
+    },
+    {
+      "a": "Irene Adler",
+      "b": "Sherlock Holmes",
+      "note": "唯一赢过福尔摩斯的女子"
+    },
+    {
+      "a": "Irene Adler",
+      "b": "King of Bohemia",
+      "note": "被勒索的国王"
+    },
+    {
+      "a": "Irene Adler",
+      "b": "Godfrey Norton",
+      "note": "情人"
+    },
+    {
+      "a": "Jabez Wilson",
+      "b": "John Clay",
+      "note": "红发会骗局受害者与主谋"
+    },
+    {
+      "a": "Mr. Windibank",
+      "b": "Hosmer Angel",
+      "note": "同一人（化名骗婚）"
+    },
+    {
+      "a": "Mr. Windibank",
+      "b": "Mary Sutherland",
+      "note": "继父与继女"
+    },
+    {
+      "a": "James McCarthy",
+      "b": "John Turner",
+      "note": "遇害者之子与真凶"
+    },
+    {
+      "a": "Neville St. Clair",
+      "b": "Hugh Boone",
+      "note": "同一人（乞丐伪装）"
+    },
+    {
+      "a": "James Ryder",
+      "b": "John Horner",
+      "note": "宝石窃贼与被诬者"
+    },
+    {
+      "a": "Sherlock Holmes",
+      "b": "Lestrade",
+      "note": "顾问与警方"
+    },
+    {
+      "a": "Helen Stoner",
+      "b": "Dr. Grimesby Roylott",
+      "note": "继女与继父"
+    },
+    {
+      "a": "Colonel Lysander Stark",
+      "b": "Victor Hatherley",
+      "note": "雇主与工程师"
+    },
+    {
+      "a": "Lord Robert St. Simon",
+      "b": "Flora Millar",
+      "note": "悔婚的新郎与旧识"
+    },
+    {
+      "a": "Mr. Rucastle",
+      "b": "Miss Hunter",
+      "note": "雇主与家庭女教师"
+    },
+    {
+      "a": "Mr. Rucastle",
+      "b": "Mrs. Toller",
+      "note": "主仆"
+    }
+  ],
+  "assignments": [
+    {
+      "cluster": "c001",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c005",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c007",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c010",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c020",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c002",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c008",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c017",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c016",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c023",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c003",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c006",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c027",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c015",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c019",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c029",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c004",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c024",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c032",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c011",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c022",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c028",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c009",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c013",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c030",
+      "theme": "t12"
+    },
+    {
+      "cluster": "c018",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c026",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c014",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c025",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c031",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c012",
+      "theme": "t15"
+    },
+    {
+      "cluster": "c021",
+      "theme": "t16"
+    }
+  ]
+}

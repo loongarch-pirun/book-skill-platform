@@ -1,0 +1,518 @@
+{
+  "task_ref": "jane-eyre-en.epub.db",
+  "themes": [
+    {
+      "id": "t1",
+      "name": "Gateshead and the Reed Household",
+      "note": "盖茨黑德：里德一家、表亲与仆役"
+    },
+    {
+      "id": "t2",
+      "name": "Bessie's Care of Jane",
+      "note": "保姆贝西对简·爱的照料"
+    },
+    {
+      "id": "t3",
+      "name": "Lowood School and Its People",
+      "note": "洛伍德学校：布罗克赫斯特、坦普尔小姐与校园生活"
+    },
+    {
+      "id": "t4",
+      "name": "Thornfield Hall: Mrs. Fairfax and Adele",
+      "note": "桑菲尔德：管家费尔法克斯与阿黛勒"
+    },
+    {
+      "id": "t5",
+      "name": "The House Party and Miss Ingram",
+      "note": "桑菲尔德派对与英格拉姆小姐"
+    },
+    {
+      "id": "t6",
+      "name": "Jane and Rochester's Growing Attachment",
+      "note": "简与罗切斯特日渐滋长的情愫"
+    },
+    {
+      "id": "t7",
+      "name": "Grace Poole and the Mysterious Laugh",
+      "note": "格雷斯·普尔与神秘笑声"
+    },
+    {
+      "id": "t8",
+      "name": "The Mason Incident",
+      "note": "梅森阁楼受伤事件"
+    },
+    {
+      "id": "t9",
+      "name": "Leaving Thornfield and the Moor Journey",
+      "note": "离开桑菲尔德与荒原之旅"
+    },
+    {
+      "id": "t10",
+      "name": "The Rivers Family and St. John's Proposal",
+      "note": "里弗斯一家与圣约翰的求婚"
+    },
+    {
+      "id": "t11",
+      "name": "Jane and Rochester Reunited",
+      "note": "简与罗切斯特的重逢与结合"
+    },
+    {
+      "id": "t12",
+      "name": "Front Matter and Edition Notes",
+      "note": "版权页与版本说明"
+    }
+  ],
+  "persons": [
+    {
+      "name": "Jane Eyre",
+      "match_names": [
+        "Jane Eyre",
+        "Jane"
+      ],
+      "aliases_zh": [
+        "简·爱"
+      ],
+      "note": "主人公，家庭教师"
+    },
+    {
+      "name": "Edward Rochester",
+      "match_names": [
+        "Mr. Rochester",
+        "Rochester"
+      ],
+      "aliases_zh": [
+        "罗切斯特"
+      ],
+      "note": "桑菲尔德主人"
+    },
+    {
+      "name": "St. John Rivers",
+      "match_names": [
+        "St. John Rivers",
+        "St. John"
+      ],
+      "aliases_zh": [
+        "圣约翰·里弗斯"
+      ],
+      "note": "表兄，牧师"
+    },
+    {
+      "name": "Diana Rivers",
+      "match_names": [
+        "Diana Rivers",
+        "Diana"
+      ],
+      "aliases_zh": [
+        "黛安娜·里弗斯"
+      ],
+      "note": "表姐"
+    },
+    {
+      "name": "Mary Rivers",
+      "match_names": [
+        "Mary Rivers",
+        "Mary"
+      ],
+      "aliases_zh": [
+        "玛丽·里弗斯"
+      ],
+      "note": "表姐"
+    },
+    {
+      "name": "Mrs. Reed",
+      "match_names": [
+        "Mrs. Reed",
+        "Aunt Reed"
+      ],
+      "aliases_zh": [
+        "里德太太"
+      ],
+      "note": "舅母，简的监护人"
+    },
+    {
+      "name": "Bessie",
+      "match_names": [
+        "Bessie"
+      ],
+      "note": "盖茨黑德保姆"
+    },
+    {
+      "name": "Georgiana Reed",
+      "match_names": [
+        "Georgiana"
+      ],
+      "aliases_zh": [
+        "乔治安娜"
+      ],
+      "note": "里德家表姐"
+    },
+    {
+      "name": "Eliza Reed",
+      "match_names": [
+        "Eliza"
+      ],
+      "aliases_zh": [
+        "伊莉莎"
+      ],
+      "note": "里德家表姐"
+    },
+    {
+      "name": "Mr. Brocklehurst",
+      "match_names": [
+        "Mr. Brocklehurst",
+        "Brocklehurst"
+      ],
+      "aliases_zh": [
+        "布罗克赫斯特"
+      ],
+      "note": "洛伍德学校司库"
+    },
+    {
+      "name": "Helen Burns",
+      "match_names": [
+        "Helen Burns",
+        "Helen"
+      ],
+      "aliases_zh": [
+        "海伦·彭斯"
+      ],
+      "note": "洛伍德同窗挚友"
+    },
+    {
+      "name": "Miss Temple",
+      "match_names": [
+        "Miss Temple",
+        "Temple"
+      ],
+      "aliases_zh": [
+        "坦普尔小姐"
+      ],
+      "note": "洛伍德教师"
+    },
+    {
+      "name": "Mrs. Fairfax",
+      "match_names": [
+        "Mrs. Fairfax",
+        "Fairfax"
+      ],
+      "aliases_zh": [
+        "费尔法克斯太太"
+      ],
+      "note": "桑菲尔德管家"
+    },
+    {
+      "name": "Adele Varens",
+      "match_names": [
+        "Adèle",
+        "Varens"
+      ],
+      "aliases_zh": [
+        "阿黛勒"
+      ],
+      "note": "罗切斯特的养女"
+    },
+    {
+      "name": "Blanche Ingram",
+      "match_names": [
+        "Miss Ingram",
+        "Blanche Ingram",
+        "Ingram"
+      ],
+      "aliases_zh": [
+        "布兰奇·英格拉姆"
+      ],
+      "note": "社交名媛"
+    },
+    {
+      "name": "Mr. Mason",
+      "match_names": [
+        "Mr. Mason",
+        "Mason"
+      ],
+      "aliases_zh": [
+        "梅森"
+      ],
+      "note": "西印度商人"
+    },
+    {
+      "name": "Grace Poole",
+      "match_names": [
+        "Grace Poole",
+        "Poole"
+      ],
+      "aliases_zh": [
+        "格雷斯·普尔"
+      ],
+      "note": "桑菲尔德仆役"
+    },
+    {
+      "name": "Miss Miller",
+      "match_names": [
+        "Miss Miller",
+        "Miller"
+      ],
+      "note": "洛伍德教师"
+    },
+    {
+      "name": "Bertha Mason",
+      "match_names": [
+        "Bertha"
+      ],
+      "aliases_zh": [
+        "伯莎·梅森"
+      ],
+      "note": "罗切斯特的阁楼疯妻"
+    },
+    {
+      "name": "Rosamond Oliver",
+      "match_names": [
+        "Rosamond Oliver",
+        "Oliver"
+      ],
+      "aliases_zh": [
+        "罗莎蒙德·奥利弗"
+      ],
+      "note": "乡绅之女"
+    },
+    {
+      "name": "John Reed",
+      "match_names": [
+        "John Reed"
+      ],
+      "aliases_zh": [
+        "约翰·里德"
+      ],
+      "note": "里德家表哥"
+    },
+    {
+      "name": "Leaven",
+      "match_names": [
+        "Leaven"
+      ],
+      "note": "盖茨黑德车夫"
+    }
+  ],
+  "relations": [
+    {
+      "a": "Jane Eyre",
+      "b": "Edward Rochester",
+      "note": "恋人，最终成婚"
+    },
+    {
+      "a": "Jane Eyre",
+      "b": "Mrs. Reed",
+      "note": "舅母与外甥女"
+    },
+    {
+      "a": "Jane Eyre",
+      "b": "Bessie",
+      "note": "保姆与照看长大的孩子"
+    },
+    {
+      "a": "Jane Eyre",
+      "b": "Helen Burns",
+      "note": "洛伍德同窗挚友"
+    },
+    {
+      "a": "Jane Eyre",
+      "b": "Miss Temple",
+      "note": "学生与老师"
+    },
+    {
+      "a": "Jane Eyre",
+      "b": "St. John Rivers",
+      "note": "表兄妹，求婚被拒"
+    },
+    {
+      "a": "Jane Eyre",
+      "b": "Diana Rivers",
+      "note": "表姐妹"
+    },
+    {
+      "a": "Jane Eyre",
+      "b": "Mary Rivers",
+      "note": "表姐妹"
+    },
+    {
+      "a": "Edward Rochester",
+      "b": "Bertha Mason",
+      "note": "夫妻（阁楼疯妻）"
+    },
+    {
+      "a": "Edward Rochester",
+      "b": "Mrs. Fairfax",
+      "note": "主人与管家"
+    },
+    {
+      "a": "Edward Rochester",
+      "b": "Adele Varens",
+      "note": "养父与养女"
+    },
+    {
+      "a": "Edward Rochester",
+      "b": "Blanche Ingram",
+      "note": "派对上的求婚候选人"
+    },
+    {
+      "a": "St. John Rivers",
+      "b": "Diana Rivers",
+      "note": "兄妹"
+    },
+    {
+      "a": "St. John Rivers",
+      "b": "Mary Rivers",
+      "note": "兄妹"
+    },
+    {
+      "a": "St. John Rivers",
+      "b": "Rosamond Oliver",
+      "note": "被爱慕者"
+    },
+    {
+      "a": "Georgiana Reed",
+      "b": "Eliza Reed",
+      "note": "姐妹"
+    },
+    {
+      "a": "Mrs. Reed",
+      "b": "Georgiana Reed",
+      "note": "母女"
+    },
+    {
+      "a": "Mrs. Reed",
+      "b": "Eliza Reed",
+      "note": "母女"
+    },
+    {
+      "a": "Mrs. Reed",
+      "b": "John Reed",
+      "note": "母子"
+    }
+  ],
+  "assignments": [
+    {
+      "cluster": "c008",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c019",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c020",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c029",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c030",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c009",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c024",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c011",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c015",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c021",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c023",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c003",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c004",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c005",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c012",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c013",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c010",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c016",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c017",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c026",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c022",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c028",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c006",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c027",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c001",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c018",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c025",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c002",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c014",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c007",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c031",
+      "theme": "t12"
+    }
+  ]
+}

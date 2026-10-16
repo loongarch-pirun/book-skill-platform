@@ -1,0 +1,3174 @@
+{
+ "task_version": "1",
+ "generated_at": "2026-10-16T14:13:14.589Z",
+ "book": {
+  "db": "sherlock-holmes-adventures-en.epub.db",
+  "title": "sherlock-holmes-adventures-en",
+  "lang": "en",
+  "chunks": 1031,
+  "chapters": 14,
+  "total_chars": 558822
+ },
+ "provenance": {
+  "cluster_model": "e5",
+  "cluster_method": "centered-greedy-th0.34-min5",
+  "clustered_at": "2026-10-16T14:13:14.593Z",
+  "clusters": 32,
+  "covered_chunks": 596
+ },
+ "clusters": [
+  {
+   "id": "c001",
+   "size": 76,
+   "members": [
+    304,
+    841,
+    475,
+    550,
+    213,
+    6,
+    345,
+    937,
+    518,
+    168,
+    77,
+    8,
+    778,
+    470,
+    423,
+    597,
+    533,
+    343,
+    454,
+    661,
+    217,
+    66,
+    874,
+    583,
+    60,
+    381,
+    163,
+    61,
+    80,
+    532,
+    765,
+    1017,
+    663,
+    892,
+    540,
+    188,
+    69,
+    425,
+    337,
+    574,
+    622,
+    655,
+    472,
+    144,
+    70,
+    243,
+    615,
+    149,
+    158,
+    4,
+    138,
+    91,
+    813,
+    755,
+    139,
+    179,
+    431,
+    641,
+    39,
+    383,
+    971,
+    148,
+    1018,
+    909,
+    621,
+    659,
+    934,
+    279,
+    514,
+    676,
+    665,
+    88,
+    251,
+    798,
+    932,
+    142
+   ],
+   "top_terms": [
+    {
+     "t": "holmes",
+     "n": 91
+    },
+    {
+     "t": "upon",
+     "n": 48
+    },
+    {
+     "t": "out",
+     "n": 40
+    },
+    {
+     "t": "sherlock",
+     "n": 38
+    },
+    {
+     "t": "man",
+     "n": 32
+    },
+    {
+     "t": "street",
+     "n": 26
+    },
+    {
+     "t": "who",
+     "n": 25
+    },
+    {
+     "t": "down",
+     "n": 25
+    },
+    {
+     "t": "door",
+     "n": 21
+    },
+    {
+     "t": "through",
+     "n": 19
+    },
+    {
+     "t": "room",
+     "n": 19
+    },
+    {
+     "t": "eyes",
+     "n": 17
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "I. A SCANDAL IN BOHEMIA",
+     "n": 12
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 11
+    },
+    {
+     "ch": "II. THE RED-HEADED LEAGUE",
+     "n": 10
+    },
+    {
+     "ch": "VI. THE MAN WITH THE TWISTED LIP",
+     "n": 7
+    },
+    {
+     "ch": "VII. THE ADVENTURE OF THE BLUE CARBUNCLE",
+     "n": 7
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 304,
+     "text": "Sherlock Holmes was transformed when he was hot upon such a scent as this.Men\nwho had only known the quiet thinker and logician of Baker Street would have\nfailed to recognise him.His face flushed and "
+    },
+    {
+     "chunk": 841,
+     "text": "A few moments later he was in our room, still puffing, still gesticulating, but\nwith so fixed a look of grief and despair in his eyes that our smiles were\nturned in an instant to horror and pity. For "
+    }
+   ]
+  },
+  {
+   "id": "c002",
+   "size": 41,
+   "members": [
+    245,
+    73,
+    264,
+    831,
+    982,
+    782,
+    437,
+    662,
+    44,
+    374,
+    382,
+    253,
+    970,
+    68,
+    876,
+    509,
+    502,
+    694,
+    277,
+    32,
+    507,
+    208,
+    898,
+    695,
+    601,
+    320,
+    1011,
+    731,
+    450,
+    433,
+    466,
+    700,
+    174,
+    757,
+    446,
+    697,
+    3,
+    576,
+    933,
+    33,
+    102
+   ],
+   "top_terms": [
+    {
+     "t": "see",
+     "n": 8
+    },
+    {
+     "t": "before",
+     "n": 8
+    },
+    {
+     "t": "watson",
+     "n": 6
+    },
+    {
+     "t": "yes",
+     "n": 6
+    },
+    {
+     "t": "matter",
+     "n": 6
+    },
+    {
+     "t": "who",
+     "n": 5
+    },
+    {
+     "t": "understand",
+     "n": 5
+    },
+    {
+     "t": "say",
+     "n": 5
+    },
+    {
+     "t": "upon",
+     "n": 5
+    },
+    {
+     "t": "man",
+     "n": 5
+    },
+    {
+     "t": "yourself",
+     "n": 4
+    },
+    {
+     "t": "now",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "I. A SCANDAL IN BOHEMIA",
+     "n": 6
+    },
+    {
+     "ch": "VI. THE MAN WITH THE TWISTED LIP",
+     "n": 5
+    },
+    {
+     "ch": "IX. THE ADVENTURE OF THE ENGINEER’S THUMB",
+     "n": 5
+    },
+    {
+     "ch": "IV. THE BOSCOMBE VALLEY MYSTERY",
+     "n": 4
+    },
+    {
+     "ch": "XII. THE ADVENTURE OF THE COPPER BEECHES",
+     "n": 4
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 245,
+     "text": "“And how did you verify them?”"
+    },
+    {
+     "chunk": 73,
+     "text": "“How did that help you?”"
+    }
+   ]
+  },
+  {
+   "id": "c003",
+   "size": 40,
+   "members": [
+    231,
+    198,
+    232,
+    222,
+    233,
+    204,
+    203,
+    244,
+    200,
+    199,
+    195,
+    201,
+    210,
+    190,
+    228,
+    191,
+    229,
+    235,
+    196,
+    202,
+    189,
+    193,
+    223,
+    242,
+    220,
+    240,
+    212,
+    246,
+    234,
+    237,
+    611,
+    894,
+    464,
+    462,
+    129,
+    361,
+    197,
+    24,
+    463,
+    582
+   ],
+   "top_terms": [
+    {
+     "t": "holmes",
+     "n": 42
+    },
+    {
+     "t": "windibank",
+     "n": 20
+    },
+    {
+     "t": "man",
+     "n": 20
+    },
+    {
+     "t": "upon",
+     "n": 20
+    },
+    {
+     "t": "hosmer",
+     "n": 18
+    },
+    {
+     "t": "angel",
+     "n": 17
+    },
+    {
+     "t": "little",
+     "n": 17
+    },
+    {
+     "t": "well",
+     "n": 16
+    },
+    {
+     "t": "see",
+     "n": 15
+    },
+    {
+     "t": "father",
+     "n": 14
+    },
+    {
+     "t": "come",
+     "n": 13
+    },
+    {
+     "t": "know",
+     "n": 12
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "III. A CASE OF IDENTITY",
+     "n": 31
+    },
+    {
+     "ch": "VI. THE MAN WITH THE TWISTED LIP",
+     "n": 3
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 2
+    },
+    {
+     "ch": "XI. THE ADVENTURE OF THE BERYL CORONET",
+     "n": 1
+    },
+    {
+     "ch": "II. THE RED-HEADED LEAGUE",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 231,
+     "text": "“On the contrary,” said Holmes quietly; “I have every reason\nto believe that I will succeed in discovering Mr. Hosmer Angel.”\nMr. Windibank gave a violent start and dropped his gloves. “I am\ndelighted"
+    },
+    {
+     "chunk": 198,
+     "text": "Hosmer Angel.”\n“I suppose,” said Holmes, “that when Mr. Windibank came back\nfrom France he was very annoyed at your having gone to the ball.”\n“Oh, well, he was very good about it. He laughed, I rememb"
+    }
+   ]
+  },
+  {
+   "id": "c004",
+   "size": 27,
+   "members": [
+    558,
+    537,
+    541,
+    546,
+    544,
+    571,
+    535,
+    151,
+    564,
+    519,
+    545,
+    20,
+    559,
+    150,
+    525,
+    560,
+    575,
+    563,
+    530,
+    534,
+    152,
+    547,
+    536,
+    516,
+    155,
+    526,
+    657
+   ],
+   "top_terms": [
+    {
+     "t": "holmes",
+     "n": 20
+    },
+    {
+     "t": "now",
+     "n": 15
+    },
+    {
+     "t": "goose",
+     "n": 15
+    },
+    {
+     "t": "bird",
+     "n": 15
+    },
+    {
+     "t": "see",
+     "n": 12
+    },
+    {
+     "t": "geese",
+     "n": 10
+    },
+    {
+     "t": "well",
+     "n": 10
+    },
+    {
+     "t": "upon",
+     "n": 10
+    },
+    {
+     "t": "little",
+     "n": 9
+    },
+    {
+     "t": "man",
+     "n": 9
+    },
+    {
+     "t": "who",
+     "n": 9
+    },
+    {
+     "t": "think",
+     "n": 9
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "VII. THE ADVENTURE OF THE BLUE CARBUNCLE",
+     "n": 21
+    },
+    {
+     "ch": "II. THE RED-HEADED LEAGUE",
+     "n": 4
+    },
+    {
+     "ch": "I. A SCANDAL IN BOHEMIA",
+     "n": 1
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 558,
+     "text": "“Here we are!” said Holmes cheerily as we filed into the room.\n“The fire looks very seasonable in this weather. You look cold, Mr.\nRyder. Pray take the basket-chair. I will just put on my slippers bef"
+    },
+    {
+     "chunk": 537,
+     "text": "Sherlock Holmes glanced sharply across at me with a slight shrug of his\nshoulders.\n“There is your hat, then, and there your bird,” said he. “By\nthe way, would it bore you to tell me where you got the "
+    }
+   ]
+  },
+  {
+   "id": "c005",
+   "size": 27,
+   "members": [
+    618,
+    23,
+    839,
+    777,
+    479,
+    96,
+    418,
+    482,
+    95,
+    360,
+    167,
+    445,
+    323,
+    40,
+    679,
+    471,
+    186,
+    65,
+    816,
+    899,
+    422,
+    221,
+    22,
+    166,
+    136,
+    216,
+    352
+   ],
+   "top_terms": [
+    {
+     "t": "man",
+     "n": 21
+    },
+    {
+     "t": "upon",
+     "n": 21
+    },
+    {
+     "t": "face",
+     "n": 19
+    },
+    {
+     "t": "out",
+     "n": 17
+    },
+    {
+     "t": "black",
+     "n": 15
+    },
+    {
+     "t": "down",
+     "n": 13
+    },
+    {
+     "t": "little",
+     "n": 13
+    },
+    {
+     "t": "who",
+     "n": 13
+    },
+    {
+     "t": "hand",
+     "n": 10
+    },
+    {
+     "t": "side",
+     "n": 10
+    },
+    {
+     "t": "about",
+     "n": 10
+    },
+    {
+     "t": "coat",
+     "n": 9
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "VI. THE MAN WITH THE TWISTED LIP",
+     "n": 6
+    },
+    {
+     "ch": "II. THE RED-HEADED LEAGUE",
+     "n": 5
+    },
+    {
+     "ch": "I. A SCANDAL IN BOHEMIA",
+     "n": 4
+    },
+    {
+     "ch": "III. A CASE OF IDENTITY",
+     "n": 3
+    },
+    {
+     "ch": "XI. THE ADVENTURE OF THE BERYL CORONET",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 618,
+     "text": "The ejaculation had been drawn from my companion by the fact that our door had\nbeen suddenly dashed open, and that a huge man had framed himself in the\naperture. His costume was a peculiar mixture of "
+    },
+    {
+     "chunk": 23,
+     "text": "He carried a broad-brimmed hat in his hand, while he wore across\nthe upper part of his face, extending down past the cheekbones, a black vizard\nmask, which he had apparently adjusted that very moment,"
+    }
+   ]
+  },
+  {
+   "id": "c006",
+   "size": 25,
+   "members": [
+    259,
+    271,
+    258,
+    257,
+    256,
+    254,
+    299,
+    306,
+    338,
+    255,
+    308,
+    302,
+    297,
+    287,
+    333,
+    293,
+    300,
+    326,
+    368,
+    272,
+    303,
+    309,
+    590,
+    336,
+    296
+   ],
+   "top_terms": [
+    {
+     "t": "mccarthy",
+     "n": 27
+    },
+    {
+     "t": "father",
+     "n": 18
+    },
+    {
+     "t": "upon",
+     "n": 16
+    },
+    {
+     "t": "holmes",
+     "n": 15
+    },
+    {
+     "t": "out",
+     "n": 14
+    },
+    {
+     "t": "son",
+     "n": 14
+    },
+    {
+     "t": "pool",
+     "n": 13
+    },
+    {
+     "t": "man",
+     "n": 13
+    },
+    {
+     "t": "turner",
+     "n": 13
+    },
+    {
+     "t": "boscombe",
+     "n": 11
+    },
+    {
+     "t": "who",
+     "n": 10
+    },
+    {
+     "t": "down",
+     "n": 10
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "IV. THE BOSCOMBE VALLEY MYSTERY",
+     "n": 23
+    },
+    {
+     "ch": "V. THE FIVE ORANGE PIPS",
+     "n": 1
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 259,
+     "text": "She had hardly said the words when young\nMr.McCarthy came running up to the lodge to say that he had found his father\ndead in the wood, and to ask for the help of the lodge-keeper.He was much\nexcited,"
+    },
+    {
+     "chunk": 271,
+     "text": "“Mr.James McCarthy, the only son of the deceased, was then called and\ngave evidence as follows: ‘I had been away from home for three days at\nBristol, and had only just returned upon the morning of las"
+    }
+   ]
+  },
+  {
+   "id": "c007",
+   "size": 23,
+   "members": [
+    921,
+    923,
+    656,
+    354,
+    342,
+    928,
+    838,
+    675,
+    566,
+    452,
+    340,
+    225,
+    417,
+    291,
+    845,
+    882,
+    939,
+    267,
+    727,
+    922,
+    260,
+    748,
+    883
+   ],
+   "top_terms": [
+    {
+     "t": "down",
+     "n": 9
+    },
+    {
+     "t": "lane",
+     "n": 7
+    },
+    {
+     "t": "snow",
+     "n": 6
+    },
+    {
+     "t": "little",
+     "n": 6
+    },
+    {
+     "t": "upon",
+     "n": 6
+    },
+    {
+     "t": "front",
+     "n": 5
+    },
+    {
+     "t": "found",
+     "n": 5
+    },
+    {
+     "t": "through",
+     "n": 5
+    },
+    {
+     "t": "window",
+     "n": 5
+    },
+    {
+     "t": "out",
+     "n": 5
+    },
+    {
+     "t": "before",
+     "n": 5
+    },
+    {
+     "t": "lay",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "XI. THE ADVENTURE OF THE BERYL CORONET",
+     "n": 8
+    },
+    {
+     "ch": "V. THE FIVE ORANGE PIPS",
+     "n": 3
+    },
+    {
+     "ch": "IX. THE ADVENTURE OF THE ENGINEER’S THUMB",
+     "n": 3
+    },
+    {
+     "ch": "IV. THE BOSCOMBE VALLEY MYSTERY",
+     "n": 3
+    },
+    {
+     "ch": "VI. THE MAN WITH THE TWISTED LIP",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 921,
+     "text": "I passed round the garden without seeing anything more than random tracks,\nwhich I took to be the police; but when I got into the stable lane a very long\nand complex story was written in the snow in f"
+    },
+    {
+     "chunk": 923,
+     "text": "When he came to the high road at the\nother end, I found that the pavement had been cleared, so there was an end to\nthat clue."
+    }
+   ]
+  },
+  {
+   "id": "c008",
+   "size": 22,
+   "members": [
+    404,
+    688,
+    624,
+    226,
+    579,
+    812,
+    397,
+    811,
+    461,
+    78,
+    498,
+    154,
+    250,
+    968,
+    81,
+    194,
+    317,
+    801,
+    339,
+    539,
+    497,
+    341
+   ],
+   "top_terms": [
+    {
+     "t": "holmes",
+     "n": 22
+    },
+    {
+     "t": "sherlock",
+     "n": 19
+    },
+    {
+     "t": "upon",
+     "n": 17
+    },
+    {
+     "t": "day",
+     "n": 9
+    },
+    {
+     "t": "before",
+     "n": 8
+    },
+    {
+     "t": "morning",
+     "n": 8
+    },
+    {
+     "t": "clock",
+     "n": 6
+    },
+    {
+     "t": "down",
+     "n": 6
+    },
+    {
+     "t": "left",
+     "n": 6
+    },
+    {
+     "t": "time",
+     "n": 6
+    },
+    {
+     "t": "little",
+     "n": 6
+    },
+    {
+     "t": "out",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "V. THE FIVE ORANGE PIPS",
+     "n": 4
+    },
+    {
+     "ch": "X. THE ADVENTURE OF THE NOBLE BACHELOR",
+     "n": 3
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 2
+    },
+    {
+     "ch": "III. A CASE OF IDENTITY",
+     "n": 2
+    },
+    {
+     "ch": "VI. THE MAN WITH THE TWISTED LIP",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 404,
+     "text": "All day I was engaged in my professional work, and it was late in the evening\nbefore I returned to Baker Street. Sherlock Holmes had not come back yet. It\nwas nearly ten o’clock before he entered, loo"
+    },
+    {
+     "chunk": 688,
+     "text": "Sherlock Holmes was, as I expected, lounging about his sitting-room in his\ndressing-gown, reading the agony column of The Times and smoking his\nbefore-breakfast pipe, which was composed of all the plu"
+    }
+   ]
+  },
+  {
+   "id": "c009",
+   "size": 21,
+   "members": [
+    771,
+    764,
+    754,
+    772,
+    780,
+    766,
+    792,
+    767,
+    827,
+    817,
+    797,
+    815,
+    833,
+    758,
+    759,
+    761,
+    836,
+    796,
+    768,
+    762,
+    773
+   ],
+   "top_terms": [
+    {
+     "t": "lord",
+     "n": 25
+    },
+    {
+     "t": "simon",
+     "n": 23
+    },
+    {
+     "t": "doran",
+     "n": 8
+    },
+    {
+     "t": "upon",
+     "n": 8
+    },
+    {
+     "t": "think",
+     "n": 8
+    },
+    {
+     "t": "marriage",
+     "n": 7
+    },
+    {
+     "t": "holmes",
+     "n": 7
+    },
+    {
+     "t": "lady",
+     "n": 7
+    },
+    {
+     "t": "robert",
+     "n": 6
+    },
+    {
+     "t": "now",
+     "n": 6
+    },
+    {
+     "t": "some",
+     "n": 6
+    },
+    {
+     "t": "house",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "X. THE ADVENTURE OF THE NOBLE BACHELOR",
+     "n": 21
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 771,
+     "text": "“‘The family of Lord Robert St. Simon has been thrown into\nthe greatest consternation by the strange and painful episodes which have taken\nplace in connection with his wedding. The ceremony, as shortl"
+    },
+    {
+     "chunk": 764,
+     "text": "“Here is the first notice which I can find. It is in the personal column\nof the Morning Post, and dates, as you see, some weeks back: ‘A\nmarriage has been arranged,’ it says, ‘and will, if rumour is\nc"
+    }
+   ]
+  },
+  {
+   "id": "c010",
+   "size": 21,
+   "members": [
+    490,
+    848,
+    691,
+    853,
+    434,
+    488,
+    862,
+    849,
+    930,
+    625,
+    489,
+    949,
+    929,
+    108,
+    873,
+    846,
+    958,
+    491,
+    487,
+    706,
+    436
+   ],
+   "top_terms": [
+    {
+     "t": "upon",
+     "n": 14
+    },
+    {
+     "t": "money",
+     "n": 11
+    },
+    {
+     "t": "day",
+     "n": 11
+    },
+    {
+     "t": "well",
+     "n": 9
+    },
+    {
+     "t": "little",
+     "n": 8
+    },
+    {
+     "t": "think",
+     "n": 8
+    },
+    {
+     "t": "found",
+     "n": 7
+    },
+    {
+     "t": "made",
+     "n": 7
+    },
+    {
+     "t": "good",
+     "n": 7
+    },
+    {
+     "t": "business",
+     "n": 7
+    },
+    {
+     "t": "some",
+     "n": 7
+    },
+    {
+     "t": "now",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "XI. THE ADVENTURE OF THE BERYL CORONET",
+     "n": 8
+    },
+    {
+     "ch": "VI. THE MAN WITH THE TWISTED LIP",
+     "n": 7
+    },
+    {
+     "ch": "IX. THE ADVENTURE OF THE ENGINEER’S THUMB",
+     "n": 2
+    },
+    {
+     "ch": "XII. THE ADVENTURE OF THE COPPER BEECHES",
+     "n": 2
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 490,
+     "text": "“Well, very soon I found that I was saving considerable sums of money. I\ndo not mean that any beggar in the streets of London could earn £ 700 a\nyear—which is less than my average takings—but I had ex"
+    },
+    {
+     "chunk": 848,
+     "text": "“‘Mr. Holder,’ said he, ‘I have been informed\nthat you are in the habit of advancing money.’\n“‘The firm does so when the security is good.’ I\nanswered.\n“‘It is absolutely essential to me,’ said he, ‘t"
+    }
+   ]
+  },
+  {
+   "id": "c011",
+   "size": 18,
+   "members": [
+    668,
+    592,
+    648,
+    606,
+    619,
+    628,
+    649,
+    598,
+    589,
+    652,
+    673,
+    578,
+    593,
+    630,
+    577,
+    633,
+    664,
+    617
+   ],
+   "top_terms": [
+    {
+     "t": "roylott",
+     "n": 17
+    },
+    {
+     "t": "holmes",
+     "n": 11
+    },
+    {
+     "t": "stoke",
+     "n": 9
+    },
+    {
+     "t": "moran",
+     "n": 9
+    },
+    {
+     "t": "some",
+     "n": 8
+    },
+    {
+     "t": "upon",
+     "n": 8
+    },
+    {
+     "t": "grimesby",
+     "n": 6
+    },
+    {
+     "t": "room",
+     "n": 6
+    },
+    {
+     "t": "death",
+     "n": 5
+    },
+    {
+     "t": "came",
+     "n": 5
+    },
+    {
+     "t": "stoner",
+     "n": 5
+    },
+    {
+     "t": "sister",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 18
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 668,
+     "text": "Such are the true facts of the death of Dr. Grimesby Roylott, of Stoke Moran.\nIt is not necessary that I should prolong a narrative which has already run to\ntoo great a length by telling how we broke "
+    },
+    {
+     "chunk": 592,
+     "text": "“When Dr. Roylott was in India he married my mother, Mrs. Stoner, the\nyoung widow of Major-General Stoner, of the Bengal Artillery. My sister Julia\nand I were twins, and we were only two years old at "
+    }
+   ]
+  },
+  {
+   "id": "c012",
+   "size": 18,
+   "members": [
+    807,
+    301,
+    810,
+    314,
+    282,
+    281,
+    289,
+    830,
+    285,
+    311,
+    286,
+    760,
+    294,
+    261,
+    263,
+    802,
+    305,
+    262
+   ],
+   "top_terms": [
+    {
+     "t": "lestrade",
+     "n": 23
+    },
+    {
+     "t": "holmes",
+     "n": 16
+    },
+    {
+     "t": "upon",
+     "n": 8
+    },
+    {
+     "t": "little",
+     "n": 7
+    },
+    {
+     "t": "about",
+     "n": 7
+    },
+    {
+     "t": "find",
+     "n": 6
+    },
+    {
+     "t": "some",
+     "n": 6
+    },
+    {
+     "t": "think",
+     "n": 6
+    },
+    {
+     "t": "case",
+     "n": 6
+    },
+    {
+     "t": "facts",
+     "n": 5
+    },
+    {
+     "t": "right",
+     "n": 5
+    },
+    {
+     "t": "good",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "IV. THE BOSCOMBE VALLEY MYSTERY",
+     "n": 13
+    },
+    {
+     "ch": "X. THE ADVENTURE OF THE NOBLE BACHELOR",
+     "n": 5
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 807,
+     "text": "“Very good, Lestrade,” said Holmes, laughing. “You really are\nvery fine indeed. Let me see it.” He took up the paper in a listless way,\nbut his attention instantly became riveted, and he gave a little"
+    },
+    {
+     "chunk": 301,
+     "text": "“We have got to the deductions and the inferences,” said Lestrade,\nwinking at me. “I find it hard enough to tackle facts, Holmes, without\nflying away after theories and fancies.”\n“You are right,” said"
+    }
+   ]
+  },
+  {
+   "id": "c013",
+   "size": 17,
+   "members": [
+    824,
+    820,
+    821,
+    825,
+    822,
+    819,
+    832,
+    789,
+    53,
+    826,
+    205,
+    332,
+    330,
+    1023,
+    786,
+    790,
+    52
+   ],
+   "top_terms": [
+    {
+     "t": "frank",
+     "n": 18
+    },
+    {
+     "t": "came",
+     "n": 12
+    },
+    {
+     "t": "away",
+     "n": 9
+    },
+    {
+     "t": "back",
+     "n": 8
+    },
+    {
+     "t": "come",
+     "n": 8
+    },
+    {
+     "t": "wedding",
+     "n": 8
+    },
+    {
+     "t": "saw",
+     "n": 7
+    },
+    {
+     "t": "about",
+     "n": 7
+    },
+    {
+     "t": "never",
+     "n": 7
+    },
+    {
+     "t": "alice",
+     "n": 7
+    },
+    {
+     "t": "simon",
+     "n": 6
+    },
+    {
+     "t": "out",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "X. THE ADVENTURE OF THE NOBLE BACHELOR",
+     "n": 11
+    },
+    {
+     "ch": "I. A SCANDAL IN BOHEMIA",
+     "n": 2
+    },
+    {
+     "ch": "IV. THE BOSCOMBE VALLEY MYSTERY",
+     "n": 2
+    },
+    {
+     "ch": "III. A CASE OF IDENTITY",
+     "n": 1
+    },
+    {
+     "ch": "XII. THE ADVENTURE OF THE COPPER BEECHES",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 824,
+     "text": "“When I got back I told my maid, who had known him in California, and had\nalways been his friend.I ordered her to say nothing, but to get a few things\npacked and my ulster ready.I know I ought to have"
+    },
+    {
+     "chunk": 820,
+     "text": "‘Why shouldn’t we be married right\naway, then,’ said he, ‘and then I will feel sure of you; and I\nwon’t claim to be your husband until I come back?’ Well, we talked\nit over, and he had fixed it all up"
+    }
+   ]
+  },
+  {
+   "id": "c014",
+   "size": 16,
+   "members": [
+    983,
+    1000,
+    980,
+    985,
+    996,
+    997,
+    992,
+    1006,
+    986,
+    1007,
+    979,
+    1010,
+    995,
+    1008,
+    989,
+    994
+   ],
+   "top_terms": [
+    {
+     "t": "rucastle",
+     "n": 18
+    },
+    {
+     "t": "man",
+     "n": 8
+    },
+    {
+     "t": "toller",
+     "n": 8
+    },
+    {
+     "t": "upon",
+     "n": 8
+    },
+    {
+     "t": "who",
+     "n": 8
+    },
+    {
+     "t": "wife",
+     "n": 7
+    },
+    {
+     "t": "much",
+     "n": 7
+    },
+    {
+     "t": "room",
+     "n": 7
+    },
+    {
+     "t": "door",
+     "n": 7
+    },
+    {
+     "t": "child",
+     "n": 7
+    },
+    {
+     "t": "look",
+     "n": 7
+    },
+    {
+     "t": "out",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "XII. THE ADVENTURE OF THE COPPER BEECHES",
+     "n": 16
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 983,
+     "text": "“I shall try not to miss anything of importance. The one unpleasant thing\nabout the house, which struck me at once, was the appearance and conduct of the\nservants. There are only two, a man and his wi"
+    },
+    {
+     "chunk": 1000,
+     "text": "“It was only yesterday that the chance came. I may tell you that, besides\nMr. Rucastle, both Toller and his wife find something to do in these deserted\nrooms, and I once saw him carrying a large black"
+    }
+   ]
+  },
+  {
+   "id": "c015",
+   "size": 16,
+   "members": [
+    375,
+    391,
+    395,
+    405,
+    410,
+    363,
+    406,
+    396,
+    390,
+    349,
+    399,
+    386,
+    400,
+    350,
+    356,
+    371
+   ],
+   "top_terms": [
+    {
+     "t": "upon",
+     "n": 15
+    },
+    {
+     "t": "openshaw",
+     "n": 14
+    },
+    {
+     "t": "out",
+     "n": 8
+    },
+    {
+     "t": "some",
+     "n": 8
+    },
+    {
+     "t": "papers",
+     "n": 8
+    },
+    {
+     "t": "pips",
+     "n": 6
+    },
+    {
+     "t": "night",
+     "n": 6
+    },
+    {
+     "t": "nothing",
+     "n": 6
+    },
+    {
+     "t": "young",
+     "n": 6
+    },
+    {
+     "t": "took",
+     "n": 6
+    },
+    {
+     "t": "table",
+     "n": 5
+    },
+    {
+     "t": "uncle",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "V. THE FIVE ORANGE PIPS",
+     "n": 16
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 375,
+     "text": "“There is one thing,” said John Openshaw. He rummaged in his coat\npocket, and, drawing out a piece of discoloured, blue-tinted paper, he laid it\nout upon the table. “I have some remembrance,” said he,"
+    },
+    {
+     "chunk": 391,
+     "text": "“The papers which Openshaw carried are obviously of vital importance to\nthe person or persons in the sailing-ship. I think that it is quite clear that\nthere must be more than one of them. A single man"
+    }
+   ]
+  },
+  {
+   "id": "c016",
+   "size": 15,
+   "members": [
+    106,
+    140,
+    101,
+    107,
+    109,
+    128,
+    89,
+    104,
+    173,
+    127,
+    172,
+    110,
+    119,
+    133,
+    556
+   ],
+   "top_terms": [
+    {
+     "t": "red",
+     "n": 18
+    },
+    {
+     "t": "headed",
+     "n": 13
+    },
+    {
+     "t": "league",
+     "n": 13
+    },
+    {
+     "t": "holmes",
+     "n": 12
+    },
+    {
+     "t": "who",
+     "n": 9
+    },
+    {
+     "t": "men",
+     "n": 8
+    },
+    {
+     "t": "man",
+     "n": 7
+    },
+    {
+     "t": "see",
+     "n": 7
+    },
+    {
+     "t": "about",
+     "n": 7
+    },
+    {
+     "t": "advertisement",
+     "n": 6
+    },
+    {
+     "t": "little",
+     "n": 6
+    },
+    {
+     "t": "hair",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "II. THE RED-HEADED LEAGUE",
+     "n": 14
+    },
+    {
+     "ch": "VII. THE ADVENTURE OF THE BLUE CARBUNCLE",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 106,
+     "text": "“The first thing that put us out was that advertisement. Spaulding, he\ncame down into the office just this day eight weeks, with this very paper in\nhis hand, and he says:\n“‘I wish to the Lord, Mr. Wil"
+    },
+    {
+     "chunk": 140,
+     "text": "“Smart fellow, that,” observed Holmes as we walked away. “He\nis, in my judgment, the fourth smartest man in London, and for daring I am not\nsure that he has not a claim to be third. I have known somet"
+    }
+   ]
+  },
+  {
+   "id": "c017",
+   "size": 15,
+   "members": [
+    62,
+    79,
+    85,
+    38,
+    84,
+    82,
+    46,
+    784,
+    34,
+    35,
+    87,
+    31,
+    86,
+    51,
+    45
+   ],
+   "top_terms": [
+    {
+     "t": "photograph",
+     "n": 15
+    },
+    {
+     "t": "holmes",
+     "n": 13
+    },
+    {
+     "t": "majesty",
+     "n": 11
+    },
+    {
+     "t": "king",
+     "n": 9
+    },
+    {
+     "t": "good",
+     "n": 7
+    },
+    {
+     "t": "see",
+     "n": 6
+    },
+    {
+     "t": "norton",
+     "n": 6
+    },
+    {
+     "t": "about",
+     "n": 6
+    },
+    {
+     "t": "out",
+     "n": 6
+    },
+    {
+     "t": "woman",
+     "n": 5
+    },
+    {
+     "t": "irene",
+     "n": 5
+    },
+    {
+     "t": "three",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "I. A SCANDAL IN BOHEMIA",
+     "n": 14
+    },
+    {
+     "ch": "X. THE ADVENTURE OF THE NOBLE BACHELOR",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 62,
+     "text": "“You see,” remarked Holmes, as we paced to and fro in front of the\nhouse, “this marriage rather simplifies matters. The photograph becomes a\ndouble-edged weapon now. The chances are that she would be "
+    },
+    {
+     "chunk": 79,
+     "text": "“Then that will simplify matters.” We descended and started off\nonce more for Briony Lodge.\n“Irene Adler is married,” remarked Holmes.\n“Married! When?”\n“Yesterday.”\n“But to whom?”\n“To an English lawye"
+    }
+   ]
+  },
+  {
+   "id": "c018",
+   "size": 15,
+   "members": [
+    886,
+    870,
+    885,
+    915,
+    910,
+    917,
+    867,
+    926,
+    858,
+    889,
+    877,
+    875,
+    266,
+    924,
+    857
+   ],
+   "top_terms": [
+    {
+     "t": "arthur",
+     "n": 14
+    },
+    {
+     "t": "who",
+     "n": 14
+    },
+    {
+     "t": "coronet",
+     "n": 11
+    },
+    {
+     "t": "man",
+     "n": 7
+    },
+    {
+     "t": "out",
+     "n": 6
+    },
+    {
+     "t": "see",
+     "n": 6
+    },
+    {
+     "t": "down",
+     "n": 5
+    },
+    {
+     "t": "door",
+     "n": 5
+    },
+    {
+     "t": "sir",
+     "n": 5
+    },
+    {
+     "t": "george",
+     "n": 5
+    },
+    {
+     "t": "saw",
+     "n": 4
+    },
+    {
+     "t": "let",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "XI. THE ADVENTURE OF THE BERYL CORONET",
+     "n": 14
+    },
+    {
+     "ch": "IV. THE BOSCOMBE VALLEY MYSTERY",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 886,
+     "text": "“How could I help suspecting him, when I actually saw him with the\ncoronet in his hand?”\n“Oh, but he had only picked it up to look at it. Oh, do, do take my word\nfor it that he is innocent. Let the ma"
+    },
+    {
+     "chunk": 870,
+     "text": "“By this time the whole house was astir, for I had raised my voice in my\nanger. Mary was the first to rush into my room, and, at the sight of the\ncoronet and of Arthur’s face, she read the whole story"
+    }
+   ]
+  },
+  {
+   "id": "c019",
+   "size": 13,
+   "members": [
+    447,
+    443,
+    444,
+    451,
+    448,
+    453,
+    439,
+    440,
+    477,
+    484,
+    438,
+    481,
+    492
+   ],
+   "top_terms": [
+    {
+     "t": "clair",
+     "n": 13
+    },
+    {
+     "t": "upon",
+     "n": 12
+    },
+    {
+     "t": "window",
+     "n": 10
+    },
+    {
+     "t": "who",
+     "n": 9
+    },
+    {
+     "t": "boone",
+     "n": 7
+    },
+    {
+     "t": "some",
+     "n": 7
+    },
+    {
+     "t": "lascar",
+     "n": 7
+    },
+    {
+     "t": "neville",
+     "n": 7
+    },
+    {
+     "t": "down",
+     "n": 7
+    },
+    {
+     "t": "inspector",
+     "n": 6
+    },
+    {
+     "t": "street",
+     "n": 6
+    },
+    {
+     "t": "room",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "VI. THE MAN WITH THE TWISTED LIP",
+     "n": 13
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 447,
+     "text": "“Mrs.St.Clair had fainted at the sight of the blood upon the window,\nand she was escorted home in a cab by the police, as her presence could be of\nno help to them in their investigations.Inspector Bar"
+    },
+    {
+     "chunk": 443,
+     "text": "“And now as to the villains who seemed to be immediately implicated in\nthe matter. The Lascar was known to be a man of the vilest antecedents, but as,\nby Mrs. St. Clair’s story, he was known to have b"
+    }
+   ]
+  },
+  {
+   "id": "c020",
+   "size": 13,
+   "members": [
+    1005,
+    602,
+    726,
+    1002,
+    334,
+    603,
+    1001,
+    988,
+    83,
+    920,
+    112,
+    722,
+    730
+   ],
+   "top_terms": [
+    {
+     "t": "door",
+     "n": 12
+    },
+    {
+     "t": "down",
+     "n": 10
+    },
+    {
+     "t": "holmes",
+     "n": 7
+    },
+    {
+     "t": "room",
+     "n": 6
+    },
+    {
+     "t": "round",
+     "n": 6
+    },
+    {
+     "t": "ran",
+     "n": 6
+    },
+    {
+     "t": "light",
+     "n": 6
+    },
+    {
+     "t": "through",
+     "n": 6
+    },
+    {
+     "t": "who",
+     "n": 6
+    },
+    {
+     "t": "found",
+     "n": 5
+    },
+    {
+     "t": "myself",
+     "n": 5
+    },
+    {
+     "t": "thought",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "XII. THE ADVENTURE OF THE COPPER BEECHES",
+     "n": 4
+    },
+    {
+     "ch": "IX. THE ADVENTURE OF THE ENGINEER’S THUMB",
+     "n": 3
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 2
+    },
+    {
+     "ch": "IV. THE BOSCOMBE VALLEY MYSTERY",
+     "n": 1
+    },
+    {
+     "ch": "I. A SCANDAL IN BOHEMIA",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1005,
+     "text": "“I was so terrified that I do not know what I did.I suppose that I must\nhave rushed past him into my room.I remember nothing until I found myself\nlying on my bed trembling all over.Then I thought of y"
+    },
+    {
+     "chunk": 602,
+     "text": "“I could not sleep that night.A vague feeling of impending misfortune\nimpressed me.My sister and I, you will recollect, were twins, and you know how\nsubtle are the links which bind two souls which are"
+    }
+   ]
+  },
+  {
+   "id": "c021",
+   "size": 12,
+   "members": [
+    1028,
+    1030,
+    1029,
+    1031,
+    120,
+    851,
+    15,
+    384,
+    2,
+    1,
+    19,
+    776
+   ],
+   "top_terms": [
+    {
+     "t": "gutenberg",
+     "n": 14
+    },
+    {
+     "t": "project",
+     "n": 12
+    },
+    {
+     "t": "who",
+     "n": 6
+    },
+    {
+     "t": "days",
+     "n": 6
+    },
+    {
+     "t": "ebook",
+     "n": 5
+    },
+    {
+     "t": "use",
+     "n": 5
+    },
+    {
+     "t": "work",
+     "n": 5
+    },
+    {
+     "t": "full",
+     "n": 4
+    },
+    {
+     "t": "works",
+     "n": 4
+    },
+    {
+     "t": "upon",
+     "n": 4
+    },
+    {
+     "t": "license",
+     "n": 3
+    },
+    {
+     "t": "terms",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "THE FULL PROJECT GUTENBERG™ LICENSE",
+     "n": 4
+    },
+    {
+     "ch": "I. A SCANDAL IN BOHEMIA",
+     "n": 2
+    },
+    {
+     "ch": "The Adventures of Sherlock Holmes",
+     "n": 2
+    },
+    {
+     "ch": "II. THE RED-HEADED LEAGUE",
+     "n": 1
+    },
+    {
+     "ch": "XI. THE ADVENTURE OF THE BERYL CORONET",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1028,
+     "text": "THE FULL PROJECT GUTENBERG™ LICENSE\nThis eBook is for the use of anyone anywhere in the United States and most\nother parts of the world at no cost and with almost no restrictions\nwhatsoever. You may c"
+    },
+    {
+     "chunk": 1030,
+     "text": "• You provide a full refund of any money paid by a user who notifies\nyou in writing (or by e-mail) within 30 days of receipt that s/he\ndoes not agree to the terms of the full Project Gutenberg™\nLicens"
+    }
+   ]
+  },
+  {
+   "id": "c022",
+   "size": 11,
+   "members": [
+    720,
+    709,
+    732,
+    692,
+    710,
+    711,
+    736,
+    717,
+    712,
+    719,
+    156
+   ],
+   "top_terms": [
+    {
+     "t": "colonel",
+     "n": 15
+    },
+    {
+     "t": "door",
+     "n": 10
+    },
+    {
+     "t": "stark",
+     "n": 9
+    },
+    {
+     "t": "out",
+     "n": 9
+    },
+    {
+     "t": "lysander",
+     "n": 7
+    },
+    {
+     "t": "room",
+     "n": 5
+    },
+    {
+     "t": "light",
+     "n": 5
+    },
+    {
+     "t": "down",
+     "n": 5
+    },
+    {
+     "t": "upon",
+     "n": 5
+    },
+    {
+     "t": "lamp",
+     "n": 5
+    },
+    {
+     "t": "went",
+     "n": 4
+    },
+    {
+     "t": "see",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "IX. THE ADVENTURE OF THE ENGINEER’S THUMB",
+     "n": 10
+    },
+    {
+     "ch": "II. THE RED-HEADED LEAGUE",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 720,
+     "text": "“Colonel Lysander Stark stopped at last before a low door, which he\nunlocked. Within was a small, square room, in which the three of us could\nhardly get at one time. Ferguson remained outside, and the"
+    },
+    {
+     "chunk": 709,
+     "text": "“Away we went then, and we drove for at least an hour.Colonel Lysander\nStark had said that it was only seven miles, but I should think, from the rate\nthat we seemed to go, and from the time that we to"
+    }
+   ]
+  },
+  {
+   "id": "c023",
+   "size": 11,
+   "members": [
+    115,
+    100,
+    93,
+    122,
+    131,
+    103,
+    97,
+    177,
+    132,
+    94,
+    185
+   ],
+   "top_terms": [
+    {
+     "t": "wilson",
+     "n": 12
+    },
+    {
+     "t": "jabez",
+     "n": 8
+    },
+    {
+     "t": "nothing",
+     "n": 5
+    },
+    {
+     "t": "holmes",
+     "n": 5
+    },
+    {
+     "t": "upon",
+     "n": 5
+    },
+    {
+     "t": "some",
+     "n": 5
+    },
+    {
+     "t": "first",
+     "n": 4
+    },
+    {
+     "t": "done",
+     "n": 4
+    },
+    {
+     "t": "good",
+     "n": 4
+    },
+    {
+     "t": "heard",
+     "n": 4
+    },
+    {
+     "t": "assistant",
+     "n": 3
+    },
+    {
+     "t": "league",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "II. THE RED-HEADED LEAGUE",
+     "n": 10
+    },
+    {
+     "ch": "III. A CASE OF IDENTITY",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 115,
+     "text": "“‘This is Mr. Jabez Wilson,’ said my assistant,\n‘and he is willing to fill a vacancy in the League.’\n“‘And he is admirably suited for it,’ the other\nanswered. ‘He has every requirement. I cannot recal"
+    },
+    {
+     "chunk": 100,
+     "text": "Mr. Jabez Wilson laughed heavily. “Well, I never!” said he.\n“I thought at first that you had done something clever, but I see that\nthere was nothing in it after all.”\n“I begin to think, Watson,” said "
+    }
+   ]
+  },
+  {
+   "id": "c024",
+   "size": 11,
+   "members": [
+    506,
+    503,
+    504,
+    568,
+    528,
+    538,
+    569,
+    667,
+    594,
+    527,
+    570
+   ],
+   "top_terms": [
+    {
+     "t": "goose",
+     "n": 10
+    },
+    {
+     "t": "peterson",
+     "n": 8
+    },
+    {
+     "t": "christmas",
+     "n": 8
+    },
+    {
+     "t": "well",
+     "n": 5
+    },
+    {
+     "t": "who",
+     "n": 5
+    },
+    {
+     "t": "upon",
+     "n": 5
+    },
+    {
+     "t": "man",
+     "n": 5
+    },
+    {
+     "t": "stone",
+     "n": 5
+    },
+    {
+     "t": "bird",
+     "n": 5
+    },
+    {
+     "t": "hat",
+     "n": 4
+    },
+    {
+     "t": "morning",
+     "n": 4
+    },
+    {
+     "t": "off",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "VII. THE ADVENTURE OF THE BLUE CARBUNCLE",
+     "n": 9
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 506,
+     "text": "“What, then, did Peterson do?”\n“He brought round both hat and goose to me on Christmas morning, knowing\nthat even the smallest problems are of interest to me. The goose we retained\nuntil this morning,"
+    },
+    {
+     "chunk": 503,
+     "text": "“No, no, he found it.Its owner is unknown.I beg that you will look upon\nit not as a battered billycock but as an intellectual problem.And, first, as\nto how it came here.It arrived upon Christmas morni"
+    }
+   ]
+  },
+  {
+   "id": "c025",
+   "size": 10,
+   "members": [
+    1021,
+    1026,
+    977,
+    1024,
+    961,
+    962,
+    965,
+    1020,
+    1009,
+    1016
+   ],
+   "top_terms": [
+    {
+     "t": "holmes",
+     "n": 11
+    },
+    {
+     "t": "rucastle",
+     "n": 10
+    },
+    {
+     "t": "miss",
+     "n": 8
+    },
+    {
+     "t": "toller",
+     "n": 5
+    },
+    {
+     "t": "hunter",
+     "n": 5
+    },
+    {
+     "t": "out",
+     "n": 5
+    },
+    {
+     "t": "yes",
+     "n": 4
+    },
+    {
+     "t": "matter",
+     "n": 4
+    },
+    {
+     "t": "good",
+     "n": 4
+    },
+    {
+     "t": "man",
+     "n": 4
+    },
+    {
+     "t": "mind",
+     "n": 4
+    },
+    {
+     "t": "off",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "XII. THE ADVENTURE OF THE COPPER BEECHES",
+     "n": 10
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1021,
+     "text": "“Mrs. Toller!” cried Miss Hunter.\n“Yes, miss. Mr. Rucastle let me out when he came back before he went up\nto you. Ah, miss, it is a pity you didn’t let me know what you were\nplanning, for I would have"
+    },
+    {
+     "chunk": 1026,
+     "text": "“And in this way he managed that your good man should have no want of\ndrink, and that a ladder should be ready at the moment when your master had\ngone out.”\n“You have it, sir, just as it happened.”\n“I"
+    }
+   ]
+  },
+  {
+   "id": "c026",
+   "size": 10,
+   "members": [
+    523,
+    524,
+    562,
+    565,
+    522,
+    893,
+    561,
+    850,
+    636,
+    521
+   ],
+   "top_terms": [
+    {
+     "t": "horner",
+     "n": 10
+    },
+    {
+     "t": "case",
+     "n": 9
+    },
+    {
+     "t": "upon",
+     "n": 7
+    },
+    {
+     "t": "room",
+     "n": 7
+    },
+    {
+     "t": "jewel",
+     "n": 6
+    },
+    {
+     "t": "countess",
+     "n": 6
+    },
+    {
+     "t": "ryder",
+     "n": 6
+    },
+    {
+     "t": "hotel",
+     "n": 5
+    },
+    {
+     "t": "robbery",
+     "n": 5
+    },
+    {
+     "t": "having",
+     "n": 5
+    },
+    {
+     "t": "some",
+     "n": 5
+    },
+    {
+     "t": "man",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "VII. THE ADVENTURE OF THE BLUE CARBUNCLE",
+     "n": 7
+    },
+    {
+     "ch": "XI. THE ADVENTURE OF THE BERYL CORONET",
+     "n": 2
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 523,
+     "text": "“Hotel Cosmopolitan Jewel Robbery.John Horner, 26, plumber, was brought\nup upon the charge of having upon the 22nd inst., abstracted from the\njewel-case of the Countess of Morcar the valuable gem know"
+    },
+    {
+     "chunk": 524,
+     "text": "Ryder instantly gave\nthe alarm, and Horner was arrested the same evening; but the stone could not be\nfound either upon his person or in his rooms.Catherine Cusack, maid to the\nCountess, deposed to hav"
+    }
+   ]
+  },
+  {
+   "id": "c027",
+   "size": 10,
+   "members": [
+    275,
+    274,
+    276,
+    278,
+    273,
+    298,
+    315,
+    316,
+    918,
+    919
+   ],
+   "top_terms": [
+    {
+     "t": "father",
+     "n": 11
+    },
+    {
+     "t": "coroner",
+     "n": 9
+    },
+    {
+     "t": "witness",
+     "n": 9
+    },
+    {
+     "t": "son",
+     "n": 8
+    },
+    {
+     "t": "cooee",
+     "n": 6
+    },
+    {
+     "t": "before",
+     "n": 6
+    },
+    {
+     "t": "cry",
+     "n": 5
+    },
+    {
+     "t": "upon",
+     "n": 5
+    },
+    {
+     "t": "nothing",
+     "n": 5
+    },
+    {
+     "t": "know",
+     "n": 5
+    },
+    {
+     "t": "returned",
+     "n": 4
+    },
+    {
+     "t": "who",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "IV. THE BOSCOMBE VALLEY MYSTERY",
+     "n": 8
+    },
+    {
+     "ch": "XI. THE ADVENTURE OF THE BERYL CORONET",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 275,
+     "text": "“The Coroner: That is for the court to decide. I need not point out to\nyou that your refusal to answer will prejudice your case considerably in any\nfuture proceedings which may arise.\n“Witness: I must"
+    },
+    {
+     "chunk": 274,
+     "text": "“Witness: He mumbled a few words, but I could only catch some allusion to\na rat.\n“The Coroner: What did you understand by that?\n“Witness: It conveyed no meaning to me. I thought that he was delirious."
+    }
+   ]
+  },
+  {
+   "id": "c028",
+   "size": 10,
+   "members": [
+    698,
+    699,
+    707,
+    713,
+    740,
+    901,
+    430,
+    614,
+    746,
+    280
+   ],
+   "top_terms": [
+    {
+     "t": "train",
+     "n": 7
+    },
+    {
+     "t": "out",
+     "n": 7
+    },
+    {
+     "t": "eyford",
+     "n": 6
+    },
+    {
+     "t": "place",
+     "n": 6
+    },
+    {
+     "t": "little",
+     "n": 5
+    },
+    {
+     "t": "miles",
+     "n": 5
+    },
+    {
+     "t": "station",
+     "n": 5
+    },
+    {
+     "t": "some",
+     "n": 5
+    },
+    {
+     "t": "upon",
+     "n": 5
+    },
+    {
+     "t": "come",
+     "n": 4
+    },
+    {
+     "t": "reading",
+     "n": 4
+    },
+    {
+     "t": "time",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "IX. THE ADVENTURE OF THE ENGINEER’S THUMB",
+     "n": 6
+    },
+    {
+     "ch": "XI. THE ADVENTURE OF THE BERYL CORONET",
+     "n": 1
+    },
+    {
+     "ch": "VI. THE MAN WITH THE TWISTED LIP",
+     "n": 1
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 1
+    },
+    {
+     "ch": "IV. THE BOSCOMBE VALLEY MYSTERY",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 698,
+     "text": "“‘The work appears to be light and the pay munificent.’\n“‘Precisely so. We shall want you to come to-night by the\nlast train.’\n“‘Where to?’\n“‘To Eyford, in Berkshire. It is a little place near the\nbor"
+    },
+    {
+     "chunk": 699,
+     "text": "“‘Yes, our little place is quite out in the country. It is a\ngood seven miles from Eyford Station.’\n“‘Then we can hardly get there before midnight. I suppose\nthere would be no chance of a train back. "
+    }
+   ]
+  },
+  {
+   "id": "c029",
+   "size": 9,
+   "members": [
+    442,
+    441,
+    493,
+    449,
+    428,
+    751,
+    483,
+    591,
+    401
+   ],
+   "top_terms": [
+    {
+     "t": "upon",
+     "n": 7
+    },
+    {
+     "t": "neville",
+     "n": 7
+    },
+    {
+     "t": "clair",
+     "n": 6
+    },
+    {
+     "t": "window",
+     "n": 5
+    },
+    {
+     "t": "tide",
+     "n": 5
+    },
+    {
+     "t": "found",
+     "n": 5
+    },
+    {
+     "t": "out",
+     "n": 4
+    },
+    {
+     "t": "bedroom",
+     "n": 4
+    },
+    {
+     "t": "away",
+     "n": 4
+    },
+    {
+     "t": "coat",
+     "n": 4
+    },
+    {
+     "t": "pennies",
+     "n": 4
+    },
+    {
+     "t": "traces",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "VI. THE MAN WITH THE TWISTED LIP",
+     "n": 6
+    },
+    {
+     "ch": "IX. THE ADVENTURE OF THE ENGINEER’S THUMB",
+     "n": 1
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 1
+    },
+    {
+     "ch": "V. THE FIVE ORANGE PIPS",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 442,
+     "text": "There were no signs of\nviolence upon any of these garments, and there were no other traces of Mr.Neville St.Clair.Out of the window he must apparently have gone for no other\nexit could be discovered, "
+    },
+    {
+     "chunk": 441,
+     "text": "“This discovery, and the evident confusion which the cripple showed, made\nthe inspector realise that the matter was serious.The rooms were carefully\nexamined, and results all pointed to an abominable "
+    }
+   ]
+  },
+  {
+   "id": "c030",
+   "size": 9,
+   "members": [
+    805,
+    775,
+    806,
+    794,
+    774,
+    791,
+    605,
+    809,
+    799
+   ],
+   "top_terms": [
+    {
+     "t": "some",
+     "n": 7
+    },
+    {
+     "t": "flora",
+     "n": 7
+    },
+    {
+     "t": "lestrade",
+     "n": 6
+    },
+    {
+     "t": "millar",
+     "n": 5
+    },
+    {
+     "t": "now",
+     "n": 4
+    },
+    {
+     "t": "dress",
+     "n": 4
+    },
+    {
+     "t": "lady",
+     "n": 4
+    },
+    {
+     "t": "who",
+     "n": 4
+    },
+    {
+     "t": "upon",
+     "n": 4
+    },
+    {
+     "t": "disappearance",
+     "n": 3
+    },
+    {
+     "t": "holmes",
+     "n": 3
+    },
+    {
+     "t": "made",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "X. THE ADVENTURE OF THE NOBLE BACHELOR",
+     "n": 8
+    },
+    {
+     "ch": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 805,
+     "text": "“At some evidence implicating Flora Millar in the disappearance.”\n“I am afraid that you will find it difficult.”\n“Are you, indeed, now?” cried Lestrade with some bitterness.\n“I am afraid, Holmes, that"
+    },
+    {
+     "chunk": 775,
+     "text": "“Only one little item in another of the morning papers, but it is a\nsuggestive one.”\n“And it is—”\n“That Miss Flora Millar, the lady who had caused the disturbance, has\nactually been arrested. It appea"
+    }
+   ]
+  },
+  {
+   "id": "c031",
+   "size": 7,
+   "members": [
+    984,
+    1027,
+    991,
+    978,
+    1013,
+    959,
+    951
+   ],
+   "top_terms": [
+    {
+     "t": "copper",
+     "n": 8
+    },
+    {
+     "t": "beeches",
+     "n": 8
+    },
+    {
+     "t": "rucastle",
+     "n": 8
+    },
+    {
+     "t": "miss",
+     "n": 6
+    },
+    {
+     "t": "house",
+     "n": 6
+    },
+    {
+     "t": "door",
+     "n": 5
+    },
+    {
+     "t": "after",
+     "n": 4
+    },
+    {
+     "t": "down",
+     "n": 4
+    },
+    {
+     "t": "hunter",
+     "n": 4
+    },
+    {
+     "t": "now",
+     "n": 4
+    },
+    {
+     "t": "front",
+     "n": 4
+    },
+    {
+     "t": "came",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "XII. THE ADVENTURE OF THE COPPER BEECHES",
+     "n": 7
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 984,
+     "text": "“For two days after my arrival at the Copper Beeches my life was very\nquiet; on the third, Mrs. Rucastle came down just after breakfast and whispered\nsomething to her husband.\n“‘Oh, yes,’ said he, tur"
+    },
+    {
+     "chunk": 1027,
+     "text": "And thus was solved the mystery of the sinister house with the copper beeches\nin front of the door. Mr. Rucastle survived, but was always a broken man, kept\nalive solely through the care of his devote"
+    }
+   ]
+  },
+  {
+   "id": "c032",
+   "size": 7,
+   "members": [
+    552,
+    555,
+    549,
+    548,
+    553,
+    542,
+    543
+   ],
+   "top_terms": [
+    {
+     "t": "out",
+     "n": 7
+    },
+    {
+     "t": "now",
+     "n": 7
+    },
+    {
+     "t": "little",
+     "n": 5
+    },
+    {
+     "t": "geese",
+     "n": 5
+    },
+    {
+     "t": "oakshott",
+     "n": 5
+    },
+    {
+     "t": "man",
+     "n": 5
+    },
+    {
+     "t": "see",
+     "n": 5
+    },
+    {
+     "t": "well",
+     "n": 5
+    },
+    {
+     "t": "round",
+     "n": 4
+    },
+    {
+     "t": "breckinridge",
+     "n": 4
+    },
+    {
+     "t": "salesman",
+     "n": 4
+    },
+    {
+     "t": "brixton",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "VII. THE ADVENTURE OF THE BLUE CARBUNCLE",
+     "n": 7
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 552,
+     "text": "His remarks were suddenly cut short by a loud hubbub which broke out from the\nstall which we had just left. Turning round we saw a little rat-faced fellow\nstanding in the centre of the circle of yello"
+    },
+    {
+     "chunk": 555,
+     "text": "“Excuse me, I know everything of it. You are endeavouring to trace some\ngeese which were sold by Mrs. Oakshott, of Brixton Road, to a salesman named\nBreckinridge, by him in turn to Mr. Windigate, of t"
+    }
+   ]
+  }
+ ],
+ "instructions": "你是图书馆编目员。请只依据本任务书中的证据（词频、代表块、章节分布）为这本书编目，禁止使用你对该书的既有知识补充证据中不存在的细节。\n\n输出单个 JSON 对象（不要 markdown 围栏、不要解释文字），字段如下：\n{\n  \"task_ref\": \"<原样返回 book.db 字段>\",\n  \"themes\": [ { \"id\": \"t1\", \"name\": \"主题名\", \"note\": \"一句话中文说明\" } ],\n  \"persons\": [ { \"name\": \"人物标准名\", \"match_names\": [\"书中真实出现的写法\", \"...\"], \"aliases_zh\": [\"中文译名（可选，仅广为人知时写）\"], \"note\": \"身份一句话\" } ],\n  \"relations\": [ { \"a\": \"人物名\", \"b\": \"人物名\", \"note\": \"关系一句话\" } ],\n  \"assignments\": [ { \"cluster\": \"c001\", \"theme\": \"t1\" } ]\n}\n\n硬性要求：\n1. assignments 必须覆盖 clusters 里出现的每一个 id，且只允许出现这些 id；每个 cluster 恰好分给一个 theme。\n2. themes 数量建议 5~12 个，每个 theme 至少被一个 cluster 使用。\n3. persons 的 match_names 里每个字符串必须是书中原文真实出现的写法（导入程序会逐一在原文检索验证，任何一条不存在则整批拒绝）。没有把握的写法不要写。aliases_zh 是**可选**的中文译名（如 Darcy→达西、Mencius→孟子），仅当该译名广为人知时提供、宁缺毋滥——它不参与书内验真，用于中文提问时链到书内写法。\n4. 只有真实出场的人物才列入 persons；relations 的 a/b 必须是 persons 里出现过的名字。\n5. 主题名与人物名用与书中原文一致的语言（英文书用英文，中文书用中文）；说明性文字用中文。"
+}

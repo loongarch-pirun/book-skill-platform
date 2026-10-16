@@ -1,0 +1,3779 @@
+{
+ "task_version": "1",
+ "generated_at": "2026-10-16T14:13:12.047Z",
+ "book": {
+  "db": "jane-eyre-en.epub.db",
+  "title": "jane-eyre-en",
+  "lang": "en",
+  "chunks": 1863,
+  "chapters": 41,
+  "total_chars": 1015667
+ },
+ "provenance": {
+  "cluster_model": "e5",
+  "cluster_method": "centered-greedy-th0.38-min5",
+  "clustered_at": "2026-10-16T14:13:12.051Z",
+  "clusters": 31,
+  "covered_chunks": 1065
+ },
+ "clusters": [
+  {
+   "id": "c001",
+   "size": 71,
+   "members": [
+    1354,
+    1736,
+    1136,
+    1336,
+    1326,
+    162,
+    460,
+    457,
+    1768,
+    476,
+    1139,
+    17,
+    459,
+    355,
+    1137,
+    1477,
+    458,
+    190,
+    1434,
+    1769,
+    1355,
+    1735,
+    20,
+    461,
+    1358,
+    306,
+    1359,
+    1357,
+    479,
+    1330,
+    148,
+    1141,
+    1024,
+    1344,
+    1478,
+    1739,
+    406,
+    434,
+    1025,
+    1164,
+    1004,
+    58,
+    1747,
+    1059,
+    1316,
+    619,
+    1486,
+    1327,
+    75,
+    962,
+    1341,
+    217,
+    908,
+    218,
+    1320,
+    161,
+    462,
+    1028,
+    1324,
+    191,
+    1356,
+    1317,
+    1742,
+    1441,
+    1329,
+    567,
+    463,
+    1134,
+    354,
+    1621,
+    72
+   ],
+   "top_terms": [
+    {
+     "t": "now",
+     "n": 27
+    },
+    {
+     "t": "through",
+     "n": 19
+    },
+    {
+     "t": "some",
+     "n": 19
+    },
+    {
+     "t": "yet",
+     "n": 18
+    },
+    {
+     "t": "far",
+     "n": 17
+    },
+    {
+     "t": "down",
+     "n": 17
+    },
+    {
+     "t": "out",
+     "n": 16
+    },
+    {
+     "t": "road",
+     "n": 16
+    },
+    {
+     "t": "looked",
+     "n": 16
+    },
+    {
+     "t": "day",
+     "n": 15
+    },
+    {
+     "t": "trees",
+     "n": 15
+    },
+    {
+     "t": "still",
+     "n": 15
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXVIII",
+     "n": 14
+    },
+    {
+     "ch": "CHAPTER XII",
+     "n": 9
+    },
+    {
+     "ch": "CHAPTER XXV",
+     "n": 6
+    },
+    {
+     "ch": "CHAPTER XXXVI",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER V",
+     "n": 4
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1354,
+     "text": "My glazed eye wandered over the dim and misty landscape. I saw I had strayed\nfar from the village: it was quite out of sight. The very cultivation\nsurrounding it had disappeared. I had, by cross-ways "
+    },
+    {
+     "chunk": 1736,
+     "text": "It was a journey of six-and-thirty hours. I had set out from Whitcross on a\nTuesday afternoon, and early on the succeeding Thursday morning the coach\nstopped to water the horses at a wayside inn, situ"
+    }
+   ]
+  },
+  {
+   "id": "c002",
+   "size": 66,
+   "members": [
+    1859,
+    1464,
+    1680,
+    1695,
+    1706,
+    1692,
+    1664,
+    1678,
+    1591,
+    1606,
+    1614,
+    1668,
+    1685,
+    1688,
+    1698,
+    1857,
+    1694,
+    1681,
+    1671,
+    1482,
+    1523,
+    1815,
+    1719,
+    1789,
+    1584,
+    1654,
+    1673,
+    1511,
+    1675,
+    1723,
+    1814,
+    1055,
+    1429,
+    1391,
+    1651,
+    1655,
+    1413,
+    1627,
+    1444,
+    1657,
+    1790,
+    1728,
+    1822,
+    1297,
+    1646,
+    1656,
+    329,
+    1715,
+    1718,
+    1265,
+    1465,
+    1824,
+    1650,
+    1549,
+    1666,
+    1831,
+    1404,
+    1672,
+    1367,
+    1592,
+    1372,
+    1296,
+    1683,
+    1682,
+    331,
+    1550
+   ],
+   "top_terms": [
+    {
+     "t": "john",
+     "n": 54
+    },
+    {
+     "t": "jane",
+     "n": 32
+    },
+    {
+     "t": "now",
+     "n": 24
+    },
+    {
+     "t": "love",
+     "n": 24
+    },
+    {
+     "t": "never",
+     "n": 17
+    },
+    {
+     "t": "heart",
+     "n": 17
+    },
+    {
+     "t": "man",
+     "n": 17
+    },
+    {
+     "t": "like",
+     "n": 17
+    },
+    {
+     "t": "good",
+     "n": 16
+    },
+    {
+     "t": "little",
+     "n": 16
+    },
+    {
+     "t": "god",
+     "n": 16
+    },
+    {
+     "t": "felt",
+     "n": 15
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXXIV",
+     "n": 23
+    },
+    {
+     "ch": "CHAPTER XXXV",
+     "n": 10
+    },
+    {
+     "ch": "CHAPTER XXXVII",
+     "n": 7
+    },
+    {
+     "ch": "CHAPTER XXXIII",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XXIX",
+     "n": 4
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1859,
+     "text": "St. John is unmarried: he never will marry now. Himself has hitherto sufficed\nto the toil, and the toil draws near its close: his glorious sun hastens to its\nsetting. The last letter I received from h"
+    },
+    {
+     "chunk": 1464,
+     "text": "“He will sacrifice all to his long-framed resolves,” she said: “natural\naffection and feelings more potent still. St. John looks quiet, Jane; but he\nhides a fever in his vitals. You would think him ge"
+    }
+   ]
+  },
+  {
+   "id": "c003",
+   "size": 63,
+   "members": [
+    673,
+    405,
+    1412,
+    480,
+    426,
+    165,
+    42,
+    1609,
+    684,
+    400,
+    1361,
+    113,
+    402,
+    695,
+    743,
+    750,
+    698,
+    847,
+    586,
+    1360,
+    1745,
+    437,
+    407,
+    679,
+    432,
+    948,
+    884,
+    753,
+    433,
+    185,
+    1741,
+    112,
+    1610,
+    43,
+    1471,
+    1770,
+    933,
+    1514,
+    1608,
+    699,
+    425,
+    46,
+    1433,
+    1362,
+    665,
+    1133,
+    391,
+    1394,
+    1140,
+    1619,
+    682,
+    382,
+    864,
+    576,
+    181,
+    744,
+    344,
+    602,
+    848,
+    390,
+    577,
+    573,
+    887
+   ],
+   "top_terms": [
+    {
+     "t": "room",
+     "n": 37
+    },
+    {
+     "t": "some",
+     "n": 23
+    },
+    {
+     "t": "like",
+     "n": 21
+    },
+    {
+     "t": "looked",
+     "n": 18
+    },
+    {
+     "t": "hall",
+     "n": 18
+    },
+    {
+     "t": "door",
+     "n": 18
+    },
+    {
+     "t": "out",
+     "n": 18
+    },
+    {
+     "t": "house",
+     "n": 18
+    },
+    {
+     "t": "little",
+     "n": 17
+    },
+    {
+     "t": "table",
+     "n": 17
+    },
+    {
+     "t": "fire",
+     "n": 16
+    },
+    {
+     "t": "now",
+     "n": 16
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XI",
+     "n": 12
+    },
+    {
+     "ch": "CHAPTER XVII",
+     "n": 8
+    },
+    {
+     "ch": "CHAPTER XX",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XV",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XXXIV",
+     "n": 4
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 673,
+     "text": "Thursday came: all work had been completed the previous evening; carpets were\nlaid down, bed-hangings festooned, radiant white counterpanes spread, toilet\ntables arranged, furniture rubbed, flowers pi"
+    },
+    {
+     "chunk": 405,
+     "text": "Traversing the long and matted gallery, I descended the slippery steps of oak;\nthen I gained the hall: I halted there a minute; I looked at some pictures on\nthe walls (one, I remember, represented a g"
+    }
+   ]
+  },
+  {
+   "id": "c004",
+   "size": 52,
+   "members": [
+    690,
+    663,
+    1016,
+    526,
+    486,
+    1095,
+    496,
+    499,
+    1101,
+    415,
+    685,
+    510,
+    1096,
+    520,
+    530,
+    721,
+    503,
+    519,
+    493,
+    1850,
+    926,
+    1018,
+    509,
+    688,
+    1204,
+    649,
+    1106,
+    1013,
+    531,
+    1184,
+    1063,
+    1066,
+    594,
+    455,
+    621,
+    640,
+    482,
+    570,
+    431,
+    422,
+    1181,
+    527,
+    489,
+    483,
+    1064,
+    1089,
+    542,
+    1132,
+    416,
+    761,
+    411,
+    631
+   ],
+   "top_terms": [
+    {
+     "t": "rochester",
+     "n": 62
+    },
+    {
+     "t": "fairfax",
+     "n": 31
+    },
+    {
+     "t": "little",
+     "n": 19
+    },
+    {
+     "t": "now",
+     "n": 15
+    },
+    {
+     "t": "room",
+     "n": 14
+    },
+    {
+     "t": "day",
+     "n": 13
+    },
+    {
+     "t": "out",
+     "n": 13
+    },
+    {
+     "t": "never",
+     "n": 12
+    },
+    {
+     "t": "after",
+     "n": 12
+    },
+    {
+     "t": "came",
+     "n": 12
+    },
+    {
+     "t": "yes",
+     "n": 11
+    },
+    {
+     "t": "eyre",
+     "n": 11
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XIII",
+     "n": 10
+    },
+    {
+     "ch": "CHAPTER XXIV",
+     "n": 8
+    },
+    {
+     "ch": "CHAPTER XIV",
+     "n": 6
+    },
+    {
+     "ch": "CHAPTER XVII",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XI",
+     "n": 5
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 690,
+     "text": "“You said it was not likely they should think of being married,” said I, “but\nyou see Mr. Rochester evidently prefers her to any of the other ladies.”\n“Yes, I daresay: no doubt he admires her.”\n“And s"
+    },
+    {
+     "chunk": 663,
+     "text": "“Well, I sometimes think we are too quiet; but we run a chance of being busy\nenough now: for a little while at least,” said Mrs. Fairfax, still holding the\nnote before her spectacles.\nEre I permitted "
+    }
+   ]
+  },
+  {
+   "id": "c005",
+   "size": 52,
+   "members": [
+    696,
+    443,
+    1099,
+    680,
+    1242,
+    413,
+    568,
+    591,
+    635,
+    1098,
+    592,
+    1115,
+    697,
+    741,
+    528,
+    419,
+    569,
+    414,
+    694,
+    1177,
+    447,
+    525,
+    590,
+    565,
+    674,
+    1017,
+    1100,
+    1759,
+    1180,
+    1513,
+    417,
+    1288,
+    572,
+    676,
+    1105,
+    1005,
+    589,
+    686,
+    687,
+    1103,
+    412,
+    511,
+    739,
+    487,
+    1036,
+    1032,
+    929,
+    395,
+    1226,
+    532,
+    454,
+    587
+   ],
+   "top_terms": [
+    {
+     "t": "little",
+     "n": 21
+    },
+    {
+     "t": "now",
+     "n": 19
+    },
+    {
+     "t": "out",
+     "n": 17
+    },
+    {
+     "t": "sir",
+     "n": 16
+    },
+    {
+     "t": "who",
+     "n": 14
+    },
+    {
+     "t": "long",
+     "n": 13
+    },
+    {
+     "t": "fairfax",
+     "n": 13
+    },
+    {
+     "t": "room",
+     "n": 12
+    },
+    {
+     "t": "mademoiselle",
+     "n": 11
+    },
+    {
+     "t": "some",
+     "n": 11
+    },
+    {
+     "t": "day",
+     "n": 11
+    },
+    {
+     "t": "down",
+     "n": 10
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XVII",
+     "n": 10
+    },
+    {
+     "ch": "CHAPTER XI",
+     "n": 7
+    },
+    {
+     "ch": "CHAPTER XXIV",
+     "n": 6
+    },
+    {
+     "ch": "CHAPTER XIV",
+     "n": 6
+    },
+    {
+     "ch": "CHAPTER XV",
+     "n": 6
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 696,
+     "text": "Adèle, who appeared to be still under the influence of a most solemnising\nimpression, sat down, without a word, on the footstool I pointed out to her. I\nretired to a window-seat, and taking a book fro"
+    },
+    {
+     "chunk": 443,
+     "text": "The conversation, thus turned on Adèle, continued till we reached the light and\ncheerful region below. Adèle came running to meet us in the hall, exclaiming—\n“Mesdames, vous êtes servies!” adding, “J’"
+    }
+   ]
+  },
+  {
+   "id": "c006",
+   "size": 51,
+   "members": [
+    872,
+    1197,
+    834,
+    860,
+    859,
+    1175,
+    1193,
+    876,
+    842,
+    862,
+    754,
+    885,
+    874,
+    764,
+    1305,
+    1227,
+    882,
+    1213,
+    599,
+    1765,
+    1780,
+    895,
+    1212,
+    1853,
+    1205,
+    783,
+    839,
+    484,
+    1210,
+    1058,
+    867,
+    846,
+    1321,
+    608,
+    861,
+    1191,
+    1056,
+    830,
+    865,
+    1186,
+    1220,
+    883,
+    492,
+    891,
+    892,
+    1048,
+    870,
+    1256,
+    893,
+    1214,
+    856
+   ],
+   "top_terms": [
+    {
+     "t": "rochester",
+     "n": 57
+    },
+    {
+     "t": "mason",
+     "n": 35
+    },
+    {
+     "t": "now",
+     "n": 27
+    },
+    {
+     "t": "face",
+     "n": 15
+    },
+    {
+     "t": "looked",
+     "n": 14
+    },
+    {
+     "t": "still",
+     "n": 14
+    },
+    {
+     "t": "sir",
+     "n": 13
+    },
+    {
+     "t": "hand",
+     "n": 13
+    },
+    {
+     "t": "out",
+     "n": 13
+    },
+    {
+     "t": "come",
+     "n": 12
+    },
+    {
+     "t": "eye",
+     "n": 12
+    },
+    {
+     "t": "jane",
+     "n": 12
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XX",
+     "n": 19
+    },
+    {
+     "ch": "CHAPTER XXVI",
+     "n": 10
+    },
+    {
+     "ch": "CHAPTER XIX",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXVII",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XVIII",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 872,
+     "text": "Mr. Rochester entered, and with him the surgeon he had been to fetch.\n“Now, Carter, be on the alert,” he said to this last: “I give you but\nhalf-an-hour for dressing the wound, fastening the bandages,"
+    },
+    {
+     "chunk": 1197,
+     "text": "Mr.Rochester, on hearing the name, set his teeth; he experienced, too, a sort\nof strong convulsive quiver; near to him as I was, I felt the spasmodic\nmovement of fury or despair run through his frame."
+    }
+   ]
+  },
+  {
+   "id": "c007",
+   "size": 48,
+   "members": [
+    1829,
+    1046,
+    1798,
+    1308,
+    1251,
+    1051,
+    1828,
+    1254,
+    1114,
+    1298,
+    1299,
+    1049,
+    1198,
+    901,
+    1301,
+    1776,
+    924,
+    1818,
+    1085,
+    1069,
+    1034,
+    1849,
+    931,
+    1072,
+    916,
+    1188,
+    841,
+    1832,
+    1053,
+    735,
+    1847,
+    1279,
+    878,
+    421,
+    1788,
+    837,
+    1190,
+    1080,
+    1201,
+    1353,
+    1150,
+    1704,
+    1162,
+    1192,
+    1830,
+    1762,
+    1075,
+    1787
+   ],
+   "top_terms": [
+    {
+     "t": "jane",
+     "n": 45
+    },
+    {
+     "t": "sir",
+     "n": 36
+    },
+    {
+     "t": "rochester",
+     "n": 36
+    },
+    {
+     "t": "now",
+     "n": 22
+    },
+    {
+     "t": "well",
+     "n": 14
+    },
+    {
+     "t": "yes",
+     "n": 12
+    },
+    {
+     "t": "wife",
+     "n": 12
+    },
+    {
+     "t": "love",
+     "n": 12
+    },
+    {
+     "t": "come",
+     "n": 12
+    },
+    {
+     "t": "know",
+     "n": 11
+    },
+    {
+     "t": "ever",
+     "n": 10
+    },
+    {
+     "t": "never",
+     "n": 10
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXXVII",
+     "n": 9
+    },
+    {
+     "ch": "CHAPTER XXVII",
+     "n": 7
+    },
+    {
+     "ch": "CHAPTER XXIV",
+     "n": 6
+    },
+    {
+     "ch": "CHAPTER XXIII",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XXVI",
+     "n": 5
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1829,
+     "text": "“Yes, sir.”\n“A crippled man, twenty years older than you, whom you will have to wait on?”\n“Yes, sir.”\n“Truly, Jane?”\n“Most truly, sir.”\n“Oh! my darling! God bless you and reward you!”\n“Mr. Rochester, "
+    },
+    {
+     "chunk": 1046,
+     "text": "“As we are!” repeated Mr. Rochester—“so,” he added, enclosing me in his arms,\ngathering me to his breast, pressing his lips on my lips: “so, Jane!”\n“Yes, so, sir,” I rejoined: “and yet not so; for you"
+    }
+   ]
+  },
+  {
+   "id": "c008",
+   "size": 45,
+   "members": [
+    951,
+    90,
+    956,
+    552,
+    1230,
+    1607,
+    1582,
+    538,
+    897,
+    1280,
+    140,
+    1264,
+    725,
+    920,
+    1166,
+    87,
+    1529,
+    1255,
+    198,
+    97,
+    1544,
+    747,
+    285,
+    923,
+    1454,
+    1461,
+    141,
+    681,
+    230,
+    1722,
+    922,
+    1839,
+    197,
+    980,
+    1743,
+    1686,
+    1801,
+    1421,
+    507,
+    1010,
+    1531,
+    543,
+    86,
+    919,
+    500
+   ],
+   "top_terms": [
+    {
+     "t": "sir",
+     "n": 22
+    },
+    {
+     "t": "reed",
+     "n": 18
+    },
+    {
+     "t": "aunt",
+     "n": 13
+    },
+    {
+     "t": "jane",
+     "n": 13
+    },
+    {
+     "t": "who",
+     "n": 12
+    },
+    {
+     "t": "now",
+     "n": 10
+    },
+    {
+     "t": "know",
+     "n": 10
+    },
+    {
+     "t": "yes",
+     "n": 9
+    },
+    {
+     "t": "like",
+     "n": 8
+    },
+    {
+     "t": "tell",
+     "n": 7
+    },
+    {
+     "t": "nothing",
+     "n": 7
+    },
+    {
+     "t": "well",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXI",
+     "n": 7
+    },
+    {
+     "ch": "CHAPTER III",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXVII",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XIV",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XXXII",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 951,
+     "text": "“Yes, Aunt Reed. How are you, dear aunt?”"
+    },
+    {
+     "chunk": 90,
+     "text": "“But are your relatives so very poor? Are they working people?”\n“I cannot tell; Aunt Reed says if I have any, they must be a beggarly set: I\nshould not like to go a begging.”\n“Would you like to go to "
+    }
+   ]
+  },
+  {
+   "id": "c009",
+   "size": 43,
+   "members": [
+    156,
+    94,
+    116,
+    149,
+    154,
+    60,
+    960,
+    38,
+    115,
+    935,
+    107,
+    946,
+    68,
+    105,
+    907,
+    151,
+    96,
+    83,
+    67,
+    39,
+    375,
+    155,
+    109,
+    66,
+    98,
+    947,
+    108,
+    40,
+    912,
+    64,
+    16,
+    84,
+    373,
+    22,
+    91,
+    152,
+    71,
+    114,
+    37,
+    81,
+    158,
+    636,
+    73
+   ],
+   "top_terms": [
+    {
+     "t": "bessie",
+     "n": 68
+    },
+    {
+     "t": "reed",
+     "n": 18
+    },
+    {
+     "t": "room",
+     "n": 16
+    },
+    {
+     "t": "nursery",
+     "n": 15
+    },
+    {
+     "t": "now",
+     "n": 15
+    },
+    {
+     "t": "little",
+     "n": 15
+    },
+    {
+     "t": "down",
+     "n": 14
+    },
+    {
+     "t": "out",
+     "n": 14
+    },
+    {
+     "t": "miss",
+     "n": 14
+    },
+    {
+     "t": "missis",
+     "n": 13
+    },
+    {
+     "t": "abbot",
+     "n": 13
+    },
+    {
+     "t": "well",
+     "n": 12
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER III",
+     "n": 12
+    },
+    {
+     "ch": "CHAPTER IV",
+     "n": 12
+    },
+    {
+     "ch": "CHAPTER XXI",
+     "n": 6
+    },
+    {
+     "ch": "CHAPTER II",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER V",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 156,
+     "text": "Bessie, having pressed me in vain to take a\nfew spoonfuls of the boiled milk and bread she had prepared for me, wrapped up\nsome biscuits in a paper and put them into my bag; then she helped me on with"
+    },
+    {
+     "chunk": 94,
+     "text": "Bessie invited him to walk into the breakfast-room, and led the way out. In the\ninterview which followed between him and Mrs. Reed, I presume, from\nafter-occurrences, that the apothecary ventured to r"
+    }
+   ]
+  },
+  {
+   "id": "c010",
+   "size": 40,
+   "members": [
+    719,
+    745,
+    771,
+    793,
+    757,
+    755,
+    746,
+    716,
+    733,
+    917,
+    748,
+    711,
+    772,
+    642,
+    849,
+    644,
+    720,
+    689,
+    838,
+    773,
+    789,
+    781,
+    794,
+    798,
+    775,
+    710,
+    792,
+    777,
+    790,
+    851,
+    709,
+    797,
+    786,
+    795,
+    701,
+    785,
+    700,
+    677,
+    749,
+    730
+   ],
+   "top_terms": [
+    {
+     "t": "ingram",
+     "n": 43
+    },
+    {
+     "t": "rochester",
+     "n": 26
+    },
+    {
+     "t": "eshton",
+     "n": 24
+    },
+    {
+     "t": "miss",
+     "n": 23
+    },
+    {
+     "t": "dent",
+     "n": 22
+    },
+    {
+     "t": "colonel",
+     "n": 17
+    },
+    {
+     "t": "now",
+     "n": 17
+    },
+    {
+     "t": "ladies",
+     "n": 16
+    },
+    {
+     "t": "party",
+     "n": 16
+    },
+    {
+     "t": "lady",
+     "n": 15
+    },
+    {
+     "t": "lynn",
+     "n": 14
+    },
+    {
+     "t": "louisa",
+     "n": 14
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XVIII",
+     "n": 22
+    },
+    {
+     "ch": "CHAPTER XVII",
+     "n": 12
+    },
+    {
+     "ch": "CHAPTER XVI",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XX",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXI",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 719,
+     "text": "Coffee is handed.The ladies, since the gentlemen entered, have become lively\nas larks; conversation waxes brisk and merry.Colonel Dent and Mr.Eshton argue\non politics; their wives listen.The two proud"
+    },
+    {
+     "chunk": 745,
+     "text": ", were brought down in armfuls by the abigails;\nthen a selection was made, and such things as were chosen were carried to the\nboudoir within the drawing-room.\nMeantime, Mr. Rochester had again summone"
+    }
+   ]
+  },
+  {
+   "id": "c011",
+   "size": 38,
+   "members": [
+    263,
+    255,
+    126,
+    200,
+    133,
+    278,
+    265,
+    505,
+    284,
+    261,
+    143,
+    271,
+    254,
+    221,
+    258,
+    1423,
+    269,
+    250,
+    134,
+    132,
+    291,
+    179,
+    264,
+    193,
+    199,
+    337,
+    262,
+    245,
+    260,
+    130,
+    244,
+    277,
+    939,
+    202,
+    280,
+    257,
+    145,
+    228
+   ],
+   "top_terms": [
+    {
+     "t": "brocklehurst",
+     "n": 44
+    },
+    {
+     "t": "miss",
+     "n": 25
+    },
+    {
+     "t": "temple",
+     "n": 19
+    },
+    {
+     "t": "who",
+     "n": 18
+    },
+    {
+     "t": "good",
+     "n": 13
+    },
+    {
+     "t": "girl",
+     "n": 11
+    },
+    {
+     "t": "now",
+     "n": 10
+    },
+    {
+     "t": "school",
+     "n": 9
+    },
+    {
+     "t": "jane",
+     "n": 9
+    },
+    {
+     "t": "great",
+     "n": 8
+    },
+    {
+     "t": "little",
+     "n": 8
+    },
+    {
+     "t": "lowood",
+     "n": 8
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER VII",
+     "n": 15
+    },
+    {
+     "ch": "CHAPTER IV",
+     "n": 7
+    },
+    {
+     "ch": "CHAPTER V",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER VIII",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER VI",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 263,
+     "text": "“A careless girl!” said Mr. Brocklehurst, and immediately after—“It is the new\npupil, I perceive.” And before I could draw breath, “I must not forget I have a\nword to say respecting her.” Then aloud: "
+    },
+    {
+     "chunk": 255,
+     "text": "Meantime, Mr. Brocklehurst, standing on the hearth with his hands behind his\nback, majestically surveyed the whole school. Suddenly his eye gave a blink, as\nif it had met something that either dazzled"
+    }
+   ]
+  },
+  {
+   "id": "c012",
+   "size": 37,
+   "members": [
+    409,
+    1199,
+    1564,
+    1751,
+    470,
+    1749,
+    1738,
+    408,
+    428,
+    712,
+    1754,
+    1012,
+    818,
+    1761,
+    521,
+    1007,
+    385,
+    1563,
+    1756,
+    1777,
+    1562,
+    410,
+    1750,
+    1568,
+    1158,
+    1845,
+    1640,
+    693,
+    1189,
+    1752,
+    547,
+    1215,
+    361,
+    1194,
+    937,
+    362,
+    388
+   ],
+   "top_terms": [
+    {
+     "t": "rochester",
+     "n": 37
+    },
+    {
+     "t": "thornfield",
+     "n": 23
+    },
+    {
+     "t": "now",
+     "n": 13
+    },
+    {
+     "t": "hall",
+     "n": 13
+    },
+    {
+     "t": "out",
+     "n": 12
+    },
+    {
+     "t": "know",
+     "n": 10
+    },
+    {
+     "t": "house",
+     "n": 10
+    },
+    {
+     "t": "yes",
+     "n": 10
+    },
+    {
+     "t": "lady",
+     "n": 8
+    },
+    {
+     "t": "see",
+     "n": 8
+    },
+    {
+     "t": "time",
+     "n": 8
+    },
+    {
+     "t": "who",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXXVI",
+     "n": 8
+    },
+    {
+     "ch": "CHAPTER XI",
+     "n": 6
+    },
+    {
+     "ch": "CHAPTER XXVI",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXXIII",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XVII",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 409,
+     "text": "“Mr. Rochester!” I exclaimed. “Who is he?”\n“The owner of Thornfield,” she responded quietly. “Did you not know he was\ncalled Rochester?”\nOf course I did not—I had never heard of him before; but the ol"
+    },
+    {
+     "chunk": 1199,
+     "text": "“Courage,” urged the lawyer,—“speak out.”\n“She is now living at Thornfield Hall,” said Mason, in more articulate tones:\n“I saw her there last April. I am her brother.”\n“At Thornfield Hall!” ejaculated"
+    }
+   ]
+  },
+  {
+   "id": "c013",
+   "size": 37,
+   "members": [
+    1019,
+    1002,
+    601,
+    523,
+    659,
+    477,
+    625,
+    661,
+    435,
+    1314,
+    1091,
+    1641,
+    738,
+    427,
+    360,
+    1086,
+    886,
+    502,
+    387,
+    1565,
+    1003,
+    1771,
+    436,
+    633,
+    506,
+    495,
+    445,
+    675,
+    1758,
+    691,
+    1097,
+    1153,
+    366,
+    1088,
+    1737,
+    742,
+    854
+   ],
+   "top_terms": [
+    {
+     "t": "fairfax",
+     "n": 38
+    },
+    {
+     "t": "rochester",
+     "n": 26
+    },
+    {
+     "t": "now",
+     "n": 17
+    },
+    {
+     "t": "thornfield",
+     "n": 15
+    },
+    {
+     "t": "day",
+     "n": 12
+    },
+    {
+     "t": "hall",
+     "n": 10
+    },
+    {
+     "t": "heard",
+     "n": 10
+    },
+    {
+     "t": "about",
+     "n": 10
+    },
+    {
+     "t": "seemed",
+     "n": 9
+    },
+    {
+     "t": "fortnight",
+     "n": 8
+    },
+    {
+     "t": "answer",
+     "n": 8
+    },
+    {
+     "t": "life",
+     "n": 8
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XVII",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XIII",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XI",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXIV",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXII",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1019,
+     "text": "A fortnight of dubious calm succeeded my return to Thornfield Hall. Nothing was\nsaid of the master’s marriage, and I saw no preparation going on for such an\nevent. Almost every day I asked Mrs. Fairfa"
+    },
+    {
+     "chunk": 1002,
+     "text": "I was going back to Thornfield: but how long was I to stay there? Not long; of\nthat I was sure. I had heard from Mrs. Fairfax in the interim of my absence:\nthe party at the hall was dispersed; Mr. Roc"
+    }
+   ]
+  },
+  {
+   "id": "c014",
+   "size": 34,
+   "members": [
+    1710,
+    1430,
+    1408,
+    1420,
+    1635,
+    1684,
+    1392,
+    1427,
+    1637,
+    1645,
+    1386,
+    1703,
+    1499,
+    1604,
+    1624,
+    1419,
+    1428,
+    1595,
+    1382,
+    1370,
+    1643,
+    1611,
+    1384,
+    1581,
+    1554,
+    1411,
+    1379,
+    1638,
+    1601,
+    1409,
+    1417,
+    1495,
+    1813,
+    1589
+   ],
+   "top_terms": [
+    {
+     "t": "john",
+     "n": 34
+    },
+    {
+     "t": "diana",
+     "n": 32
+    },
+    {
+     "t": "mary",
+     "n": 21
+    },
+    {
+     "t": "like",
+     "n": 13
+    },
+    {
+     "t": "now",
+     "n": 11
+    },
+    {
+     "t": "let",
+     "n": 9
+    },
+    {
+     "t": "hand",
+     "n": 8
+    },
+    {
+     "t": "eyes",
+     "n": 8
+    },
+    {
+     "t": "good",
+     "n": 7
+    },
+    {
+     "t": "little",
+     "n": 7
+    },
+    {
+     "t": "hannah",
+     "n": 7
+    },
+    {
+     "t": "brother",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXIX",
+     "n": 10
+    },
+    {
+     "ch": "CHAPTER XXXIV",
+     "n": 10
+    },
+    {
+     "ch": "CHAPTER XXVIII",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XXXIII",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXXV",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1710,
+     "text": "“And yet St. John is a good man,” said Diana.\n“He is a good and a great man; but he forgets, pitilessly, the feelings and\nclaims of little people, in pursuing his own large views. It is better,\ntheref"
+    },
+    {
+     "chunk": 1430,
+     "text": "“She has already said that she is willing to do anything honest she can\ndo,” answered Diana for me; “and you know, St. John, she has no choice of\nhelpers: she is forced to put up with such crusty peop"
+    }
+   ]
+  },
+  {
+   "id": "c015",
+   "size": 32,
+   "members": [
+    282,
+    288,
+    283,
+    333,
+    224,
+    286,
+    227,
+    289,
+    322,
+    325,
+    317,
+    294,
+    231,
+    279,
+    235,
+    979,
+    326,
+    298,
+    324,
+    297,
+    276,
+    328,
+    300,
+    272,
+    327,
+    332,
+    316,
+    256,
+    247,
+    241,
+    339,
+    978
+   ],
+   "top_terms": [
+    {
+     "t": "helen",
+     "n": 43
+    },
+    {
+     "t": "miss",
+     "n": 30
+    },
+    {
+     "t": "temple",
+     "n": 26
+    },
+    {
+     "t": "burns",
+     "n": 16
+    },
+    {
+     "t": "room",
+     "n": 13
+    },
+    {
+     "t": "who",
+     "n": 10
+    },
+    {
+     "t": "some",
+     "n": 9
+    },
+    {
+     "t": "now",
+     "n": 8
+    },
+    {
+     "t": "face",
+     "n": 8
+    },
+    {
+     "t": "little",
+     "n": 8
+    },
+    {
+     "t": "came",
+     "n": 7
+    },
+    {
+     "t": "near",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER VIII",
+     "n": 11
+    },
+    {
+     "ch": "CHAPTER IX",
+     "n": 10
+    },
+    {
+     "ch": "CHAPTER VI",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER VII",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXI",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 282,
+     "text": "Resting my head on Helen’s shoulder, I put my arms round her waist; she drew me\nto her, and we reposed in silence. We had not sat long thus, when another\nperson came in. Some heavy clouds, swept from "
+    },
+    {
+     "chunk": 288,
+     "text": "I had finished: Miss Temple regarded me a few minutes in silence; she then\nsaid—\n“I know something of Mr. Lloyd; I shall write to him; if his reply agrees with\nyour statement, you shall be publicly cl"
+    }
+   ]
+  },
+  {
+   "id": "c016",
+   "size": 31,
+   "members": [
+    708,
+    1083,
+    758,
+    1084,
+    648,
+    760,
+    647,
+    763,
+    822,
+    776,
+    1082,
+    1035,
+    645,
+    751,
+    1050,
+    678,
+    1257,
+    767,
+    654,
+    736,
+    706,
+    707,
+    702,
+    796,
+    731,
+    1020,
+    903,
+    1044,
+    655,
+    704,
+    918
+   ],
+   "top_terms": [
+    {
+     "t": "ingram",
+     "n": 37
+    },
+    {
+     "t": "miss",
+     "n": 33
+    },
+    {
+     "t": "rochester",
+     "n": 22
+    },
+    {
+     "t": "now",
+     "n": 8
+    },
+    {
+     "t": "think",
+     "n": 8
+    },
+    {
+     "t": "see",
+     "n": 8
+    },
+    {
+     "t": "blanche",
+     "n": 8
+    },
+    {
+     "t": "love",
+     "n": 7
+    },
+    {
+     "t": "almost",
+     "n": 7
+    },
+    {
+     "t": "jane",
+     "n": 7
+    },
+    {
+     "t": "never",
+     "n": 7
+    },
+    {
+     "t": "little",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XVII",
+     "n": 8
+    },
+    {
+     "ch": "CHAPTER XVIII",
+     "n": 7
+    },
+    {
+     "ch": "CHAPTER XVI",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XXIV",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XXIII",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 708,
+     "text": "And did I now think Miss Ingram such a choice as Mr. Rochester would be likely\nto make? I could not tell—I did not know his taste in female beauty. If he\nliked the majestic, she was the very type of m"
+    },
+    {
+     "chunk": 1083,
+     "text": "“Of course I did. But to the point if you please, sir—Miss Ingram?”\n“Well, I feigned courtship of Miss Ingram, because I wished to render you as\nmadly in love with me as I was with you; and I knew jea"
+    }
+   ]
+  },
+  {
+   "id": "c017",
+   "size": 31,
+   "members": [
+    643,
+    1094,
+    819,
+    533,
+    516,
+    1817,
+    1090,
+    759,
+    1014,
+    1702,
+    778,
+    824,
+    1093,
+    722,
+    855,
+    612,
+    823,
+    821,
+    1130,
+    833,
+    537,
+    652,
+    1755,
+    522,
+    1816,
+    1026,
+    692,
+    595,
+    1037,
+    641,
+    646
+   ],
+   "top_terms": [
+    {
+     "t": "rochester",
+     "n": 36
+    },
+    {
+     "t": "eyes",
+     "n": 13
+    },
+    {
+     "t": "never",
+     "n": 12
+    },
+    {
+     "t": "like",
+     "n": 11
+    },
+    {
+     "t": "well",
+     "n": 10
+    },
+    {
+     "t": "think",
+     "n": 9
+    },
+    {
+     "t": "long",
+     "n": 9
+    },
+    {
+     "t": "thought",
+     "n": 9
+    },
+    {
+     "t": "about",
+     "n": 8
+    },
+    {
+     "t": "rather",
+     "n": 8
+    },
+    {
+     "t": "look",
+     "n": 7
+    },
+    {
+     "t": "after",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XIX",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XVI",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXIV",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XIV",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XIII",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 643,
+     "text": "“No—nor to-morrow either; I should think he is very likely to stay a week or\nmore: when these fine, fashionable people get together, they are so surrounded\nby elegance and gaiety, so well provided wit"
+    },
+    {
+     "chunk": 1094,
+     "text": "“No: you are very well; and much improved of late; and Mr. Rochester, I\ndaresay, is fond of you. I have always noticed that you were a sort of pet of\nhis. There are times when, for your sake, I have b"
+    }
+   ]
+  },
+  {
+   "id": "c018",
+   "size": 30,
+   "members": [
+    1401,
+    1812,
+    1400,
+    1572,
+    1519,
+    1426,
+    1578,
+    1588,
+    1823,
+    1498,
+    1566,
+    1569,
+    1405,
+    1458,
+    1460,
+    1573,
+    1825,
+    1422,
+    1525,
+    1487,
+    1493,
+    1479,
+    1378,
+    1580,
+    1383,
+    1455,
+    1380,
+    1528,
+    1725,
+    984
+   ],
+   "top_terms": [
+    {
+     "t": "rivers",
+     "n": 24
+    },
+    {
+     "t": "john",
+     "n": 20
+    },
+    {
+     "t": "now",
+     "n": 19
+    },
+    {
+     "t": "name",
+     "n": 15
+    },
+    {
+     "t": "like",
+     "n": 12
+    },
+    {
+     "t": "house",
+     "n": 9
+    },
+    {
+     "t": "asked",
+     "n": 9
+    },
+    {
+     "t": "oliver",
+     "n": 9
+    },
+    {
+     "t": "father",
+     "n": 8
+    },
+    {
+     "t": "much",
+     "n": 8
+    },
+    {
+     "t": "who",
+     "n": 8
+    },
+    {
+     "t": "morton",
+     "n": 8
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXXIII",
+     "n": 7
+    },
+    {
+     "ch": "CHAPTER XXIX",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XXXI",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXXVII",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XXXII",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1401,
+     "text": "“The name, then, of that gentleman, is Mr. St. John Rivers?”\n“Aye; St. John is like his kirstened name.”\n“And his sisters are called Diana and Mary Rivers?”\n“Their father is dead?”\n“Dead three weeks s"
+    },
+    {
+     "chunk": 1812,
+     "text": "“Well, whatever my sufferings had been, they were very short,” I answered: and\nthen I proceeded to tell him how I had been received at Moor House; how I had\nobtained the office of schoolmistress, &c. "
+    }
+   ]
+  },
+  {
+   "id": "c019",
+   "size": 28,
+   "members": [
+    972,
+    961,
+    996,
+    994,
+    971,
+    976,
+    15,
+    100,
+    991,
+    977,
+    970,
+    49,
+    999,
+    111,
+    944,
+    941,
+    77,
+    973,
+    943,
+    965,
+    1001,
+    104,
+    997,
+    33,
+    992,
+    14,
+    968,
+    32
+   ],
+   "top_terms": [
+    {
+     "t": "georgiana",
+     "n": 32
+    },
+    {
+     "t": "eliza",
+     "n": 23
+    },
+    {
+     "t": "now",
+     "n": 13
+    },
+    {
+     "t": "time",
+     "n": 11
+    },
+    {
+     "t": "out",
+     "n": 11
+    },
+    {
+     "t": "day",
+     "n": 10
+    },
+    {
+     "t": "before",
+     "n": 8
+    },
+    {
+     "t": "room",
+     "n": 8
+    },
+    {
+     "t": "bessie",
+     "n": 8
+    },
+    {
+     "t": "either",
+     "n": 7
+    },
+    {
+     "t": "some",
+     "n": 7
+    },
+    {
+     "t": "who",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXI",
+     "n": 14
+    },
+    {
+     "ch": "CHAPTER XXII",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER I",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER IV",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER II",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 972,
+     "text": "Georgiana, when not unburdening her heart to me, spent most of her time in\nlying on the sofa, fretting about the dulness of the house, and wishing over\nand over again that her aunt Gibson would send h"
+    },
+    {
+     "chunk": 961,
+     "text": "More than ten days elapsed before I had again any conversation with her. She\ncontinued either delirious or lethargic; and the doctor forbade everything\nwhich could painfully excite her. Meantime, I go"
+    }
+   ]
+  },
+  {
+   "id": "c020",
+   "size": 28,
+   "members": [
+    102,
+    137,
+    103,
+    142,
+    945,
+    139,
+    153,
+    56,
+    118,
+    986,
+    101,
+    34,
+    29,
+    123,
+    27,
+    135,
+    54,
+    70,
+    959,
+    53,
+    703,
+    26,
+    927,
+    25,
+    125,
+    372,
+    44,
+    281
+   ],
+   "top_terms": [
+    {
+     "t": "reed",
+     "n": 33
+    },
+    {
+     "t": "eye",
+     "n": 8
+    },
+    {
+     "t": "say",
+     "n": 7
+    },
+    {
+     "t": "thing",
+     "n": 7
+    },
+    {
+     "t": "john",
+     "n": 7
+    },
+    {
+     "t": "heart",
+     "n": 7
+    },
+    {
+     "t": "out",
+     "n": 6
+    },
+    {
+     "t": "like",
+     "n": 6
+    },
+    {
+     "t": "child",
+     "n": 6
+    },
+    {
+     "t": "room",
+     "n": 6
+    },
+    {
+     "t": "see",
+     "n": 6
+    },
+    {
+     "t": "some",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER IV",
+     "n": 11
+    },
+    {
+     "ch": "CHAPTER I",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XXI",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER II",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER III",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 102,
+     "text": "“What would Uncle Reed say to you, if he were alive?” was my scarcely voluntary\ndemand. I say scarcely voluntary, for it seemed as if my tongue pronounced\nwords without my will consenting to their utt"
+    },
+    {
+     "chunk": 137,
+     "text": "Mrs. Reed looked up from her work; her eye settled on mine, her fingers at the\nsame time suspended their nimble movements.\n“Go out of the room; return to the nursery,” was her mandate. My look or\nsome"
+    }
+   ]
+  },
+  {
+   "id": "c021",
+   "size": 27,
+   "members": [
+    171,
+    180,
+    323,
+    174,
+    172,
+    173,
+    182,
+    318,
+    310,
+    368,
+    177,
+    243,
+    168,
+    209,
+    204,
+    311,
+    251,
+    683,
+    346,
+    169,
+    167,
+    183,
+    188,
+    170,
+    99,
+    341,
+    1342
+   ],
+   "top_terms": [
+    {
+     "t": "miss",
+     "n": 26
+    },
+    {
+     "t": "miller",
+     "n": 19
+    },
+    {
+     "t": "room",
+     "n": 13
+    },
+    {
+     "t": "long",
+     "n": 12
+    },
+    {
+     "t": "some",
+     "n": 11
+    },
+    {
+     "t": "who",
+     "n": 11
+    },
+    {
+     "t": "schoolroom",
+     "n": 9
+    },
+    {
+     "t": "girls",
+     "n": 9
+    },
+    {
+     "t": "little",
+     "n": 8
+    },
+    {
+     "t": "out",
+     "n": 7
+    },
+    {
+     "t": "time",
+     "n": 6
+    },
+    {
+     "t": "silence",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER V",
+     "n": 14
+    },
+    {
+     "ch": "CHAPTER IX",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER X",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER VII",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER VI",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 171,
+     "text": "The meal over, prayers were read by Miss Miller, and the classes filed off, two\nand two, upstairs. Overpowered by this time with weariness, I scarcely noticed\nwhat sort of a place the bedroom was, exc"
+    },
+    {
+     "chunk": 180,
+     "text": "A clock in the schoolroom struck nine; Miss Miller left her circle, and\nstanding in the middle of the room, cried—\n“Silence! To your seats!”"
+    }
+   ]
+  },
+  {
+   "id": "c022",
+   "size": 25,
+   "members": [
+    858,
+    605,
+    606,
+    1168,
+    424,
+    632,
+    481,
+    401,
+    438,
+    1057,
+    668,
+    491,
+    488,
+    611,
+    1275,
+    664,
+    490,
+    666,
+    618,
+    441,
+    1206,
+    1159,
+    638,
+    392,
+    863
+   ],
+   "top_terms": [
+    {
+     "t": "fairfax",
+     "n": 25
+    },
+    {
+     "t": "door",
+     "n": 16
+    },
+    {
+     "t": "room",
+     "n": 13
+    },
+    {
+     "t": "grace",
+     "n": 12
+    },
+    {
+     "t": "now",
+     "n": 10
+    },
+    {
+     "t": "poole",
+     "n": 10
+    },
+    {
+     "t": "night",
+     "n": 10
+    },
+    {
+     "t": "rochester",
+     "n": 9
+    },
+    {
+     "t": "still",
+     "n": 9
+    },
+    {
+     "t": "down",
+     "n": 8
+    },
+    {
+     "t": "some",
+     "n": 8
+    },
+    {
+     "t": "before",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XI",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XV",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XVII",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XIII",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XX",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 858,
+     "text": "I saw a room I remembered to have seen before, the day Mrs. Fairfax showed me\nover the house: it was hung with tapestry; but the tapestry was now looped up\nin one part, and there was a door apparent, "
+    },
+    {
+     "chunk": 605,
+     "text": "Something gurgled and moaned. Ere long, steps retreated up the gallery towards\nthe third-storey staircase: a door had lately been made to shut in that\nstaircase; I heard it open and close, and all was"
+    }
+   ]
+  },
+  {
+   "id": "c023",
+   "size": 25,
+   "members": [
+    308,
+    305,
+    312,
+    307,
+    1219,
+    888,
+    1649,
+    216,
+    309,
+    1022,
+    515,
+    1023,
+    513,
+    938,
+    514,
+    1351,
+    1272,
+    19,
+    343,
+    206,
+    147,
+    313,
+    1271,
+    1027,
+    237
+   ],
+   "top_terms": [
+    {
+     "t": "now",
+     "n": 17
+    },
+    {
+     "t": "lowood",
+     "n": 11
+    },
+    {
+     "t": "day",
+     "n": 9
+    },
+    {
+     "t": "trees",
+     "n": 8
+    },
+    {
+     "t": "sky",
+     "n": 7
+    },
+    {
+     "t": "like",
+     "n": 7
+    },
+    {
+     "t": "garden",
+     "n": 7
+    },
+    {
+     "t": "morning",
+     "n": 7
+    },
+    {
+     "t": "down",
+     "n": 7
+    },
+    {
+     "t": "through",
+     "n": 7
+    },
+    {
+     "t": "white",
+     "n": 7
+    },
+    {
+     "t": "out",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER IX",
+     "n": 6
+    },
+    {
+     "ch": "CHAPTER XXIII",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XIII",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XXVII",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXVI",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 308,
+     "text": "April advanced to May: a bright serene May it was; days of blue sky, placid\nsunshine, and soft western or southern gales filled up its duration. And now\nvegetation matured with vigour; Lowood shook lo"
+    },
+    {
+     "chunk": 305,
+     "text": "But the privations, or rather the hardships, of Lowood lessened.Spring drew\non: she was indeed already come; the frosts of winter had ceased; its snows\nwere melted, its cutting winds ameliorated.My wr"
+    }
+   ]
+  },
+  {
+   "id": "c024",
+   "size": 24,
+   "members": [
+    80,
+    61,
+    377,
+    914,
+    369,
+    157,
+    163,
+    955,
+    374,
+    981,
+    150,
+    119,
+    998,
+    1784,
+    41,
+    59,
+    950,
+    987,
+    1065,
+    82,
+    93,
+    160,
+    79,
+    534
+   ],
+   "top_terms": [
+    {
+     "t": "jane",
+     "n": 32
+    },
+    {
+     "t": "bessie",
+     "n": 25
+    },
+    {
+     "t": "eyre",
+     "n": 20
+    },
+    {
+     "t": "miss",
+     "n": 18
+    },
+    {
+     "t": "like",
+     "n": 10
+    },
+    {
+     "t": "well",
+     "n": 9
+    },
+    {
+     "t": "out",
+     "n": 9
+    },
+    {
+     "t": "quite",
+     "n": 8
+    },
+    {
+     "t": "something",
+     "n": 8
+    },
+    {
+     "t": "down",
+     "n": 8
+    },
+    {
+     "t": "child",
+     "n": 7
+    },
+    {
+     "t": "now",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXI",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER III",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER II",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER X",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER V",
+     "n": 3
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 80,
+     "text": "“What, already up!” said he, as he entered the nursery. “Well, nurse, how is\nshe?”\nBessie answered that I was doing very well.\n“Then she ought to look more cheerful. Come here, Miss Jane: your name is"
+    },
+    {
+     "chunk": 61,
+     "text": "“What is all this?” demanded another voice peremptorily; and Mrs. Reed came\nalong the corridor, her cap flying wide, her gown rustling stormily. “Abbot and\nBessie, I believe I gave orders that Jane Ey"
+    }
+   ]
+  },
+  {
+   "id": "c025",
+   "size": 21,
+   "members": [
+    1463,
+    1630,
+    1469,
+    1717,
+    1586,
+    1445,
+    1467,
+    1856,
+    1623,
+    1388,
+    1432,
+    1466,
+    1620,
+    1470,
+    1436,
+    1732,
+    1371,
+    1501,
+    1557,
+    1437,
+    1406
+   ],
+   "top_terms": [
+    {
+     "t": "diana",
+     "n": 26
+    },
+    {
+     "t": "mary",
+     "n": 25
+    },
+    {
+     "t": "rivers",
+     "n": 9
+    },
+    {
+     "t": "john",
+     "n": 9
+    },
+    {
+     "t": "yet",
+     "n": 7
+    },
+    {
+     "t": "day",
+     "n": 7
+    },
+    {
+     "t": "about",
+     "n": 7
+    },
+    {
+     "t": "home",
+     "n": 6
+    },
+    {
+     "t": "while",
+     "n": 6
+    },
+    {
+     "t": "some",
+     "n": 6
+    },
+    {
+     "t": "come",
+     "n": 6
+    },
+    {
+     "t": "left",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXX",
+     "n": 9
+    },
+    {
+     "ch": "CHAPTER XXXIV",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XXXIII",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXIX",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXXV",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1463,
+     "text": "He left the room. In this brief hour I had learnt more of him than in the whole\nprevious month: yet still he puzzled me.\nDiana and Mary Rivers became more sad and silent as the day approached for\nleav"
+    },
+    {
+     "chunk": 1630,
+     "text": "As our mutual happiness (i.e., Diana’s, Mary’s, and mine) settled into a\nquieter character, and we resumed our usual habits and regular studies, St.\nJohn stayed more at home: he sat with us in the sam"
+    }
+   ]
+  },
+  {
+   "id": "c026",
+   "size": 19,
+   "members": [
+    620,
+    1315,
+    637,
+    1060,
+    1507,
+    1135,
+    524,
+    853,
+    1841,
+    1217,
+    1031,
+    1331,
+    1185,
+    603,
+    1029,
+    1182,
+    1333,
+    1848,
+    1006
+   ],
+   "top_terms": [
+    {
+     "t": "rochester",
+     "n": 19
+    },
+    {
+     "t": "night",
+     "n": 9
+    },
+    {
+     "t": "day",
+     "n": 8
+    },
+    {
+     "t": "long",
+     "n": 8
+    },
+    {
+     "t": "morning",
+     "n": 7
+    },
+    {
+     "t": "seemed",
+     "n": 6
+    },
+    {
+     "t": "enough",
+     "n": 6
+    },
+    {
+     "t": "see",
+     "n": 5
+    },
+    {
+     "t": "till",
+     "n": 5
+    },
+    {
+     "t": "heard",
+     "n": 5
+    },
+    {
+     "t": "some",
+     "n": 5
+    },
+    {
+     "t": "wanted",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXVI",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XVI",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXIII",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXVIII",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXVII",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 620,
+     "text": "CHAPTER XVI\nI both wished and feared to see Mr. Rochester on the day which followed this\nsleepless night: I wanted to hear his voice again, yet feared to meet his eye.\nDuring the early part of the mor"
+    },
+    {
+     "chunk": 1315,
+     "text": "“Mr. Rochester, I will love you and live with you through life till death,” and\na fount of rapture would spring to my lips. I thought of this.\nThat kind master, who could not sleep now, was waiting wi"
+    }
+   ]
+  },
+  {
+   "id": "c027",
+   "size": 19,
+   "members": [
+    1043,
+    1147,
+    1116,
+    386,
+    1151,
+    1033,
+    1236,
+    660,
+    579,
+    1148,
+    1241,
+    1173,
+    1809,
+    389,
+    1223,
+    485,
+    1287,
+    1273,
+    1250
+   ],
+   "top_terms": [
+    {
+     "t": "thornfield",
+     "n": 21
+    },
+    {
+     "t": "sir",
+     "n": 9
+    },
+    {
+     "t": "leave",
+     "n": 8
+    },
+    {
+     "t": "now",
+     "n": 8
+    },
+    {
+     "t": "hall",
+     "n": 8
+    },
+    {
+     "t": "long",
+     "n": 8
+    },
+    {
+     "t": "like",
+     "n": 7
+    },
+    {
+     "t": "jane",
+     "n": 7
+    },
+    {
+     "t": "place",
+     "n": 6
+    },
+    {
+     "t": "life",
+     "n": 5
+    },
+    {
+     "t": "well",
+     "n": 5
+    },
+    {
+     "t": "asked",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXVII",
+     "n": 6
+    },
+    {
+     "ch": "CHAPTER XXV",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER XXIII",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XI",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXIV",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 1043,
+     "text": "“I grieve to leave Thornfield: I love Thornfield:—I love it, because I have\nlived in it a full and delightful life,—momentarily at least. I have not been\ntrampled on. I have not been petrified. I have"
+    },
+    {
+     "chunk": 1147,
+     "text": "“I wanted you: but don’t boast. Here we are at Thornfield: now let me get\ndown.”\nHe landed me on the pavement. As John took his horse, and he followed me into\nthe hall, he told me to make haste and pu"
+    }
+   ]
+  },
+  {
+   "id": "c028",
+   "size": 18,
+   "members": [
+    614,
+    622,
+    440,
+    453,
+    1238,
+    1208,
+    832,
+    1207,
+    442,
+    890,
+    1176,
+    670,
+    815,
+    1757,
+    669,
+    630,
+    1276,
+    671
+   ],
+   "top_terms": [
+    {
+     "t": "grace",
+     "n": 17
+    },
+    {
+     "t": "poole",
+     "n": 17
+    },
+    {
+     "t": "woman",
+     "n": 12
+    },
+    {
+     "t": "heard",
+     "n": 8
+    },
+    {
+     "t": "leah",
+     "n": 8
+    },
+    {
+     "t": "out",
+     "n": 8
+    },
+    {
+     "t": "laugh",
+     "n": 6
+    },
+    {
+     "t": "about",
+     "n": 6
+    },
+    {
+     "t": "now",
+     "n": 6
+    },
+    {
+     "t": "some",
+     "n": 6
+    },
+    {
+     "t": "sir",
+     "n": 5
+    },
+    {
+     "t": "who",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XVII",
+     "n": 3
+    },
+    {
+     "ch": "CHAPTER XVI",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XI",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXVII",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER XXVI",
+     "n": 2
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 614,
+     "text": "“But you heard an odd laugh? You have heard that laugh before, I should think,\nor something like it?”\n“Yes, sir: there is a woman who sews here, called Grace Poole,—she laughs in\nthat way. She is a si"
+    },
+    {
+     "chunk": 622,
+     "text": "To much confabulation succeeded a sound of scrubbing and setting to rights; and\nwhen I passed the room, in going downstairs to dinner, I saw through the open\ndoor that all was again restored to comple"
+    }
+   ]
+  },
+  {
+   "id": "c029",
+   "size": 14,
+   "members": [
+    127,
+    136,
+    949,
+    62,
+    287,
+    246,
+    128,
+    146,
+    952,
+    65,
+    120,
+    45,
+    364,
+    95
+   ],
+   "top_terms": [
+    {
+     "t": "reed",
+     "n": 17
+    },
+    {
+     "t": "now",
+     "n": 8
+    },
+    {
+     "t": "brocklehurst",
+     "n": 7
+    },
+    {
+     "t": "felt",
+     "n": 5
+    },
+    {
+     "t": "some",
+     "n": 5
+    },
+    {
+     "t": "after",
+     "n": 5
+    },
+    {
+     "t": "well",
+     "n": 4
+    },
+    {
+     "t": "time",
+     "n": 4
+    },
+    {
+     "t": "knew",
+     "n": 4
+    },
+    {
+     "t": "nature",
+     "n": 3
+    },
+    {
+     "t": "never",
+     "n": 3
+    },
+    {
+     "t": "however",
+     "n": 3
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER IV",
+     "n": 5
+    },
+    {
+     "ch": "CHAPTER XXI",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER II",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER III",
+     "n": 2
+    },
+    {
+     "ch": "CHAPTER VIII",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 127,
+     "text": "Well might I dread, well might I dislike Mrs. Reed; for it was her nature to\nwound me cruelly; never was I happy in her presence; however carefully I\nobeyed, however strenuously I strove to please her"
+    },
+    {
+     "chunk": 136,
+     "text": "Sitting on a low stool, a few yards from her arm-chair, I examined her figure;\nI perused her features. In my hand I held the tract containing the sudden death\nof the Liar, to which narrative my attent"
+    }
+   ]
+  },
+  {
+   "id": "c030",
+   "size": 9,
+   "members": [
+    910,
+    370,
+    371,
+    159,
+    915,
+    934,
+    378,
+    921,
+    380
+   ],
+   "top_terms": [
+    {
+     "t": "miss",
+     "n": 11
+    },
+    {
+     "t": "bessie",
+     "n": 10
+    },
+    {
+     "t": "reed",
+     "n": 9
+    },
+    {
+     "t": "gateshead",
+     "n": 6
+    },
+    {
+     "t": "georgiana",
+     "n": 5
+    },
+    {
+     "t": "yes",
+     "n": 5
+    },
+    {
+     "t": "leaven",
+     "n": 4
+    },
+    {
+     "t": "well",
+     "n": 4
+    },
+    {
+     "t": "about",
+     "n": 4
+    },
+    {
+     "t": "mother",
+     "n": 4
+    },
+    {
+     "t": "jane",
+     "n": 4
+    },
+    {
+     "t": "off",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XXI",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER X",
+     "n": 4
+    },
+    {
+     "ch": "CHAPTER V",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 910,
+     "text": "“I daresay you hardly remember me, Miss,” he said, rising as I entered; “but my\nname is Leaven: I lived coachman with Mrs. Reed when you were at Gateshead,\neight or nine years since, and I live there "
+    },
+    {
+     "chunk": 370,
+     "text": "“That is my little boy,” said Bessie directly.\n“Then you are married, Bessie?”\n“Yes; nearly five years since to Robert Leaven, the coachman; and I’ve a little\ngirl besides Bobby there, that I’ve chris"
+    }
+   ]
+  },
+  {
+   "id": "c031",
+   "size": 7,
+   "members": [
+    381,
+    1502,
+    444,
+    993,
+    304,
+    1131,
+    658
+   ],
+   "top_terms": [
+    {
+     "t": "xxxii",
+     "n": 1
+    },
+    {
+     "t": "xii",
+     "n": 1
+    },
+    {
+     "t": "xxii",
+     "n": 1
+    },
+    {
+     "t": "xxv",
+     "n": 1
+    },
+    {
+     "t": "xvii",
+     "n": 1
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "CHAPTER XI",
+     "n": 1
+    },
+    {
+     "ch": "CHAPTER XXXII",
+     "n": 1
+    },
+    {
+     "ch": "CHAPTER XII",
+     "n": 1
+    },
+    {
+     "ch": "CHAPTER XXII",
+     "n": 1
+    },
+    {
+     "ch": "CHAPTER IX",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 381,
+     "text": "CHAPTER XI"
+    },
+    {
+     "chunk": 1502,
+     "text": "CHAPTER XXXII"
+    }
+   ]
+  }
+ ],
+ "instructions": "你是图书馆编目员。请只依据本任务书中的证据（词频、代表块、章节分布）为这本书编目，禁止使用你对该书的既有知识补充证据中不存在的细节。\n\n输出单个 JSON 对象（不要 markdown 围栏、不要解释文字），字段如下：\n{\n  \"task_ref\": \"<原样返回 book.db 字段>\",\n  \"themes\": [ { \"id\": \"t1\", \"name\": \"主题名\", \"note\": \"一句话中文说明\" } ],\n  \"persons\": [ { \"name\": \"人物标准名\", \"match_names\": [\"书中真实出现的写法\", \"...\"], \"aliases_zh\": [\"中文译名（可选，仅广为人知时写）\"], \"note\": \"身份一句话\" } ],\n  \"relations\": [ { \"a\": \"人物名\", \"b\": \"人物名\", \"note\": \"关系一句话\" } ],\n  \"assignments\": [ { \"cluster\": \"c001\", \"theme\": \"t1\" } ]\n}\n\n硬性要求：\n1. assignments 必须覆盖 clusters 里出现的每一个 id，且只允许出现这些 id；每个 cluster 恰好分给一个 theme。\n2. themes 数量建议 5~12 个，每个 theme 至少被一个 cluster 使用。\n3. persons 的 match_names 里每个字符串必须是书中原文真实出现的写法（导入程序会逐一在原文检索验证，任何一条不存在则整批拒绝）。没有把握的写法不要写。aliases_zh 是**可选**的中文译名（如 Darcy→达西、Mencius→孟子），仅当该译名广为人知时提供、宁缺毋滥——它不参与书内验真，用于中文提问时链到书内写法。\n4. 只有真实出场的人物才列入 persons；relations 的 a/b 必须是 persons 里出现过的名字。\n5. 主题名与人物名用与书中原文一致的语言（英文书用英文，中文书用中文）；说明性文字用中文。"
+}
