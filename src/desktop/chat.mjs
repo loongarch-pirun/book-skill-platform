@@ -142,7 +142,8 @@ export function archiveClear() {
 
 // ---------- 对话记忆压缩（V3-R6）：旧轮次 → ≤200 字要点，渲染层持有并钉进后续上下文 ----------
 // 无状态设计：渲染层在历史变长时主动调用（chat:compact）；压缩失败静默降级——对话继续，只是记忆没更新。
-// BSP_MEMORY=0 一键关；askCloud 侧 context 用量由「keep 4 条即时 + memory ≤800 字」兜住。
+// BSP_MEMORY=0 一键关；askCloud 侧 context 用量由「近 12 条即时 + memory ≤800 字」兜住
+// （buildHistory 送近 12 条、cloudSummary 侧 sanitizeHistory keep:12，两处同源）。
 export async function compactHistory({ history = [], prevMemory = "" } = {}) {
   if (process.env.BSP_MEMORY === "0") return { ok: false, skipped: true, note: "对话记忆已关闭（BSP_MEMORY=0）" };
   const arr = sanitizeHistory(history, { keep: 9999, maxLen: 3000 });
@@ -150,7 +151,11 @@ export async function compactHistory({ history = [], prevMemory = "" } = {}) {
   const cfg = loadLlmConfig();
   const key = readLlmKey();
   if (!key) return { ok: false, skipped: true, note: "云端 AI 未配置" };
-  const old = arr.slice(0, arr.length - 4);  // 最近 4 条不压（保留即时上下文）
+  // V3R-D14（一般）：渲染层已按「除最后 6 条外全部」切好边界（views-chat maybeCompact：
+  // usable.slice(0, usable.length - 6)），主进程对收到的数组必须全量压缩。旧代码再保
+  // 「最后 4 条」，中间 4 条（2 轮问答）既不进记忆、又不在渲染层保留窗里——静默丢失，
+  // 渲染层「更早的对话已折叠为记忆」提示行对这 4 条也不实。保留窗由渲染层管，主进程不二次切。
+  const old = arr;
   const prior = String(prevMemory || "").trim();
   const r = await chat({
     baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model,

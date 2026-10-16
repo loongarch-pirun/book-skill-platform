@@ -83,6 +83,12 @@ console.log("\n--- A. rewriteQuery ---");
   const p = parseRewrite(JSON.stringify({ variants: ["甲", "乙"] }), "原句");
   ok(p.variants[0] === "原句" && p.variants.length === 3, "A9: parseRewrite 原句缺位自动补首");
   ok(parseRewrite("没有花括号的一段话") === null, "A10: parseRewrite 无花括号 → null");
+  // V3R-D15：原句必须居首（rerank 终审以 variants[0] 为排序权威）——旧代码只保「包含」，
+  // 模型把原句放中间位时 variants[0] 是改写句，权威性丢失 + UI chip 把原句当「换个问法」
+  const mid = parseRewrite(JSON.stringify({ variants: ["书内术语甲", "原句", "书内术语乙"] }), "原句");
+  ok(mid.variants[0] === "原句" && mid.variants.join(",") === "原句,书内术语甲,书内术语乙", "A12: 原句在中间位 → 强制居首（D15）");
+  const tail = parseRewrite(JSON.stringify({ variants: ["改写一", "改写二", "原句"] }), "原句");
+  ok(tail.variants[0] === "原句" && tail.variants.join(",") === "原句,改写一,改写二", "A13: 原句在末尾 → 强制居首（D15）");
 }
 
 // ---------- 夹具：tmp libDir + 迷你书（甲篇 3 块 / 乙篇 2 块，无 emb 列 → 字面腿快路径） ----------

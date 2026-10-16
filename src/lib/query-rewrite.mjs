@@ -29,8 +29,12 @@ export function parseRewrite(text, original) {
     .filter(v => v && v.length <= maxLen))].slice(0, cap);
   const variants = clean(d.variants, 4, 80);
   if (!variants.length) return null;
-  if (!variants.some(v => v === original)) variants.unshift(original);  // 原句保底必含
-  return { variants: variants.slice(0, 4), terms: clean(d.terms, 8, 40) };
+  // V3R-D15（一般）：原句必须居首，不只「包含」——search.mjs:267 的 rerank 终审以 variants[0]
+  // 为排序权威（注释声称「权威仍然是用户原话」），模型把原句返回到中间位置时旧代码只保包含，
+  // variants[0] 就成了改写句、权威性丢失；views-chat/views-ask 的 slice(1) chip 也会把原句
+  // 当「换个问法」展示给用户。这里机器强制：原句永远在第一位，其余改写句跟后。
+  const rest = variants.filter((v) => v !== original);
+  return { variants: [original, ...rest].slice(0, 4), terms: clean(d.terms, 8, 40) };
 }
 
 export async function rewriteQuery({ config, question, history = [], timeoutMs = 8000 } = {}) {

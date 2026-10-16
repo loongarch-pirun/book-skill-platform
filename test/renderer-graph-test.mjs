@@ -380,6 +380,18 @@ assert(validAll.length === 6,
 obs(true, "P4-R3d buildHistory/sanitizeHistory 过滤顺序不对称登记",
   `渲染层 slice(-6) 先于过滤、主进程先过滤后 slice(-6)：error 消息挤占近 6 条窗口时，渲染层把窗口外的有效历史一起误伤（少送 ${validAll.length - sentHistory.length} 条）。上下文变少不影响正确性，轻微，登记不修`);
 
+// R3e：V3R-D14 两层压缩窗对账——渲染层 maybeCompact 切「除最后 6 条外全部」，
+// 主进程 compactHistory 必须全量压缩（旧代码再保「最后 4 条」→ 中间 4 条既不进记忆、
+// 又不在渲染层保留窗里，静默丢失，提示行对这 4 条也不实）。静态对账锁口径：任一侧单独改数立红。
+{
+  const chatSrc = fs.readFileSync(path.join(ROOT, "src/renderer/views-chat.js"), "utf8");
+  const mainSrc = fs.readFileSync(path.join(ROOT, "src/desktop/chat.mjs"), "utf8");
+  assert(/usable\.slice\(0, usable\.length - 6\)/.test(chatSrc) && /c\.messages = c\.messages\.slice\(-6\)/.test(chatSrc),
+    "P4-R3e: 渲染层压缩边界在位（送除最后 6 条外全部 + 成功后保留近 6 条）");
+  assert(/const old = arr;/.test(mainSrc) && !/arr\.slice\(0, arr\.length - 4\)/.test(mainSrc),
+    "P4-R3e2: 主进程 compactHistory 全量压缩不二次切窗（旧 -4 口径丢中间 4 条，D14 修复锁定）");
+}
+
 // R4：降级折叠区开关——A1 的「看本地检索到的 N 段原文」按钮要真的能展开/收起
 // （stub 的 closest 恒 null，专门造一条带 .degfold→.deglist 链的假事件目标）
 const toggleCalls = [];
