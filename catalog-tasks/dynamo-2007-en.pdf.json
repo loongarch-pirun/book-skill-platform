@@ -1,0 +1,487 @@
+{
+ "task_version": "1",
+ "generated_at": "2026-10-16T15:18:12.064Z",
+ "book": {
+  "db": "dynamo-2007-en.pdf.db",
+  "title": "dynamo-2007-en",
+  "lang": "en",
+  "chunks": 119,
+  "chapters": 0,
+  "total_chars": 91502
+ },
+ "provenance": {
+  "cluster_model": "e5",
+  "cluster_method": "centered-greedy-th0.38-min5",
+  "clustered_at": "2026-10-16T15:18:12.066Z",
+  "clusters": 6,
+  "covered_chunks": 63
+ },
+ "clusters": [
+  {
+   "id": "c001",
+   "size": 16,
+   "members": [
+    6,
+    110,
+    2,
+    14,
+    12,
+    8,
+    108,
+    5,
+    111,
+    79,
+    1,
+    7,
+    15,
+    13,
+    20,
+    109
+   ],
+   "top_terms": [
+    {
+     "t": "dynamo",
+     "n": 38
+    },
+    {
+     "t": "amazon",
+     "n": 21
+    },
+    {
+     "t": "data",
+     "n": 20
+    },
+    {
+     "t": "services",
+     "n": 18
+    },
+    {
+     "t": "storage",
+     "n": 13
+    },
+    {
+     "t": "service",
+     "n": 13
+    },
+    {
+     "t": "consistency",
+     "n": 12
+    },
+    {
+     "t": "availability",
+     "n": 11
+    },
+    {
+     "t": "system",
+     "n": 11
+    },
+    {
+     "t": "applications",
+     "n": 10
+    },
+    {
+     "t": "performance",
+     "n": 8
+    },
+    {
+     "t": "platform",
+     "n": 8
+    }
+   ],
+   "chapters": [],
+   "samples": [
+    {
+     "chunk": 6,
+     "text": "Dynamo is used to manage the state of services that have very\nhigh reliability requirements and need tight control over the\ntradeoffs between availability, consistency, cost-effectiveness and\nperforma"
+    },
+    {
+     "chunk": 110,
+     "text": "This\nlimitationmightbeovercomebyintroducinghierarchical\nextensions to Dynamo.Also, note that this problem is actively\naddressed by O(1) DHT systems(e.g., [14]).7.CONCLUSIONS\nThis paper described Dynam"
+    }
+   ]
+  },
+  {
+   "id": "c002",
+   "size": 12,
+   "members": [
+    93,
+    92,
+    90,
+    94,
+    65,
+    39,
+    89,
+    70,
+    40,
+    95,
+    41,
+    91
+   ],
+   "top_terms": [
+    {
+     "t": "node",
+     "n": 38
+    },
+    {
+     "t": "nodes",
+     "n": 34
+    },
+    {
+     "t": "system",
+     "n": 19
+    },
+    {
+     "t": "strategy",
+     "n": 16
+    },
+    {
+     "t": "tokens",
+     "n": 15
+    },
+    {
+     "t": "key",
+     "n": 13
+    },
+    {
+     "t": "ring",
+     "n": 12
+    },
+    {
+     "t": "load",
+     "n": 12
+    },
+    {
+     "t": "space",
+     "n": 10
+    },
+    {
+     "t": "ranges",
+     "n": 10
+    },
+    {
+     "t": "partitioning",
+     "n": 9
+    },
+    {
+     "t": "keys",
+     "n": 8
+    }
+   ],
+   "chapters": [],
+   "samples": [
+    {
+     "chunk": 93,
+     "text": "In this strategy, the tokens are\nonly used to build the function that maps values in the hash space\nto the ordered lists of nodes and not to decide the partitioning.A\npartition is placed on the first "
+    },
+    {
+     "chunk": 92,
+     "text": "In this\nscheme, archiving the entire key space requires us to retrieve the\nkeys from each node separately, which is highly inefficient.The fundamental issue with this strategy is that the schemes for\n"
+    }
+   ]
+  },
+  {
+   "id": "c003",
+   "size": 10,
+   "members": [
+    49,
+    47,
+    51,
+    48,
+    50,
+    56,
+    99,
+    57,
+    46,
+    52
+   ],
+   "top_terms": [
+    {
+     "t": "clock",
+     "n": 20
+    },
+    {
+     "t": "versions",
+     "n": 18
+    },
+    {
+     "t": "object",
+     "n": 15
+    },
+    {
+     "t": "vector",
+     "n": 15
+    },
+    {
+     "t": "version",
+     "n": 12
+    },
+    {
+     "t": "node",
+     "n": 12
+    },
+    {
+     "t": "data",
+     "n": 12
+    },
+    {
+     "t": "client",
+     "n": 9
+    },
+    {
+     "t": "reconciliation",
+     "n": 9
+    },
+    {
+     "t": "new",
+     "n": 8
+    },
+    {
+     "t": "system",
+     "n": 8
+    },
+    {
+     "t": "nodes",
+     "n": 8
+    }
+   ],
+   "chapters": [],
+   "samples": [
+    {
+     "chunk": 49,
+     "text": "Figure 3: Version evolution of an object over time.Dynamohasaccesstomultiplebranchesthatcannotbe\nsyntactically reconciled, it will return all the objects at the leaves,\nwith the corresponding version "
+    },
+    {
+     "chunk": 47,
+     "text": "Updates in the presence of network\npartitions and node failures can potentially result in an object\nhaving distinct version sub-histories, which the system will need\nto reconcile in the future.This re"
+    }
+   ]
+  },
+  {
+   "id": "c004",
+   "size": 10,
+   "members": [
+    84,
+    105,
+    87,
+    81,
+    83,
+    75,
+    96,
+    77,
+    78,
+    88
+   ],
+   "top_terms": [
+    {
+     "t": "load",
+     "n": 18
+    },
+    {
+     "t": "request",
+     "n": 13
+    },
+    {
+     "t": "write",
+     "n": 11
+    },
+    {
+     "t": "latencies",
+     "n": 10
+    },
+    {
+     "t": "performance",
+     "n": 10
+    },
+    {
+     "t": "dynamo",
+     "n": 10
+    },
+    {
+     "t": "node",
+     "n": 10
+    },
+    {
+     "t": "figure",
+     "n": 8
+    },
+    {
+     "t": "read",
+     "n": 8
+    },
+    {
+     "t": "services",
+     "n": 8
+    },
+    {
+     "t": "strategy",
+     "n": 8
+    },
+    {
+     "t": "average",
+     "n": 7
+    }
+   ],
+   "chapters": [],
+   "samples": [
+    {
+     "chunk": 84,
+     "text": "As seen in the figure,\nthe latencies exhibit a clear diurnal pattern which is a result of the\ndiurnal pattern in the incoming request rate (i.e., there is a\nsignificant difference in request rate betw"
+    },
+    {
+     "chunk": 105,
+     "text": "The latency improvement is because the client-\ndriven approach eliminates the overhead of the load balancer and\nthe extra network hop that may be incurred when a request is\nassigned to a random node.A"
+    }
+   ]
+  },
+  {
+   "id": "c005",
+   "size": 8,
+   "members": [
+    113,
+    114,
+    118,
+    115,
+    112,
+    119,
+    116,
+    117
+   ],
+   "top_terms": [
+    {
+     "t": "acm",
+     "n": 18
+    },
+    {
+     "t": "systems",
+     "n": 11
+    },
+    {
+     "t": "inproceedings",
+     "n": 10
+    },
+    {
+     "t": "distributed",
+     "n": 10
+    },
+    {
+     "t": "symposium",
+     "n": 9
+    },
+    {
+     "t": "press",
+     "n": 8
+    },
+    {
+     "t": "new",
+     "n": 8
+    },
+    {
+     "t": "york",
+     "n": 8
+    },
+    {
+     "t": "peer",
+     "n": 8
+    },
+    {
+     "t": "operating",
+     "n": 7
+    },
+    {
+     "t": "storage",
+     "n": 7
+    },
+    {
+     "t": "principles",
+     "n": 6
+    }
+   ],
+   "chapters": [],
+   "samples": [
+    {
+     "chunk": 113,
+     "text": "Process-based\nregulation of low-importance processes.SIGOPS Oper.Syst.Rev.34, 2 (Apr.2000), 26-27.[5]Fox, A., Gribble, S.D., Chawathe, Y., Brewer, E.A., and\nGauthier, P.1997.Cluster-based scalable net"
+    },
+    {
+     "chunk": 114,
+     "text": "ACM Press, New\nYork, NY, 173-182.[8]Gupta, I., Chandra, T.D., and Goldszmidt, G.S.2001.On\nscalable and efficient distributed failure detectors.In\nProceedings of the Twentieth Annual ACM Symposium on\n2"
+    }
+   ]
+  },
+  {
+   "id": "c006",
+   "size": 7,
+   "members": [
+    16,
+    19,
+    17,
+    18,
+    4,
+    10,
+    3
+   ],
+   "top_terms": [
+    {
+     "t": "amazon",
+     "n": 13
+    },
+    {
+     "t": "services",
+     "n": 11
+    },
+    {
+     "t": "service",
+     "n": 9
+    },
+    {
+     "t": "platform",
+     "n": 7
+    },
+    {
+     "t": "performance",
+     "n": 7
+    },
+    {
+     "t": "data",
+     "n": 7
+    },
+    {
+     "t": "many",
+     "n": 5
+    },
+    {
+     "t": "response",
+     "n": 4
+    },
+    {
+     "t": "important",
+     "n": 4
+    },
+    {
+     "t": "page",
+     "n": 4
+    },
+    {
+     "t": "percentile",
+     "n": 4
+    },
+    {
+     "t": "within",
+     "n": 3
+    }
+   ],
+   "chapters": [],
+   "samples": [
+    {
+     "chunk": 16,
+     "text": "Figure1:Service-orientedarchitectureofAmazon’s\nplatform\nprovide a response within 300ms for 99.9% of its requests for a\npeak client load of 500 requests per second.In Amazon’s decentralized service or"
+    },
+    {
+     "chunk": 19,
+     "text": "9percentile of\ndistributions, which reflects Amazon engineers’ relentless focus\nonperformancefromtheperspectiveofthecustomers’\nexperience.Many papers report on averages, so these are included\nwhere it"
+    }
+   ]
+  }
+ ],
+ "instructions": "你是图书馆编目员。请只依据本任务书中的证据（词频、代表块、章节分布）为这本书编目，禁止使用你对该书的既有知识补充证据中不存在的细节。\n\n输出单个 JSON 对象（不要 markdown 围栏、不要解释文字），字段如下：\n{\n  \"task_ref\": \"<原样返回 book.db 字段>\",\n  \"themes\": [ { \"id\": \"t1\", \"name\": \"主题名\", \"note\": \"一句话中文说明\" } ],\n  \"persons\": [ { \"name\": \"人物标准名\", \"match_names\": [\"书中真实出现的写法\", \"...\"], \"aliases_zh\": [\"中文译名（可选，仅广为人知时写）\"], \"note\": \"身份一句话\" } ],\n  \"relations\": [ { \"a\": \"人物名\", \"b\": \"人物名\", \"note\": \"关系一句话\" } ],\n  \"assignments\": [ { \"cluster\": \"c001\", \"theme\": \"t1\" } ]\n}\n\n硬性要求：\n1. assignments 必须覆盖 clusters 里出现的每一个 id，且只允许出现这些 id；每个 cluster 恰好分给一个 theme。\n2. themes 数量建议 5~12 个，每个 theme 至少被一个 cluster 使用。\n3. persons 的 match_names 里每个字符串必须是书中原文真实出现的写法（导入程序会逐一在原文检索验证，任何一条不存在则整批拒绝）。没有把握的写法不要写。aliases_zh 是**可选**的中文译名（如 Darcy→达西、Mencius→孟子），仅当该译名广为人知时提供、宁缺毋滥——它不参与书内验真，用于中文提问时链到书内写法。\n4. 只有真实出场的人物才列入 persons；relations 的 a/b 必须是 persons 里出现过的名字。\n5. 主题名与人物名用与书中原文一致的语言（英文书用英文，中文书用中文）；说明性文字用中文。"
+}

@@ -1,0 +1,18 @@
+{
+  "task_ref": "lamport-1978-en.pdf.db",
+  "themes": [
+    {
+      "id": "t1",
+      "name": "Time, Clocks, and the Ordering of Events",
+      "note": "分布式系统中的时间、时钟与事件排序（happened before、逻辑时钟、全序）"
+    }
+  ],
+  "persons": [],
+  "relations": [],
+  "assignments": [
+    {
+      "cluster": "c001",
+      "theme": "t1"
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+{
+ "task_version": "1",
+ "generated_at": "2026-10-16T15:19:07.855Z",
+ "book": {
+  "db": "mapreduce-2004-en.pdf.db",
+  "title": "mapreduce-2004-en",
+  "lang": "en",
+  "chunks": 70,
+  "chapters": 0,
+  "total_chars": 54374
+ },
+ "provenance": {
+  "cluster_model": "e5",
+  "cluster_method": "single(retry-exhausted)",
+  "clustered_at": "2026-10-16T15:19:07.858Z",
+  "clusters": 1,
+  "covered_chunks": 70
+ },
+ "clusters": [
+  {
+   "id": "c001",
+   "size": 70,
+   "members": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70
+   ],
+   "top_terms": [
+    {
+     "t": "mapreduce",
+     "n": 84
+    },
+    {
+     "t": "data",
+     "n": 82
+    },
+    {
+     "t": "reduce",
+     "n": 64
+    },
+    {
+     "t": "output",
+     "n": 64
+    },
+    {
+     "t": "map",
+     "n": 63
+    },
+    {
+     "t": "input",
+     "n": 58
+    },
+    {
+     "t": "tasks",
+     "n": 55
+    },
+    {
+     "t": "task",
+     "n": 49
+    },
+    {
+     "t": "machines",
+     "n": 45
+    },
+    {
+     "t": "user",
+     "n": 44
+    },
+    {
+     "t": "key",
+     "n": 39
+    },
+    {
+     "t": "large",
+     "n": 37
+    }
+   ],
+   "chapters": [],
+   "samples": [
+    {
+     "chunk": 1,
+     "text": "MapReduce: Simplified Data Processing on Large Clusters\nJeffrey Dean and Sanjay Ghemawat\njeff@google.com, sanjay@google.com\nGoogle, Inc.Abstract\nMapReduce is a programming model and an associ-\nated im"
+    },
+    {
+     "chunk": 2,
+     "text": "This allows programmers without any\nexperience with parallel and distributed systems to eas-\nily utilize the resources of a large distributed system.Our implementation of MapReduce runs on a large\nclu"
+    }
+   ]
+  }
+ ],
+ "instructions": "你是图书馆编目员。请只依据本任务书中的证据（词频、代表块、章节分布）为这本书编目，禁止使用你对该书的既有知识补充证据中不存在的细节。\n\n输出单个 JSON 对象（不要 markdown 围栏、不要解释文字），字段如下：\n{\n  \"task_ref\": \"<原样返回 book.db 字段>\",\n  \"themes\": [ { \"id\": \"t1\", \"name\": \"主题名\", \"note\": \"一句话中文说明\" } ],\n  \"persons\": [ { \"name\": \"人物标准名\", \"match_names\": [\"书中真实出现的写法\", \"...\"], \"aliases_zh\": [\"中文译名（可选，仅广为人知时写）\"], \"note\": \"身份一句话\" } ],\n  \"relations\": [ { \"a\": \"人物名\", \"b\": \"人物名\", \"note\": \"关系一句话\" } ],\n  \"assignments\": [ { \"cluster\": \"c001\", \"theme\": \"t1\" } ]\n}\n\n硬性要求：\n1. assignments 必须覆盖 clusters 里出现的每一个 id，且只允许出现这些 id；每个 cluster 恰好分给一个 theme。\n2. themes 数量建议 5~12 个，每个 theme 至少被一个 cluster 使用。\n3. persons 的 match_names 里每个字符串必须是书中原文真实出现的写法（导入程序会逐一在原文检索验证，任何一条不存在则整批拒绝）。没有把握的写法不要写。aliases_zh 是**可选**的中文译名（如 Darcy→达西、Mencius→孟子），仅当该译名广为人知时提供、宁缺毋滥——它不参与书内验真，用于中文提问时链到书内写法。\n4. 只有真实出场的人物才列入 persons；relations 的 a/b 必须是 persons 里出现过的名字。\n5. 主题名与人物名用与书中原文一致的语言（英文书用英文，中文书用中文）；说明性文字用中文。"
+}

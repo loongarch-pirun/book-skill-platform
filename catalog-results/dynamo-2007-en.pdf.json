@@ -1,0 +1,63 @@
+{
+  "task_ref": "dynamo-2007-en.pdf.db",
+  "themes": [
+    {
+      "id": "t1",
+      "name": "Dynamo Overview and Design Goals",
+      "note": "Dynamo 总览：在 Amazon 服务中的角色与设计目标（一致性/可用性权衡）"
+    },
+    {
+      "id": "t2",
+      "name": "Partitioning and Consistent Hashing",
+      "note": "分区与一致性哈希：环、令牌与负载分配"
+    },
+    {
+      "id": "t3",
+      "name": "Versioning and Vector Clocks",
+      "note": "版本演进与向量时钟：因果追踪与冲突协调"
+    },
+    {
+      "id": "t4",
+      "name": "Performance Evaluation and Load Patterns",
+      "note": "性能评估：读写下延迟与日周期负载模式"
+    },
+    {
+      "id": "t5",
+      "name": "References",
+      "note": "参考文献"
+    },
+    {
+      "id": "t6",
+      "name": "Amazon Platform Requirements",
+      "note": "Amazon 平台需求：面向服务的架构与 SLA 指标"
+    }
+  ],
+  "persons": [],
+  "relations": [],
+  "assignments": [
+    {
+      "cluster": "c001",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c002",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c003",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c004",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c005",
+      "theme": "t5"
+    },
+    {
+      "cluster": "c006",
+      "theme": "t6"
+    }
+  ]
+}

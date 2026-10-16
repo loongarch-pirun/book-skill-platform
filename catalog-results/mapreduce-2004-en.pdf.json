@@ -1,0 +1,18 @@
+{
+  "task_ref": "mapreduce-2004-en.pdf.db",
+  "themes": [
+    {
+      "id": "t1",
+      "name": "MapReduce: Simplified Data Processing on Large Clusters",
+      "note": "MapReduce 编程模型：map/reduce 原语、master/worker 执行与容错"
+    }
+  ],
+  "persons": [],
+  "relations": [],
+  "assignments": [
+    {
+      "cluster": "c001",
+      "theme": "t1"
+    }
+  ]
+}
