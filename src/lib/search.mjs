@@ -55,12 +55,17 @@ function libFingerprint(libDir) {
 function scanBooks(libDir) {
   return fs.readdirSync(libDir).filter(f => f.endsWith(".db")).map(f => {
     const dbPath = path.join(libDir, f);
+    let db;
     try {
-      const db = new Database(dbPath, { readonly: true });
+      db = new Database(dbPath, { readonly: true });
       const meta = Object.fromEntries(db.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
       db.close();
       return { id: f.replace(/\.db$/, ""), db: dbPath, title: meta.title || f, format: meta.format, model: meta.model || null, chunks: +meta.chunk_count, chars: +meta.total_chars, pages: meta.num_pages || null, chapters: meta.num_chapters || null };
-    } catch { return null; }
+    } catch {
+      // 坏库过滤：句柄必须先 close——Windows 上泄漏会让删库/清理临时目录报 EBUSY
+      try { db?.close(); } catch { /* close 失败无从补救，继续过滤 */ }
+      return null;
+    }
   }).filter(Boolean);
 }
 

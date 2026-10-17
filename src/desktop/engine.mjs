@@ -6,6 +6,7 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import { resolveDirs, writeConfig, hasConfig } from "./paths.mjs";
 import { listBooks, findBook, hybridSearch, routeAndSearch, configureSearch, currentLibDir } from "../lib/search.mjs";
+import { listShelf } from "../lib/assets.mjs";
 import { getCatalogSummary } from "../lib/catalog.mjs";
 import { questionKeywords } from "../lib/keywords.mjs";
 import { listSkills, readSkill, configureSkillStore } from "../lib/skill-store.mjs";
@@ -71,7 +72,12 @@ function enrichSummary(dbPath) {
 export function booksList() {
   const libDir = currentLibDir();
   const state = loadSkillState(libDir);
-  return listBooks(libDir, { includeDisabled: true }).map(b => {
+  // V3 第四波 #165：listShelf 合并 books/ 原件与 library/*.db（raw=仅入库未加工）。
+  // raw 书没有库：跳过编目/洗数据摘要（无表可查），skill 恒开（无技能开关可言）。
+  return listShelf(libDir).map(b => {
+    if (b.status === "raw") {
+      return { ...b, skillEnabled: true, catalog: { cataloged: false, themes: [], persons: 0 }, enrich: { ready: false } };
+    }
     let catalog = { cataloged: false, themes: [], persons: 0 };
     try {
       const s = getCatalogSummary(b.db);
