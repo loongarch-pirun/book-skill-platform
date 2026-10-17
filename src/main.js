@@ -1,7 +1,7 @@
 // 我的书房：Electron 主进程（窗口 + 启动编排）
 // 架构：主进程 CJS → 动态 import ipc.mjs（注册全部通道）→ engine.mjs（ESM 桥接层）→ lib 引擎库。
 // STONE3 环境变量 = 试金石自检模式（打包冒烟用，勿删）。
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, protocol, shell } = require("electron");
 const path = require("path");
 const { pathToFileURL } = require("url");
 
@@ -28,7 +28,7 @@ function createWindow() {
 
 async function boot() {
   const { registerIpc } = await import(pathToFileURL(path.join(__dirname, "desktop", "ipc.mjs")).href);
-  const engine = await registerIpc({ ipcMain, app, dialog, getWin: () => win });
+  const engine = await registerIpc({ ipcMain, app, dialog, shell, getWin: () => win });
   // 引擎初始化（三层目录解析 → 注入 lib）；模型下载进度 → 渲染进程
   engine.init({ packaged: app.isPackaged, userData: app.getPath("userData") });
   engine.onModelProgress((e) => {
@@ -56,6 +56,10 @@ async function boot() {
   enrichJob.onEnrichProgress((e) => {
     if (win && !win.isDestroyed()) win.webContents.send("enrich:progress", e);
   });
+  // 原书视图（V3 #166）：book://asset/<bookId> → books/ 原件（txt 直读 / docx mammoth 转 HTML）。
+  // handler 懒取 libDir（用户点击时才触发，彼时目录已解析）——protocol.handle 在 whenReady 后注册
+  const { createAssetProtocol } = await import(pathToFileURL(path.join(__dirname, "desktop", "book-view.mjs")).href);
+  protocol.handle("book", createAssetProtocol());
   return { engine, jobs, enrichJob };
 }
 

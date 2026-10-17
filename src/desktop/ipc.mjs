@@ -6,7 +6,7 @@ import * as jobs from "./jobs.mjs";
 import * as chat from "./chat.mjs";
 import * as enrichJob from "./enrich-job.mjs";
 
-export async function registerIpc({ ipcMain, app, dialog, getWin }) {
+export async function registerIpc({ ipcMain, app, dialog, shell, getWin }) {
   const handle = (channel, fn) => ipcMain.handle(channel, async (_e, ...args) => {
     try { return { ok: true, data: await fn(engine, ...args) }; }
     catch (err) { return { ok: false, error: engine.humanizeError(err) }; }
@@ -78,6 +78,16 @@ export async function registerIpc({ ipcMain, app, dialog, getWin }) {
   handle("reader:themeBlocks", (eng, bookId, theme) => eng.readerThemeBlocks(bookId, theme));
   handle("reader:persons", (eng, bookId) => eng.readerPersons(bookId));
   handle("reader:personBlocks", (eng, bookId, person) => eng.readerPersonBlocks(bookId, person));
+
+  // 原书视图（V3 #166）：book:// 协议读 books/ 原件（协议 handler 在 main.js 注册）；
+  // openExternal 用系统程序打开（shell 由主进程注入，engine 不直接碰 electron）
+  handle("book:original", (eng, bookId) => eng.bookOriginal(bookId));
+  handle("book:openExternal", async (eng, bookId) => {
+    const p = eng.bookAssetPath(bookId);
+    const err = await shell.openPath(p);
+    if (err) throw new engine.UserError(`系统打不开这个文件：${err}（可以手动去 books/ 文件夹找 ${p}）`);
+    return { opened: p };
+  });
 
   // 技能
   handle("skills:list", (eng) => eng.skillsList());

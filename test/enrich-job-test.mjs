@@ -111,7 +111,7 @@ const cell = (dbPath, sql, ...args) => {
 {
   const handlers = new Map();
   const ipcMain = { handle: (ch, fn) => handlers.set(ch, fn) };
-  await registerIpc({ ipcMain, app: { isPackaged: false, getPath: () => null }, dialog: { showOpenDialog: async () => ({ canceled: true }) }, getWin: () => null });
+  await registerIpc({ ipcMain, app: { isPackaged: false, getPath: () => null }, dialog: { showOpenDialog: async () => ({ canceled: true }) }, shell: { openPath: async () => "" }, getWin: () => null });
   const want = ["enrich:start", "enrich:cancel", "enrich:status", "enrich:audit"];
   ok(want.every((ch) => handlers.has(ch)), `enrich 四通道注册（${want.length}/4）`);
 }
@@ -247,7 +247,7 @@ fs.writeFileSync(path.join(TMP, "userData", "llm.json"), JSON.stringify({
   // IPC 包装：坏书名走 {ok:false} 不崩（M3）
   const handlers = new Map();
   const ipcMain = { handle: (ch, fn) => handlers.set(ch, fn) };
-  await registerIpc({ ipcMain, app: { isPackaged: false, getPath: () => null }, dialog: { showOpenDialog: async () => ({ canceled: true }) }, getWin: () => null });
+  await registerIpc({ ipcMain, app: { isPackaged: false, getPath: () => null }, dialog: { showOpenDialog: async () => ({ canceled: true }) }, shell: { openPath: async () => "" }, getWin: () => null });
   const r = await handlers.get("enrich:start")({}, "不存在的书");
   ok(r.ok === false && r.error.code === "user", "IPC 层错误包装 {ok:false,error}（M3）");
 }

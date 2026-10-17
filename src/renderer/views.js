@@ -142,7 +142,7 @@ export function bindShelfEvents() {
     if (!el) return;
     const act = el.dataset.action;
     if (act === "open") {
-      state.reader = { bookId: el.dataset.bid, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false };
+      state.reader = { bookId: el.dataset.bid, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false, original: null };
       show("reader");
     }
     else if (act === "del") {

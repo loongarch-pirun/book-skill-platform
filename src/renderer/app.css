@@ -102,6 +102,25 @@ body {
 }
 .askthis:hover { background: #e9dec6; }
 
+/* 原书视图（V3 #166）：入口条 / 原件按钮条 / 内容区 */
+.origentry { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.origentry .orighint { font-size: 11px; color: var(--muted); }
+.origbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.origbar .origmeta { font-size: 11px; color: var(--muted); margin-left: auto; }
+.origtag {
+  font-size: 11px; font-weight: 400; color: #7a5c3e; background: #f0e9d8;
+  border: 1px solid var(--line); border-radius: 10px; padding: 1px 10px; margin-left: 10px;
+  vertical-align: middle;
+}
+.reader.orig { grid-template-columns: 1fr; }
+.origwrap { padding: 0; overflow: hidden; }
+.origframe { width: 100%; height: 100%; border: 0; background: var(--card); }
+.origcard {
+  background: #faf3e3; border: 1px dashed var(--line); border-radius: 10px;
+  padding: 18px 22px; font-size: 13px; line-height: 1.8; margin: 20px;
+}
+.origcard .orighint { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+
 /* 翻书·编目条（主题分区 + 人物表） */
 .catstrip { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; }
 .catrow { display: flex; gap: 10px; align-items: flex-start; }

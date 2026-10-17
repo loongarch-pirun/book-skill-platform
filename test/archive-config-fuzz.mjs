@@ -300,7 +300,7 @@ console.log("\n--- P1-D books:delete 联动 ---");
 
   const handlers = new Map();
   const ipcMain = { handle: (ch, fn) => handlers.set(ch, fn) };
-  const engine = await registerIpc({ ipcMain, app: { isPackaged: false, getPath: () => null }, dialog: {}, getWin: () => null });
+  const engine = await registerIpc({ ipcMain, app: { isPackaged: false, getPath: () => null }, dialog: {}, shell: { openPath: async () => "" }, getWin: () => null });
   engine.init({ packaged: false });
   const invoke = async (ch, ...args) => handlers.get(ch)({}, ...args);
 

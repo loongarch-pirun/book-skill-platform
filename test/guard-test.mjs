@@ -290,6 +290,45 @@ const copyDb = (src) => {
     "静态: booksList 挂 enrich 摘要（#140 书架徽标）");
 }
 
+// ========== 13) 静态防回归：原书视图接线契约（V3 第四波 #166） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  // ① 两通道注册 + preload 暴露（book:// 内容不走 IPC，渲染层直接 fetch）
+  const ipcRegSrc = readSrc("src", "desktop", "ipc.mjs");
+  ok(["book:original", "book:openExternal"].every((ch) => ipcRegSrc.includes(`"${ch}"`)),
+    "静态: ipc.mjs 注册 book 两通道（#166）");
+  const preloadSrc = readSrc("src", "preload.js");
+  ok(["bookOriginal", "bookOpenExternal"].every((k) => preloadSrc.includes(k)),
+    "静态: preload 暴露 book 两口（#166）");
+
+  // ② main.js 注册协议 + shell 注入（openExternal 走主进程 shell，渲染层无 Node 能力）
+  const mainSrc = readSrc("src", "main.js");
+  ok(mainSrc.includes('protocol.handle("book"') && mainSrc.includes("createAssetProtocol"),
+    "静态: main.js 注册 book:// 协议（#166）");
+  ok(/registerIpc\(\{[^}]*shell/.test(mainSrc.replace(/\n/g, " ")),
+    "静态: registerIpc 注入 shell（#166 系统打开）");
+
+  // ③ book-view.mjs 防穿越不旁路：只经 safeBookId + resolveAsset（与 assets.mjs 同一把闸门）
+  const bvSrc = stripComments(readSrc("src", "desktop", "book-view.mjs"));
+  ok(bvSrc.includes("safeBookId") && bvSrc.includes("resolveAsset") && !/existsSync\(.*bookId/.test(bvSrc),
+    "静态: book-view 走 safeBookId+resolveAsset（不自己拼路径）");
+  // ④ 本模块零 Electron 依赖（协议 handler 可单测——book-view-test 直接调）
+  ok(!/require\("electron"\)|from "electron"/.test(bvSrc),
+    "静态: book-view 不 import electron（handler 可在 node 下单测）");
+
+  // ⑤ 渲染层入口：看原件/返回块视图/系统打开三个动作 + raw 书 fallback
+  const rdSrc = readSrc("src", "renderer", "views-reader.js");
+  ok(["data-action=\"original\"", "data-action=\"backblocks\"", "data-action=\"openexternal\""].every((s) => rdSrc.includes(s)),
+    "静态: views-reader 原书视图三动作接线（#166）");
+  ok(rdSrc.includes("bookOriginal") && rdSrc.includes("bookOpenExternal") && rdSrc.includes('class="origframe"'),
+    "静态: 原书视图走 IPC 取元信息 + iframe 加载 book://（不 fetch，守渲染层无直连红线）");
+  ok(/status === "raw"[\s\S]{0,80}loadOriginal/.test(rdSrc),
+    "静态: raw 书（无块）fallback 原书视图（#166）");
+}
+
 // ========== 收尾 ==========
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);

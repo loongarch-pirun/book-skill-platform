@@ -6,7 +6,8 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import { resolveDirs, writeConfig, hasConfig } from "./paths.mjs";
 import { listBooks, findBook, hybridSearch, routeAndSearch, configureSearch, currentLibDir } from "../lib/search.mjs";
-import { listShelf } from "../lib/assets.mjs";
+import { listShelf, resolveAsset, safeBookId } from "../lib/assets.mjs";
+import { describeAsset } from "./book-view.mjs";
 import { getCatalogSummary } from "../lib/catalog.mjs";
 import { questionKeywords } from "../lib/keywords.mjs";
 import { listSkills, readSkill, configureSkillStore } from "../lib/skill-store.mjs";
@@ -152,6 +153,24 @@ export async function attachSkill(base, slug, question) {
 }
 
 // ---------- 翻书：目录 + 原文块（M1：lib 无此 API，这里自建，不污染 lib） ----------
+// ---------- 原书视图（V3 #166）：book:// 协议 + 系统打开 ----------
+// bookOriginal：原件元信息（存在性/格式/大小/展示方式）——渲染层按 render 分流
+// bookAssetPath：原件绝对路径——只给 book:openExternal 用（shell.openPath 要真路径），
+//   不走 IPC 回渲染层（路径不外泄）；不存在/不合法抛 UserError 走统一错误包装
+export function bookOriginal(bookId) {
+  const d = describeAsset(currentLibDir(), bookId);
+  if (!d.ok) throw new UserError(d.error);
+  return d.data;
+}
+
+export function bookAssetPath(bookId) {
+  const id = safeBookId(bookId);
+  if (!id) throw new UserError("书名不合法");
+  const asset = resolveAsset(currentLibDir(), id);
+  if (!asset.exists) throw new UserError(`《${id}》没有原件文件（books/ 里找不到）`);
+  return asset.path;
+}
+
 export function readerChapters(bookId) {
   const b = exactBook(bookId);
   if (!b) throw new UserError(`书库里找不到「${bookId}」`);

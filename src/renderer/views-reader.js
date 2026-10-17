@@ -6,21 +6,97 @@ import { esc } from "./views.js";
 
 // ---------- ② 翻书 ----------
 // 三种浏览模式：chapter 按章翻 / theme 按主题逛（编目主题分区）/ person 看人物出场块
+// 原书视图（V3 #166）：original 模式直接看 books/ 原件（txt 直显 / docx mammoth 转 HTML /
+// pdf·epub 元信息卡走系统打开）——「丢入即可看原文」，未加工（raw）的书没有块可翻，就靠它
 export function renderReader() {
   const r = state.reader;
   if (!r.bookId) return `<div class="view-title">翻书</div><div class="empty">先去书架点开一本书</div>`;
+  if (r.original) return renderOriginal(r); // 原书视图整版替换（目录栏一并隐去）
   const filterBar = r.mode === "chapter" ? "" : `
     <div class="filterbar">正在看：${r.mode === "theme" ? "主题" : "人物"}「<b>${esc(r.filter)}</b>」的 ${r.blocks.length} 个块
       <button class="ghost sm" data-action="backchap">返回目录浏览</button></div>`;
   return `
     <div class="view-title">${esc(r.title || r.bookId)}</div>
     <div class="view-sub">原文一字不改 · 引用跳转后高亮对应块 · 读到哪不服，点「问这段」直接带去问一问</div>
+    <div class="origentry"><button class="ghost sm" data-action="original">看原件</button><span class="orighint">books/ 里的原始文件（未加工的书没有块，直接看它）</span></div>
     <div class="catstrip" id="catStrip">${catStripHtml(r)}</div>
     ${filterBar}
     <div class="reader">
       <div class="chaplist" id="chapList"><div class="empty" style="padding:12px">目录加载中…</div></div>
       <div class="blocks" id="blockList"><div class="skeleton">原文加载中…</div></div>
     </div>`;
+}
+
+// 原书视图：按钮条（返回块视图 / 系统打开 / 文件信息）+ 内容区（iframe 看 text/html / 元信息卡）
+function renderOriginal(r) {
+  const o = r.original;
+  const meta = o.meta;
+  const metaLine = meta ? `${meta.ext} · ${fmtSize(meta.size)} · books/${esc(meta.name)}` : "";
+  const bar = `
+    <div class="origbar">
+      <button class="ghost sm" data-action="backblocks">返回块视图</button>
+      <button class="ghost sm" data-action="openexternal" title="用系统程序打开（WPS / Word / pdf 阅读器）">用系统程序打开</button>
+      <span class="origmeta">${metaLine}</span>
+    </div>`;
+  let body;
+  if (o.loading || !meta) body = '<div class="skeleton">原件读取中…</div>';
+  else if (o.error) body = `<div class="origcard"><p>${esc(o.error)}</p><p class="orighint">块视图看的是库里切好的原文块；原件不在 books/ 目录时（早期命令行建库的书）只能这样看。</p></div>`;
+  else if (meta.render === "external") body = `
+    <div class="origcard">
+      <p><b>${esc(meta.name)}</b>（${esc(meta.ext)} 格式 · ${fmtSize(meta.size)}）</p>
+      <p class="orighint">${esc(meta.ext)} 格式应用内不直接渲染，点上方「用系统程序打开」看原文；或回块视图看库里切好的原文块。</p>
+    </div>`;
+  // text/html 都走 iframe 加载 book://（协议层已包好纸色样式壳；不 fetch——红线：渲染层无直连 fetch）
+  else body = `<iframe class="origframe" src="${esc(meta.url)}" title="原件原文"></iframe>`;
+  return `
+    <div class="view-title">${esc(r.title || r.bookId)}<span class="origtag">原件视图</span></div>
+    <div class="view-sub">books/ 里的原始文件，一字未改 · 与块视图（切好块的原文）互为对照</div>
+    ${bar}
+    <div class="reader orig"><div class="blocks origwrap" id="blockList">${body}</div></div>`;
+}
+
+function fmtSize(n) {
+  if (n == null) return "?";
+  return n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`;
+}
+
+// 本视图自守的重画：不借 app.js 的 renderMain（壳的私有函数）——原书视图不走 loadReader，
+// 回块视图时才手动触发（loadReader 内部有 view/bookId 防抖）
+function refreshReader() {
+  const main = document.querySelector("#main");
+  if (!main) return;
+  main.innerHTML = renderReader();
+  if (!state.reader.original) loadReader();
+}
+
+// 进入原书视图：book:original 拿元信息即可——内容由 iframe 直接加载 book://（协议层包壳）
+async function loadOriginal() {
+  const r = state.reader;
+  if (!r.bookId) return;
+  r.original = { loading: true, meta: null, error: null };
+  refreshReader();
+  try {
+    const meta = await call(window.study.bookOriginal(r.bookId));
+    if (state.reader !== r) return; // 期间换了书
+    r.original.meta = meta;
+    r.original.loading = false;
+  } catch (e) {
+    if (state.reader === r) { r.original.loading = false; r.original.error = e.message || String(e); }
+  }
+  refreshReader();
+}
+
+function backToBlocks() {
+  state.reader.original = null;
+  refreshReader();
+}
+
+async function openExternal() {
+  const r = state.reader;
+  try {
+    const res = await call(window.study.bookOpenExternal(r.bookId));
+    toast(`已交给系统程序打开：${res.opened.split(/[\\/]/).pop()}`);
+  } catch (e) { toast("打开失败：" + e.message); }
 }
 
 // 编目条：主题分区 chips + 人物表 chips（吃 llm 编目层；无编目时不显示）
@@ -56,7 +132,14 @@ export async function loadReader() {
     else if (r.mode === "person") await loadPersonBlocks(r.filter);
     else if (r.loadedChapter !== r.chapter) await loadChapter(r.chapter); // 同章不重拉（refresh 防抖）
     if (!r.catLoaded) loadCatalogAssets(); // 编目条后台加载，完了只更新条本身
-  } catch (e) { if (!stale()) toast("翻书失败：" + e.message); }
+  } catch (e) {
+    if (stale()) return;
+    // raw 书（仅入库未加工）没有库、没有块：chapters 必失败—— fallback 原书视图，
+    // 「丢入即可看原文」对没结构化的书同样成立
+    const book = state.books.find((b) => b.id === bid);
+    if (book?.status === "raw") { toast("这本书还没加工（没有原文块）——先看原件"); await loadOriginal(); return; }
+    toast("翻书失败：" + e.message);
+  }
 }
 
 // 编目资产（主题/人物）拉取 → 只重画编目条，不碰正文区
@@ -150,7 +233,7 @@ export async function jumpTo(bookId, chunkId) {
   try {
     const loc = await call(window.study.locate(bookId, chunkId));
     if (!loc.chapter) { toast("找不到这一块了（书可能被删过）"); return; }
-    state.reader = { bookId, title: null, chapter: loc.chapter, chapters: [], loadedChapter: null, highlightId: chunkId, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false };
+    state.reader = { bookId, title: null, chapter: loc.chapter, chapters: [], loadedChapter: null, highlightId: chunkId, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false, original: null };
     show("reader"); // show → renderMain → loadReader → loadChapter，高亮在渲染后生效
   } catch (e) { toast("跳转失败：" + e.message); }
 }
@@ -188,5 +271,9 @@ export function bindReaderEvents() {
     else if (act === "backchap") loadChapter(state.reader.chapter || state.reader.chapters[0]?.name);
     else if (act === "askthis") askAboutBlock(+el.dataset.bid);
     else if (act === "askthischat") askAboutBlockChat(+el.dataset.bid); // C2：带去对话
+    // 原书视图（V3 #166）
+    else if (act === "original") loadOriginal();
+    else if (act === "backblocks") backToBlocks();
+    else if (act === "openexternal") openExternal();
   });
 }

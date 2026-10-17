@@ -16,8 +16,9 @@ const handlers = new Map();
 const ipcMain = { handle: (ch, fn) => handlers.set(ch, fn) };
 const app = { isPackaged: false, getPath: () => null };
 const dialog = { showOpenDialog: async () => ({ canceled: true }) };
+const shell = { openPath: async () => "" }; // 假系统打开：不真启 WPS（#166 book:openExternal）
 
-const engine = await registerIpc({ ipcMain, app, dialog, getWin: () => null });
+const engine = await registerIpc({ ipcMain, app, dialog, shell, getWin: () => null });
 engine.init({ packaged: false });
 
 const EXPECTED = ["config:get", "config:set", "config:pickLibDir", "books:list", "books:catalog", "books:delete",
@@ -25,7 +26,9 @@ const EXPECTED = ["config:get", "config:set", "config:pickLibDir", "books:list",
   "engine:status", "engine:warmup", "llm:configGet", "llm:configSet", "llm:test", "chat:summary",
   "chat:archiveList", "chat:archiveClear",
   // 洗数据一键入口（V3 第二波 #140）
-  "enrich:start", "enrich:cancel", "enrich:status", "enrich:audit"];
+  "enrich:start", "enrich:cancel", "enrich:status", "enrich:audit",
+  // 原书视图（V3 第四波 #166）
+  "book:original", "book:openExternal"];
 ok(EXPECTED.every((ch) => handlers.has(ch)), `关键通道全部注册（期望子集 ${EXPECTED.length} 条 / 实际注册 ${handlers.size} 条）`);
 
 const invoke = async (ch, ...args) => handlers.get(ch)({}, ...args);
@@ -79,6 +82,19 @@ const ejAudit = await invoke("enrich:audit", books.data[0].id);
 ok(ejAudit.ok && typeof ejAudit.data.ready === "boolean", `enrich:audit 真书只读复查（ready=${ejAudit.data.ready}，形状不断言数值）`);
 const ejAuditBad = await invoke("enrich:audit", "不存在的书xyz");
 ok(ejAuditBad.ok === false && ejAuditBad.error.code === "user", "enrich:audit 坏书走错误包装（M3）");
+
+// ---------- 原书视图（V3 #166）：元信息 / 系统打开 / 坏书名包装 ----------
+{
+  const orig = await invoke("book:original", "lunyu-xueer-zh.docx"); // books/ 有真原件
+  ok(orig.ok && orig.data.ext === "docx" && orig.data.render === "html"
+    && orig.data.url.startsWith("book://asset/"), `book:original 有原件书（render=${orig.data?.render}）`);
+  const origBad = await invoke("book:original", "awesome-fenix-zh.md"); // CLI 建库无原件
+  ok(origBad.ok === false && origBad.error.code === "user", "book:original 无原件 → {ok:false,user} 不崩");
+  const openBad = await invoke("book:openExternal", "不存在的书xyz");
+  ok(openBad.ok === false && openBad.error.code === "user", "book:openExternal 坏书名 → 错误包装（不真开）");
+  const openOk = await invoke("book:openExternal", "lunyu-xueer-zh.docx");
+  ok(openOk.ok && openOk.data.opened.endsWith("lunyu-xueer-zh.docx"), "book:openExternal 有原件 → shell.openPath（假件不真启）");
+}
 
 // ---------- 错误包装：坏书名 → {ok:false,error} 不抛 ----------
 const bad = await invoke("books:catalog", "不存在的书xyz");

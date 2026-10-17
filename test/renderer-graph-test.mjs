@@ -90,6 +90,9 @@ const studyStub = {
   readerThemeBlocks: () => { ipcCalls.push("readerThemeBlocks"); return reply({ blocks: [{ n: 1, id: 9, page: null, text: "主題代表塊" }] }); },
   readerPersons: () => { ipcCalls.push("readerPersons"); return reply({ book: "测试书", persons: [{ name: "人物甲", note: "", match_names: ["甲"], mention_count: 2 }] }); },
   readerPersonBlocks: () => { ipcCalls.push("readerPersonBlocks"); return reply({ blocks: [{ n: 1, id: 5, page: null, text: "人物出場塊" }] }); },
+  // 原书视图（V3 #166）
+  bookOriginal: () => { ipcCalls.push("bookOriginal"); return reply({ bookId: "t.docx", ext: "docx", name: "t.docx", size: 1024, url: "book://asset/t.docx", render: "html" }); },
+  bookOpenExternal: () => { ipcCalls.push("bookOpenExternal"); return reply({ opened: "books/t.docx" }); },
   skillsList: () => { ipcCalls.push("skillsList"); return reply([{ slug: "t", title: "测试技能", description: "d", coverage: "3/9", chapters: 2, sources: ["测试书"] }]); },
   skillRead: () => reply({ slug: "t", skill_md: "# t", index: [{ file: "chapters/ch01-a.md", title: "第一章", tokens_est: 100 }] }),
   skillToggle: () => reply({}),

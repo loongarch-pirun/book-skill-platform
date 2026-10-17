@@ -25,6 +25,7 @@ app.whenReady().then(async () => {
     const engine = await registerIpc({
       ipcMain, app,
       dialog: { showOpenDialog: async () => ({ canceled: true }) }, // 冒烟不走文件对话框
+      shell: { openPath: async () => "" }, // 冒烟不真开系统程序（#166 book:openExternal）
       getWin: () => win,
     });
     engine.init({ packaged: false });
