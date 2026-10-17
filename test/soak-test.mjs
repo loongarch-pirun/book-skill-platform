@@ -34,7 +34,7 @@ console.log("===== 1) 连导 3 本书（同进程不重启） =====");
   configureModels({ modelsDir: path.join(ROOT, ".models") });
   process.env.BSP_LIB_DIR = libDir;
   process.env.BSP_MODELS_DIR = path.join(ROOT, ".models");
-  const { startImport } = await import("../src/desktop/jobs.mjs");
+  const { startImport, startProcessing } = await import("../src/desktop/jobs.mjs");
   const { hybridSearch } = await import("../src/lib/search.mjs");
 
   const rss0 = rss();
@@ -45,8 +45,12 @@ console.log("===== 1) 连导 3 本书（同进程不重启） =====");
     path.join(ROOT, "books/mengzi-zh.docx"),
   ];
   for (const b of books) {
-    const r = await startImport(b);
-    ok(r.stage === "catalog", `连导 ${path.basename(b)} → 待编目（${r.clusters} 堆）`);
+    // V3 #167 拆两段：一段只复制登记，二段才跑四步（soak 测的是连导不重启的内存斜率）
+    const ri = await startImport(b);
+    const id = path.basename(b);
+    ok(ri.stage === "imported", `一段 ${id} → 已放进书架（stage=${ri.stage}）`);
+    const r = await startProcessing(id);
+    ok(r.stage === "catalog", `二段 ${id} → 待编目（${r.clusters} 堆）`);
   }
   const rss1 = rss();
   obs(`连导 3 本后 RSS ${rss1}MB（Δ ${rss1 - rss0}MB）`);

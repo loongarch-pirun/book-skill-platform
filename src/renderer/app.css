@@ -76,6 +76,10 @@ body {
 .tag { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: #f0e9d8; color: #7a5c3e; }
 .tag.nocat { background: #f3f0ea; color: var(--muted); }
 .tag.enr { background: #e6efe2; color: #47683b; } /* 已洗数据徽标（#140，绿=存侧成果） */
+/* V3 #167：raw 书（仅入库未加工）——未加工标记 + 「开始加工」主按钮 */
+.rawtag { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: #fdf3e0; color: #a5690f; font-weight: 700; }
+.procbtn { background: var(--wood); color: #fff; border-color: var(--wood); font-weight: 700; }
+.procbtn:hover { filter: brightness(1.08); }
 .cardfoot { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
 .cardbtns { display: flex; align-items: center; gap: 4px; }
 .skill-dot { font-size: 11px; color: var(--ok); }

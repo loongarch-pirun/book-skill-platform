@@ -1,10 +1,12 @@
-// 导入管线（4.6，按对账审计 H1/H2 修正版实现）：
-//   切片 → 向量化 → 编目（任务书 + 暂停等结果）→（恢复）五重校验入库
+// 导入管线（4.6 按对账审计 H1/H2 修正版实现；V3 第四波 #167「导入拆两段」重构为两段）：
+//   第一段 startImport：复制原件进 books/ + 登记（丢入即可看原文，不烧算力）；
+//   第二段 startProcessing：切片 → 向量化 → 编目（任务书 + 暂停等结果）→（恢复）五重校验入库。
 // H1：编目两步绕开 CLI（catalog-export/import 按 process.cwd() 找书库，迁库即瞎），
 //     直调 lib 已导出的 clusterChunks/buildTask/parseResultText/importCatalog。
 // H2：build-book 用 require 复用且显式 -o（输出路径自己说了算，不从 Downloads 旁建库）；
 //     embed-book spawn 显式传 db 路径；进度只做阶段横幅，不做假百分比（H2-③）。
 // 铁轨：jobs 状态经 onJobsProgress 订阅 → 主进程转发 jobs:progress 事件 → 书架卡片横幅。
+// 任务带 phase 字段（import/process）——渲染层据此区分「重试导入」与「重试加工」。
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -12,6 +14,7 @@ import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import { clusterChunks, buildTask, parseResultText, importCatalog, buildPromptText } from "../lib/catalog.mjs";
 import { currentLibDir } from "../lib/search.mjs";
+import { resolveAsset, safeBookId } from "../lib/assets.mjs";
 import { UserError } from "./engine.mjs";
 
 const require = createRequire(import.meta.url);
@@ -50,7 +53,11 @@ function emit(bookId, patch) {
 export function jobsStatus() { return Object.fromEntries([...jobs].map(([k, v]) => [k, plain(v)])); }
 export function onJobsProgress(fn) { subs.add(fn); return () => subs.delete(fn); }
 
-// ---------- 主流程：拖一本书进来 → 四步管线 ----------
+// ---------- 主流程·第一段：导入（V3 第四波 #167「导入拆两段」） ----------
+// 丢一本书进来只做资产层落盘：复制原件进 books/ + 登记书架条目。
+// 不切片不向量化——用户先能看原文（book:// 原书视图），再决定点不点「开始加工」。
+// 失败必须落 failed 态——否则横幅卡「放进书架」，且 stage=slice 不在完成态列表里，
+// 这本书会被「正在导入中」永远拒之门外（P2 逮到的卡死缺陷，拆段后照样防）
 export async function startImport(filePath) {
   const raw = String(filePath ?? "").trim();
   // 空路径防御：旧的拖拽链路会传 undefined 进来，path.resolve("") 静默解析成 cwd，
@@ -61,45 +68,70 @@ export async function startImport(filePath) {
   const ext = (path.extname(file).match(/^\.(.+)$/) || [])[1]?.toLowerCase();
   const fmt = EXT_FMT[ext];
   if (!fmt) throw new UserError(`不支持的格式 .${ext || "?"}（支持 .epub / .docx / .pdf / .txt）`);
-  const { libDir, tasksDir, resultsDir, booksDir } = jobDirs();
-  fs.mkdirSync(libDir, { recursive: true });
+  const { booksDir } = jobDirs();
+  fs.mkdirSync(booksDir, { recursive: true }); // 连带把 libDir 上级建出来
   const base = path.basename(file).replace(/\.[^.]+$/, "");
   const bookId = `${base}.${fmt}`;
-  const outDb = path.join(libDir, `${bookId}.db`);
   const cur = jobs.get(bookId);
   if (cur && !["done", "failed", "catalog", "cancelled"].includes(cur.stage)) {
-    throw new UserError(`《${base}》正在导入中（${cur.label || cur.stage}），稍候或先取消`);
+    throw new UserError(`《${base}》正在${cur.phase === "process" ? "加工" : "导入"}中（${cur.label || cur.stage}），稍候或先取消`);
   }
   cancelled.delete(bookId);
-  emit(bookId, { stage: "slice", label: "准备文件", detail: path.basename(file), error: null, filePath: file });
+  emit(bookId, { phase: "import", stage: "slice", label: "放进书架", detail: path.basename(file), error: null, filePath: file });
 
-  // 0) 原件进 books/（自包含：以后重导入不依赖 Downloads 里的原始文件）；txt 先转 docx。
-  //    失败必须落 failed 态——否则横幅卡「准备文件」，且 stage=slice 不在完成态列表里，
-  //    这本书会被「正在导入中」永远拒之门外（P2 逮到的卡死缺陷）
-  let source;
+  // 0) 原件进 books/（自包含：以后加工/重导入不依赖 Downloads 里的原始文件）；
+  //    txt 保持 .txt 落盘（bookId 才是 <base>.docx——转 docx 是加工段的事）
   try {
-    if (ext === "txt") {
-      fs.mkdirSync(booksDir, { recursive: true });
-      const kept = path.join(booksDir, `${base}.txt`);
-      fs.copyFileSync(file, kept);
-      source = await txtToDocx(kept); // 稳定路径：重导入时源文件 hash 稳定，重灌保护认得出
-    } else {
-      fs.mkdirSync(booksDir, { recursive: true });
-      const dest = path.join(booksDir, path.basename(file));
-      if (path.resolve(dest) !== file) fs.copyFileSync(file, dest);
-      source = dest;
-    }
+    const dest = path.join(booksDir, ext === "txt" ? `${base}.txt` : path.basename(file));
+    if (path.resolve(dest) !== file) fs.copyFileSync(file, dest);
   } catch (e) {
-    const why = e instanceof UserError ? e.message : `准备文件失败：${e.message || e}`;
-    emit(bookId, { stage: "failed", label: "导入失败", error: why });
+    const why = e instanceof UserError ? e.message : `放进书架失败：${e.message || e}`;
+    emit(bookId, { phase: "import", stage: "failed", label: "导入失败", error: why });
     throw new UserError(why);
   }
   if (cancelled.has(bookId)) return cancelResult(bookId);
 
+  emit(bookId, { phase: "import", stage: "done", label: "已放进书架", detail: "点「开始加工」才会切片/向量化/编目", error: null });
+  return { bookId, stage: "imported", note: "原件已复制进 books/——先看原文，点「开始加工」才建库" };
+}
+
+// ---------- 主流程·第二段：加工（V3 第四波 #167） ----------
+// 切片 → 向量化 → 编目（任务书 + 暂停等结果）→（恢复）五重校验入库。
+// 入口是书架 raw 卡片的「开始加工」：原件从 books/ 经 resolveAsset 定位（资产层唯一真身，
+// 不认拖拽时的原路径——Downloads 会清、迁库不失效）；txt 书 bookId 是 <base>.docx、
+// 原件是 <base>.txt（EXT_FMT 同款映射，resolveAsset 兜底）。重跑幂等沿用旧语义：
+// 切片同 hash 跳过、向量补齐、编目任务书重生成（结果已在则顺着入库）。
+export async function startProcessing(bookId) {
+  const id = safeBookId(bookId);
+  if (!id) throw new UserError("书名不合法");
+  const { libDir, tasksDir, resultsDir } = jobDirs();
+  const cur = jobs.get(id);
+  if (cur && !["done", "failed", "catalog", "cancelled"].includes(cur.stage)) {
+    throw new UserError(`《${id}》正在加工中（${cur.label || cur.stage}），稍候或先取消`);
+  }
+  const asset = resolveAsset(libDir, id);
+  if (!asset.exists) throw new UserError(`books/ 里找不到《${id}》的原件——这本书没有可加工的原件（可能是旧管线建的库）`);
+  if (!EXT_FMT[asset.ext]) throw new UserError(`不支持的格式 .${asset.ext}（支持 .epub / .docx / .pdf / .txt）`);
+  const outDb = path.join(libDir, `${id}.db`);
+  cancelled.delete(id);
+  emit(id, { phase: "process", stage: "slice", label: "准备文件", detail: path.basename(asset.path), error: null, filePath: asset.path });
+
+  // 0) 切片源：txt 先转 docx（稳定临时路径：重跑时源文件 hash 稳定，重灌保护认得出）；
+  //    其余直接用 books/ 里的原件。失败落 failed 态（P2 逮到的 0 步卡死缺陷）
+  let source;
+  try {
+    source = asset.ext === "txt" ? await txtToDocx(asset.path) : asset.path;
+  } catch (e) {
+    const why = e instanceof UserError ? e.message : `准备文件失败：${e.message || e}`;
+    emit(id, { phase: "process", stage: "failed", label: "加工失败", error: why });
+    throw new UserError(why);
+  }
+  if (cancelled.has(id)) return cancelResult(id);
+
   // 1) 切片：require 复用 build-book.main（H2-② 显式 -o）。main 是 CLI 出身：
   //    失败时不抛错，只打 console.error + 置 process.exitCode——这里截获输出人话化，
   //    并把 exitCode 还回去（否则会把 Electron 主进程的退出码毒成 1）。
-  emit(bookId, { stage: "slice", label: "切片中", detail: "解析原文 → 分块（≤900 字/块）" });
+  emit(id, { stage: "slice", label: "切片中", detail: "解析原文 → 分块（≤900 字/块）" });
   const buildBook = require("../build-book.js");
   const keepExit = process.exitCode;
   const captured = [];
@@ -110,40 +142,40 @@ export async function startImport(filePath) {
   finally { console.error = origErr; process.exitCode = keepExit; }
   if (!r) {
     const why = captured.join(" / ").replace(/\s+/g, " ").slice(0, 200);
-    emit(bookId, { stage: "failed", label: "导入失败", error: `切片失败：${why || "文件可能损坏、是扫描版 PDF 或格式不符"}` });
+    emit(id, { stage: "failed", label: "加工失败", error: `切片失败：${why || "文件可能损坏、是扫描版 PDF 或格式不符"}` });
     throw new UserError(`切片失败：${why || "文件可能损坏、是扫描版 PDF 或格式不符"}`);
   }
-  if (cancelled.has(bookId)) return cancelResult(bookId);
+  if (cancelled.has(id)) return cancelResult(id);
 
   // 2) 向量化：spawn embed-book.js <db>（显式传参；环境变量由 engine.init 回写的是
   //    BSP_LIB_DIR/BSP_SKILLS_DIR/BSP_MODELS_DIR 三个目录，nodeEnv() 另行补 ELECTRON_RUN_AS_NODE）
-  emit(bookId, { stage: "vector", label: "向量化中", detail: r.skipped ? "库已存在，补向量/概念图谱" : "首次要下嵌入模型（约 112MB）" });
-  const code = await runEmbed(bookId, outDb);
-  if (cancelled.has(bookId)) return cancelResult(bookId);
+  emit(id, { stage: "vector", label: "向量化中", detail: r.skipped ? "库已存在，补向量/概念图谱" : "首次要下嵌入模型（约 112MB）" });
+  const code = await runEmbed(id, outDb);
+  if (cancelled.has(id)) return cancelResult(id);
   if (code !== 0) {
-    emit(bookId, { stage: "failed", label: "导入失败", error: "向量化失败（模型下载失败或磁盘空间不足）" });
+    emit(id, { stage: "failed", label: "加工失败", error: "向量化失败（模型下载失败或磁盘空间不足）" });
     throw new UserError("向量化失败：模型下载失败或磁盘空间不足（详细输出在启动终端里）");
   }
 
   // 3) 编目：聚堆 → 任务书落 catalog-tasks/（H1 直调 lib）。结果已在 → 直接入库；
   //    否则暂停在「待编目」——不卡死书架，等智能体/用户产出结果后点「导入编目结果」。
-  emit(bookId, { stage: "catalog", label: "编目中", detail: "聚堆 → 生成任务书" });
+  emit(id, { stage: "catalog", label: "编目中", detail: "聚堆 → 生成任务书" });
   const dbRo = new Database(outDb, { readonly: true });
   let clusterRes, task;
   try { clusterRes = clusterChunks(dbRo); task = buildTask(dbRo, clusterRes); }
   catch (e) {
     const why = `编目聚堆失败：${e.message || e}`;
-    emit(bookId, { stage: "failed", label: "导入失败", error: why });
+    emit(id, { stage: "failed", label: "加工失败", error: why });
     throw new UserError(why);
   } finally { dbRo.close(); }
   fs.mkdirSync(tasksDir, { recursive: true });
-  const taskPath = path.join(tasksDir, `${bookId}.json`);
+  const taskPath = path.join(tasksDir, `${id}.json`);
   fs.writeFileSync(taskPath, JSON.stringify(task, null, 1), "utf8");
 
-  const rp = path.join(resultsDir, `${bookId}.json`);
-  if (fs.existsSync(rp)) return resumeCatalog(bookId, rp); // 结果已在 → 顺着入库
-  emit(bookId, { stage: "catalog", label: "待编目", detail: `任务书已生成（${task.clusters.length} 堆），等编目结果`, taskPath });
-  return { bookId, stage: "catalog", taskPath, clusters: task.clusters.length };
+  const rp = path.join(resultsDir, `${id}.json`);
+  if (fs.existsSync(rp)) return resumeCatalog(id, rp); // 结果已在 → 顺着入库
+  emit(id, { stage: "catalog", label: "待编目", detail: `任务书已生成（${task.clusters.length} 堆），等编目结果`, taskPath });
+  return { bookId: id, stage: "catalog", taskPath, clusters: task.clusters.length };
 }
 
 // ---------- 恢复：导入编目结果（五重校验 + 入库；校验失败整批拒收） ----------
@@ -167,7 +199,7 @@ export async function resumeCatalog(bookId, resultPath) {
   let db;
   try { db = new Database(dbPath); } catch (e) {
     const why = `书库打不开（${e.message}）——文件可能损坏或被占用`;
-    emit(id, { stage: "failed", label: "导入失败", error: why });
+    emit(id, { stage: "failed", label: "入库失败", error: why });
     throw new UserError(why);
   }
   try {
@@ -176,7 +208,7 @@ export async function resumeCatalog(bookId, resultPath) {
     return { bookId: id, stage: "done", ...stats };
   } catch (e) {
     const why = e.errors?.length ? `校验失败：${e.errors[0]}` : (e.message || "入库失败");
-    emit(id, { stage: "failed", label: "导入失败", error: why });
+    emit(id, { stage: "failed", label: "入库失败", error: why });
     throw new UserError(why);
   } finally { db.close(); }
 }
@@ -184,7 +216,7 @@ export async function resumeCatalog(bookId, resultPath) {
 // 取消：杀掉向量化子进程；切片阶段（进程内）拦不住，跑完即止（cancelled 集合把着后续步骤）
 export function cancelImport(bookId) {
   const j = jobs.get(bookId);
-  if (!j) return { cancelled: false, note: "没有进行中的导入" };
+  if (!j) return { cancelled: false, note: "没有进行中的任务" };
   cancelled.add(bookId);
   if (j.child) { try { j.child.kill(); } catch { /* 已退出 */ } }
   const wasSlice = j.stage === "slice";

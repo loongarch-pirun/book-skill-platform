@@ -1,9 +1,11 @@
-// 导入管线验收（4.6）：jobs.mjs 四步（切片→向量→编目任务书→恢复入库）。
+// 导入管线验收（4.6 四步管线；V3 第四波 #167「导入拆两段」重构）：
+//   第一段 startImport：复制原件进 books/ + 登记（不建库、不烧算力）；
+//   第二段 startProcessing：切片 → 向量化 → 编目任务书 →（恢复）五重校验入库。
 // 全部在系统临时目录的假书库上进行，不碰真 library；模型用项目 .models/ 现有缓存。
-// 慢速（要加载嵌入模型）——挂 test:slow。
+// 慢速（第二段要加载嵌入模型）——挂 test:slow。
 // 覆盖审计修正：H1（编目直调 lib，任务书/结果目录紧挨书库）、H2（build-book require
 // 复用 + 显式 -o、embed-book spawn 显式传参、阶段横幅不造假百分比）、
-// 暂停恢复（待编目不卡死）、重导入幂等、txt 分支。
+// 暂停恢复（待编目不卡死）、重跑幂等、txt 分支、#167 两段边界（导入不建库/加工认 books/）。
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -14,7 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 const Database = require("better-sqlite3");
 
-const { startImport, resumeCatalog, cancelImport, scanPending, jobsStatus, jobDirs, catalogPrompt } = await import("../src/desktop/jobs.mjs");
+const { startImport, startProcessing, resumeCatalog, cancelImport, scanPending, jobsStatus, jobDirs, catalogPrompt } = await import("../src/desktop/jobs.mjs");
 const { configureSearch } = await import("../src/lib/search.mjs");
 const { configureModels } = await import("../src/lib/models.mjs");
 
@@ -44,6 +46,13 @@ assert(dirs.libDir === libDir && dirs.tasksDir === path.join(tmp, "catalog-tasks
   let e2 = null;
   try { await startImport(fake); } catch (e) { e2 = e; }
   assert(e2 && /不支持的格式/.test(e2.message), "不支持的格式 → 明确报错（不进管线）");
+  // #167 第二段入口的闸门：坏书名（穿越字符）/ 无原件 → 人话拒，不进管线
+  let e3 = null;
+  try { await startProcessing("../evil.docx"); } catch (e) { e3 = e; }
+  assert(e3 && /书名不合法/.test(e3.message), "startProcessing 拒带 .. 的书名（防穿越）");
+  let e4 = null;
+  try { await startProcessing("根本没有这本书.docx"); } catch (e) { e4 = e; }
+  assert(e4 && /找不到.*原件/.test(e4.message), "startProcessing 无原件 → 明确报错（不凭记忆找文件）");
   const c = cancelImport("whatever.docx");
   assert(c.cancelled === false, "取消不存在的任务 → 不崩，明确回复");
 }
@@ -67,24 +76,35 @@ assert(dirs.libDir === libDir && dirs.tasksDir === path.join(tmp, "catalog-tasks
   fs.rmSync(path.join(libDir, "ghost.docx.db"), { force: true });
 }
 
-// ---------- 3) 完整四步：docx 导入 → 停在待编目 → 恢复入库 ----------
+// ---------- 3) 两段式：导入只落盘 → 加工四步走到待编目 → 恢复入库 ----------
 {
   const src = path.join(ROOT, "books", "lunyu-xueer-zh.docx");
   const events = [];
   const off = (await import("../src/desktop/jobs.mjs")).onJobsProgress((e) => events.push(e.stage));
-  const r = await startImport(src);
-  off();
+
+  // 第一段：复制 + 登记——不建库、不烧算力（#167 的「丢入即可看原文」）
+  const ri = await startImport(src);
+  assert(ri.stage === "imported" && ri.bookId === "lunyu-xueer-zh.docx",
+    `一段①导入：只落盘登记（stage=${ri.stage}，note 提示看原文+开始加工）`);
+  assert(fs.existsSync(path.join(tmp, "books", "lunyu-xueer-zh.docx")), "一段②原件进了书库旁的 books/（自包含，重跑不依赖原位置）");
+  assert(!fs.existsSync(path.join(libDir, "lunyu-xueer-zh.docx.db")), "一段③导入不建库（加工是第二段的事——算力用户说了算）");
+  assert(jobsStatus()["lunyu-xueer-zh.docx"]?.stage === "done" && jobsStatus()["lunyu-xueer-zh.docx"]?.phase === "import",
+    "一段④jobsStatus 记完成态 + phase=import（渲染层据此区分重试导入/重试加工）");
+
+  // 第二段：从 books/ 定位原件跑四步（不认拖拽原路径—— Downloads 会清、迁库不失效）
+  const r = await startProcessing("lunyu-xueer-zh.docx");
+  off(); // 两段的事件都要收（一段 import 段 + 二段 process 段）
   const dbPath = path.join(libDir, "lunyu-xueer-zh.docx.db");
-  assert(fs.existsSync(dbPath), "四步①切片：库文件落在书库目录（显式 -o，不建到 books/ 旁——H2-②）");
-  assert(fs.existsSync(path.join(tmp, "books", "lunyu-xueer-zh.docx")), "原件进了书库旁的 books/（自包含，重导入不依赖原位置）");
+  assert(fs.existsSync(dbPath), "二段①切片：库文件落在书库目录（显式 -o，不建到 books/ 旁——H2-②）");
   const nEmb = new Database(dbPath, { readonly: true }).prepare("SELECT COUNT(*) n FROM chunks WHERE emb IS NOT NULL").get().n;
-  assert(nEmb > 0, `四步②向量：${nEmb} 块带向量（spawn embed-book 显式传参——H2-①）`);
+  assert(nEmb > 0, `二段②向量：${nEmb} 块带向量（spawn embed-book 显式传参——H2-①）`);
   const taskPath = path.join(dirs.tasksDir, "lunyu-xueer-zh.docx.json");
-  assert(fs.existsSync(taskPath), "四步③编目：任务书落在 catalog-tasks/（H1 直调 lib，不碰 CLI cwd）");
-  assert(r.stage === "catalog", `四步停在「待编目」不卡死（stage=${r.stage}，${r.clusters} 堆任务）`);
+  assert(fs.existsSync(taskPath), "二段③编目：任务书落在 catalog-tasks/（H1 直调 lib，不碰 CLI cwd）");
+  assert(r.stage === "catalog", `二段停在「待编目」不卡死（stage=${r.stage}，${r.clusters} 堆任务）`);
   assert(events.includes("slice") && events.includes("vector") && events.includes("catalog"),
     `阶段横幅事件齐全（${events.join("→")}；只报阶段不造假百分比——H2-③）`);
-  assert(jobsStatus()["lunyu-xueer-zh.docx"]?.stage === "catalog", "jobsStatus 记录待编目态（书架横幅数据源）");
+  assert(jobsStatus()["lunyu-xueer-zh.docx"]?.stage === "catalog" && jobsStatus()["lunyu-xueer-zh.docx"]?.phase === "process",
+    "jobsStatus 记录待编目态 + phase=process（书架横幅数据源）");
 
   // 手写一份合法编目结果（从任务书读 cluster ids，保证全覆盖；人物用真实原文词过防幻觉）
   const task = JSON.parse(fs.readFileSync(taskPath, "utf8"));
@@ -104,7 +124,7 @@ assert(dirs.libDir === libDir && dirs.tasksDir === path.join(tmp, "catalog-tasks
   const before = new Database(dbPath, { readonly: true }).prepare("SELECT COUNT(*) n FROM nodes WHERE source='llm'").get().n;
   const rr = await resumeCatalog("lunyu-xueer-zh.docx");
   const after = new Database(dbPath, { readonly: true }).prepare("SELECT COUNT(*) n FROM nodes WHERE source='llm'").get().n;
-  assert(rr.stage === "done" && rr.themes === 1, `四步④恢复入库：主题 ${rr.themes} · 人物 ${rr.persons}（五重校验+mention 扫描）`);
+  assert(rr.stage === "done" && rr.themes === 1, `恢复入库：主题 ${rr.themes} · 人物 ${rr.persons}（五重校验+mention 扫描）`);
   assert(after > before, `llm 编目层从 ${before} → ${after} 节点（真入库）`);
   assert(jobsStatus()["lunyu-xueer-zh.docx"]?.stage === "done", "jobsStatus 转完成态");
 
@@ -116,9 +136,11 @@ assert(dirs.libDir === libDir && dirs.tasksDir === path.join(tmp, "catalog-tasks
   assert(badErr && /task_ref 不匹配/.test(badErr.message), "task_ref 不匹配 → 整批拒收（校验不放松）");
   fs.rmSync(badPath, { force: true });
 
-  // ---------- 4) 重导入幂等：同书再拖一次 → 切片跳过 → 结果已在 → 自动入库到 done ----------
+  // ---------- 4) 重跑幂等：再导入（只复制）→ 再加工（切片跳过 → 结果已在 → 自动入库到 done） ----------
   const r2 = await startImport(src);
-  assert(r2.stage === "done", `重导入幂等：同源同内容切片跳过、结果已在自动入库（stage=${r2.stage}）`);
+  assert(r2.stage === "imported", "重导入幂等：再拖一次只走复制段（不重复烧算力）");
+  const r3 = await startProcessing("lunyu-xueer-zh.docx");
+  assert(r3.stage === "done", `再加工幂等：同源同内容切片跳过、结果已在自动入库（stage=${r3.stage}）`);
 }
 
 // ---------- 4.5) 一键提示词：任务书 → 可粘贴文本（落盘 + cluster 全覆盖 + instructions 原文） ----------
@@ -136,18 +158,22 @@ assert(dirs.libDir === libDir && dirs.tasksDir === path.join(tmp, "catalog-tasks
   assert(e && /找不到.*任务书/.test(e.message), "没有任务书 → 人话报错（不裸崩）");
 }
 
-// ---------- 5) txt 分支：转 docx → 建库（小文本，秒级） ----------
+// ---------- 5) txt 分支：一段落盘 .txt → 二段转 docx 建库（小文本，秒级） ----------
 {
   const txt = path.join(tmp, "小语.txt");
   fs.writeFileSync(txt, "道可道，非常道。\n名可名，非常名。\n无名天地之始。\n有名万物之母。\n".repeat(30), "utf8");
-  const r = await startImport(txt);
+  const ri = await startImport(txt);
+  assert(ri.stage === "imported" && ri.bookId === "小语.docx",
+    "txt 一段：bookId 映射 .docx（EXT_FMT），但 books/ 里落的是 .txt 原件");
+  assert(fs.existsSync(path.join(tmp, "books", "小语.txt")), "txt 一段：原件按原扩展名进 books/（转 docx 是加工段的事）");
+  const r = await startProcessing("小语.docx");
   const dbPath = path.join(libDir, "小语.docx.db");
-  assert(fs.existsSync(dbPath) && r.stage === "catalog", "txt 分支：txt2docx 转换 → 建库成功，走到待编目");
-  assert(fs.existsSync(path.join(dirs.tasksDir, "小语.docx.json")), "txt 分支任务书也落 catalog-tasks/");
+  assert(fs.existsSync(dbPath) && r.stage === "catalog", "txt 二段：txt2docx 转换 → 建库成功，走到待编目");
+  assert(fs.existsSync(path.join(dirs.tasksDir, "小语.docx.json")), "txt 二段任务书也落 catalog-tasks/");
 }
 
 // ---------- 汇总 ----------
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log("\n========== 导入管线结果 ==========");
 if (failed > 0) { console.log(`有 ${failed} 项 FAIL`); process.exit(1); }
-console.log("全部 PASS：四步管线 + 目录约定 + 暂停恢复 + 假结果拒收 + 重导入幂等 + txt 分支");
+console.log("全部 PASS：两段式（导入只落盘/加工四步）+ 目录约定 + 暂停恢复 + 假结果拒收 + 重跑幂等 + txt 分支");

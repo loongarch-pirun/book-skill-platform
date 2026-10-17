@@ -329,6 +329,43 @@ const copyDb = (src) => {
     "静态: raw 书（无块）fallback 原书视图（#166）");
 }
 
+// ========== 14) 静态防回归：导入拆两段接线契约（V3 第四波 #167） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  // ① 两段边界：startImport 函数体不许出现切片/向量化/编目三段的调用（拆段防回退——
+  //    一段只复制登记；用户先看原文，算力花不花自己定）
+  const jobsSrc = stripComments(readSrc("src", "desktop", "jobs.mjs"));
+  const importAt = jobsSrc.indexOf("export async function startImport(");
+  const procAt = jobsSrc.indexOf("export async function startProcessing(");
+  ok(importAt > -1 && procAt > importAt, "静态: jobs.mjs 导出 startImport + startProcessing 两段（#167）");
+  const importBody = jobsSrc.slice(importAt, procAt);
+  ok(!/buildBook\.main|runEmbed\(|clusterChunks\(|txtToDocx\(/.test(importBody),
+    "静态: startImport 只复制登记（不碰切片/向量化/编目/txt转换——#167 第一段边界）");
+  const procBody = jobsSrc.slice(procAt, jobsSrc.indexOf("export async function resumeCatalog("));
+  ok(/buildBook\.main/.test(procBody) && /runEmbed\(/.test(procBody) && /clusterChunks\(/.test(procBody),
+    "静态: startProcessing 承接四步管线（切片/向量化/编目都在第二段）");
+
+  // ② 第二段从 books/ 定位原件：safeBookId 闸门 + resolveAsset（不认拖拽原路径）
+  ok(/safeBookId\(/.test(procBody) && /resolveAsset\(/.test(procBody),
+    "静态: startProcessing 经 safeBookId + resolveAsset（防穿越 + 资产层定位）");
+
+  // ③ 三处接线：ipc 通道 / preload 暴露 / 渲染层按钮与动作
+  const ipcRegSrc = readSrc("src", "desktop", "ipc.mjs");
+  ok(ipcRegSrc.includes('"jobs:start"') && ipcRegSrc.includes("jobs.startProcessing"),
+    "静态: ipc.mjs 注册 jobs:start → startProcessing（#167）");
+  const preloadSrc = readSrc("src", "preload.js");
+  ok(preloadSrc.includes("jobsStart"), "静态: preload 暴露 jobsStart（#167）");
+  const viewsSrc = readSrc("src", "renderer", "views.js");
+  ok(viewsSrc.includes('data-action="process"') && /raw\s*=\s*b\.status === "raw"/.test(viewsSrc),
+    "静态: 书架 raw 卡片带「开始加工」按钮（#167，洗数据按钮 raw 不显示）");
+  const askSrc = readSrc("src", "renderer", "views-ask.js");
+  ok(askSrc.includes("jobsStart") && /act === "process"/.test(askSrc),
+    "静态: views-ask 接线 process 动作 + 两段式重试（#167）");
+}
+
 // ========== 收尾 ==========
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);

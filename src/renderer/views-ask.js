@@ -223,9 +223,18 @@ export async function shelfJobAction(act, bookId) {
       const r = await call(window.study.enrichCancel(bookId));
       toast(r.cancelled ? (r.note || "已取消") : "没有进行中的洗数据");
     } else if (act === "jobretry") {
+      // V3 #167 两段式重试：加工失败（phase=process，或老任务没有 filePath）→ 从 books/
+      // 原件重跑加工；导入失败（复制阶段炸的）→ 按原路径再复制一遍进书架
       const job = state.jobs[bookId];
-      if (!job?.filePath) { toast("找不到原始文件路径，请重新把书拖进书架"); return; }
-      await call(window.study.importBook(job.filePath));
+      if (job?.phase === "process" || !job?.filePath) {
+        await call(window.study.jobsStart(bookId));
+      } else {
+        await call(window.study.importBook(job.filePath));
+      }
+    } else if (act === "process") {
+      // V3 #167 第二段：raw 书点「开始加工」——切片 → 向量化 → 编目任务书（停在待编目）
+      await call(window.study.jobsStart(bookId));
+      toast("开始加工——切片 → 向量化 → 生成编目任务书，进度在书架卡片上看，可以离开这个页面");
     } else if (act === "enrich" || act === "enrichretry") {
       // 一键洗数据：启动即返回（后台跑批），进度走 enrich:progress 事件 → 书架卡片横幅
       const r = await call(window.study.enrichStart(bookId));

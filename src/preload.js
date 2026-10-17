@@ -11,8 +11,9 @@ contextBridge.exposeInMainWorld("study", {
   booksList: () => ipcRenderer.invoke("books:list"),
   bookCatalog: (bookId) => ipcRenderer.invoke("books:catalog", bookId),
   deleteBook: (bookId) => ipcRenderer.invoke("books:delete", bookId),
-  // 导入管线
+  // 导入管线（V3 #167 拆两段：importBook 只复制原件进书架；jobsStart 才是切片→向量化→编目）
   importBook: (filePath) => ipcRenderer.invoke("books:import", filePath),
+  jobsStart: (bookId) => ipcRenderer.invoke("jobs:start", bookId),
   // Electron 32+ 已移除 File.path（官方破坏性变更）——拖拽文件取真实路径只能走 webUtils
   // （webUtils 仅在 preload 可用，渲染层经这里转发）
   filePathOf: (file) => webUtils.getPathForFile(file),

@@ -13,7 +13,7 @@ export function renderShelf() {
   return `
     <div class="view-title">书架</div>
     <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据 · 「洗数据」给每块产前置/标签/摘要（走云端，检索永远在本机）</div>
-    <div class="dropzone" id="dropzone"><b>把书拖到这里</b>（.epub / .docx / .pdf / .txt）<span class="soon">自动切片 → 向量化 → 生成编目任务书（编目结果可稍后导入）</span></div>
+    <div class="dropzone" id="dropzone"><b>把书拖到这里</b>（.epub / .docx / .pdf / .txt）<span class="soon">先放进书架看原件 → 点「开始加工」才切片/向量化/编目（编目结果可稍后导入）</span></div>
     ${promptBoxHTML()}
     <div class="shelf">${books.map((b) => bookCard(b)).join("") || '<div class="empty">书架空空如也——去拖本书进来</div>'}
     </div>`;
@@ -37,9 +37,11 @@ function promptBoxHTML() {
 }
 
 // 书卡片：导入中显示阶段横幅（jobs 状态），失败显示哪一步，待编目给恢复入口。
+// raw（#165：仅入库未加工）显示「开始加工」入口（#167 第二段按钮）——洗数据要库，raw 没有。
 // 洗数据任务（#140）汇进同一个 state.jobs——stage 名落在同一套分支里，kind 区分取消/重试按钮
 function bookCard(b) {
   const job = state.jobs[b.id];
+  const raw = b.status === "raw";
   const running = job && !["done", "failed", "catalog", "cancelled"].includes(job.stage);
   let badge = "";
   if (running) {
@@ -54,15 +56,23 @@ function bookCard(b) {
       <button class="ghost sm" data-action="catprompt" data-bid="${esc(b.id)}">生成提示词</button>
       <button class="ghost sm" data-action="catimport" data-bid="${esc(b.id)}">导入编目结果</button></div>`;
   }
+  const meta = raw
+    ? `<span class="rawtag">未加工</span> ${esc(b.format || "?")} 原件 · 点卡片看原文`
+    : `${esc(b.format || "?")} · ${b.chapters ? b.chapters + " 章" : "未分章"} · ${b.chunks || 0} 块`;
+  const tags = raw
+    ? '<span class="tag nocat">未加工</span>'
+    : `${b.catalog?.themes?.length ? b.catalog.themes.slice(0, 4).map((t) => `<span class="tag">${esc(t)}</span>`).join("") : '<span class="tag nocat">未编目</span>'}${enrichTag(b)}`;
   return `
     <div class="bookcard" data-action="open" data-bid="${esc(b.id)}">
       <h3>${esc(b.title)}</h3>
-      <div class="bookmeta">${esc(b.format || "?")} · ${b.chapters ? b.chapters + " 章" : "未分章"} · ${b.chunks || 0} 块</div>
-      <div class="tags">${b.catalog?.themes?.length ? b.catalog.themes.slice(0, 4).map((t) => `<span class="tag">${esc(t)}</span>`).join("") : '<span class="tag nocat">未编目</span>'}${enrichTag(b)}</div>
+      <div class="bookmeta">${meta}</div>
+      <div class="tags">${tags}</div>
       ${badge}
       <div class="cardfoot">
         <span class="skill-dot ${b.skillEnabled ? "" : "off"}">${b.skillEnabled ? "AI 可查" : "skill 已关"}</span>
-        <span class="cardbtns">${running ? "" : `<button class="ghost sm" data-action="enrich" data-bid="${esc(b.id)}">洗数据</button>`}<button class="delbtn" data-action="del" data-bid="${esc(b.id)}">删除</button></span>
+        <span class="cardbtns">${running ? "" : raw
+          ? `<button class="ghost sm procbtn" data-action="process" data-bid="${esc(b.id)}">开始加工</button>`
+          : `<button class="ghost sm" data-action="enrich" data-bid="${esc(b.id)}">洗数据</button>`}<button class="delbtn" data-action="del" data-bid="${esc(b.id)}">删除</button></span>
       </div>
     </div>`;
 }
@@ -75,12 +85,14 @@ function enrichTag(b) {
   return `<span class="tag enr" title="标签 ${e.tags} 个 · 摘要 ${s.chunk || 0} 块 / ${s.chapter || 0} 章 / ${s.book ? 1 : 0} 全书">已洗 ${e.pct}% · 标签 ${e.tags}</span>`;
 }
 
-// ---------- 拖拽导入（接 jobs.mjs 真管线） ----------
+// ---------- 拖拽导入（V3 #167：第一段只放进书架，加工是第二步） ----------
 async function importFile(filePath, name) {
   const ext = (name.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase();
   if (!["epub", "docx", "pdf", "txt"].includes(ext)) { toast(`不支持 .${ext || "?"}（支持 .epub/.docx/.pdf/.txt）`); return; }
   try {
-    await call(window.study.importBook(filePath));
+    const r = await call(window.study.importBook(filePath));
+    // 两段式提示：不自动开跑加工——先看原文，用户自己决定什么时候烧算力
+    if (r?.stage === "imported") toast("已放进书架——点卡片看原文，点「开始加工」才会切片/向量化/编目");
   } catch (err) {
     toast("导入失败：" + err.message);
   } finally {
@@ -157,7 +169,9 @@ export function bindShelfEvents() {
     }
     else if (act === "cite") jumpTo(el.dataset.bid, el.dataset.cid);
     else if (act === "jobcancel" || act === "jobretry" || act === "catimport" || act === "catprompt"
-      || act === "enrich" || act === "enrichretry" || act === "enrichcancel") {
+      || act === "enrich" || act === "enrichretry" || act === "enrichcancel"
+      // V3 #167：raw 书「开始加工」——第二段管线入口（切片→向量化→编目任务书）
+      || act === "process") {
       e.stopPropagation();
       shelfJobAction(act, el.dataset.bid);
     }

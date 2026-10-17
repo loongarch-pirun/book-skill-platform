@@ -55,10 +55,16 @@ const studyStub = {
   configGet: () => { ipcCalls.push("configGet"); return reply({ dirs: {}, firstRun: false, packaged: false }); },
   configSet: () => reply({}),
   pickLibDir: () => reply(null),
-  booksList: () => { ipcCalls.push("booksList"); return reply([{ id: "t.docx", title: "测试书", chunks: 3, skillEnabled: true, catalog: { cataloged: true, themes: ["主题一"] } }]); },
+  // V3 #167：书架空两本——一本已加工（processed）、一本仅入库未加工（raw，等「开始加工」）
+  booksList: () => { ipcCalls.push("booksList"); return reply([
+    { id: "t.docx", title: "测试书", chunks: 3, skillEnabled: true, status: "processed", catalog: { cataloged: true, themes: ["主题一"] }, enrich: { ready: false } },
+    { id: "rawbook.docx", title: "未加工书", chunks: 0, skillEnabled: true, status: "raw", format: "txt", catalog: { cataloged: false, themes: [], persons: 0 }, enrich: { ready: false } },
+  ]); },
   bookCatalog: () => reply({}),
   deleteBook: () => reply({}),
   importBook: () => reply({}),
+  // V3 #167 拆两段：第二段加工入口（raw 书「开始加工」按钮 → jobs:start）
+  jobsStart: (bookId) => { ipcCalls.push("jobsStart"); return reply({ bookId, stage: "catalog", clusters: 2 }); },
   // G-02：拖拽取真实路径（webUtils 仅在 preload 可用，经这里转发）——R6 静态对账要求
   // studyStub 覆盖 preload 全部 API，漏一个就等于测试里断了条真实契约没人知道
   filePathOf: (f) => (f && (f.path || f.name)) || "",
@@ -122,12 +128,32 @@ assert(ipcCalls.includes("booksList") && ipcCalls.includes("jobsScanPending") &&
 assert(mainEl.innerHTML.includes("测试书"), "书架显示书卡（booksList 数据落地）");
 assert(getEl("#cloudChip").textContent.includes("云端 AI 未配置"), "C4：boot 后顶栏云端 chip 显示未配置态（与 modelChip 并列）");
 
+// ---------- 2b) V3 #167 两段式：raw 卡片带「开始加工」（无洗数据按钮）→ 点击拨通 jobsStart ----------
+assert(mainEl.innerHTML.includes("未加工书") && mainEl.innerHTML.includes("开始加工"),
+  "raw 卡片渲染「未加工」态 + 「开始加工」按钮（#167 书架入口）");
+{
+  // 单独渲染一本 raw 书验证按钮分流：有「开始加工」按钮、无「洗数据」按钮（没有库可洗）
+  // （view-sub 文案里也提「洗数据」三个字——断言必须认 data-action，不认全文；
+  //   renderShelf 读 state.books，直接改状态再 refresh，不麻烦 IPC stub）
+  const realBooks = app.state.books;
+  app.state.books = [{ id: "rawbook.docx", title: "未加工书", chunks: 0, skillEnabled: true, status: "raw", format: "txt", catalog: { cataloged: false, themes: [], persons: 0 }, enrich: { ready: false } }];
+  app.refresh();
+  assert(mainEl.innerHTML.includes('data-action="process"') && !mainEl.innerHTML.includes('data-action="enrich"'),
+    "raw 卡片只有「开始加工」按钮没有「洗数据」按钮（#167 按钮分流：没库可洗）");
+  app.state.books = realBooks;
+  app.refresh();
+}
+
 // ---------- 3) 翻书视图：点卡片进翻书（open 委托）+ loadReader 接线 ----------
 const click = (action, data = {}) => {
   const el = { dataset: { action, ...data } };
   const ev = { target: { closest: (s) => (s === "[data-action]" ? el : null) }, stopPropagation() {} };
   for (const fn of mainEl.listeners.click || []) fn(ev);
 };
+click("process", { bid: "rawbook.docx" });
+await sleep(30);
+assert(ipcCalls.includes("jobsStart"), "点「开始加工」→ jobsStart 拨通（#167 第二段入口）");
+
 const fireChange = (sel, value) => { // 模拟 <select> 换书（B6 断言用）
   const el = getEl(sel);
   el.id = sel.replace("#", "");

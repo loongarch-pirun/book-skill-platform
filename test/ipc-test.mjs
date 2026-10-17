@@ -27,6 +27,8 @@ const EXPECTED = ["config:get", "config:set", "config:pickLibDir", "books:list",
   "chat:archiveList", "chat:archiveClear",
   // 洗数据一键入口（V3 第二波 #140）
   "enrich:start", "enrich:cancel", "enrich:status", "enrich:audit",
+  // 导入拆两段（V3 第四波 #167）：books:import 只复制登记，jobs:start 才是加工四步
+  "books:import", "jobs:start", "jobs:cancel",
   // 原书视图（V3 第四波 #166）
   "book:original", "book:openExternal"];
 ok(EXPECTED.every((ch) => handlers.has(ch)), `关键通道全部注册（期望子集 ${EXPECTED.length} 条 / 实际注册 ${handlers.size} 条）`);
@@ -94,6 +96,14 @@ ok(ejAuditBad.ok === false && ejAuditBad.error.code === "user", "enrich:audit �
   ok(openBad.ok === false && openBad.error.code === "user", "book:openExternal 坏书名 → 错误包装（不真开）");
   const openOk = await invoke("book:openExternal", "lunyu-xueer-zh.docx");
   ok(openOk.ok && openOk.data.opened.endsWith("lunyu-xueer-zh.docx"), "book:openExternal 有原件 → shell.openPath（假件不真启）");
+}
+
+// ---------- 导入拆两段（V3 #167）：jobs:start 坏书名/无原件 → 错误包装不崩 ----------
+{
+  const badId = await invoke("jobs:start", "../evil.docx");
+  ok(badId.ok === false && badId.error.code === "user", "jobs:start 穿越书名 → {ok:false,user}（safeBookId 闸门）");
+  const noAsset = await invoke("jobs:start", "不存在的书xyz.docx");
+  ok(noAsset.ok === false && noAsset.error.code === "user", "jobs:start 无原件 → 错误包装（不凭记忆找文件）");
 }
 
 // ---------- 错误包装：坏书名 → {ok:false,error} 不抛 ----------
