@@ -453,6 +453,23 @@ const copyDb = (src) => {
   ok((pkgSrc.scripts["test:fast"] || "").includes("structurize-test"),
     "静态: package.json test:fast 含 structurize-test（P2 验收挂载）");
 }
+
+// ========== 17) 静态对账：入口对抗套件落盘 + 挂载（V3 第四波标准轮 S2） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+
+  // ① 套件本体落盘在 test/ 根（51 发：A12/B6/C14/D4/E5/F10），自包含对抗套件（头部声明即身份）
+  const fuzzSrc = readSrc("test", "entry-adversarial-fuzz.mjs");
+  ok(fuzzSrc.includes("入口链路 + 结构化改造对抗 fuzz") && fuzzSrc.includes("51 发索引与 ledger 缺陷对照"),
+    "静态: entry-adversarial-fuzz.mjs 落盘（51 发对抗套件，V3 第四波标准轮 S2）");
+  // ②③ 挂载对账：fast 与 ci 都含新套件（防「写了套件没挂」——S2 步骤 4 挂载的静态锁）
+  const pkgSrc = JSON.parse(readSrc("package.json"));
+  ok((pkgSrc.scripts["test:fast"] || "").includes("entry-adversarial-fuzz"),
+    "静态: package.json test:fast 含 entry-adversarial-fuzz（对抗套件挂 fast）");
+  ok((pkgSrc.scripts["test:ci"] || "").includes("entry-adversarial-fuzz"),
+    "静态: package.json test:ci 含 entry-adversarial-fuzz（对抗套件挂 ci）");
+}
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);
 if (fail) { console.error(`${fail} 项 FAIL`); process.exit(1); }
