@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld("study", {
   booksList: () => ipcRenderer.invoke("books:list"),
   bookCatalog: (bookId) => ipcRenderer.invoke("books:catalog", bookId),
   deleteBook: (bookId) => ipcRenderer.invoke("books:delete", bookId),
+  // 删书第二档（V3 #168 两档删除）：库 + books/ 原件一体删，不可恢复
+  purgeBook: (bookId) => ipcRenderer.invoke("books:purge", bookId),
   // 导入管线（V3 #167 拆两段：importBook 只复制原件进书架；jobsStart 才是切片→向量化→编目）
   importBook: (filePath) => ipcRenderer.invoke("books:import", filePath),
   jobsStart: (bookId) => ipcRenderer.invoke("jobs:start", bookId),

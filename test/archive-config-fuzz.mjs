@@ -352,6 +352,65 @@ console.log("\n--- P1-D books:delete 联动 ---");
   const lst = await invoke("chat:archiveList", { limit: 2 });
   ok(lst.ok === true && lst.data.length === 2, "P1-D4: chat:archiveList limit=2 → 透传生效（2 条）");
 
+  // ========== P1-E 两档删除（V3 第四波 #168：移出书架 / 彻底删除） ==========
+  // D2 把 chat-archive 堵成文件过——purge 双清前先恢复目录，否则存档通道被 try 兜底成 0
+  fs.rmSync(path.join(libDir, "chat-archive"), { recursive: true, force: true });
+  const booksDir = path.join(tmp, "books");
+  fs.mkdirSync(booksDir, { recursive: true });
+  const mkBook = (id, withAsset = true) => {
+    const dbPath = path.join(libDir, id + ".db");
+    const d = new Database(dbPath);
+    d.exec("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)");
+    d.prepare("INSERT OR REPLACE INTO meta VALUES ('model','e5')").run();
+    d.close();
+    if (withAsset) fs.writeFileSync(path.join(booksDir, id), "原件内容", "utf8");
+    return dbPath;
+  };
+
+  // E1：彻底删除 processed 书（有原件）——库 + 原件 + 存档/反馈一体删，note 带条数
+  const dbE1 = mkBook("t3.docx");
+  appendArchive(libDir, entry("问t3-1", "t3.docx"));
+  appendArchive(libDir, entry("问t3-2", "t3.docx"));
+  appendArchive(libDir, entry("问别的书2", "other.docx")); // 别人的存档不能动
+  const { appendFeedback } = await import("../src/desktop/feedback-pool.mjs");
+  appendFeedback(libDir, { kind: "no-results", question: "q", book: "t3", bookId: "t3.docx", mode: "book" });
+  const pur = await invoke("books:purge", "t3.docx");
+  ok(pur.ok === true && !fs.existsSync(dbE1) && !fs.existsSync(path.join(booksDir, "t3.docx")),
+    "P1-E1: books:purge 删掉书库 + books/ 原件（一体全删）");
+  ok(pur.data.removedAsset === true && String(pur.data.note).includes("彻底删除"),
+    `P1-E1: purge 回执 removedAsset + 彻底删除措辞（实测 note=${JSON.stringify(pur.data.note)}）`);
+  ok(String(pur.data.note).includes("3") && String(pur.data.note).includes("存档"),
+    "P1-E1: purge note 明示连 3 条（2 存档 + 1 反馈）引用一起清");
+  const leftE1 = listArchive(libDir, { limit: 100 });
+  ok(leftE1.length === 1 && leftE1[0].question === "问别的书2", "P1-E1: 只剩引用别的书的存档（不误伤）");
+
+  // E2：移出书架 processed 书（第一档）——库删了，原件留，书架回 raw 态
+  const dbE2 = mkBook("t4.docx");
+  const delE2 = await invoke("books:delete", "t4.docx");
+  ok(delE2.ok === true && !fs.existsSync(dbE2) && fs.existsSync(path.join(booksDir, "t4.docx")),
+    "P1-E2: books:delete 只删库、books/ 原件保留（第一档=删库留原件）");
+  const shelfE2 = await invoke("books:list");
+  const rowE2 = shelfE2.data.find((b) => b.id === "t4.docx");
+  ok(!!rowE2 && rowE2.status === "raw" && rowE2.asset?.exists === true,
+    "P1-E2: 移出书架后书架显示 raw（点「开始加工」可重建，不用重新拖文件）");
+
+  // E3：彻底删除 raw-only 书（只有原件没库）——原件删掉，书架不再显示
+  fs.writeFileSync(path.join(booksDir, "rawonly.txt"), "只有原件的书", "utf8");
+  const purRaw = await invoke("books:purge", "rawonly.docx");
+  ok(purRaw.ok === true && !fs.existsSync(path.join(booksDir, "rawonly.txt")),
+    "P1-E3: raw 书（无库）也能彻底删除——删 books/ 原件");
+  const shelfE3 = await invoke("books:list");
+  ok(!shelfE3.data.some((b) => b.id === "rawonly.docx"), "P1-E3: 删完书架不再显示该书");
+
+  // E4：错误路径——两档都不许碰不存在的书；第一档对 raw-only 书给人话（没有库可移出）
+  const noBook = await invoke("books:purge", "不存在的书xyz");
+  ok(noBook.ok === false && noBook.error.code === "user", "P1-E4: books:purge 坏书名 → {ok:false,user}");
+  fs.writeFileSync(path.join(booksDir, "rawonly2.txt"), "x", "utf8");
+  const delRaw = await invoke("books:delete", "rawonly2.docx");
+  ok(delRaw.ok === false && String(delRaw.error?.message || "").includes("彻底删除"),
+    `P1-E4: books:delete 对 raw-only 书 → 人话指路彻底删除（实测: ${delRaw.ok ? "成功" : delRaw.error?.message}）`);
+  ok(fs.existsSync(path.join(booksDir, "rawonly2.txt")), "P1-E4: 指路报错不动文件（原件还在）");
+
   delete process.env.BSP_LIB_DIR;
   fs.rmSync(tmp, { recursive: true, force: true });
 }

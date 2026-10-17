@@ -22,6 +22,7 @@ const engine = await registerIpc({ ipcMain, app, dialog, shell, getWin: () => nu
 engine.init({ packaged: false });
 
 const EXPECTED = ["config:get", "config:set", "config:pickLibDir", "books:list", "books:catalog", "books:delete",
+  "books:purge",
   "ask:query", "reader:chapters", "reader:block", "reader:locate", "skills:list", "skills:read", "skills:toggle",
   "engine:status", "engine:warmup", "llm:configGet", "llm:configSet", "llm:test", "chat:summary",
   "chat:archiveList", "chat:archiveClear",
@@ -105,6 +106,13 @@ ok(ejAuditBad.ok === false && ejAuditBad.error.code === "user", "enrich:audit �
   const noAsset = await invoke("jobs:start", "不存在的书xyz.docx");
   ok(noAsset.ok === false && noAsset.error.code === "user", "jobs:start 无原件 → 错误包装（不凭记忆找文件）");
 }
+
+// ---------- 两档删除（V3 第四波 #168）：purge 通道注册 + 坏书名错误包装 ----------
+// （真删真库的书由 archive-config-fuzz P1-E 在 tmp 自建库上验；这里只锁通道契约）
+const badPurge = await invoke("books:purge", "不存在的书xyz");
+ok(badPurge.ok === false && badPurge.error.code === "user", "books:purge 坏书名 → {ok:false,user}（不抛）");
+const evilPurge = await invoke("books:purge", "../evil.docx");
+ok(evilPurge.ok === false && evilPurge.error.code === "user", "books:purge 穿越书名 → {ok:false,user}（resolveAsset safeBookId 闸门）");
 
 // ---------- 错误包装：坏书名 → {ok:false,error} 不抛 ----------
 const bad = await invoke("books:catalog", "不存在的书xyz");

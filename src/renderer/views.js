@@ -62,6 +62,11 @@ function bookCard(b) {
   const tags = raw
     ? '<span class="tag nocat">未加工</span>'
     : `${b.catalog?.themes?.length ? b.catalog.themes.slice(0, 4).map((t) => `<span class="tag">${esc(t)}</span>`).join("") : '<span class="tag nocat">未编目</span>'}${enrichTag(b)}`;
+  // 删书两档按钮（V3 第四波 #168）：raw 书没有库可「移出」，只剩彻底删除；
+  //   processed 书两档都在——移出书架=删库留原件（可重新加工），彻底删除=一体全删
+  const delBtns = raw
+    ? `<button class="delbtn" data-action="purge" data-bid="${esc(b.id)}">彻底删除</button>`
+    : `<button class="ghost sm" data-action="del" data-bid="${esc(b.id)}">移出书架</button><button class="delbtn" data-action="purge" data-bid="${esc(b.id)}">彻底删除</button>`;
   return `
     <div class="bookcard" data-action="open" data-bid="${esc(b.id)}">
       <h3>${esc(b.title)}</h3>
@@ -72,7 +77,7 @@ function bookCard(b) {
         <span class="skill-dot ${b.skillEnabled ? "" : "off"}">${b.skillEnabled ? "AI 可查" : "skill 已关"}</span>
         <span class="cardbtns">${running ? "" : raw
           ? `<button class="ghost sm procbtn" data-action="process" data-bid="${esc(b.id)}">开始加工</button>`
-          : `<button class="ghost sm" data-action="enrich" data-bid="${esc(b.id)}">洗数据</button>`}<button class="delbtn" data-action="del" data-bid="${esc(b.id)}">删除</button></span>
+          : `<button class="ghost sm" data-action="enrich" data-bid="${esc(b.id)}">洗数据</button>`}${delBtns}</span>
       </div>
     </div>`;
 }
@@ -158,14 +163,34 @@ export function bindShelfEvents() {
       show("reader");
     }
     else if (act === "del") {
+      // 第一档「移出书架」（V3 #168）：删库留原件——书架回 raw 态，可重新加工
       e.stopPropagation();
-      if (!confirm(`删除《${el.dataset.bid}》的书库？\n只删书库文件，books/ 里的原始书保留，之后可以重新导入。`)) return;
+      const b = state.books.find((x) => x.id === el.dataset.bid);
+      if (!confirm(`将《${b?.title || el.dataset.bid}》移出书架？\n书库文件删除（块/向量/编目/洗数据全没了），books/ 原件保留，之后点「开始加工」可重建。`)) return;
       try {
         const r = await call(window.study.deleteBook(el.dataset.bid));
         state.books = await call(window.study.booksList());
         refresh();
         if (r?.note) toast(r.note); // P4：note 可能带"已连 N 条云端回答存档一起删除"（删书联动）
-      } catch (err) { toast("删除失败：" + err.message); }
+      } catch (err) { toast("移出书架失败：" + err.message); }
+    }
+    else if (act === "purge") {
+      // 第二档「彻底删除」（V3 #168）：库 + books/ 原件 + 存档/反馈一体删，确认清单先行
+      e.stopPropagation();
+      const b = state.books.find((x) => x.id === el.dataset.bid);
+      const lines = [`彻底删除《${b?.title || el.dataset.bid}》？以下内容全部删除、不可恢复：`];
+      if (b && b.status !== "raw") lines.push("· 书库文件（块/向量/编目/洗数据）");
+      lines.push(b?.asset?.exists
+        ? `· books/ 原件（${b.format || "?"} 文件）`
+        : "· books/ 原件（无——这本当初没复制原件，重建要重新导入文件）");
+      lines.push("· 引用这本书的云端存档 / 反馈样本");
+      if (!confirm(lines.join("\n"))) return;
+      try {
+        const r = await call(window.study.purgeBook(el.dataset.bid));
+        state.books = await call(window.study.booksList());
+        refresh();
+        if (r?.note) toast(r.note);
+      } catch (err) { toast("彻底删除失败：" + err.message); }
     }
     else if (act === "cite") jumpTo(el.dataset.bid, el.dataset.cid);
     else if (act === "jobcancel" || act === "jobretry" || act === "catimport" || act === "catprompt"

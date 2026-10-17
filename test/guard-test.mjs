@@ -366,6 +366,48 @@ const copyDb = (src) => {
     "静态: views-ask 接线 process 动作 + 两段式重试（#167）");
 }
 
+// ========== 15) 静态防回归：两档删除接线契约（V3 第四波 #168） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  // ① engine 两档导出 + 边界：purgeBook 删 asset.path（一体删），deleteBook 不许碰原件
+  const engSrc = stripComments(readSrc("src", "desktop", "engine.mjs"));
+  ok(/export function deleteBook\(/.test(engSrc) && /export function purgeBook\(/.test(engSrc),
+    "静态: engine 导出 deleteBook + purgeBook 两档（#168）");
+  const purgeAt = engSrc.indexOf("export function purgeBook(");
+  const purgeBody = engSrc.slice(purgeAt, engSrc.indexOf("\nexport ", purgeAt + 10));
+  ok(/rmSync\(asset\.path/.test(purgeBody) && /resolveAsset\(/.test(purgeBody),
+    "静态: purgeBook 删 books/ 原件（resolveAsset 定位 + rmSync(asset.path)，一体全删）");
+  const delAt = engSrc.indexOf("export function deleteBook(");
+  const delBody = engSrc.slice(delAt, purgeAt);
+  ok(!/rmSync\(asset\.path/.test(delBody),
+    "静态: deleteBook 不删 books/ 原件（第一档=删库留原件，书架回 raw 可重建）");
+
+  // ② 三处接线：ipc 通道 / preload 暴露 / 渲染层两档按钮与确认清单
+  const ipcRegSrc = readSrc("src", "desktop", "ipc.mjs");
+  ok(ipcRegSrc.includes('"books:purge"') && ipcRegSrc.includes("eng.purgeBook"),
+    "静态: ipc.mjs 注册 books:purge → purgeBook（#168）");
+  const preloadSrc = readSrc("src", "preload.js");
+  ok(preloadSrc.includes("purgeBook"), "静态: preload 暴露 purgeBook（#168）");
+
+  // ③ 渲染层按钮分流：raw 卡只有彻底删除；processed 卡移出书架 + 彻底删除两档
+  const viewsSrc = readSrc("src", "renderer", "views.js");
+  const cardAt = viewsSrc.indexOf("function bookCard(");
+  const cardBody = viewsSrc.slice(cardAt, viewsSrc.indexOf("\nfunction ", cardAt + 10));
+  ok(/const delBtns = raw\s*\n\s*\?\s*`[^`]*data-action="purge"[^`]*`\s*\n\s*:\s*`[^`]*data-action="del"[^`]*data-action="purge"/.test(cardBody),
+    "静态: raw 卡仅彻底删除 / processed 卡移出+彻底两档（#168 按钮分流）");
+  // ④ 两个动作都拨通 IPC + 彻底删除带确认清单（asset/chunks 数从书架数据来）
+  ok(/act === "purge"[\s\S]{0,600}window\.study\.purgeBook/.test(viewsSrc),
+    "静态: 彻底删除动作拨通 purgeBook（#168）");
+  ok(/act === "purge"[\s\S]{0,900}不可恢复/.test(viewsSrc) && /asset\?\.exists/.test(viewsSrc),
+    "静态: 彻底删除确认清单先行（books/ 原件在不在按 asset.exists 说实情）");
+  // ⑤ 通道契约同步：ipc-test EXPECTED 含 books:purge
+  const ipcTestSrc = readSrc("test", "ipc-test.mjs");
+  ok(ipcTestSrc.includes('"books:purge"'), "静态: ipc-test EXPECTED 含 books:purge（#168 通道对账）");
+}
+
 // ========== 收尾 ==========
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);

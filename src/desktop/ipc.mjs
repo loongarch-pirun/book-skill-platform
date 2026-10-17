@@ -26,10 +26,18 @@ export async function registerIpc({ ipcMain, app, dialog, shell, getWin }) {
   // 书架
   handle("books:list", (eng) => eng.booksList());
   handle("books:catalog", (eng, bookId) => eng.bookCatalog(bookId));
-  // P4 删书联动：删书连引用这本书的云端回答存档一起清——不给"删除残留"添新尾巴；
+  // 删书两档（P4 联动 + V3 第四波 #168）：
+  //   第一档 books:delete「移出书架」= 只删库文件，books/ 原件保留（书架回 raw，可重新加工）；
+  //   第二档 books:purge「彻底删除」= 库 + 原件一体删（渲染层确认清单先行，不可恢复）。
+  // 两档都连引用这本书的云端回答存档/反馈样本一起清——不给"删除残留"添新尾巴；
   // 清了几条回进 note，UI toast 告知（清理失败不挡删书本体，purgeArchives 内部已兜底）
   handle("books:delete", async (eng, bookId) => {
     const r = eng.deleteBook(bookId);
+    const purged = chat.purgeArchives(bookId);
+    return purged > 0 ? { ...r, note: `${r.note}；已连 ${purged} 条引用这本书的存档/反馈样本一起删除` } : r;
+  });
+  handle("books:purge", async (eng, bookId) => {
+    const r = eng.purgeBook(bookId);
     const purged = chat.purgeArchives(bookId);
     return purged > 0 ? { ...r, note: `${r.note}；已连 ${purged} 条引用这本书的存档/反馈样本一起删除` } : r;
   });

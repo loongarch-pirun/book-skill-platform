@@ -95,17 +95,47 @@ export function bookCatalog(bookId) {
   return { book: b.title, bookId: b.id, ...out };
 }
 
-// 删书（M6）：只删库文件（含 wal/shm），books/ 原始书保留；开关记录一并清掉
+// 删书第一档「移出书架」（M6 + V3 第四波 #168 两档删除）：只删库文件（含 wal/shm），
+// books/ 原件保留——书架回到 raw 态，点「开始加工」即可重建，不用重新拖文件。
 export function deleteBook(bookId) {
   const libDir = currentLibDir();
   const b = listBooks(libDir, { includeDisabled: true }).find(x => x.id === bookId);
-  if (!b) throw new UserError(`书库里找不到「${bookId}」`);
+  if (!b) throw new UserError(`书库里找不到「${bookId}」——移出书架只删书库；只有原件的书请用「彻底删除」`);
   for (const suffix of ["", "-wal", "-shm"]) {
     const p = b.db + suffix;
     if (fs.existsSync(p)) fs.rmSync(p, { force: true });
   }
   setSkillEnabled(libDir, bookId, true); // 删记录，不留垃圾状态
-  return { deleted: bookId, note: "只删了书库文件，books/ 里的原始书保留（可重新导入）" };
+  const hasAsset = resolveAsset(libDir, bookId).exists;
+  return { deleted: bookId, removedAsset: false, note: hasAsset
+    ? "已移出书架——书库文件已删，books/ 原件还在；点「开始加工」可重建"
+    : "已移出书架——书库文件已删（这本没有 books/ 原件，重建要重新导入文件）" };
+}
+
+// 删书第二档「彻底删除」（V3 第四波 #168）：书库文件 + books/ 原件 + 开关记录一体删，不可恢复。
+// 顺序：先删原件再删库——原件删除失败（占用/权限）时书库还完好，用户可重试；
+// 存档/反馈样本联动在 ipc 层（purgeArchives 双清，与第一档同一条链路）。
+export function purgeBook(bookId) {
+  const libDir = currentLibDir();
+  const b = listBooks(libDir, { includeDisabled: true }).find(x => x.id === bookId);
+  const asset = resolveAsset(libDir, bookId);
+  if (!b && !asset.exists) throw new UserError(`书库里找不到「${bookId}」`);
+  const title = b?.title || String(bookId).replace(/\.[^.]+$/, "");
+  if (asset.exists && asset.path) {
+    try { fs.rmSync(asset.path, { force: true }); }
+    catch (e) { throw new UserError(`books/ 原件删除失败（${e.message}）——书库未动，请关掉占用该文件的程序后重试`); }
+  }
+  if (b) {
+    for (const suffix of ["", "-wal", "-shm"]) {
+      const p = b.db + suffix;
+      if (fs.existsSync(p)) fs.rmSync(p, { force: true });
+    }
+  }
+  setSkillEnabled(libDir, bookId, true); // 删记录，不留垃圾状态
+  const parts = [];
+  if (b) parts.push("书库文件");
+  if (asset.exists) parts.push("books/ 原件");
+  return { purged: bookId, title, removedAsset: asset.exists, note: `《${title}》已彻底删除（${parts.join(" + ")}）` };
 }
 
 // ---------- 问一问：单书 / 全库（跨书检索入口） ----------

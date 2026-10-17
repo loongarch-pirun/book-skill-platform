@@ -61,7 +61,9 @@ const studyStub = {
     { id: "rawbook.docx", title: "未加工书", chunks: 0, skillEnabled: true, status: "raw", format: "txt", catalog: { cataloged: false, themes: [], persons: 0 }, enrich: { ready: false } },
   ]); },
   bookCatalog: () => reply({}),
-  deleteBook: () => reply({}),
+  deleteBook: (bookId) => { ipcCalls.push("deleteBook"); return reply({}); },
+  // V3 #168 两档删除第二档：彻底删除（库 + books/ 原件一体删）
+  purgeBook: (bookId) => { ipcCalls.push("purgeBook"); return reply({ purged: bookId, removedAsset: true, note: "已彻底删除" }); },
   importBook: () => reply({}),
   // V3 #167 拆两段：第二段加工入口（raw 书「开始加工」按钮 → jobs:start）
   jobsStart: (bookId) => { ipcCalls.push("jobsStart"); return reply({ bookId, stage: "catalog", clusters: 2 }); },
@@ -140,6 +142,13 @@ assert(mainEl.innerHTML.includes("未加工书") && mainEl.innerHTML.includes("�
   app.refresh();
   assert(mainEl.innerHTML.includes('data-action="process"') && !mainEl.innerHTML.includes('data-action="enrich"'),
     "raw 卡片只有「开始加工」按钮没有「洗数据」按钮（#167 按钮分流：没库可洗）");
+  // V3 #168 两档删除：raw 书没有库可「移出」——只有彻底删除；processed 书两档都在
+  assert(mainEl.innerHTML.includes('data-action="purge"') && !mainEl.innerHTML.includes('data-action="del"'),
+    "raw 卡片只有「彻底删除」（#168：没库可移出，purge 删 books/ 原件）");
+  app.state.books = [{ id: "t.docx", title: "测试书", chunks: 3, skillEnabled: true, status: "processed", format: "docx", asset: { exists: true }, catalog: { cataloged: true, themes: ["主题一"] }, enrich: { ready: false } }];
+  app.refresh();
+  assert(mainEl.innerHTML.includes('data-action="del"') && mainEl.innerHTML.includes('data-action="purge"'),
+    "processed 卡片「移出书架」+「彻底删除」两档都在（#168）");
   app.state.books = realBooks;
   app.refresh();
 }
@@ -153,6 +162,14 @@ const click = (action, data = {}) => {
 click("process", { bid: "rawbook.docx" });
 await sleep(30);
 assert(ipcCalls.includes("jobsStart"), "点「开始加工」→ jobsStart 拨通（#167 第二段入口）");
+
+// V3 #168 两档删除：点「彻底删除」→ purgeBook 拨通（确认清单+真删在主进程侧验）
+click("purge", { bid: "rawbook.docx" });
+await sleep(30);
+assert(ipcCalls.includes("purgeBook"), "点「彻底删除」→ purgeBook 拨通（#168 第二档入口）");
+click("del", { bid: "t.docx" });
+await sleep(30);
+assert(ipcCalls.includes("deleteBook"), "点「移出书架」→ deleteBook 拨通（#168 第一档入口）");
 
 const fireChange = (sel, value) => { // 模拟 <select> 换书（B6 断言用）
   const el = getEl(sel);
