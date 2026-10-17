@@ -408,8 +408,52 @@ const copyDb = (src) => {
   ok(ipcTestSrc.includes('"books:purge"'), "静态: ipc-test EXPECTED 含 books:purge（#168 通道对账）");
 }
 
-// ========== 收尾 ==========
+// ========== 16) 静态防回归：结构化改造接线契约（V3 第四波 P2） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  // ① lib 层存在且导出五件套（纯函数零依赖——单测可 node 直跑的根本）
+  const libSrc = readSrc("src", "lib", "structurize.mjs");
+  for (const fn of ["detectGarbled", "repairMojibake", "structurizeChunks", "assessCleaned", "structChanged"]) {
+    ok(new RegExp(`export function ${fn}\\(`).test(libSrc), `静态: structurize.mjs 导出 ${fn}（P2 五件套）`);
+  }
+
+  // ② build-book 顺序契约：结构化改造在语义分块之前（流程=结构化改造→切片→洗数据）
+  const bbSrc = stripComments(readSrc("src", "build-book.js"));
+  const structAt = bbSrc.indexOf("structurizeChunks(parsed.chunks)");
+  const sliceAt = bbSrc.indexOf('process.env.BSP_SEMANTIC === "1"');
+  ok(structAt > -1 && sliceAt > -1 && structAt < sliceAt,
+    "静态: build-book 先结构化改造后语义分块（P2 流程顺序：结构化改造→切片→洗数据）");
+  // ③ 开关 + 后置硬闸门：BSP_STRUCT=0 整段跳过；修不完的拦在烧算力之前（不建库）
+  ok(/process\.env\.BSP_STRUCT !== "0"/.test(bbSrc) && /await import\("\.\/lib\/structurize\.mjs"\)/.test(bbSrc),
+    "静态: BSP_STRUCT=0 逃生开关在（排障通道，整段跳过不清洗）");
+  const gateAt = bbSrc.indexOf("assessCleaned(parsed.chunks, st.report)");
+  ok(gateAt > -1 && /if \(!gate\.ok\) \{[\s\S]{0,200}?process\.exitCode = 1;[\s\S]{0,80}?return;/.test(bbSrc.slice(gateAt)),
+    "静态: assessCleaned 硬闸门拦在切片前（exitCode=1 + return，不烧算力不建库）");
+  // ④ 账进 meta + onStage 两段（桌面横幅据此分格；CLI 不传即静默）
+  ok(/setMeta\.run\("struct_report"/.test(bbSrc), "静态: 清洗账写 meta.struct_report（可审计）");
+  ok(/opts\.onStage\?\.\("structurize"\)/.test(bbSrc) && /opts\.onStage\?\.\("slice"\)/.test(bbSrc),
+    "静态: onStage 两段回调 structurize → slice（P2 横幅分格）");
+  // ⑤ main 返回 struct（jobs 横幅账的源头）
+  ok(/struct: parsed\.struct \|\| null/.test(bbSrc), "静态: main 返回 struct（jobs 横幅清洗账源头）");
+
+  // ⑥ jobs 横幅：结构化改造单独占一格 + 切片一格 + 真洗了才刷账
+  const jobsSrc = stripComments(readSrc("src", "desktop", "jobs.mjs"));
+  ok(/label: "结构化改造中"/.test(jobsSrc) && /detail: "清洗坏数据\/不全数据\/乱码符号，过了才切片"/.test(jobsSrc),
+    "静态: jobs 横幅「结构化改造中」一格（P2 阶段可见）");
+  ok(/onStage: \(s\) => \{[\s\S]{0,200}?if \(s === "slice"\) emit\(id, \{ stage: "slice", label: "切片中"/.test(jobsSrc),
+    "静态: onStage slice → 横幅转「切片中」（结构化改造/切片两格分明）");
+  ok(/const st = r\.struct;[\s\S]{0,300}?结构化改造：去空块/.test(jobsSrc),
+    "静态: 真洗了东西横幅才刷账（干净的书零刷屏——存量行为零变化）");
+
+  // ⑦ 测试挂载对账：structurize-test 进 fast（防「写了测试没挂」）
+  const pkgSrc = JSON.parse(readSrc("package.json"));
+  ok((pkgSrc.scripts["test:fast"] || "").includes("structurize-test"),
+    "静态: package.json test:fast 含 structurize-test（P2 验收挂载）");
+}
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);
 if (fail) { console.error(`${fail} 项 FAIL`); process.exit(1); }
-console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由 ${pass} 项全过`);
+console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造 ${pass} 项全过`);
