@@ -418,6 +418,7 @@ function buildDb(file, outPath, parsed) {
     setMeta.run("content_hash", contentHash(file));
     if (parsed.files) setMeta.run("md_files", String(parsed.files));
     if (parsed.droppedCode) setMeta.run("dropped_code", String(parsed.droppedCode));
+    if (parsed.struct) setMeta.run("struct_report", JSON.stringify(parsed.struct));
 
     const tx = db.transaction(() => {
       const ins = db.prepare("INSERT INTO chunks(chapter, page, text) VALUES (?,?,?)");
@@ -446,7 +447,9 @@ const contentHash = (target) => {
 };
 
 // ---------- 主流程（可被测试以 main(argv) 调用；直接运行时走 CLI） ----------
-async function main(argv = process.argv.slice(2)) {
+// opts.onStage(stage)：阶段回调（桌面横幅用）——"structurize"（结构化改造）在清洗前、
+// "slice"（切片）在语义分块前触发；CLI 不传即静默（存量行为零变化）。
+async function main(argv = process.argv.slice(2), opts = {}) {
   const file = argv[0];
   if (!file || !fs.existsSync(file)) {
     console.error("用法: node build-book.js <book文件|md目录> [-o 输出.db] [--force] [--title 书名]");
@@ -478,6 +481,29 @@ async function main(argv = process.argv.slice(2)) {
     process.exitCode = 1;
     return;
   }
+
+  // 结构化改造（V3 第四波 P2）：解析之后、切片之前——清洗坏数据/不全数据/乱码符号。
+  // 老板定的新流程：结构化改造 → 切片 → 洗数据（原来是切完片直接洗）。
+  // 铁律：干净的书零变化（存量四书块数锁定不受影响）；硬拦只发生在烧算力之前；
+  //   BSP_STRUCT=0 可整段关掉（排障用）。修不动的乱码才拦，能修的当场修。
+  opts.onStage?.("structurize");
+  if (process.env.BSP_STRUCT !== "0") {
+    const { structurizeChunks, assessCleaned } = await import("./lib/structurize.mjs");
+    const st = structurizeChunks(parsed.chunks);
+    parsed.chunks = st.chunks;
+    parsed.struct = st.report;
+    const gate = assessCleaned(parsed.chunks, st.report);
+    if (!gate.ok) {
+      console.error(gate.reason);
+      process.exitCode = 1;
+      return;
+    }
+    const r = st.report;
+    if (r.droppedEmpty || r.droppedGarbage || r.repairedMojibake || r.strippedControls || r.strippedPua || r.strippedFffd) {
+      console.log(`  结构化改造: 去空块 ${r.droppedEmpty} · 去垃圾块 ${r.droppedGarbage} · 修乱码块 ${r.repairedMojibake} · 清控制符 ${r.strippedControls} / 私用区 ${r.strippedPua} / 替换符 ${r.strippedFffd} 处`);
+    }
+  }
+  opts.onStage?.("slice");
 
   // 语义分块（BSP_SEMANTIC=1，默认关——存量行为零变化）：本地 e5 零成本，先并后切——
   // ① merge：同章/同页相邻小块并到 ~400 字符（本语料块长 p50≈40~113，检索每问只取 6 段，
@@ -558,7 +584,7 @@ async function main(argv = process.argv.slice(2)) {
   if (parsed.files) console.log(`  md 文件: ${parsed.files} 篇`);
   if (parsed.droppedCode) console.log(`  已去代码块: ${parsed.droppedCode} 段`);
   if (parsed.cleanedJunk.length) console.log(`  已去页眉页脚: ${parsed.cleanedJunk.length} 种重复行`);
-  return { chunkCount, totalChars };
+  return { chunkCount, totalChars, struct: parsed.struct || null };
 }
 
 // ---------- 入口：直接运行才启动 CLI；被 import/require 时只暴露函数（测试用真实实现） ----------

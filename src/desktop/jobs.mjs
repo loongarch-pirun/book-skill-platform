@@ -128,22 +128,36 @@ export async function startProcessing(bookId) {
   }
   if (cancelled.has(id)) return cancelResult(id);
 
-  // 1) 切片：require 复用 build-book.main（H2-② 显式 -o）。main 是 CLI 出身：
+  // 1) 结构化改造 + 切片：require 复用 build-book.main（H2-② 显式 -o）。main 是 CLI 出身：
   //    失败时不抛错，只打 console.error + 置 process.exitCode——这里截获输出人话化，
   //    并把 exitCode 还回去（否则会把 Electron 主进程的退出码毒成 1）。
-  emit(id, { stage: "slice", label: "切片中", detail: "解析原文 → 分块（≤900 字/块）" });
+  //    V3 第四波 P2：结构化改造（清洗坏数据/不全数据/乱码符号）是切片前的独立一步，
+  //    经 onStage 回调在横幅上单独占一格——硬拦（修不动的乱码/内容太少）发生在烧算力之前。
+  emit(id, { stage: "slice", label: "结构化改造中", detail: "清洗坏数据/不全数据/乱码符号，过了才切片" });
   const buildBook = require("../build-book.js");
   const keepExit = process.exitCode;
   const captured = [];
   const origErr = console.error;
   console.error = (...a) => captured.push(a.map(String).join(" "));
   let r;
-  try { r = await buildBook.main([source, "-o", outDb]); }
+  try {
+    r = await buildBook.main([source, "-o", outDb], {
+      onStage: (s) => {
+        if (s === "slice") emit(id, { stage: "slice", label: "切片中", detail: "解析原文 → 分块（≤900 字/块）" });
+      },
+    });
+  }
   finally { console.error = origErr; process.exitCode = keepExit; }
   if (!r) {
     const why = captured.join(" / ").replace(/\s+/g, " ").slice(0, 200);
-    emit(id, { stage: "failed", label: "加工失败", error: `切片失败：${why || "文件可能损坏、是扫描版 PDF 或格式不符"}` });
-    throw new UserError(`切片失败：${why || "文件可能损坏、是扫描版 PDF 或格式不符"}`);
+    const msg = `加工失败：${why || "文件可能损坏、是扫描版 PDF 或格式不符"}`;
+    emit(id, { stage: "failed", label: "加工失败", error: msg });
+    throw new UserError(msg);
+  }
+  // 结构化改造账（P2）：真洗了东西横幅说一声，干净的书零刷屏（存量行为零变化）
+  const st = r.struct;
+  if (st && (st.droppedEmpty || st.droppedGarbage || st.repairedMojibake || st.strippedControls || st.strippedPua || st.strippedFffd)) {
+    emit(id, { stage: "slice", detail: `结构化改造：去空块 ${st.droppedEmpty} · 去垃圾块 ${st.droppedGarbage} · 修乱码块 ${st.repairedMojibake} · 清符号 ${st.strippedControls + st.strippedPua + st.strippedFffd} 处` });
   }
   if (cancelled.has(id)) return cancelResult(id);
 
