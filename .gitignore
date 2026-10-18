@@ -9,6 +9,8 @@ release-new/
 # 书库二进制（可由 books/ + embed-book.js 重建）
 library/
 library-backup-zh-small/
+library-pre-p3/
+library-new/
 *.db
 *.db-shm
 *.db-wal
