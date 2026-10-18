@@ -6,8 +6,8 @@
 //   - 干净的书零变化：所有规则只对「有问题」的文本发力——存量四书块数锁定不受影响；
 //   - 清洗全部可审计：report 进 meta.struct_report，控制台明示条数；
 //   - 硬拦只发生在烧算力之前：0 块/内容太少/乱码超阈值 → 人话失败，不进切片不建库；
-//   - 修乱码只认经典双重编码（UTF-8 字节被当 Latin-1 解过）：回读不是合法 UTF-8 就不修，
-//     宁可留下不修，不可把好文本修坏（French 书里的 é 就是反例警戒）。
+//   - 修乱码只认经典双重编码（UTF-8 字节被当 Latin-1 或 cp1252 解过）：回读不是
+//     合法 UTF-8 就不修，宁可留下不修，不可把好文本修坏（French 书里的 é 就是反例警戒）。
 // 纯文本层：零依赖、零 IO、零模型——可在 node 下单测。
 
 // 内容下限：全文少于此字数视为「不全数据」（空文件/加密文档/扫描图片的典型身形）
@@ -43,42 +43,109 @@ function stripLoneSurrogates(text) {
   const out = text.replace(LONE_SURROGATE_RE, () => { n++; return ""; });
   return [out, n];
 }
+// 双重编码续字节的字符域（cp1252 版）。UTF-8 的续字节只可能是 0x80~0xBF，但
+// 「被当什么编码解」决定它落在哪个字符上：
+//   - latin1 解码：0x80~0xBF 原样 = U+0080~U+00BF（C1 控制符 + Latin-1 符号）
+//   - cp1252 解码：0x80~0x9F 那 27 个字节变成「特俗字符」（€ ‚ ƒ „ … † ‡ ˆ ‰ Š ‹ Œ
+//     Ž ‘ ’ “ ” • – — ˜ ™ š › œ ž Ÿ），0xA0~0xBF 仍是原样
+// 两套都要算进字符域。漏掉 cp1252 那一半 = â€™（U+2019 撇号，现实书里最高发的
+// mojibake 之一，英文书的 don't/it's 全变它）整类 100% 逃逸（G-05：与 P2-01
+// 同一审计失效模式——把签名表当白名单用，白名单外就漏检）。
+// 逐段枚举而非 \u2013-\u2022 图省事：那一段里含 2015/2016/2017/201B/201F 五个
+// 码位，它们**永远不可能**由 cp1252 单字节产生（毛 O2）——放进来只会给
+// 「检得出、修不动」添乱（CP1252_REV 没有它们的映射）。
+const CP1252_HI = "\\u0080-\\u00bf\\u0152\\u0153\\u0160\\u0161\\u0178\\u017d\\u017e\\u0192"
+  + "\\u02c6\\u02dc\\u2013\\u2014\\u2018-\\u201a\\u201c-\\u201e\\u2020-\\u2022\\u2026\\u2030\\u2039\\u203a\\u20ac\\u2122";
 // 经典双重编码签名（显式 \u 转义，不靠字面字符——文件编码一动正则就废）：
-//   é(C3A9)→é(C3 A9)  â‚¬(E282AC)→â‚¬  ä¸­(E4B8AD)→ä¸­  ä½ (E4B9A6)→ä½
-const MOJIBAKE_RE = /(?:\u00c3[\u0080-\u00bf]|\u00c2[\u0080-\u00bf]|\u00e2\u20ac[\u2013\u2014\u201c\u201d\u2022\u2026\u0152\u0153]|\u00e5[\u0080-\u00bf]|\u00e6[\u0080-\u00bf]|\u00e8[\u0080-\u00bf])/g;
+//   2 字符：Ã©(C3A9) / Âx(C2xx) / ä(E4) / å(E5) / æ(E6) / è(E8) 打头
+//   3 字符：â + 两个续字节（E2 80/84/8B… xx，标点族）。第三字节必是续字节
+//     （0x80~0xBF），两段都落在 CP1252_HI 内，故一支 {2} 同时覆盖两条解码路径：
+//     cp1252 路 â€™/â€œ/â€”/â„¢(™)、latin1 路 â + C1 + C1（毛 F1：先前只写死第二字符
+//     为 €，等于只补了 â€™ 一个案例，â„¢/âœ“/â˜… 等 E2 84/E2 98/E2 9C 打头的
+//     整类仍 0 命中——工单点名的正是这一族）
+const MOJIBAKE_RE = new RegExp(
+  `(?:\\u00e2[${CP1252_HI}]{2}|\\u00c3[${CP1252_HI}]|\\u00c2[${CP1252_HI}]`
+  + `|\\u00e4[${CP1252_HI}]|\\u00e5[${CP1252_HI}]|\\u00e6[${CP1252_HI}]|\\u00e8[${CP1252_HI}])`, "g");
+
+// 乱码字符并集（G-06）：MOJIBAKE 的第二字符域与 CONTROL_RE 在 C1 区
+// （\u0080~\u009f）交叠——按分类求和会把同一个字符数两遍（「ÃŸ」×50 得
+// bad=150/100，ratio 1.5，报告出现不可审计的数字）。bad 改按并集长度算：
+// alternation 左优先且不重叠，天然去重，保证 bad ≤ 文本长度、ratio ≤ 1。
+// （正则用字符串构造：字符域里含 C1 控制符，字面量写法过不了 no-control-regex）
+const BAD_RE = new RegExp(
+  `(?:${MOJIBAKE_RE.source})|(?:${CONTROL_RE.source})|(?:${PUA_RE.source})|(?:${FFFD_RE.source})`, "g");
 
 // 乱码体检：数出四类乱码符号，返回计数与占比（ratio 按字符数加权由调用方汇总）
 export function detectGarbled(text) {
   const s = String(text ?? "");
-  // 签名实际占用按匹配长度求和：双重编码签名拖 2~3 个字符，按 2 估会把
-  // 「100 字符 15 签名 = 真实乱码率 45%」低估成 30% 从而放过（P2-01，
-  // A1/A8/F9 三处坐实：乱码隐形入库 + report 全零 = 审计失效）。
-  // 注意：MOJIBAKE_RE 是已知经典签名白名单，类外双重编码（如 â€™
-  // 撇号乱码）不在其列——检测集非完备，白名单缺口已登记后续波次工单。
+  // bad 按「匹配到的字符长度」求和而非按签名个数×2 估：双重编码签名拖 2~3 个
+  // 字符，按 2 估会把「100 字符 15 签名 = 真实乱码率 45%」低估成 30% 从而放过
+  // （P2-01，A1/A8/F9 三处坐实：乱码隐形入库 + report 全零 = 审计失效）。
+  // 注意：MOJIBAKE_RE 是已知经典签名表，不是完备检测器；G-05 已把 cp1252
+  // 特俗字符域（â€™ 一族）与 E4 打头的中文序列补进字符域，仍属白名单式扩展。
   // 用 match 而非 matchAll：match 前置清零 lastIndex，外部若推进过
   // MOJIBAKE_RE.lastIndex 也不会从污染偏移起匹配而静默漏计前缀。
-  let mojibake = 0, mojibakeChars = 0;
-  for (const m of s.match(MOJIBAKE_RE) || []) { mojibake++; mojibakeChars += m.length; }
+  const mojibake = (s.match(MOJIBAKE_RE) || []).length;
   const controls = (s.match(CONTROL_RE) || []).length;
   const pua = (s.match(PUA_RE) || []).length;
   const fffd = (s.match(FFFD_RE) || []).length;
-  const bad = mojibakeChars + controls + pua + fffd;
+  // bad = 并集字符数（G-06）。分支各自计数只用于 report 展示，不进 bad——
+  // 分类之间在 C1 区有交叠，求和会重复计数（ratio 能到 1.5）
+  let bad = 0;
+  for (const m of s.match(BAD_RE) || []) bad += m.length;
   return { mojibake, controls, pua, fffd, bad, ratio: s.length ? bad / s.length : 0 };
 }
 
-// 反向修复：把「被当 Latin-1 解过的 UTF-8」修回来。
-// 只修签名单个字符都落在 Latin-1 范围（<0x100）的文本——CP1252 的特俗字符
-// （‚ Œ 等 >0xFF）latin1 Buffer 装不下，保守不修（report 里记账）。
+// cp1252 高位区反查表：把「特俗字符」还原成原字节（0x80~0x9F 那 27 个有定义的）。
+// 0x81/0x8D/0x8F/0x90/0x9D 在 cp1252 无定义——解码器按 C1 控制符原样留下，
+// 码位本身 ≤0xFF，走 Latin-1 直通，不需查表。
+const CP1252_REV = new Map([
+  [0x20ac, 0x80], [0x201a, 0x82], [0x0192, 0x83], [0x201e, 0x84], [0x2026, 0x85],
+  [0x2020, 0x86], [0x2021, 0x87], [0x02c6, 0x88], [0x2030, 0x89], [0x0160, 0x8a],
+  [0x2039, 0x8b], [0x0152, 0x8c], [0x017d, 0x8e], [0x2018, 0x91], [0x2019, 0x92],
+  [0x201c, 0x93], [0x201d, 0x94], [0x2022, 0x95], [0x2013, 0x96], [0x2014, 0x97],
+  [0x02dc, 0x98], [0x2122, 0x99], [0x0161, 0x9a], [0x203a, 0x9b], [0x0153, 0x9c],
+  [0x017e, 0x9e], [0x0178, 0x9f],
+]);
+
+// 反向修复：把「被当 Latin-1 / cp1252 解过的 UTF-8」修回来。
+// 逆向编码两条路：Latin-1 字符（<0x100）直通取码位；cp1252 的 27 个特俗字符
+// （€ ‚ Œ ‘ ’ “ ” • – — ™ …）查表还原原字节——不这么做，â€™ 这类英文书里
+// 最高发的撇号乱码只能检出不能修，等于「见乱码就拦」，违背清洗诉求（G-05）。
+// 表外字符（中文/日文/真正的弯引号）一律拒绝——宁可留下不修，不可把好文本修坏
+// （French é 就是反例警戒：单码位 é 回读不是合法 UTF-8，照样被下面的回读闸门拦）。
+// 查表只在**签名跨度内**放行（毛 F2）：cp1252 特俗字符对应的字节全在 0x80~0x9F
+// （UTF-8 的续字节区），若允许句子别处的 …/™/œ 也查表，它们会和前面的前导字节
+// 拼成**合法但错误**的 UTF-8——实测干净意大利文「è\u00a0… ma non è\u00a0…」会被
+// 「修」成含生僻汉字「蠅」的垃圾，report 还记成清洗成果。跨度外的 >0xFF 字符
+// 一律触发保守拒修，与「宁可留下不修」对齐。
 // 回读出现 U+FFFD（说明原字节本就不是合法 UTF-8）→ 不修，原样返回。
 export function repairMojibake(text) {
   const s = String(text ?? "");
-  const hints = (s.match(MOJIBAKE_RE) || []).length;
-  if (hints < MOJIBAKE_MIN_HINTS) return { text: s, repaired: false };
-  for (const ch of s) {
-    if (ch.codePointAt(0) > 0xff) return { text: s, repaired: false };
+  const spans = [];
+  for (const m of s.matchAll(MOJIBAKE_RE)) spans.push([m.index, m.index + m[0].length]);
+  if (spans.length < MOJIBAKE_MIN_HINTS) return { text: s, repaired: false };
+  // 跨度游标而非 spans.some()（毛 F3）：matchAll 产出的跨度天然升序、互不重叠，
+  // 而 i 在下面的循环里单调递增——游标只前进不后退，摊还 O(n)。
+  // 用 some() 是 O(n·k) 二次：10 万字符的整本人身要 3 秒+（实测 210k=3.8s），
+  // 而 txt2docx「一行一段」会把无换行的整本书变成 1 块送进来，正好是最坏输入。
+  let si = 0;
+  const inSpan = (i) => {
+    while (si < spans.length && spans[si][1] <= i) si++;
+    return si < spans.length && i >= spans[si][0];
+  };
+  const bytes = [];
+  for (let i = 0; i < s.length;) {
+    const cp = s.codePointAt(i);
+    const w = cp > 0xffff ? 2 : 1;
+    if (cp <= 0xff) { bytes.push(cp); i += w; continue; }
+    const b = inSpan(i) ? CP1252_REV.get(cp) : undefined;
+    if (b === undefined) return { text: s, repaired: false }; // 混了表外/跨度外字符：保守不修
+    bytes.push(b);
+    i += w;
   }
   let fixed;
-  try { fixed = Buffer.from(s, "latin1").toString("utf8"); } catch { return { text: s, repaired: false }; }
+  try { fixed = Buffer.from(bytes).toString("utf8"); } catch { return { text: s, repaired: false }; }
   if (fixed.includes("\ufffd") || fixed === s) return { text: s, repaired: false };
   if (!/[\u4e00-\u9fffA-Za-z]/.test(fixed)) return { text: s, repaired: false };
   return { text: fixed, repaired: true };
