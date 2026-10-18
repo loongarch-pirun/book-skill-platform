@@ -94,8 +94,8 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 
 | ID | 文件:行号 | 描述 | 级别 | 状态 | 修复commit |
 | --- | --- | --- | --- | --- | --- |
-| C1 | src/lib/assets.mjs:21 | safeBookId 放行 NUL（实测 Node 22 path.join 容错+existsSync 吞 ERR_INVALID_ARG_VALUE，链路降级 404/UserError 无崩溃无穿越——闸门名不副实，靠下游吞错兜底） | 一般 | 待修（F3）｜坐实 C8（C9 行为锁） | |
-| C2 | src/desktop/jobs.mjs:197/199-202/248/260-262 | resumeCatalog/catalogPrompt/scanPending 无 safeBookId：taskPath 可 `../` 逃逸、resultPath 任意文件读 | 严重 | 待修（F3）｜坐实 C10/C11 | |
+| C1 | src/lib/assets.mjs:21 | safeBookId 放行 NUL（实测 Node 22 path.join 容错+existsSync 吞 ERR_INVALID_ARG_VALUE，链路降级 404/UserError 无崩溃无穿越——闸门名不副实，靠下游吞错兜底） | 一般 | **已修 1365b91（F3）**｜坐实 C8（C9 行为锁）｜双 PASS |
+| C2 | src/desktop/jobs.mjs:197/199-202/248/260-262 | resumeCatalog/catalogPrompt/scanPending 无 safeBookId：taskPath 可 `../` 逃逸、resultPath 任意文件读 | 严重 | **已修 1365b91（F3）**｜坐实 C10/C11｜双 PASS |
 | C3 | src/desktop/jobs.mjs:73-74 | 文件名派生 bookId 未经 safeBookId：「x..pdf」幽灵条目永卡书架、「..txt」出 title="." 怪行 | 严重 | 待修（F6）｜坐实 C12/C13 | |
 | C4/C37 | src/desktop/jobs.mjs:85-86 | Windows 设备名/尾空格文件名：覆盖或 id 与磁盘名不一致 | 一般 | 探针锁定+人话文案 | |
 | C5 | — | ADS 冒号/超长 id >255/MAX_PATH | 疑点→挂起 | 真机轮 | |
@@ -182,6 +182,7 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 | F1 乱码权重精确化 | **已修** | 3b81aa9 | structurize-test 九节全绿（含新钉子 bad=20/30）；fuzz 49 PASS/22 FAIL/2 OBSERVE/1 SKIP，转绿恰 {A1,A8,F9}，集合级 diff 新红=空（22⊆25）；guard 91 绿；eslint 0 | 毛求疵 PASS（7 OBSERVE：3 条采纳同 commit=lastIndex 硬化/白名单注释/钉子测试；2 条登记工单见下）；陆回测 PASS（FAIL 无） |
 | F2a surrogate 剥离 + null 对称 | **已修** | 802a9d2 | structurize-test 43 PASS（第 7 节 9 字段全零精确相等）；fuzz 53 PASS/19 FAIL/2 OBSERVE/1 SKIP，转绿恰 {A3,A4,F2a}，集合差新红空（19⊆22），A11c strippedSurrogates=1→true；guard 91 绿；jobs-test 全 PASS；ipc-test 29 PASS；eslint 0 | 毛求疵 PASS（高 0/中 3/低 5/观察 2：M1/M2/L1/L2 同 commit 采纳；M3 grep 坐实构造点唯一=关闭；余登记）；陆回测 PASS（FAIL 无） |
 | F2b 开关 + 回调 | **已修** | bbc9c80 | fuzz 56 PASS/16 FAIL/2 OBSERVE/1 SKIP，转绿恰 {F4,F5,F6}（19→16），F4 十值矩阵全绿（含零宽/全角/前导空/制表换行）；F5/F6 加调用序列断言；guard 91 绿（③ 放宽为语义存在性）；structurize/jobs/ipc（29 PASS）全绿；eslint 0 | 毛求疵 PASS（无 FAIL，5 OBSERVE 全部同 commit 处置：零宽换脸复现→归一化、async 契约注释、catch 留日志、guard 放宽、onStage 两处 grep 坐实）；陆回测 PASS（FAIL 0，O1 补跑 ipc、O5 加序列断言、余登记） |
+| F3 bookId 闸门统一 | **已修** | 1365b91 | fuzz 61 PASS/13 FAIL/2 OBSERVE/1 SKIP，转绿恰 {C8,C10,C11}（16→13），C8b/C8c win32 冒号/尾点双平台语义锁；jobs/ipc（29）/guard（91）/enrich-job（30）/book-view（31）全绿；eslint 0 | 毛求疵 PASS（无 FAIL；OBSERVE-2 ADS 冒号/OBSERVE-3 尾点/OBSERVE-4 留痕/OBSERVE-5b resultPath 澄清同 commit 处置；C1 区间/误伤面/includes 过宽/scanPending 直证登记）；陆回测 PASS（FAIL 0；OBSERVE-4 → G-08；OBSERVE-5 enrich 补跑闭环） |
 
 ### F1 顺手采纳与工单登记（毛求疵 OBSERVE 处置）
 
@@ -206,3 +207,11 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 - 陆 O2/O3/O4 登记备查：O2 两条 OBSERVE 即 S2 硬证据节原有 2 条（前后同源）；O3 单次跑+总量守恒（56+16+2+1=75=53+19+2+1）已闭合，不重复跑；O4 lint 效力限于 no-empty（含注释块不报），行为断言以 fuzz 为准。
 - 陆「放行条件」归档：pre-fix 19 条 FAIL 清单见 S2 硬证据节原文表；回滚粒度=4 hunk（build-book 3 + guard 1）整体 revert（不可半回滚，半回滚会留 F4 单独复红的混合态）；fuzz EXIT=1 与 16 条红登记为 known-red，不参与发布门禁。
 - 毛「顺带提示」登记：onStage("structurize") 位于 if 之前无条件触发——BSP_STRUCT=0 时仍发「结构化改造」阶段事件（既有行为，本轮不改，横幅语义名不符实属 UI 层待办）。
+
+### F3 OBSERVE 处置（毛求疵/陆回测）
+
+- 已采纳（同 commit 1365b91）：毛 OBSERVE-2 win32 冒号（ADS 别名 `a:b.json`=base a 的隐藏流，静默产怪文件=与 NUL 同型）与尾点（系统剥点撞名）入闸——只在 win32 拒，macOS/Linux 合法名不误伤，C8b/C8c 双平台语义锁；毛 OBSERVE-4 scanPending 跳过留一行 stderr；毛 OBSERVE-5b resumeCatalog 注释澄清 resultPath 为用户「选择文件」直传（非 id 派生，设计如此，非缺陷）；陆 OBSERVE-5 enrich-job-test 补跑 30 PASS 闭环。
+- 毛 OBSERVE-1 C1 区间：不扩（C1 区 0x80-0x9F 在 Win 文件名合法，微软命名文档为据），注释已改为「C0 + DEL」口径。
+- **工单 G-08（新登记，后续波次）**：scanPending continue 分支直证——真实文件系统造不出含 NUL/`/` 的文件名，须 mock 注入 readdir 返回 `["../evil.json","正常书.json"]` 断言只含正常书（陆 OBSERVE-4 + 毛 OBSERVE-4 后半）。注意加探针会动「51 发索引」计数体系（guard §17），故本轮登记不加。
+- **观察 A（含与 C3 修复的耦合）**：`id.includes("..")` 过宽会误拒 "Vol.2..3" 类合法名——但过严是安全侧偏差、误伤极罕见，且 C12/C13（派生 id 含 ..）的修复锚点正在此处：**F6/F8 修 C3 时若要依赖 safeBookId 拒 ..，不得先收紧 includes**；若改收紧为「整段 . / ..」，须同 commit 把 C12/C13 拒点移到 startImport 派生规则。
+- 观察 B/C 登记：C10 读侧直证已由「修复前走到『书库文件不见了』=已读库外任务书」隐证（人话文案即读侧证据），不另加 canary；C27（ipc 通道参数形状）随 C2 处置——三入口在 jobs 层过闸 + UserError 经 handle() 统一 {ok:false,error}，ipc 层无需重复校验；缺陷号 C1/C2 与 fuzz 用例号 C1/C2 同号不同义，汇编时以「缺陷 C1/C2」与「探针 C1/C2」区分。
