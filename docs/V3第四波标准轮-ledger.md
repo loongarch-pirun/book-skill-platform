@@ -96,11 +96,11 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 | --- | --- | --- | --- | --- | --- |
 | C1 | src/lib/assets.mjs:21 | safeBookId 放行 NUL（实测 Node 22 path.join 容错+existsSync 吞 ERR_INVALID_ARG_VALUE，链路降级 404/UserError 无崩溃无穿越——闸门名不副实，靠下游吞错兜底） | 一般 | **已修 1365b91（F3）**｜坐实 C8（C9 行为锁）｜双 PASS |
 | C2 | src/desktop/jobs.mjs:197/199-202/248/260-262 | resumeCatalog/catalogPrompt/scanPending 无 safeBookId：taskPath 可 `../` 逃逸、resultPath 任意文件读 | 严重 | **已修 1365b91（F3）**｜坐实 C10/C11｜双 PASS |
-| C3 | src/desktop/jobs.mjs:73-74 | 文件名派生 bookId 未经 safeBookId：「x..pdf」幽灵条目永卡书架、「..txt」出 title="." 怪行 | 严重 | 待修（F6）｜坐实 C12/C13 | |
+| C3 | src/desktop/jobs.mjs:73-74 | 文件名派生 bookId 未经 safeBookId：「x..pdf」幽灵条目永卡书架、「..txt」出 title="." 怪行 | 严重 | **已修 14a86c3（F8）**｜坐实 C12/C13（C13b 隐藏文件同族）｜双 PASS |
 | C4/C37 | src/desktop/jobs.mjs:85-86 | Windows 设备名/尾空格文件名：覆盖或 id 与磁盘名不一致 | 一般 | 探针锁定+人话文案 | |
 | C5 | — | ADS 冒号/超长 id >255/MAX_PATH | 疑点→挂起 | 真机轮 | |
-| C6 | src/desktop/jobs.mjs:85-86 | 大小写折叠碰撞：双导入 dest 同名覆盖，两条书架条目指向同一文件 | 严重 | 待修（F6 dest 碰撞检测）｜坐实 C14 | |
-| C7 | src/desktop/book-view.mjs:117-119 | 损坏 docx → 500 人话路径无测试 | 一般 | 待修（F8 补断言） | |
+| C6 | src/desktop/jobs.mjs:85-86 | 大小写折叠碰撞：双导入 dest 同名覆盖，两条书架条目指向同一文件 | 严重 | **已修 14a86c3（F8）**｜坐实 C14（+C14b id 级折叠）；运行时 FS 探测覆盖 win32/macOS｜双 PASS |
+| C7 | src/desktop/book-view.mjs:117-119 | 损坏 docx → 500 人话路径无测试 | 一般 | **已锁（C7a/C7b 探针，F4 随异常路径落地时转绿）**——行文过期修正（陆 F8-FAIL-2） | |
 | C8 | src/desktop/book-view.mjs:100/107 | docx zip 炸弹：只挡文件体积，无解压尺寸/超时闸门 | 严重 | 挂起→候选解压尺寸闸门 | |
 | C9 | src/desktop/book-view.mjs:47-51 | UTF-16BE/无 BOM UTF-16 静默乱码（P2 后部分缓解） | 一般 | 登记+探针 | |
 | C10 | src/desktop/book-view.mjs:100-104 | 49MB 临界 txt 双倍内存 + 渲染进程 ~100MB HTML | 严重 | 挂起→候选流式/早闸门 | |
@@ -117,13 +117,13 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 | C21 | src/desktop/jobs.mjs:47-52、151-156、158-162 | 取消后 emit 复活：buildBook 失败路径 emit failed 重建条目（持久幽灵横幅）；脏书 struct emit 瞬建瞬删（幽灵闪烁） | 严重 | 待修（F6 墓碑）｜坐实 C1/C2 | |
 | C22 | src/desktop/jobs.mjs:300 vs :279 | txt2docx 子进程未挂 j.child → 取消杀不到，reject 落 failed emit 叠加幽灵 | 一般 | 待修（F6）｜坐实 C6 | |
 | C23 | src/desktop/jobs.mjs:234-239 | 终态后取消：cancelled 残留（下次导入自愈） | 轻微 | 登记 | |
-| C25 | src/desktop/engine.mjs:370 | humanizeError ENOENT 正则把非书库操作误报「书库文件不见了」，code 统一 db-missing | 一般 | 待修（F8 收紧+保真） | |
+| C25 | src/desktop/engine.mjs:370 | humanizeError ENOENT 正则把非书库操作误报「书库文件不见了」，code 统一 db-missing | 一般 | **已修 14a86c3（F8）**｜D5 直证（.db→书库文件；books/→保真原文）｜双 PASS |
 | C26 | src/desktop/ipc.mjs:95-100 | openExternal 错误文案回传绝对路径 | 疑点→轻微·可接受 | 登记 | |
 | C27 | src/desktop/ipc.mjs/preload.js | 通道无参数形状校验 | 一般 | 随 C2 修（F3） | |
-| C29 | src/renderer/views.js/views-ask.js | 全库零 XSS/转义断言（书名可合法含 `<`、`>`、引号） | 严重（测试面） | 新套件 E 段（F7 挂载） | |
-| C30 | src/renderer/views-ask.js:54/123 | data-cid 未 esc（当前为 sqlite 整数，低危但不一致） | 轻微 | 待修（F7）｜坐实 E3 | |
+| C29 | src/renderer/views.js/views-ask.js | 全库零 XSS/转义断言（书名可合法含 `<`、`>`、引号） | 严重（测试面） | **已修 325d52b（F7）**｜E1/E2/E3/E3b/E6 五发常驻 + guard 四条绳索｜双 PASS |
+| C30 | src/renderer/views-ask.js:54/123 | data-cid 未 esc（当前为 sqlite 整数，低危但不一致） | 轻微 | **已修 325d52b（F7）**｜坐实 E3；九处实际未转义面全清（含 chat×3/reader×3/views.js×2 自查扩面）｜双 PASS |
 | C31 | src/renderer/views-reader.js:50 | iframe 无 sandbox：mammoth HTML 原样入，docx 内 http(s) 图片发起网络请求 | 疑点→一般 | 登记→后续评估 | |
-| C32 | src/renderer/app.js:136 | state.jobs 以 bookId 为键 spread，"__proto__" 键无断言 | 轻微 | 锁断言（E4，F7 挂载） | |
+| C32 | src/renderer/app.js:136 | state.jobs 以 bookId 为键 spread，"__proto__" 键无断言 | 轻微 | **已锁 325d52b（F7）**｜E4 常驻（自有属性 + 原型不污染）｜双 PASS |
 | C33 | src/desktop/jobs.mjs:297-309 | tmp 稳定路径保幂等但永不清理 + 同名 base 碰撞覆盖（第二个换源，重灌保护误判「另一本书」） | 一般 | 待修（F6 hash 命名）｜坐实 C3 | |
 | C34 | src/desktop/jobs.mjs:268 | catalog prompt.md 累积（与任务书同命运、幂等覆盖） | 疑点→轻微 | 登记（设计行为） | |
 | C38 | src/desktop/jobs.mjs:85-86 | WPS 打开中导入共享违规分支无测 | 疑点→一般 | 登记 | |
@@ -184,6 +184,24 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 | F2b 开关 + 回调 | **已修** | bbc9c80 | fuzz 56 PASS/16 FAIL/2 OBSERVE/1 SKIP，转绿恰 {F4,F5,F6}（19→16），F4 十值矩阵全绿（含零宽/全角/前导空/制表换行）；F5/F6 加调用序列断言；guard 91 绿（③ 放宽为语义存在性）；structurize/jobs/ipc（29 PASS）全绿；eslint 0 | 毛求疵 PASS（无 FAIL，5 OBSERVE 全部同 commit 处置：零宽换脸复现→归一化、async 契约注释、catch 留日志、guard 放宽、onStage 两处 grep 坐实）；陆回测 PASS（FAIL 0，O1 补跑 ipc、O5 加序列断言、余登记） |
 | F3 bookId 闸门统一 | **已修** | 1365b91 | fuzz 61 PASS/13 FAIL/2 OBSERVE/1 SKIP，转绿恰 {C8,C10,C11}（16→13），C8b/C8c win32 冒号/尾点双平台语义锁；jobs/ipc（29）/guard（91）/enrich-job（30）/book-view（31）全绿；eslint 0 | 毛求疵 PASS（无 FAIL；OBSERVE-2 ADS 冒号/OBSERVE-3 尾点/OBSERVE-4 留痕/OBSERVE-5b resultPath 澄清同 commit 处置；C1 区间/误伤面/includes 过宽/scanPending 直证登记）；陆回测 PASS（FAIL 0；OBSERVE-4 → G-08；OBSERVE-5 enrich 补跑闭环） |
 | F4 协议 handler | **已修** | b3810f7 | fuzz 65 PASS/11 FAIL/2 OBSERVE/1 SKIP，转绿恰 {B1,B2}（13→11），B1b docx statSync TOCTOU/B6b 不同书并发不折叠 新断言全绿；B3 LRU calls=10 绿锁未破；B6 OBSERVE calls 2→1 翻转；book-view 31 pass；ipc 29 PASS；guard 91；eslint 0 | 毛求疵 PASS（无硬阻断；O1 currentLibDir 契约核实恒返字符串→条件阻断关闭；O2 ctimeMs/O3 状态码/O4 单次 stat/O6 归一化 同 commit；O5 超时/O8 纯函数 登记）；陆回测 PASS（FAIL 0，第 11 条红经核为 C6 无缺项） |
+| F5 删除半途失败 | **已修** | b8b71d4 | fuzz 69 PASS/8 FAIL/2 OBSERVE/1 SKIP（纯净 F5 态，F6 改动 stash），转绿恰 {D1,D2,D3}（11→8）；D1b wal 顺序直证/D2 文案「再点一次」/D3 patch 命中计数 新断言全绿；guard 92 绿（+删除顺序契约）；ipc 29/enrich 30 全绿；eslint 真退出码 0 | 评审对抗官条件性 PASS（F-A deleteBook 空守卫/F-B purge 原件吞错 核实均不成立=关闭；O1 顺序前提核实 makeBookDb 只建主库=关闭；O2/O3/O5 同 commit；O4 幂等/O6 僵尸登记）；测试验证师有条件过关（D1 零删除/D3 patch 直证 两条 FAIL 已同 commit 补齐） |
+| F6 jobs 竞态/幽灵 | **已修** | da907c6 | fuzz 75 PASS/4 FAIL/2 OBSERVE/1 SKIP，转绿恰 {C1,C2,C3,C6}（8→4）；C1b jobsStatus 无残留/C1c 代际防线/C3b 同内容幂等/C6 幽灵事件 新断言全绿；jobs/ipc(29)/guard(92)/enrich(30)/book-view(31) 全绿；eslint 真退出码 0 | 评审对抗官 PASS（F1 代际竞态阻断→epoch 方案落地；F2 墓碑只入口清/F3 orphan 短路/O1 16hex/O2 流式/O3 取消不抛 同 commit；O4/O5/O6 核实覆盖）；测试验证师 PASS（实跑差分 69/8→75/4、C6 假绿手工对照排除）+ FAIL F2 代际零覆盖/F3 C6 单断言 已同 commit 补齐；F1 eslint 红归属 F2a 遗留另 commit 647e3e8 |
+| F7 渲染转义 | **已修** | 325d52b | fuzz 78 PASS/3 FAIL/2 OBSERVE/1 SKIP，转绿 {E3}（4→3）；E3 三载荷精确断言（data-cid 值逐字=esc(id)）/E3b 集成计数恰 2/E6 chat 常驻 全绿；guard 96 绿（+4 转义绳索）；book-view 31/renderer-graph 全 PASS/ipc 29 全绿；eslint 真退出码 0 | 评审对抗官 PASS（代码侧 0 阻断：esc 对双引号属性完备/单趟不二次扫描/DOM 反查不失配；F1 载荷字面量可绕过→三载荷精确断言、F2 覆盖率 1/9→renderCite 单点+E6 同 commit；O1 全属性扫/O4 消费链/O15/O17 采纳；O3 on*/O7 URL/O14 tagged template 登记）；测试验证师 PASS（实跑 jsdom 四处渲染面全转义；F1 cites 未进断言→===2、F2 文本节点→esc、O1 E6、O2 guard 通用绳索 同 commit） |
+| F8 一般项收尾 | **已修** | 14a86c3 | fuzz **85 PASS / 0 FAIL / 2 OBSERVE / 1 SKIP EXIT=0**（25 红全清 25→0）；C8d 保留名/C13b 隐藏文件/C14 补文案+零状态断言+折叠 FS 探测/C14b id 级折叠/D5 ENOENT 保真 新断言全绿；**npm run test:fast EXIT=0**；jobs/ipc(29)/guard(96)/enrich(30)/book-view(31)/renderer-graph/structurize 全绿；eslint 真退出码 0 | 评审对抗官 PASS（F1 macOS 折叠阻断→运行时探测/F2 空 base/F3 保留名/OBSERVE 全部同 commit；F4 核实 mkdir 在 readdir 前=关闭）；测试验证师 PASS（25→0 逐 commit 实跑逐位一致、闭环 3+3+3+3+2+3+4+1+3=25、零回归）+ FAIL-2 C25/FAIL-3 C14 断言/FAIL-4 id 级折叠/O-1 fail-safe/O-3 平台护栏 全部同 commit 补齐 |
+
+## S3 下段检查点 + S4 五门（2026-10-18）
+
+- **F5~F8 全修 + F5b 补漏**：b8b71d4（F5 删除半途失败）→ 8729f86（F5b C20 变体文案）→ da907c6（F6 墓碑+代际/转换命名/child 闸）→ 325d52b（F7 renderCite 单点+九处转义）→ 14a86c3（F8 派生 id 闸+折叠防护+C25 保真）→ 647e3e8（lint 修复，F2a 遗留）
+- **fuzz 25→0 全清（EXIT=0）**：红数轨迹 25→22（F1）→19（F2a）→16（F2b）→13（F3）→11（F4）→8（F5）→4（F6）→3（F7）→**0（F8）**；断言总数 74→88（85 PASS + 0 FAIL + 2 OBSERVE + 1 SKIP）
+- **25 条红闭环**（测试验证师逐 commit 实跑复现，非引账）：F1{A1,A8,F9} F2a{A3,A4,F2a} F2b{F4,F5,F6} F3{C8,C10,C11} F4{B1,B2} F5{D1,D2,D3} F6{C1,C2,C3,C6} F7{E3} F8{C12,C13,C14} —— 3+3+3+3+2+3+4+1+3=25，零清单外、零新红、正常路径（空格/间隔点/中文名）无被误伤
+- **S4 五门全过**：
+  - `npm run test:fast` **EXIT=0**（30 套，含 entry-fuzz 85/0）
+  - `npm run test:ci` **EXIT=0**（16 套）
+  - `npm run test:slow` **EXIT=0**（10 套）；**eval-gate 86/92 = 93 分 ≥ 基线 93，漏题 6 条与基线一致（无新增）**——零回归
+  - guard 96 项全过（含 F5 删除顺序 / F7 转义四条绳索）
+  - `npx eslint .` **EXIT=0**（真退出码——本轮起弃用管道读退出码）
+- **工单**：G-05 签名白名单 / G-06 双计 ratio / G-07 横幅 emit 直证 / G-08 scanPending continue 直证 / **G-09（新）空格与间隔点书名测试锁**（陆 O-5）/ **G-10（新）同名改内容重导入语义锁**（陆 O-6，与 C33 重灌保护分界）
+- **教训（重要）**：lint 门从 F2a 起一直读管道退出码（`npm run lint | tail` 的 $? 是 tail 的 0），5 轮「eslint 0」是假绿——由测试验证师 `npx eslint .` 实测揭穿（structurize.mjs 两处 no-useless-assignment）。fuzz 首跑曾踩过同一坑，lint 没汲取。
 
 ## S3 上段检查点（2026-10-18）
 
