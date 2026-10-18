@@ -3,10 +3,12 @@
 // 职责（按对账审计）：configure 注入（paths.mjs 三层解析）+ getBookChunks（M1）+
 // 错误人话化（M3）+ 模型进度钩子转事件（M4）。
 import fs from "node:fs";
+import path from "node:path";
 import { createRequire } from "node:module";
 import { resolveDirs, writeConfig, hasConfig } from "./paths.mjs";
 import { listBooks, findBook, hybridSearch, routeAndSearch, configureSearch, currentLibDir } from "../lib/search.mjs";
 import { listShelf, resolveAsset, safeBookId } from "../lib/assets.mjs";
+import { purgeDerived } from "../lib/derived.mjs";
 import { describeAsset } from "./book-view.mjs";
 import { getCatalogSummary } from "../lib/catalog.mjs";
 import { questionKeywords } from "../lib/keywords.mjs";
@@ -97,6 +99,8 @@ export function bookCatalog(bookId) {
 
 // 删书第一档「移出书架」（M6 + V3 第四波 #168 两档删除）：只删库文件（含 wal/shm），
 // books/ 原件保留——书架回到 raw 态，点「开始加工」即可重建，不用重新拖文件。
+// 明确**不调 purgeDerived**（P5 拍板 2026-10-18）：原件还在、重建后块号可复用，
+// 编目/洗数据派生留着能省一次云端洗数据的钱；只有「彻底删除」承诺清全部六落点。
 export function deleteBook(bookId) {
   const libDir = currentLibDir();
   const shelf = listBooks(libDir, { includeDisabled: true });
@@ -134,15 +138,92 @@ export function deleteBook(bookId) {
     : "已移出书架——书库文件已删（这本没有 books/ 原件，重建要重新导入文件）" };
 }
 
-// 删书第二档「彻底删除」（V3 第四波 #168）：书库文件 + books/ 原件 + 开关记录一体删，不可恢复。
+// 删书第二档「彻底删除」（V3 第四波 #168；P5 补齐派生六落点）：书库文件 + books/ 原件 +
+// 开关记录 + 编目/洗数据派生文件一体删，不可恢复。
 // 顺序：先删原件再删库——原件删除失败（占用/权限）时书库还完好，用户可重试；
+// 派生清理放最后（前面失败就整块不动，见下方注释）。
 // 存档/反馈样本联动在 ipc 层（purgeArchives 双清，与第一档同一条链路）。
 export function purgeBook(bookId) {
   const libDir = currentLibDir();
-  const b = listBooks(libDir, { includeDisabled: true }).find(x => x.id === bookId);
-  const asset = resolveAsset(libDir, bookId);
-  if (!b && !asset.exists) throw new UserError(`书库里找不到「${bookId}」`);
-  const title = b?.title || String(bookId).replace(/\.[^.]+$/, "");
+  const raw = String(bookId ?? "");
+  const shelf = listBooks(libDir, { includeDisabled: true });
+
+  // 第一段：精确匹配，**不做任何归一**。
+  let b = shelf.find(x => x.id === raw) || null;
+  let id = b ? b.id : raw;
+  let asset = resolveAsset(libDir, id);
+  // resolveAsset 内部过 safeBookId（它会 trim）：返回的 bookId 与请求不一致，说明这次
+  // 「找到」的是另一本书（" foo.docx" → "foo.docx"）。数据丢失级，一律不认账
+  // （评审对抗官 FAIL-1 实测复现：前导空格的 raw 卡会把隔壁正常书的原件删掉）。
+  if (asset.exists && asset.bookId !== id) {
+    asset = { bookId: id, path: null, ext: null, exists: false };
+  }
+
+  // 原件归属校验（评审 FAIL-4）：resolveAsset 有**跨扩展兜底**（"foo.pdf" 的库会被
+  // 判成 books/foo.docx）——阅读场景那是容错，删除场景就是删掉隔壁那本的原件。
+  // 删除路径只认两种归属：与 id 同扩展，或 jobs.mjs EXT_FMT 的 txt→docx 映射；
+  // 无扩展的旧库 id 才允许任意扩展（历史命名约定）。
+  const assetBelongs = (aid, apath) => {
+    if (!apath) return false;
+    const idExt = path.extname(aid).toLowerCase();
+    if (!idExt) return true;
+    const gotExt = path.extname(apath).toLowerCase();
+    if (gotExt === idExt) return true;
+    return idExt === ".docx" && gotExt === ".txt";
+  };
+
+  // 第二段：精确没命中库时做大小写归一（C20）。Windows/macOS 默认文件系统大小写
+  // 不敏感，T3.docx 与 t3.docx 是同一本。**不能看 asset.exists 再决定**：Windows 上
+  // resolveAsset 本身大小写不敏感，会先一步「找到」原件，导致这段被跳过 → 库不删、
+  // 原件却删了（评审 FAIL-2 实测：比不修更糟的半截态）。
+  // 判「同一本」用**文件系统身份**，不用字符串小写：JS 的 toLowerCase 会把 U+212A
+  // KELVIN SIGN 折叠成 ASCII "k"，而 NTFS 视其为两个不同文件名——用字符串证明身份
+  // 会删错书（评审 FAIL-3 实测：purge("k.docx") 删掉了 K.docx 那本）。
+  // 坏库（在盘上但 scanBooks 读不了）不会进 shelf → 探不到 → 不猜，宁可拒绝。
+  // 也不 trim：首尾空白可能是文件名的一部分。
+  if (!b && raw && raw === raw.trim()) {
+    let probeReal = null;
+    try { probeReal = fs.realpathSync.native(path.join(libDir, raw + ".db")); } catch { /* 盘上没有这个名 */ }
+    if (probeReal) {
+      const hit = shelf.find((x) => {
+        try { return fs.realpathSync.native(x.db) === probeReal; } catch { return false; }
+      });
+      if (hit) {
+        b = hit;
+        id = b.id;
+        asset = resolveAsset(libDir, id);
+      }
+    }
+  }
+
+  // 归属统一收口：不管走哪条路，最终 asset 必须真属于这本书——bookId 回验挡住
+  // safeBookId 的 trim，扩展校验挡住 resolveAsset 的跨扩展兜底。
+  if (asset.exists && (asset.bookId !== id || !assetBelongs(id, asset.path))) {
+    asset = { bookId: id, path: null, ext: null, exists: false };
+  }
+
+  if (!b && !asset.exists) {
+    // 带首尾空白的书名单独给话术：含糊说「找不到」会让用户反复试
+    if (raw !== raw.trim()) {
+      throw new UserError(`「${raw}」书名前后带空白——系统无法确认是哪一本，请先把文件改成不含首尾空格的名字再删`);
+    }
+    // 补刀路（评审 OBSERVE-1）：库和原件都没了，但上次可能因占用留下派生——
+    // 没有这条，用户永远清不掉残留（再点一次只会得到「找不到」）。只清派生，
+    // 删不掉就如实说。派生文件名严格等于 bookId，不存在「猜」的成分。
+    const leftover = purgeDerived(libDir, id);
+    if (leftover.removedCount > 0 || leftover.failed.length > 0) {
+      const bits = [];
+      if (leftover.removedCount > 0) bits.push(`清掉残留派生 ${leftover.removedCount} 项`);
+      if (leftover.failed.length > 0) bits.push(`还有 ${leftover.failed.length} 项没删掉（可能被占用）`);
+      return {
+        purged: id, title: id.replace(/\.[^.]+$/, ""), removedAsset: false,
+        removedDerived: leftover.removedCount, derivedFailed: leftover.failed.length,
+        note: `《${id}》的书库和 books/ 原件都不在了；${bits.join("，")}`,
+      };
+    }
+    throw new UserError(`书库里找不到「${bookId}」`);
+  }
+  const title = b?.title || id.replace(/\.[^.]+$/, "");
   if (asset.exists && asset.path) {
     try { fs.rmSync(asset.path, { force: true }); }
     catch (e) { throw new UserError(`books/ 原件删除失败（${e.message}）——书库未动，请关掉占用该文件的程序后重试`); }
@@ -160,12 +241,31 @@ export function purgeBook(bookId) {
       }
     }
   }
-  try { setSkillEnabled(libDir, bookId, true); }
+  try { setSkillEnabled(libDir, id, true); }
   catch (e) { console.warn(`  开关记录清理失败（${e?.code || e?.message}）——书库已删，残留记录无害`); }
+  // 派生文件六落点（P5 一体删除收尾）：编目任务书/提示词/结果 + 洗数据任务书/产物/缓存。
+  // 放在最后：上面任何一步抛错（原件或库删不掉）都会直接穿层，派生保持原样——
+  // 用户重试还能原路清，不会出现「书库还在、任务书先没了」的半截态。
+  // 失败不改成功语义（与开关清理同款）：删书主体已成既成事实，残留尾巴进 note 告知。
+  const dv = purgeDerived(libDir, id);
   const parts = [];
   if (b) parts.push("书库文件");
   if (asset.exists) parts.push("books/ 原件");
-  return { purged: bookId, title, removedAsset: asset.exists, note: `《${title}》已彻底删除（${parts.join(" + ")}）` };
+  let note = `《${title}》已彻底删除（${parts.join(" + ")}）`;
+  if (dv.removedCount > 0) note += `；编目/洗数据派生文件已清 ${dv.removedCount} 项`;
+  if (dv.failed.length > 0) note += `；有 ${dv.failed.length} 项派生文件没删掉（可能被占用）`;
+  // skipped 必须说出来：候选位置是目录/符号链接时我们保守不动，但用户看到的
+  // 「彻底删除」承诺不能含糊——否则那项会静默留下，且没有补刀入口（陆回测 OBSERVE-1）
+  if (dv.skipped.length > 0) note += `；有 ${dv.skipped.length} 项不是普通文件（目录或链接），已保留`;
+  // rejected = 派生层闸门没过（书名含系统不允许的字符）。必须说出来：
+  // 否则用户以为「彻彻底底删干净了」，实际上六项可能一项没动（评审 OBSERVE-1）
+  if (dv.rejected) note += "；派生文件未清理（书名含系统不允许的字符），请手动检查四个派生目录";
+  return {
+    purged: id, title, removedAsset: asset.exists,
+    removedDerived: dv.removedCount,
+    derivedFailed: dv.failed.length,
+    note,
+  };
 }
 
 // ---------- 问一问：单书 / 全库（跨书检索入口） ----------

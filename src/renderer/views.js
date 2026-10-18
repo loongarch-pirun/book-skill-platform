@@ -194,6 +194,10 @@ export function bindShelfEvents() {
         ? `· books/ 原件（${b.format || "?"} 文件）`
         : "· books/ 原件（无——这本当初没复制原件，重建要重新导入文件）");
       lines.push("· 引用这本书的云端存档 / 反馈样本");
+      // P5：一体删除补齐派生六落点（编目任务书/提示词/结果 + 洗数据任务书/产物/缓存）。
+      // 不做逐文件存在性枚举（每次书架刷新多 4 次 stat 不值），实数由删除回执的
+      // removedDerived 保证——清单只说「有就删」，回执说「真删了几项」。
+      lines.push("· 编目任务书（含提示词）/ 编目结果 / 洗数据任务书、产物与缓存（若存在）");
       if (!confirm(lines.join("\n"))) return;
       try {
         const r = await call(window.study.purgeBook(el.dataset.bid));

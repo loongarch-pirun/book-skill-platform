@@ -38,7 +38,10 @@ export async function registerIpc({ ipcMain, app, dialog, shell, getWin }) {
   });
   handle("books:purge", async (eng, bookId) => {
     const r = eng.purgeBook(bookId);
-    const purged = chat.purgeArchives(bookId);
+    // 用归一后的 r.purged 清存档/反馈，不用原始入参：大小写变体（"t3.docx" 对上
+    // 库 "T3.docx"）时两者不同，用原始值清不到任何东西，存档与反馈会留成孤儿
+    // （评审对抗官 OBSERVE-6）。存档里存的 bookId 是建库时的真名。
+    const purged = chat.purgeArchives(r.purged);
     return purged > 0 ? { ...r, note: `${r.note}；已连 ${purged} 条引用这本书的存档/反馈样本一起删除` } : r;
   });
   // 导入管线（4.6：H1 直调 lib 四函数 / H2 require 复用 + spawn 显式传参；
