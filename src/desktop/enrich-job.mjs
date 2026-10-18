@@ -23,7 +23,7 @@ const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 
 // ---------- 任务注册表 + 进度订阅（jobs.mjs 同款；bookId 不会两边同时在跑，见 startEnrich 守卫） ----------
-const enrichJobs = new Map();   // bookId → { stage, label, detail, error, kind:"enrich", startedAt, stats? }
+const enrichJobs = new Map();   // bookId → { stage, label, detail, error, kind:"enrich", startedAt, stats?, gate? }
 const cancelled = new Set();
 const subs = new Set();
 
@@ -127,8 +127,10 @@ async function runPipeline(b, config, opts) {
     });
     if (cancelled.has(id)) throw Object.assign(new Error("已取消"), { code: "CANCELLED" });
     if (!r.ok) {
-      // STALE/CONFIG/NOBOOK 等人的消息直接进横幅（runEnrich 的 message 已带修复指引）
-      emit(id, { stage: "failed", label: "洗数据失败", error: r.message, code: r.code });
+      // STALE/CONFIG/NOBOOK 等人的消息直接进横幅（runEnrich 的 message 已带修复指引）；
+      // DIRTY（P4 前门体检）单给标签——病因是书要重新加工，不是洗数据本身失败
+      const label = r.code === "DIRTY" ? "洗数据被拒（书太脏）" : "洗数据失败";
+      emit(id, { stage: "failed", label, error: r.message, code: r.code });
       return;
     }
     emit(id, { stage: "import", label: "入库中", detail: "验真 → 写库（原文一字不改）", error: null });
@@ -136,14 +138,19 @@ async function runPipeline(b, config, opts) {
       onProgress: (p) => emit(id, { stage: "import", label: "入库中", detail: `写库 ${p.done}/${p.total}` }),
     });
     if (!imp.ok) {
-      emit(id, { stage: "failed", label: "入库失败", error: imp.message, code: imp.code });
+      // GATE（P4 闸门硬线）单给标签：产物质量不达标被拦，message 是人话原因+补救
+      const label = imp.code === "GATE" ? "入库被拦（质量闸门）" : "入库失败";
+      emit(id, { stage: "failed", label, error: imp.message, code: imp.code });
       return;
     }
     const s = imp.stats;
+    const gateNote = imp.gate && imp.gate.verdict === "warn"
+      ? ` · 闸门标记：覆盖 ${(imp.gate.coverage * 100).toFixed(0)}%（部分覆盖）`
+      : "";
     emit(id, {
       stage: "done", label: "完成",
-      detail: `覆盖 ${s.imported}/${s.eligible}（${pct(s.imported, s.eligible)}%） · 标签 ${s.tags} · 摘要 ${s.chapterSummaries} 章${s.bookSummary ? "+全书" : ""}`,
-      stats: s, artifactPath: r.artifactPath, error: null,
+      detail: `覆盖 ${s.imported}/${s.eligible}（${pct(s.imported, s.eligible)}%） · 标签 ${s.tags} · 摘要 ${s.chapterSummaries} 章${s.bookSummary ? "+全书" : ""}${gateNote}`,
+      stats: s, gate: imp.gate || null, artifactPath: r.artifactPath, error: null,
     });
   } catch (e) {
     if (cancelled.has(id) || e?.code === "CANCELLED") {

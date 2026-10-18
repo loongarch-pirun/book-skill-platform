@@ -7,12 +7,16 @@
 //   ② 标签回源 100%：入库前复用 validateEnrichEntry 重跑回源验真（自造标签在这一层被丢并计数），
 //      入库后 auditEnrich 可在库侧复查 chunk_tags 每个 tag 必须被该块原文包含；
 //   ③ 对齐可验：artifact.book.content_hash 与库内 meta.content_hash 不符 → 整单拒收（书重建过）；
-//   ④ 失败可部分：缺号块不产条目（留 NULL，audit 报覆盖率），重跑同一命令即覆盖更新。
+//   ③' 结构可验（P4）：书被重新加工过（切片结构变、源文件没变）时 content_hash 相同管不住——
+//      chunk_fp 比对（老产物无指纹退化为 chunk_count）不符 → STALE_STRUCT 拒收；
+//   ④ 失败可部分：缺号块不产条目（留 NULL，audit 报覆盖率），重跑同一命令即覆盖更新；
+//   ⑤ 闸门双档（P4）：evaluateEnrichGate 判 pass/warn/block——block 在事务与 schema 之前拒收
+//      （一个字符都不写），warn 照常入库且 verdict 落 meta.enrich_gate 供书架徽标显示。
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { createRequire } from "node:module";
-import { buildEnrichTasks, validateEnrichResult, ENRICH_DEFAULTS } from "./enrich.mjs";
+import { buildEnrichTasks, validateEnrichResult, evaluateEnrichGate, ENRICH_DEFAULTS } from "./enrich.mjs";
 const require = createRequire(import.meta.url);
 
 // 入库 = 覆盖写（条目级）：产物覆盖的块整条刷新，缺号块保持原值不猜。
@@ -82,11 +86,48 @@ export function importEnrich(dbPath, artifactPath, opts = {}) {
         message: `产物 content_hash ${artifact.book.content_hash} ≠ 书库 ${task.book.content_hash}——书被重建过，请重跑洗数据再入库`,
       };
     }
+    // ③' 结构可验（P4）：源文件没变但书被**重新加工过**（切片结构变）时 content_hash
+    // 相同、旧产物会按 idx 硬套新块静默串味。两边都有 chunk_fp → 指纹比；老产物无
+    // 指纹 → 退化为 chunk_count 比。不符 → STALE_STRUCT，同样一个字符都不写。
+    const artFp = typeof artifact.book?.chunk_fp === "string" ? artifact.book.chunk_fp : null;
+    if (artFp && task.book.chunk_fp && artFp !== task.book.chunk_fp) {
+      return {
+        ok: false, code: "STALE_STRUCT",
+        message: `这本书重新加工过，切片结构变了（块结构指纹 ${artFp} → ${task.book.chunk_fp}）——旧洗数据结果作废，请重跑洗数据`,
+      };
+    }
+    if (!artFp && Number.isFinite(artifact.book?.chunk_count)
+      && artifact.book.chunk_count !== task.book.chunk_count) {
+      return {
+        ok: false, code: "STALE_STRUCT",
+        message: `这本书重新加工过，切片结构变了（块数 ${artifact.book.chunk_count} → ${task.book.chunk_count}）——旧洗数据结果作废，请重跑洗数据`,
+      };
+    }
     // 入库前重跑验真（与跑批通道同一套函数）：自造标签在这层被丢并计数
     const v = validateEnrichResult(artifact, task);
     const warnings = [...v.errors];
     const covered = new Set(v.entries.map(e => e.idx));
     const uncovered = task.chunks.filter(c => !covered.has(c.idx)).map(c => c.idx);
+
+    // 闸门（P4 双档）：block 在事务与 schema 之前判定——一个字符都不写。
+    // 输入全部从事务前就算好的数来（covered/标签/章摘要），不依赖写库结果。
+    const dbChapters = new Set(task.chunks.map(c => c.chapter).filter(Boolean));
+    const chapterTotal = artifact.chapter_summaries && Object.keys(artifact.chapter_summaries).length > 0
+      ? dbChapters.size : 0;   // 未开摘要（或章摘要全失败）时不参与判定，不冤枉
+    const chapterCount = chapterTotal
+      ? Object.keys(artifact.chapter_summaries).filter(ch => dbChapters.has(ch)).length : 0;
+    const tagsKept = v.entries.reduce((a, e) => a + (Array.isArray(e.tags) ? e.tags.length : 0), 0);
+    const gate = evaluateEnrichGate({
+      eligible: task.chunks.length, covered: v.entries.length,
+      tagsDropped: v.stats.tagsDropped, tagsKept,
+      chapterCount, chapterTotal,
+    });
+    if (gate.verdict === "block") {
+      return {
+        ok: false, code: "GATE", gate,
+        message: `洗数据产物没过闸门（${gate.reasons.join("；")}）——重跑洗数据补齐，或确认这是预期结果再放行`,
+      };
+    }
 
     ensureEnrichSchema(db);
     const hashBefore = textFingerprint(db);
@@ -111,7 +152,6 @@ ON CONFLICT(scope,ref) DO UPDATE SET summary=excluded.summary, updated_at=exclud
         if (e.summary) stamp("chunk", String(e.idx), e.summary);
       }
       // 章摘要：章名必须在库内存在（产物外的章名是孤儿，跳过并警告）
-      const dbChapters = new Set(task.chunks.map(c => c.chapter).filter(Boolean));
       let chapterCount = 0, bookWritten = false;
       const chapterOrphans = [];
       for (const [ch, s] of Object.entries(artifact.chapter_summaries || {})) {
@@ -128,6 +168,9 @@ ON CONFLICT(scope,ref) DO UPDATE SET summary=excluded.summary, updated_at=exclud
       db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('enrich_at',?)").run(now);
       db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('enrich_entries',?)").run(String(v.entries.length));
       db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('enrich_source',?)").run(path.basename(artifactPath));
+      // P4 闸门落账：verdict + 两个比率（书架徽标读它显示「部分覆盖」；block 到不了这里）
+      db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('enrich_gate',?)")
+        .run(JSON.stringify({ verdict: gate.verdict, coverage: gate.coverage, dropRate: gate.dropRate, at: now }));
       // ① 运行时保险：事务内复核原文指纹，不一致抛错 → 整个事务回滚（一行都不留）；
       //   抛出后由 tx() 外层 catch 转 {ok:false, code:"TAMPER"} 返回（V3R-D04，绝不穿层）
       const hashAfter = textFingerprint(db);
@@ -158,6 +201,7 @@ ON CONFLICT(scope,ref) DO UPDATE SET summary=excluded.summary, updated_at=exclud
         chapterSummaries: written.chapterCount, bookSummary: written.bookWritten,
         textHash: hashBefore,
       },
+      gate,
       uncoveredIdx: uncovered,
       warnings,
       artifactPath,

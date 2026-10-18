@@ -93,10 +93,14 @@ function bookCard(b) {
 }
 
 // 洗数据徽标（#140）：已洗→覆盖率+标签数（悬浮看三级摘要）；未洗→引导（没配 key 点了也有人话提示）
+// P4：闸门判 warn（黄线：部分覆盖/丢弃率偏高）→ 文案改「洗数据·部分覆盖」，浮标明示原因
 function enrichTag(b) {
   const e = b.enrich;
   if (!e || !e.ready) return '<span class="tag nocat">未洗数据</span>';
   const s = e.summaries || {};
+  if (e.enrichGate === "warn") {
+    return `<span class="tag enr warn" title="质量闸门黄线：覆盖 ${esc(e.pct)}% · 标签 ${esc(e.tags)} 个 · 摘要 ${s.chunk || 0} 块 / ${s.chapter || 0} 章 / ${s.book ? 1 : 0} 全书（部分覆盖，可重跑补齐）">洗数据·部分覆盖</span>`;
+  }
   return `<span class="tag enr" title="标签 ${esc(e.tags)} 个 · 摘要 ${s.chunk || 0} 块 / ${s.chapter || 0} 章 / ${s.book ? 1 : 0} 全书">已洗 ${esc(e.pct)}% · 标签 ${esc(e.tags)}</span>`;
 }
 

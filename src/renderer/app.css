@@ -76,6 +76,8 @@ body {
 .tag { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: #f0e9d8; color: #7a5c3e; }
 .tag.nocat { background: #f3f0ea; color: var(--muted); }
 .tag.enr { background: #e6efe2; color: #47683b; } /* 已洗数据徽标（#140，绿=存侧成果） */
+/* P4 闸门黄线（warn）：部分覆盖/丢弃率偏高——琥珀色，浮窗写明可重跑补齐 */
+.tag.enr.warn { background: #fdf3e0; color: #a5690f; }
 /* V3 #167：raw 书（仅入库未加工）——未加工标记 + 「开始加工」主按钮 */
 .rawtag { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: #fdf3e0; color: #a5690f; font-weight: 700; }
 .procbtn { background: var(--wood); color: #fff; border-color: var(--wood); font-weight: 700; }

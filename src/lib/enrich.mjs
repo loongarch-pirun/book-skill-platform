@@ -11,8 +11,10 @@
 //   ④ 失败降级可续跑：网络/超时/坏 JSON → 该批记 failed，重跑只补失败批，不阻断其他批。
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { createRequire } from "node:module";
 import { chat, normalizeLlmConfig } from "./llm.mjs";
+import { detectGarbled } from "./structurize.mjs";
 const require = createRequire(import.meta.url);
 
 export const ENRICH_DEFAULTS = {
@@ -32,19 +34,105 @@ export const ENRICH_DEFAULTS = {
   bookInputMax: 12000,   // 书摘要输入的章节摘要总长上限（超长截断——巨章节数书的书摘要天然有损）
 };
 
+// ---------- 块结构指纹与闸门阈值（V3 第四波 P4） ----------
+// 指纹：逐块 [idx, 文本长度, 文本 sha1 前 8 位] 序列化后取 sha256 截 16 位。
+// 存在意义：P3 改切片规则后源文件不变 → content_hash 相同 → 旧产物会按 idx
+// 硬套新块、静默串味（条目对得上号、内容全错位）。任何一块的编号/长度/内容
+// 变了指纹就变，STALE_STRUCT 有机器可判的判据。兼容：老产物无此字段时退化为
+// chunk_count 比对（importEnrich 侧）。
+export function chunkFingerprint(chunks) {
+  const list = Array.isArray(chunks) ? chunks : [];
+  const h = crypto.createHash("sha256");
+  for (const c of list) {
+    const text = String(c?.text ?? "");
+    const id = c?.idx ?? c?.id ?? null;
+    h.update(JSON.stringify([id, text.length, crypto.createHash("sha1").update(text).digest("hex").slice(0, 8)]));
+    h.update("\n");
+  }
+  return h.digest("hex").slice(0, 16);
+}
+
+// 脏库上限（前门体检）：合格块里带乱码/控制符的占比超过此值 → 拒洗（DIRTY）。
+// 逃生开关 BSP_ENRICH_DIRTY=0。实测依据（17 本真库只读扫）：16 本零乱码块，
+// 最高 system-design-primer 0.08%（1/1188）——5% 离真实分布有 60 倍安全边际。
+export const ENRICH_DIRTY_MAX = 0.05;
+
+// 双档闸门阈值（黄线 warn=入库+标记 / 硬线 block=拒收）。环境变量可覆盖——
+// 回归对比时不想改代码就能调档（BSP_GATE_COVERAGE_WARN 等）。
+const gateNum = (envName, dflt) => {
+  const v = process.env[envName];
+  if (v == null || v === "") return dflt;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? n : dflt;
+};
+export function enrichGateThresholds() {
+  return {
+    coverageWarn: gateNum("BSP_GATE_COVERAGE_WARN", 0.95),
+    coverageHard: gateNum("BSP_GATE_COVERAGE_HARD", 0.60),
+    dropWarn: gateNum("BSP_GATE_DROP_WARN", 0.10),
+    dropHard: gateNum("BSP_GATE_DROP_HARD", 0.50),
+    summaryWarn: gateNum("BSP_GATE_SUMMARY_WARN", 0.20),
+    summaryHard: gateNum("BSP_GATE_SUMMARY_HARD", 0.50),
+  };
+}
+
+// 闸门评定（纯函数，不碰库不碰网）：入库前给产物判 pass/warn/block。
+// 输入都是 importEnrich 事务前就算好的数（covered/tagsDropped/tagsKept/章摘要数），
+// 阈值现读（env 可覆盖）。block 级任何一条命中即 block；否则 warn 级命中即 warn。
+// 覆盖率按**合格块**算（短块不计入分母——论语 9/16 按总块数算只有 56% 会被误杀）。
+export function evaluateEnrichGate(input = {}) {
+  const th = enrichGateThresholds();
+  const inp = input || {};   // null 也容错（lib 铁律：不抛）
+  const eligible = Math.max(0, Number(inp.eligible) || 0);
+  const covered = Math.max(0, Number(inp.covered) || 0);
+  const tagsDropped = Math.max(0, Number(inp.tagsDropped) || 0);
+  const tagsKept = Math.max(0, Number(inp.tagsKept) || 0);
+  // 章摘要缺口：仅传入 chapterTotal>0 才参与判定（未开摘要/章摘要全失败时不冤枉）
+  const chapterCount = Math.max(0, Number(inp.chapterCount) || 0);
+  const chapterTotal = Math.max(0, Number(inp.chapterTotal) || 0);
+
+  const coverage = eligible ? Math.min(1, covered / eligible) : 1;   // 0 合格块=无可洗对象，不误杀
+  const dropRate = (tagsDropped + tagsKept) ? tagsDropped / (tagsDropped + tagsKept) : 0;
+  const summaryGap = chapterTotal ? Math.min(1, 1 - chapterCount / chapterTotal) : null;
+
+  const reasons = [];
+  let verdict = "pass";
+  const judge = (value, warn, hard, fmt) => {
+    if (value > hard) { verdict = "block"; reasons.push(`硬线：${fmt(value)} > ${fmt(hard)}`); return; }
+    if (value > warn) { if (verdict === "pass") verdict = "warn"; reasons.push(`黄线：${fmt(value)} > ${fmt(warn)}`); }
+  };
+  judge(coverage < 1 ? 1 - coverage : 0, 1 - th.coverageWarn, 1 - th.coverageHard, (v) => `合格块缺口 ${(v * 100).toFixed(0)}%`);
+  judge(dropRate, th.dropWarn, th.dropHard, (v) => `标签丢弃率 ${(v * 100).toFixed(0)}%`);
+  if (summaryGap != null) {
+    judge(summaryGap, th.summaryWarn, th.summaryHard, (v) => `章摘要缺口 ${(v * 100).toFixed(0)}%`);
+  }
+  return {
+    verdict,
+    coverage: Number(coverage.toFixed(4)),
+    dropRate: Number(dropRate.toFixed(4)),
+    summaryGap: summaryGap == null ? null : Number(summaryGap.toFixed(4)),
+    reasons,
+  };
+}
+
 // 归一化：去空白与标点（标签回源比对用；Latin 大小写不敏感——"Docker" 命中 "docker"）
 const norm = (s) => String(s || "").replace(/[\s\p{P}\p{S}]/gu, "").toLowerCase();
 const cap = (s, n) => (s.length > n ? s.slice(0, n) : s);
 
 // ---------- 任务书 ----------
 // 从书库读块（只读）。idx =  chunks.id（全局编号，提示词与缓存同一套编号空间，杜绝两套表错位）。
+// P4：book.chunk_fp 块结构指纹、book.eligible 合格块数——随任务书/产物/缓存 meta 三处流转，
+// 重新切片（结构变）有机器可判的判据，不再只靠 content_hash（源文件不变时它不变）。
 export function buildEnrichTasks(db, { minChars = ENRICH_DEFAULTS.minChars } = {}) {
   const rows = db.prepare("SELECT id, chapter, page, text FROM chunks ORDER BY id").all();
   const meta = Object.fromEntries(db.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
   const chunks = rows.map(r => ({ idx: r.id, chapter: r.chapter ?? "", page: r.page ?? null, text: r.text }));
   const eligible = chunks.filter(c => c.text.length >= minChars);
   return {
-    book: { title: meta.title || "", content_hash: meta.content_hash || "", chunk_count: chunks.length },
+    book: {
+      title: meta.title || "", content_hash: meta.content_hash || "",
+      chunk_count: chunks.length, chunk_fp: chunkFingerprint(chunks), eligible: eligible.length,
+    },
     chunks: eligible,
     skipped: chunks.length - eligible.length,
   };
@@ -214,11 +302,17 @@ export function enrichArtifactPath(resultsDir, dbName) {
   return path.join(resultsDir, dbName.replace(/\.db$/, "") + ".json");
 }
 
-// 读缓存：末条覆盖（重跑的批会追加新条）；返回 { entries: Map, failedBatches: number[][], hash }
+// 读缓存：末条覆盖（重跑的批会追加新条）；返回 { entries: Map, failedBatches: number[][], hash, fp }
 // V3R-D09（一般）：除半行损坏（JSON 解析失败）外，形状异常行（null 行/entries:null/条目无 idx/缺 idxs）
 // 同样当坏行跳过——手改或裁剪过的缓存不该让 runEnrich 炸 TypeError 穿层
-export function loadEnrichCache(jsonlPath, contentHash) {
-  const out = { entries: new Map(), failedBatches: [], hash: null };
+// P4：第三参 chunkFp 传入当前书库的块结构指纹；meta 行带 chunk_fp 且不符 → stale + reason:"STRUCT"
+// （书被重新加工过，切片结构变了，旧缓存按 idx 硬套会串味——人话指「先移走缓存再跑」）。
+// A7 修复（毛求疵对抗审查）：调用方传了 chunkFp 而 meta 行**没有** chunk_fp（P4 之前格式/
+// meta 行整个缺失）→ 缓存结构不可判，同样 stale STRUCT——「无指纹」不等于「没变过」，
+// 旧条目按 idx 硬套新块就是静默串味（实证：同 content_hash 重加工全链路）。两参旧调用
+// （compactEnrichArtifact 的重读）不传 chunkFp → 不判结构，行为不变。
+export function loadEnrichCache(jsonlPath, contentHash, chunkFp) {
+  const out = { entries: new Map(), failedBatches: [], hash: null, fp: null };
   if (!fs.existsSync(jsonlPath)) return out;
   for (const line of fs.readFileSync(jsonlPath, "utf8").split(/\r?\n/)) {
     if (!line.trim()) continue;
@@ -227,6 +321,7 @@ export function loadEnrichCache(jsonlPath, contentHash) {
     if (rec == null || typeof rec !== "object" || Array.isArray(rec)) continue;  // null/标量/数组行 → 跳过
     if (rec.t === "meta") {
       if (typeof rec.content_hash === "string") out.hash = rec.content_hash;
+      if (typeof rec.chunk_fp === "string") out.fp = rec.chunk_fp;
     } else if (rec.t === "ok") {
       if (Array.isArray(rec.entries)) {
         for (const e of rec.entries) if (e && Number.isInteger(e.idx)) out.entries.set(e.idx, e);
@@ -235,7 +330,10 @@ export function loadEnrichCache(jsonlPath, contentHash) {
       if (Array.isArray(rec.idxs)) out.failedBatches.push(rec.idxs);
     }
   }
-  out.stale = !!contentHash && out.hash != null && out.hash !== contentHash;
+  const hashStale = !!contentHash && out.hash != null && out.hash !== contentHash;
+  const fpStale = !!chunkFp && (out.fp == null || out.fp !== chunkFp);
+  out.stale = hashStale || fpStale;
+  out.staleReason = hashStale ? "HASH" : fpStale ? "STRUCT" : null;
   return out;
 }
 
@@ -245,13 +343,17 @@ function appendCache(jsonlPath, rec) {
 
 // 压成最终产物（外部智能体通道与 #137 入库都读这个 JSON）。
 // entries 可由调用方传入（runEnrich 传的是已清孤儿条目的版本）；不传则从 JSONL 重读。
+// P4：book 带 chunk_fp/eligible（老调用方不传则写 null——入库侧按「无指纹」走 chunk_count 兜底）。
 export function compactEnrichArtifact(jsonlPath, jsonPath, { book, stats, entries: entriesIn }) {
   const cache = loadEnrichCache(jsonlPath, book.content_hash);
   const entries = (entriesIn || [...cache.entries.values()])
     .slice().sort((a, b) => a.idx - b.idx);
   const artifact = {
     version: 1,
-    book: { db: book.db, title: book.title, content_hash: book.content_hash, chunk_count: book.chunk_count },
+    book: {
+      db: book.db, title: book.title, content_hash: book.content_hash, chunk_count: book.chunk_count,
+      chunk_fp: book.chunk_fp ?? null, eligible: book.eligible ?? null,
+    },
     stats: { ...stats, entries: entries.length },
     entries,
     failed_batches: cache.failedBatches,
@@ -286,13 +388,35 @@ export async function runEnrich(dbPath, opts = {}) {
   const dbName = path.basename(dbPath);
   const jsonlPath = enrichResultPath(resultsDir, dbName);
   const jsonPath = enrichArtifactPath(resultsDir, dbName);
-  const cache = loadEnrichCache(jsonlPath, task.book.content_hash);
+
+  // 前门体检（P4）：脏库拒洗——合格块里带乱码/控制符的占比 > ENRICH_DIRTY_MAX 就拒，
+  // 在**任何云端调用之前**（e5 不加载，纯正则 O(总字符)，d2l 5506 块实测 19ms）。脏书洗数据
+  // 等于把坏文本喂给云端、产出的标签/摘要全是垃圾。逃生开关 BSP_ENRICH_DIRTY=0。
+  // 实测：17 本真库最高 0.08%，阈值 5% 有 60 倍安全边际（见 ENRICH_DIRTY_MAX 注释）。
+  if (process.env.BSP_ENRICH_DIRTY !== "0" && task.chunks.length > 0) {
+    let dirtyChunks = 0;
+    for (const c of task.chunks) if (detectGarbled(c.text).bad > 0) dirtyChunks++;
+    const dirtyRatio = dirtyChunks / task.chunks.length;
+    if (dirtyRatio > ENRICH_DIRTY_MAX) {
+      return {
+        ok: false, code: "DIRTY",
+        message: `这本书还有 ${(dirtyRatio * 100).toFixed(0)}% 的块带乱码/控制符（${dirtyChunks}/${task.chunks.length} 个合格块）——先重新加工（结构化改造）再洗数据，否则会把坏文本喂给云端`,
+      };
+    }
+  }
+
+  const cache = loadEnrichCache(jsonlPath, task.book.content_hash, task.book.chunk_fp);
   if (cache.stale) {
-    return { ok: false, code: "STALE", message: `缓存与当前书库内容不一致（content_hash 不同）——书被重建过，请先移走 ${jsonlPath} 再跑`, cachePath: jsonlPath };
+    const why = cache.staleReason === "STRUCT"
+      ? (cache.fp == null
+        ? `缓存是旧格式（没有块结构指纹），无法判断与当前切片是否一致——书可能被重新加工过`
+        : `缓存与当前书库的切片结构不一致（块结构指纹 ${cache.fp} → ${task.book.chunk_fp}）——书被重新加工过`)
+      : `缓存与当前书库内容不一致（content_hash 不同）——书被重建过`;
+    return { ok: false, code: "STALE", message: `${why}，请先移走 ${jsonlPath} 再跑`, cachePath: jsonlPath };
   }
   if (cache.hash == null) {
     fs.mkdirSync(resultsDir, { recursive: true });
-    appendCache(jsonlPath, { t: "meta", db: dbName, content_hash: task.book.content_hash, at: new Date().toISOString() });
+    appendCache(jsonlPath, { t: "meta", db: dbName, content_hash: task.book.content_hash, chunk_fp: task.book.chunk_fp, at: new Date().toISOString() });
   }
 
   const validIdx = new Set(task.chunks.map(c => c.idx));
@@ -335,7 +459,10 @@ export async function runEnrich(dbPath, opts = {}) {
   }
 
   const artifact = compactEnrichArtifact(jsonlPath, jsonPath, {
-    book: { db: dbName, title: task.book.title, content_hash: task.book.content_hash, chunk_count: task.book.chunk_count },
+    book: {
+      db: dbName, title: task.book.title, content_hash: task.book.content_hash,
+      chunk_count: task.book.chunk_count, chunk_fp: task.book.chunk_fp, eligible: task.book.eligible,
+    },
     stats,
     entries: [...cache.entries.values()],
   });
@@ -445,7 +572,10 @@ export function buildEnrichTaskFile(dbPath, outDir) {
   const batches = makeBatches(task.chunks).map(b => b.map(c => ({ idx: c.idx, chapter: c.chapter, text: c.text })));
   const file = {
     version: 1,
-    book: { db: dbName, title: task.book.title, content_hash: task.book.content_hash, chunk_count: task.book.chunk_count },
+    book: {
+      db: dbName, title: task.book.title, content_hash: task.book.content_hash, chunk_count: task.book.chunk_count,
+      chunk_fp: task.book.chunk_fp, eligible: task.book.eligible,
+    },
     instructions: [
       "为每个原文块产出四样：prefix（前置 1~2 句）/ tags（0~5 个，必须取自块内原文出现的字词，自造会被机器丢弃）/ questions（0~3 个假设问题）/ summary（块摘要 1~2 句）。",
       "输出一个 JSON 数组，每个元素 {\"idx\":块编号,\"prefix\":\"…\",\"tags\":[…],\"questions\":[…],\"summary\":\"…\"}；idx 必须与给定编号一一对应，不许增删合并。",

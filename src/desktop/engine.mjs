@@ -62,11 +62,19 @@ function enrichSummary(dbPath) {
       const byScope = has("summaries")
         ? Object.fromEntries(db.prepare("SELECT scope, COUNT(*) c FROM summaries GROUP BY scope").all().map((r) => [r.scope, r.c]))
         : {};
+      // P4 闸门印记：入库时写的 verdict（pass/warn；block 到不了库里）。老库无此键 → null。
+      // 内层兜底：meta 表缺失/值坏都不该把整份摘要打成 ready:false（徽标数字比闸门印记重要）
+      let enrichGate = null;
+      try {
+        const gateRaw = db.prepare("SELECT value FROM meta WHERE key='enrich_gate'").get()?.value;
+        if (gateRaw) { try { enrichGate = JSON.parse(gateRaw).verdict || null; } catch { enrichGate = null; } }
+      } catch { enrichGate = null; }
       return {
         ready: true, covered, eligible,
         pct: eligible ? Math.round((covered / eligible) * 100) : 0,
         tags,
         summaries: { chunk: byScope.chunk || 0, chapter: byScope.chapter || 0, book: byScope.book || 0 },
+        enrichGate,
       };
     } finally { db.close(); }
   } catch { return { ready: false }; } // 单本读失败不拖垮整个书架
