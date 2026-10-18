@@ -84,8 +84,8 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 | P2-01 | src/lib/structurize.mjs:41（权重×2）、:14/:16/:81（阈值）、:112（块级） | 拒修乱码块按 0.3 边界隐形入库、report 全零——违反「库内无乱码残留」不变量；根因=权重×2 低估 3 字符双重编码签名实际占用（100 字符块 15 签名实测真实乱码率 45% 被算成 30%）；repairMojibake 又被 >0xff 闸门拒修 | 致命（静默篡改持久化状态+审计失效，实测复现） | **已修 3b81aa9（F1）**｜坐实 A1/A8/F9｜专家团毛求疵/陆回测双 PASS | |
 | P2-02 | src/lib/structurize.mjs:89-126（无 surrogate 处理）；build-book.js 入库点 | lone surrogate 经 sqlite 绑定静默转 U+FFFD 穿库，无夹具；structurize 跑在绑定之前原样穿层 | 致命（静默数据损坏，实测坐实） | **已修 802a9d2（F2a）**｜坐实 A3/F2a（A9 机理）｜毛求疵/陆回测双 PASS |
 | P2-03 | src/lib/structurize.mjs:73/:74 | assessCleaned 直取 `c.text`（[null] 抛 TypeError），structurizeChunks 却 `c?.text ?? ""`——契约不对称，违 lib 层不 throw 铁律 | 严重 | **已修 802a9d2（F2a）**｜坐实 A4｜毛求疵/陆回测双 PASS |
-| P2-04 | src/lib/structurize.mjs:14/:16/:18/:81/:112；src/build-book.js:490 | 100 字符/0.3 ratio/块级 0.5 三档边界无夹具；BSP_STRUCT `"0 "` 尾空格陷阱（`"0 " !== "0"` 开关失灵，实测） | 一般 | 待修（F2b）｜坐实 F4（尾空格）/A12（字数档） | |
-| P2-05 | src/build-book.js:489/:506 | onStage 抛错无 try → 穿出 main → jobs 横幅卡「结构化改造中」，重导入被拒 | 一般 | 待修（F2b）｜坐实 F5/F6 | |
+| P2-04 | src/lib/structurize.mjs:14/:16/:18/:81/:112；src/build-book.js:490 | 100 字符/0.3 ratio/块级 0.5 三档边界无夹具；BSP_STRUCT `"0 "` 尾空格陷阱（`"0 " !== "0"` 开关失灵，实测） | 一般 | **已修 bbc9c80（F2b）**｜坐实 F4（尾空格+零宽+全角变体）/A12（字数档）｜双 PASS |
+| P2-05 | src/build-book.js:489/:506 | onStage 抛错无 try → 穿出 main → jobs 横幅卡「结构化改造中」，重导入被拒 | 一般 | **已修 bbc9c80（F2b）**｜坐实 F5/F6｜双 PASS |
 | P2-06 | src/build-book.js:490-505 × src/desktop/jobs.mjs 管线 | BSP_SEMANTIC 同开无测；结构化闸门经 jobs 全链无行为测 | 一般（测试缺口） | 探针（F 段） | |
 | P2-07 | src/lib/structurize.mjs 全件 | G1~G9 变异候选现套件仍绿，缺探针 | 一般（测试缺口） | 探针+变异（M-01~08） | |
 | P2-08 | — | 5 本真书全链路 sha256 不变性对拍 + 干净书 report 全零断言缺位 | 一般（测试缺口） | 门禁③ | |
@@ -181,6 +181,7 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 | --- | --- | --- | --- | --- |
 | F1 乱码权重精确化 | **已修** | 3b81aa9 | structurize-test 九节全绿（含新钉子 bad=20/30）；fuzz 49 PASS/22 FAIL/2 OBSERVE/1 SKIP，转绿恰 {A1,A8,F9}，集合级 diff 新红=空（22⊆25）；guard 91 绿；eslint 0 | 毛求疵 PASS（7 OBSERVE：3 条采纳同 commit=lastIndex 硬化/白名单注释/钉子测试；2 条登记工单见下）；陆回测 PASS（FAIL 无） |
 | F2a surrogate 剥离 + null 对称 | **已修** | 802a9d2 | structurize-test 43 PASS（第 7 节 9 字段全零精确相等）；fuzz 53 PASS/19 FAIL/2 OBSERVE/1 SKIP，转绿恰 {A3,A4,F2a}，集合差新红空（19⊆22），A11c strippedSurrogates=1→true；guard 91 绿；jobs-test 全 PASS；ipc-test 29 PASS；eslint 0 | 毛求疵 PASS（高 0/中 3/低 5/观察 2：M1/M2/L1/L2 同 commit 采纳；M3 grep 坐实构造点唯一=关闭；余登记）；陆回测 PASS（FAIL 无） |
+| F2b 开关 + 回调 | **已修** | bbc9c80 | fuzz 56 PASS/16 FAIL/2 OBSERVE/1 SKIP，转绿恰 {F4,F5,F6}（19→16），F4 十值矩阵全绿（含零宽/全角/前导空/制表换行）；F5/F6 加调用序列断言；guard 91 绿（③ 放宽为语义存在性）；structurize/jobs/ipc（29 PASS）全绿；eslint 0 | 毛求疵 PASS（无 FAIL，5 OBSERVE 全部同 commit 处置：零宽换脸复现→归一化、async 契约注释、catch 留日志、guard 放宽、onStage 两处 grep 坐实）；陆回测 PASS（FAIL 0，O1 补跑 ipc、O5 加序列断言、余登记） |
 
 ### F1 顺手采纳与工单登记（毛求疵 OBSERVE 处置）
 
@@ -198,3 +199,10 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 - **工单 G-07（新登记，后续波次）**：jobs 横幅 emit 直证用例——构造 st.strippedSurrogates>0 的正常加工路径，断言 detail「清符号 N 处」含该计数。C1 墓碑探针时序上注定吃掉 slice emit，不能复用。
 - **观察 L3/L4/L5 登记备查**：L3（structurize-test:232 走 JSON 精确相等=键序即契约，保持现状）；L4（ratio 分母从 raw 变剥后 text——单调不减、只多丢不少丢，保守方向已由 A8/F9 边界锁覆盖）；L5（lookbehind 需 Node≥9，测试绿已证语法层无恙，打包链待真机验收顺带确认）。
 - O2（mock struct 键集 meta 测试）：本次三处 mock/期望已手工同步，防复发靠 commit 纪律，不另立套件。
+
+### F2b OBSERVE 处置（毛求疵/陆回测）
+
+- 已采纳（同 commit bbc9c80）：毛 OBSERVE-1 零宽空格 `"0\u200B"`（trim 删不掉，P2-04 换脸复现，最硬发现）→ 判定归一化加 `replace(/[\u200b-\u200d]/g,"")` + NFKC（全角"０"）；毛 OBSERVE-2 async 契约 → 注释钉死「onStage 必须同步」；毛 OBSERVE-3 空 catch 静默 → catch 留一行 stderr（全程仅 2 次不刷屏）；毛 OBSERVE-4 guard 正则过紧 → 放宽为语义存在性（不锁 ??/|| 写法）；毛 OBSERVE-5 → grep 坐实 onStage 全仓仅两处调用均包 try；陆 O1 → ipc-test 29 PASS 补跑；陆 O5 → F5/F6 加调用序列断言（slice 仍投递=横幅不永久卡）；陆补充 → F4 六值扩十值（前导空格/制表换行/零宽/全角）。
+- 陆 O2/O3/O4 登记备查：O2 两条 OBSERVE 即 S2 硬证据节原有 2 条（前后同源）；O3 单次跑+总量守恒（56+16+2+1=75=53+19+2+1）已闭合，不重复跑；O4 lint 效力限于 no-empty（含注释块不报），行为断言以 fuzz 为准。
+- 陆「放行条件」归档：pre-fix 19 条 FAIL 清单见 S2 硬证据节原文表；回滚粒度=4 hunk（build-book 3 + guard 1）整体 revert（不可半回滚，半回滚会留 F4 单独复红的混合态）；fuzz EXIT=1 与 16 条红登记为 known-red，不参与发布门禁。
+- 毛「顺带提示」登记：onStage("structurize") 位于 if 之前无条件触发——BSP_STRUCT=0 时仍发「结构化改造」阶段事件（既有行为，本轮不改，横幅语义名不符实属 UI 层待办）。
