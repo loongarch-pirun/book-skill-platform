@@ -486,10 +486,14 @@ const copyDb = (src) => {
   const projRoot = path.join(import.meta.dirname, "..");
   const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
 
-  // ① 套件本体落盘在 test/ 根（51 发：A12/B6/C14/D4/E5/F10），自包含对抗套件（头部声明即身份）
+  // ① 套件本体落盘在 test/ 根（57 发：A13/B6/C19/D4/E5/F10），自包含对抗套件（头部声明即身份）
+  // 对账改成机械计数（毛 O/F 观察）：只锁「56」这个字面量挡不住「加了 C19 却没改头部」，
+  // 声明数 != 索引行数 时必须响
   const fuzzSrc = readSrc("test", "entry-adversarial-fuzz.mjs");
-  ok(fuzzSrc.includes("入口链路 + 结构化改造对抗 fuzz") && fuzzSrc.includes("51 发索引与 ledger 缺陷对照"),
-    "静态: entry-adversarial-fuzz.mjs 落盘（51 发对抗套件，V3 第四波标准轮 S2）");
+  const declared = Number((/\/\/ (\d+) 发索引与 ledger 缺陷对照/.exec(fuzzSrc) || [])[1]);
+  const idxCount = (fuzzSrc.match(/^\/\/ {3}[A-F]\d+[a-z]? /gm) || []).length;
+  ok(fuzzSrc.includes("入口链路 + 结构化改造对抗 fuzz") && declared === idxCount && idxCount === 57,
+    `静态: entry-adversarial-fuzz.mjs 落盘（头部声明 ${declared} 发 / 索引实计 ${idxCount} 条，双向对账）`);
   // ②③ 挂载对账：fast 与 ci 都含新套件（防「写了套件没挂」——S2 步骤 4 挂载的静态锁）
   const pkgSrc = JSON.parse(readSrc("package.json"));
   ok((pkgSrc.scripts["test:fast"] || "").includes("entry-adversarial-fuzz"),

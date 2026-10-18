@@ -1,6 +1,6 @@
 // 入口链路 + 结构化改造对抗 fuzz（V3 第四波 P1+P2 标准轮 S2）：
-//   A 段 structurize 纯文本层（P2 轨核心）12 发 / B 段 book-view 协议 handler 6 发 /
-//   C 段 jobs 导入加工与资产入口 14 发 / D 段 engine 两档删除 4 发 /
+//   A 段 structurize 纯文本层（P2 轨核心）13 发 / B 段 book-view 协议 handler 6 发 /
+//   C 段 jobs 导入加工与资产入口 19 发 / D 段 engine 两档删除 4 发 /
 //   E 段渲染层转义与状态 5 发 / F 段 build-book main 全链与开关矩阵 10 发。
 // 自包含：tmp 目录 + 合成夹具 + 猴子补丁（fs/mammoth/build-book.main），不碰 library/ 真库、
 // 不连网、不加载嵌入模型（BSP_SEMANTIC 相关排 slow，本轮 SKIP 登记）。
@@ -8,7 +8,7 @@
 // 性质：对抗套件——部分用例在当前代码上为红（坐实缺陷，FAIL 输出即方法论 6.1 硬证据，
 // 回填 ledger），修复后全绿；结论以发现清单为准。
 //
-// 51 发索引与 ledger 缺陷对照（红=修复前必 FAIL；绿=双态锁定；OBSERVE=行为登记；SKIP=排 slow）：
+// 57 发索引与 ledger 缺陷对照（红=修复前必 FAIL；绿=双态锁定；OBSERVE=行为登记；SKIP=排 slow）：
 //   A1 红 P2-01 detectGarbled 权重×2 低估 3 字符签名（100 字符 15 签名真实乱码率 45% 算成 30%）
 //   A2 绿 P2-G2 西里尔 mojibake 不检出（已知限制锁定不误伤）
 //   A3 红 P2-02 structurizeChunks 不剥 lone surrogate、不入账
@@ -21,6 +21,7 @@
 //   A10 绿 M-01 repairMojibake 单签名不修（éa：1 次签名但绕过 hints 闸门即可修——M-01 hints<1 变异立红依据）
 //   A11 绿 M-07 structChanged 逐字段真值表（6 计数器各 +1→true、全零→false、null→false；F2a 同 commit 扩 7 字段）
 //   A12 绿 M-04 assessCleaned 字数硬闸门边界（99 字符拦「内容太少」/ 100·101 过）
+//   A13 绿 G-11 已知限制：emoji(F0)/C5 打头族的 cp1252 人身不检出（扩 lead 域须单独立项）
 //   B1 红 C11 TOCTOU：exists 后文件被删 → readFileSync 未捕获 → 无状态码失败
 //   B2 红 C12 缓存 key 无 libDir → applyConfig 换库后同名同尺寸同 mtime 串味
 //   B3 绿 C13 LRU 淘汰序（8 上限砍最早）
@@ -41,6 +42,11 @@
 //   C12 红 C3 导入 x..pdf 派生 id 含 ".."（现放行→永卡条目 + books/ 幽灵文件 + 书架 title "x." 怪行）
 //   C13 红 C3 导入 ..txt 派生 id "..docx"、base 剥成 "."（现放行→书架 title "." 怪行 + 幽灵文件）
 //   C14 红 C6 dest 大小写折叠碰撞（win32 语义：导 Book.docx 静默覆盖 books/ 已有 book.docx 内容）
+//   C15 绿 G-07 横幅「清符号 N 处」= 四类计数之和（含 strippedSurrogates，漏字段即少报）
+//   C15b 绿 G-07 真路径：build-book 剥出的孤立代理对真进横幅（锁 struct 键名接缝）
+//   C16 绿 G-08 scanPending 脏任务书只 skip 不上横幅 + 留痕（readdir 注入脏名直证）
+//   C17 绿 G-09 正常书名不误伤（空格 / 间隔点 · / 卷次点 Vol.2）
+//   C18 绿 G-10 同名换内容重导入 → 拒建 + 老库一格不动 + 落 failed（C33 另一面）
 //   D1 红 C16/C35 deleteBook rmSync 无 try：EBUSY → 半删 + 裸抛
 //   D2 红 C17 purgeBook 第二步 db rmSync 无 try：原件已删库删失败 → 裸抛
 //   D3 红 C18 setSkillEnabled writeFileSync 无兜底：删成功却整调用报错
@@ -64,6 +70,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import { execFileSync } from "node:child_process";
+import { TextDecoder } from "node:util";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
@@ -234,7 +242,7 @@ console.log("\n----- A 段：structurize 纯文本层 -----");
   // 闸门「回读含文字」拒修（A5d 的 ÿÿa 因回读带 ASCII a 才放行——同一闸门的正反两面）
   ok(repairMojibake("\u00c3\u00a9\u00c3\u00a9").repaired === false, "A5c éé 纯重音回读无文字证据拒修（French 警戒：不可把好文本修坏）");
   ok(repairMojibake("\u00c3\u00bf\u00c3\u00bfa").repaired === true, "A5d ÿÿa 回读含 ASCII 字母可修");
-  ok(repairMojibake("\u00c3\u00bf\u00c3\u00bfa\u0101").repaired === false, "A5e 混 >0xff 字符拒修（CP1252 特俗字符警戒）");
+  ok(repairMojibake("\u00c3\u00bf\u00c3\u00bfa\u0101").repaired === false, "A5e 混表外字符拒修（\u0101 不在 cp1252 表；cp1252 特俗字符本轮起在签名跨度内是允许的）");
 }
 // A6（绿）：先修后评顺序铁律——可修双重编码放行不拦（修前 ratio 1.0 的块修完干净）
 {
@@ -300,6 +308,20 @@ console.log("\n----- A 段：structurize 纯文本层 -----");
   const r100 = assessCleaned(mk(100)), r101 = assessCleaned(mk(101));
   ok(r100.ok === true && r101.ok === true,
     "A12b 100/101 干净字符 → 过闸（边界值恰放行）", `100=${r100.ok} 101=${r101.ok}`);
+}
+// A13（绿 G-11 已知限制）：首字节不在签名表内的 cp1252 人身仍不检出——emoji（F0 打头）
+// 与 C5 打头族（œ Œ ł ř）。按 A2（西里尔）先例显式锁定：这是**已声明的已知限制**，
+// 不是回归。扩 lead 域（[\u00c0-\u00f4]）会把 ä/Å/Æ/Ç/È 后接符号的误伤面成倍放大，
+// 必须单独评估 → 工单 G-11
+{
+  const dec = new TextDecoder("windows-1252");
+  const cp = (t) => dec.decode(Buffer.from(t, "utf8"));
+  ok(detectGarbled(cp("\u{1F600}\u{1F4DA}")).mojibake === 0,
+    "A13a emoji（F0 打头）的 cp1252 人身不检出（已知限制锁定，G-11）",
+    `mojibake=${detectGarbled(cp("\u{1F600}\u{1F4DA}")).mojibake}`);
+  ok(detectGarbled(cp("\u0153\u0142\u0159")).mojibake === 0,
+    "A13b C5 打头族（œ ł ř）的 cp1252 人身不检出（已知限制锁定，G-11）",
+    `mojibake=${detectGarbled(cp("\u0153\u0142\u0159")).mojibake}`);
 }
 
 // =====================================================================
@@ -723,6 +745,132 @@ const bspImport = path.join(TMP, "bsp-import");
     r.ok ? `\u7adf\u5bfc\u5165 bookId=${r.v?.bookId}` : `${r.e?.constructor?.name}: ${String(r.e?.message).slice(0, 60)}`);
   cancelImport("X14.docx");
   fs.rmSync(path.join(LIB, "x14.docx.db"), { force: true });
+}
+
+// C15（绿 G-07）：结构化改造账真刷到横幅——detail 的「清符号 N 处」是四类计数器
+// 之和（controls + pua + fffd + surrogates）。只断言「有横幅」锁不住字段名写错
+// （漏一项 = 少报 N 处 = 账实不符），故给三个非零计数、核对总和
+{
+  fs.writeFileSync(path.join(TMP, "c15.txt"), "道可道，非常道。\n".repeat(40), "utf8");
+  await startImport(path.join(TMP, "c15.txt"));
+  const events = [];
+  const off = onJobsProgress((e) => events.push(e));
+  const origMain = bb.main;
+  // 模拟「真洗过东西」的一次建库返回（不动盘上库：main 一返回就进横幅 emit）
+  bb.main = async () => ({ struct: { repairedMojibake: 0, droppedEmpty: 0, droppedGarbage: 0, strippedControls: 1, strippedPua: 0, strippedFffd: 0, strippedSurrogates: 3 } });
+  const p = settle(startProcessing("c15.docx"));
+  const hit = await waitFor(() => events.some((e) => /结构化改造：去空块/.test(e.detail || "")), 5000);
+  const ev = events.find((e) => /结构化改造：去空块/.test(e.detail || ""));
+  bb.main = origMain;
+  off();
+  await p; // stub 没建库 → 向量化阶段会快速失败，与横幅断言无关
+  ok(hit && /清符号 4 处/.test(ev?.detail || ""),
+    "C15 横幅「清符号」= 四类计数之和（含 strippedSurrogates，漏字段即少报）",
+    `detail=${ev?.detail || "（无横幅）"}`);
+  cancelImport("c15.docx");
+}
+// C15b（绿 G-07 真路径，毛 O4 补）：上面那条是 stub——只锁住 jobs 的字符串拼接，
+// 锁不住 build-book 返回的 struct 键名与 jobs 读的键名这条「人肉契约」接缝。
+// 这条走完整加工链：docx 里埋 &#xD800;（F2a 同款夹具），让 build-book 真剥出孤立
+// 代理对，再看横幅有没有把它报出来
+{
+  const docx = path.join(booksDir, "c15b.docx");
+  fs.writeFileSync(docx, mkDocxBuf([
+    "甲&#xD800;乙" + "测试文本需要足够长度，以免被内容太少的闸门拦下。".repeat(8),
+  ], { raw: true }));
+  const events = [];
+  const off = onJobsProgress((e) => events.push(e));
+  const p = settle(startProcessing("c15b.docx"));
+  const hit = await waitFor(() => events.some((e) => /结构化改造：去空块/.test(e.detail || "")), 15000);
+  const ev = events.find((e) => /结构化改造：去空块/.test(e.detail || ""));
+  cancelImport("c15b.docx"); // 横幅已出：立刻取消，别真跑嵌入（模型加载慢）
+  await p;
+  off();
+  const m = /清符号 (\d+) 处/.exec(ev?.detail || "");
+  // 精确值而非下界（陆 N2）：本例只埋 1 个孤立代理对，多算一个符号也必须红
+  ok(hit && m && Number(m[1]) === 1,
+    "C15b 真路径：build-book 剥出的孤立代理对真进了横幅「清符号 N 处」（键名接缝无漂移）",
+    `detail=${ev?.detail || "（无横幅）"}`);
+  fs.rmSync(docx, { force: true });
+}
+// C16（绿 G-08）：scanPending 脏任务书分支直证——真实文件系统造不出含 "/" 或 NUL 的
+// 文件名，只能把 readdir 换成返回脏名 + 正常名：脏的必须 skip，正常书照常出横幅
+{
+  const { libDir } = jobDirs();
+  fs.mkdirSync(tasksDir, { recursive: true });
+  fs.writeFileSync(path.join(tasksDir, "正常书.json"), "{}", "utf8");
+  fs.writeFileSync(path.join(libDir, "正常书.db"), ""); // 库在 → 不被「库没了」挡掉
+  const events = [];
+  const off = onJobsProgress((e) => events.push(e));
+  const warns = [];
+  const ow = console.warn;
+  console.warn = (...a) => warns.push(a.map(String).join(" "));
+  const origReaddir = fs.readdirSync;
+  fs.readdirSync = function (p, ...rest) {
+    return path.resolve(String(p)) === path.resolve(tasksDir)
+      ? ["../evil.json", "正常书.json"]
+      : origReaddir.call(fs, p, ...rest);
+  };
+  let out;
+  try { out = scanPending(); }
+  finally { fs.readdirSync = origReaddir; console.warn = ow; off(); }
+  ok(Array.isArray(out) && out.length === 1 && out[0] === "正常书" && !events.some((e) => String(e.bookId).includes("evil")),
+    "C16 scanPending 脏文件名只 skip 不上横幅（正常书照常出）",
+    `out=${JSON.stringify(out)} 事件书=${events.map((e) => e.bookId).join(",")}`);
+  ok(warns.some((w) => w.includes("../evil.json")), "C16b 脏任务书跳过留痕（不静默埋排障坑）", `warns=${warns.join(" / ")}`);
+  cancelImport("正常书");
+  fs.rmSync(path.join(tasksDir, "正常书.json"), { force: true });
+  fs.rmSync(path.join(libDir, "正常书.db"), { force: true });
+}
+// C17（绿 G-09）：正常书名不许误伤——空格与间隔点（·）是合法字符，bookId 闸门只拦
+// 路径分隔符 / .. / 控制符 /（win32）冒号尾点。收紧闸门时最容易被顺手误杀的就是这批
+{
+  for (const name of ["The Great Gatsby", "论语 · 学而", "Vol.2 修订版"]) {
+    const p = path.join(TMP, `${name}.txt`);
+    fs.writeFileSync(p, "测试正文内容，用来占位。\n".repeat(20), "utf8");
+    const r = await settle(startImport(p));
+    ok(r.ok && r.v?.bookId === `${name}.docx`,
+      `C17 正常书名「${name}」可导入（空格/间隔点不误伤）`,
+      r.ok ? `bookId=${r.v?.bookId}` : `${r.e?.constructor?.name}: ${String(r.e?.message).slice(0, 60)}`);
+    cancelImport(`${name}.docx`);
+    fs.rmSync(path.join(booksDir, `${name}.txt`), { force: true });
+  }
+}
+// C18（绿 G-10）：同名换内容的语义锁——原件路径不变、内容变了，build-book 必须拒建
+// （重建会改切片编号 → 作废这本书的人物/主题/关系）。锁定三点：人话含「内容已变」、
+// 老库数据一格不动、书架落 failed 态（不是静默成功）
+{
+  const docxPath = path.join(booksDir, "同名改.docx");
+  const dbPath = path.join(LIB, "同名改.docx.db");
+  fs.writeFileSync(docxPath, mkDocxBuf(["甲版原文".repeat(40)]));
+  execFileSync(process.execPath, [path.join(import.meta.dirname, "..", "src", "build-book.js"), docxPath, "-o", dbPath], { stdio: "pipe" });
+  const readAll = () => {
+    const db = new Database(dbPath, { readonly: true });
+    const rows = db.prepare("SELECT id, chapter, text FROM chunks ORDER BY id").all();
+    const meta = db.prepare("SELECT key,value FROM meta ORDER BY key").all();
+    db.close();
+    // meta 全字段比（不剔 source_file/content_hash）：这两个键恰是最要紧的——
+    // content_hash 是下次导入的判据，若哪天「写 meta」被挪到守卫之前，老库会变成
+    // 「chunks 是甲版、hash 是乙版」且永远建不成库，剔掉就看不见了（毛 O5 实测全字段等价）
+    return { rows: JSON.stringify(rows), meta: JSON.stringify(meta) };
+  };
+  const before = readAll();
+  ok(before.rows.includes("甲版原文"), "C18 前置：甲版库建好", `首块=${JSON.parse(before.rows)[0]?.text?.slice(0, 12)}`);
+  fs.writeFileSync(docxPath, mkDocxBuf(["乙版换了内容".repeat(40)])); // 同名换内容
+  const r = await settle(startProcessing("同名改.docx"));
+  const after = readAll();
+  ok(!r.ok && /内容已变/.test(String(r.e?.message)),
+    "C18 同名换内容 → 拒建且人话说清「源文件内容已变」",
+    r.ok ? `竟加工成功 stage=${r.v?.stage}` : `${r.e?.constructor?.name}: ${String(r.e?.message).slice(0, 80)}`);
+  ok(after.rows === before.rows && after.meta === before.meta,
+    "C18b 老库一格不动（拒建发生在删表之前，切片与编目数据不作废）",
+    `块表同=${after.rows === before.rows} meta同=${after.meta === before.meta}`);
+  ok(jobsStatus()["同名改.docx"]?.stage === "failed",
+    "C18c 书架落 failed 态（不静默成功、不卡在加工中）",
+    `stage=${jobsStatus()["同名改.docx"]?.stage}`);
+  cancelImport("同名改.docx");
+  fs.rmSync(docxPath, { force: true });
+  fs.rmSync(dbPath, { force: true });
 }
 
 // =====================================================================
