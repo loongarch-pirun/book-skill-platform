@@ -537,12 +537,26 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 | 2 | 章节层级 | 新增 `chapter_path` 字段（如「第3章 › 3.2 节」）：DB 加列惰性迁移；编目/检索/展示层渐进采用，存量库 NULL 不报错 |
 | 3 | 邻块扩展 | `BSP_NEIGHBOR` 默认关（0）：开（1）后对 topN 结果按同章 id±k 扩展、衰减计分、不重跑复试官（成本可控）；evals 双门验证后才考虑默认开 |
 
-### 执行记录（待填）
+### 执行记录（P3-①②③ 已落地，P4 push 后开工）
 
-- （P3-1 表格整表成块）
-- （P3-2 chapter_path 章节层级）
-- （P3-3 邻块扩展）
-- （P3-4 测试与 guard）
-- （P3-5 全量重建 17 本：影子库 `library-new/` 先行，考卷对照 + eval-gate 双门，净提升才替换）
+- **P3-1 表格整表成块（已落地）**：`packTable`+`mergeTableRows` 进 build-book.js——连续 `fromTable` 行合成一个块（`" | "` 连接单元格、`"\n"` 连接行），整表超 900 字按行组切（表头随组重复，单行超长保持原子永不跨行切）；**合并必须在 promotePlainHeadings 之后**（promote 的「下一段更长才认」不看 fromTable，先合并会让标题提升误触发——干净书零变化红线）；`tid` 表 id 语义（md 空行/任何非表行断表、docx 每个 `<table>` 元素一表、跨文件不相并）；整表块跳过 sentenceSplit（docx 保留首行「第X章」匹配、行内不再误切章=修复）；记账 tableStats（rows→blocks）进 meta.table_stats + CLI 播报；`BSP_TABLE=0` 逃生（零宽剥离+NFKC 归一化同 P2-04）。真书实测：d2l 125 行→18 块、道德经 81 块零变化、33454→33347 块（-107）
+- **P3-2 chapter_path（已落地）**：解析器层级栈（md 按 # 层级、docx 按 h1-h6、启发式提升=顶层重置、「第X章」文本匹配=栈重置）→ `chapter_path`（"卷 › 章 › 节"，空洞过滤后空=**null**）；扁平 `chapter` 行为逐字不变（路径是新增字段、叶节点=chapter）；**不做 ALTER 写迁移**——库全 readonly 打开，列随重建出现，消费侧 `pragma_table_info` 探测回退（pdf/epub/无标题书/老库=null）；接线四处：search 行搭载（不动 loc——loc 喂提示词）、llm 引用 additive、renderCite 有路径优先展示、similar.mjs 两路。真书实测：d2l 23521 多级路径块（样例 `Using AWS EC2 Instances › Creating and Running an EC2 Instance`）、道德经 81 章路径全对、叶节点一致性 33323 块全对
+- **P3-3 邻块扩展（已落地，默认关）**：`BSP_NEIGHBOR=1` 开——复试官终排后对终排结果按**同章 id±1** 各补一席（衰减 ×0.5 计分、只附加不挤位、不重跑复试官=成本零、总数 ≤4）；变体快路径（rerank:false）不扩；同章判据用扁平 chapter（空章/跨章不扩）。测试 12 断言（默认关/不变式/去重/跨章/上限/透传/老库兼容/多变体）挂 test:fast（31→32 套）；guard §18 十三断言（114→127 项）
+- **P3-4 测试与六门（已收官）**：neighbor-test 12 断言新挂 test:fast（31→**32 套**）；guard §18 十三断言（114→**127 项**，含 P3 三件套形状/调用序/挂载对账）；parser-v3 四个旧表格契约断言改锁新语义（整表成块/表头随组/table_stats 记账/逃生还原）+ 补 table_stats 与 BSP_TABLE=0 断言；v2-eval 加 `BSP_EVAL_LIB` 影子覆盖（门语义不变）。六门终态：fast **32 套 EXIT=0**（0 FAIL）/ ci 17 套 **EXIT=0** / guard **127 项 EXIT=0**（含 §17 索引对账）/ eslint **EXIT=0** / slow **EXIT=0**（eval-gate **93 ≥ 93，漏题 6 条不变**——默认旗标下老库检索零扰动，行字段纯加法）
+### P3-5 影子重建与换库（已收官）
+- **关键发现：现库是混合旗标**——#58/#158 之后的书（P&P/Frank/md 五本/epub 两本/论文三篇）带 `BSP_SEMANTIC=1` 建（凤凰 1227 vs 默认建 3737、d2l 5506 vs 默认建 ~33k 实证），中文经典（孟子/论语/道德经，2026-10-13 冷接入早于第二波语义分块）没开。影子重建必须逐本对齐，否则对照失效（第一版驱动用默认旗标，凤凰块数 3 倍爆炸当场暴露）
+- **驱动对齐策略**：先带语义建 → 无表书（meta 无 table_stats）块数比旧库缩水 = 原建没开语义 → `BSP_SEMANTIC=0` 重建对齐；有表书/块数不缩水保留语义建。17 建 0 败：有表书小幅缩减（og-aws −14/SDP −25/凤凰 −7/d2l −5/hello-algo），无表书逐字不变，孟子自动对齐 no-semantic
+- **重大纠偏：「名字锚定」只对 tree/relation 边成立**——belongs/mention 边 src 是块 id（d2l belongs 5500 条 src_type='chunk' 实证）。四本 id 平移的书（og-aws/SDP/凤凰/d2l + hello-algo）直接拷边=毒数据。fix-shadow-catalog.mjs：belongs/mention 边「文本对齐」重映射（旧块文本必是某新合并块子串——升序+前向窗口 120+游标不后退），重拷 llm 节点/relation 边/theme_vecs + 补 catalog_* meta
+- **丢弃 219/~14000 ≈1.5% 属管线形态差异的预期损耗**（抽查定性：旧库表格碎片行被整表合并重排、数学公式链切分边界跨块、TOC/日文目录被清洗重排），模糊对齐成本高且有投毒风险，不做
+- **影子考卷两跑**：首跑 85/92=92（漏 attention 题外新增）→ 根因=影子库缺 `catalog_model` 键，主题提名路被门禁 `meta.catalog_model === embedKey` 拦死（catalog.mjs:578）；修后单测两库 top3 逐字一致（#13 复试分 0.3399 回首位）→ 二跑 **86/92=93，漏题 6 条与基线完全一致，双门过线**
+- **换库落地**：`npm run backup`（bsp-backup-20261019-021627）→ **拷出项目 D:\bsp-backups\**（铁律）→ `mv library library-pre-p3 && mv library-new library`（旧库保留可回滚）→ 17 本 WAL checkpoint 全清（wal/shm 0 残留）→ 账实健康（17 本 15349 块全带向量、325 llm 节点）
+- **换库后两红及修复**：
+  - enrich-nom 2 红：夹具=真库论语（唯一洗过数据书），新库有意不拷 enrich → 但论语/MapReduce **id+text 全等**（无表书逐字不变），enrich 数据面有效补拷四样（`tags`/`questions` 列 + `chunk_tags` + `summaries`；enrich-signal 门禁要 tags+questions 两列都在）
+  - catalog-test 2 红：①P&P belongs 1010≠1011（文本对齐丢的那 1 条）——P&P 全文 id 完全对齐、唯一差异块 #394（P2 清洗剥块首孤引号 `”\n`），**id 直映补回 2 边**（belongs 1011=1011 闭环）②`catalog_text_bytes` 账实漂移——全 17 本同步为实际值（P&P 710793→710791 恰好=被剥 2 字符，账义一致）
+- **终态六门**：fast 1468 PASS/0 FAIL；slow eval-gate 见下节验收
 
-### 验收（待填）
+### 验收（P3-5 换库后，全部收官）
+- fast 1468 PASS / 0 FAIL（enrich 补拷 + P&P 补边 + 账实同步后）
+- slow **EXIT=0 全绿**：eval-gate 93 ≥ 93、漏题 6 条不变、全文 0 FAIL
+- 换库后第三红（slow 门 similar-fuzz P3-C2）：损坏库夹具灌垃圾固定在第 11~12 页——依赖旧 lunyu 页布局，新库 enrich 表加入后 chunks 页不再固定 → 灌不中查询路径夹具失效。修复：灌垃圾从第 11 页扩到文件尾（meta 第 1 页保持完好）；similar-fuzz 28 pass / 0 fail
+- **P3 切片 v4 全程收官**：①表格整表成块 ②chapter_path 层级 ③邻块扩展（默认关）④六门 ⑤17 本影子重建+考卷对照+换库落地。正式库=新管线（P2 清洗 + P3 切片 + 语义旗标逐本对齐），旧库留存 library-pre-p3/ 待真机验收后删除

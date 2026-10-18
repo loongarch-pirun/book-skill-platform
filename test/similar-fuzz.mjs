@@ -220,7 +220,9 @@ console.log("\n--- P3-C MCP similar_chunks 工具契约 ---");
   cd2.prepare("UPDATE meta SET value='页损坏的书' WHERE key='title'").run();
   cd2.close();
   const cbuf = fs.readFileSync(corrupt);
-  cbuf.fill(0x58, 40960, 49152); // 第 11~12 页灌垃圾（chunks 数据页；meta 在第 1 页仍可读）
+  // 从第 11 页灌到文件尾（P3-⑤ 换库后 enrich 表加入，chunks 数据页不再固定在 11~12 页——
+  // 固定范围灌不中查询路径，损坏夹具失效；meta 在第 1 页仍可读，listBooks 照样放行）
+  cbuf.fill(0x58, 40960);
   fs.writeFileSync(corrupt, cbuf);
   const mixed = path.join(libDir, "mixed.db");
   fs.copyFileSync(path.join(libDir, "lunyu-xueer-zh.docx.db"), mixed);
