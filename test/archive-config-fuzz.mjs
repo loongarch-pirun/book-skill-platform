@@ -367,8 +367,29 @@ console.log("\n--- P1-D books:delete 联动 ---");
     return dbPath;
   };
 
+  // P5：派生六落点种子（编目任务书/提示词/结果 + 洗数据任务书/产物/缓存），
+  // 与 derived.mjs 候选表逐字对齐——这里故意用真实路径形状，锁「删的是不是这六个」
+  const seedDerived = (id) => {
+    const root = path.join(libDir, "..");
+    const rel = [
+      `catalog-tasks/${id}.json`,
+      `catalog-tasks/${id}.prompt.md`,
+      `catalog-results/${id}.json`,
+      `enrich-tasks/${id}.json`,
+      `enrich-results/${id}.json`,
+      `enrich-results/${id}.jsonl`,
+    ];
+    for (const r of rel) {
+      fs.mkdirSync(path.dirname(path.join(root, r)), { recursive: true });
+      fs.writeFileSync(path.join(root, r), `fixture:${r}`, "utf8");
+    }
+    return rel.map((r) => path.join(root, r));
+  };
+
   // E1：彻底删除 processed 书（有原件）——库 + 原件 + 存档/反馈一体删，note 带条数
   const dbE1 = mkBook("t3.docx");
+  const derivedE1 = seedDerived("t3.docx");
+  const decoyE1 = seedDerived("t3-other.docx"); // 前缀同名诱饵：前缀匹配会误删它
   appendArchive(libDir, entry("问t3-1", "t3.docx"));
   appendArchive(libDir, entry("问t3-2", "t3.docx"));
   appendArchive(libDir, entry("问别的书2", "other.docx")); // 别人的存档不能动
@@ -383,12 +404,23 @@ console.log("\n--- P1-D books:delete 联动 ---");
     "P1-E1: purge note 明示连 3 条（2 存档 + 1 反馈）引用一起清");
   const leftE1 = listArchive(libDir, { limit: 100 });
   ok(leftE1.length === 1 && leftE1[0].question === "问别的书2", "P1-E1: 只剩引用别的书的存档（不误伤）");
+  // P5：派生六落点全清 + 前缀诱饵零误伤（回执实数）
+  ok(pur.data.removedDerived === 6 && derivedE1.every((f) => !fs.existsSync(f)),
+    `P1-E1: 派生六落点全清（removedDerived=${pur.data.removedDerived}）`);
+  ok(decoyE1.every((f) => fs.existsSync(f)), "P1-E1: 前缀同名的另一本书派生一格不动（精确拼接，不做前缀匹配）");
+  ok(String(pur.data.note).includes("派生文件已清 6 项"),
+    `P1-E1: note 明示清了几项（实测 ${JSON.stringify(pur.data.note)}）`);
 
   // E2：移出书架 processed 书（第一档）——库删了，原件留，书架回 raw 态
   const dbE2 = mkBook("t4.docx");
+  const derivedE2 = seedDerived("t4.docx");
   const delE2 = await invoke("books:delete", "t4.docx");
   ok(delE2.ok === true && !fs.existsSync(dbE2) && fs.existsSync(path.join(booksDir, "t4.docx")),
     "P1-E2: books:delete 只删库、books/ 原件保留（第一档=删库留原件）");
+  // P5 拍板（2026-10-18）：移出书架**不清派生**——原件还在、重建后块号可复用，
+  // 留着能省一次云端洗数据的钱；只有彻底删除才承诺清全部六落点
+  ok(derivedE2.every((f) => fs.existsSync(f)) && delE2.data.removedDerived === undefined,
+    "P1-E2: 移出书架不清派生（六项全在，回执无 removedDerived）");
   const shelfE2 = await invoke("books:list");
   const rowE2 = shelfE2.data.find((b) => b.id === "t4.docx");
   ok(!!rowE2 && rowE2.status === "raw" && rowE2.asset?.exists === true,
@@ -396,9 +428,12 @@ console.log("\n--- P1-D books:delete 联动 ---");
 
   // E3：彻底删除 raw-only 书（只有原件没库）——原件删掉，书架不再显示
   fs.writeFileSync(path.join(booksDir, "rawonly.txt"), "只有原件的书", "utf8");
+  const derivedE3 = seedDerived("rawonly.docx");
   const purRaw = await invoke("books:purge", "rawonly.docx");
   ok(purRaw.ok === true && !fs.existsSync(path.join(booksDir, "rawonly.txt")),
     "P1-E3: raw 书（无库）也能彻底删除——删 books/ 原件");
+  ok(purRaw.data.removedDerived === 6 && derivedE3.every((f) => !fs.existsSync(f)),
+    `P1-E3: raw-only 书（无库）照清派生六落点（removedDerived=${purRaw.data.removedDerived}）`);
   const shelfE3 = await invoke("books:list");
   ok(!shelfE3.data.some((b) => b.id === "rawonly.docx"), "P1-E3: 删完书架不再显示该书");
 
@@ -410,6 +445,97 @@ console.log("\n--- P1-D books:delete 联动 ---");
   ok(delRaw.ok === false && String(delRaw.error?.message || "").includes("彻底删除"),
     `P1-E4: books:delete 对 raw-only 书 → 人话指路彻底删除（实测: ${delRaw.ok ? "成功" : delRaw.error?.message}）`);
   ok(fs.existsSync(path.join(booksDir, "rawonly2.txt")), "P1-E4: 指路报错不动文件（原件还在）");
+
+  // E5：大小写/空白变体的彻底删除（C20 同款，P5 自审实测坐实的 #168 遗留缺陷）
+  // 严格相等 find 会漏掉库 → 只删原件、库还留在架上，回执却说「已彻底删除」。
+  // 归一后必须三处（库 / 原件 / 派生）全清，任意一处漏掉就是半截态。
+  const dbE5 = mkBook("Case5.docx");
+  const derivedE5 = seedDerived("Case5.docx");
+  const purCase = await invoke("books:purge", "case5.docx");
+  ok(purCase.ok === true && purCase.data.purged === "Case5.docx",
+    `P1-E5: 大小写变体归一到真实 id（实测 purged=${purCase.data.purged}）`);
+  ok(!fs.existsSync(dbE5) && !fs.existsSync(path.join(booksDir, "Case5.docx")),
+    "P1-E5: 大小写变体彻底删除 → 库与原件都清（不再只删原件留库）");
+  ok(purCase.data.removedDerived === 6 && derivedE5.every((f) => !fs.existsSync(f)),
+    "P1-E5: 派生六落点跟着归一后的 id 一起清（三处口径一致）");
+
+  // E5b：首尾空白**必须拒绝**，不许归一——前导空格可能是另一本书名的一部分。
+  // 早先这条断言写的是「空白归一成功」，等于把数据丢失的假设写进了测试
+  // （评审对抗官 FAIL-1 实测：`" foo.docx"` 归一成 `foo.docx` 会删掉隔壁正常书）。
+  const dbE5b = mkBook("Space6.docx");
+  const purSpace = await invoke("books:purge", "  Space6.docx  ");
+  ok(purSpace.ok === false && String(purSpace.error?.message || "").includes("空白"),
+    `P1-E5b: 首尾空白 → 人话拒绝（实测 ${purSpace.ok ? "成功(!)" : purSpace.error?.message}）`);
+  ok(fs.existsSync(dbE5b), "P1-E5b: 拒绝时库一格不动");
+
+  // E5c：兄弟书零触碰——真有 " foo5.docx" 与 "foo5.docx" 两本时，对前导空格那本
+  // 调 purge 绝不能删到正常那本（数据丢失路径的回归锁，比 E5b 的拒绝断言更硬）
+  const dbE5c = mkBook("foo5.docx");
+  fs.writeFileSync(path.join(booksDir, " foo5.docx"), "前导空格的另一本", "utf8");
+  fs.writeFileSync(path.join(booksDir, "foo5.docx"), "正常那本", "utf8");
+  const purLead = await invoke("books:purge", " foo5.docx");
+  ok(purLead.ok === false, "P1-E5c: 前导空格书名 → 拒绝（不猜是哪本）");
+  ok(fs.existsSync(dbE5c) && fs.existsSync(path.join(booksDir, "foo5.docx")),
+    "P1-E5c: 正常书 foo5.docx 的库与原件一格不动（数据丢失路径堵死）");
+  ok(fs.existsSync(path.join(booksDir, " foo5.docx")), "P1-E5c: 前导空格那本的原件也没动（拒绝=零副作用）");
+
+  // E6：删库失败时派生必须原样——顺序契约（先库后派生）的机器证明。
+  // 反序实现（先清派生再删库）会在这里变红：库删不掉但派生已清 = 半截态，
+  // 用户重试时还以为产物丢了（陆回测 OBSERVE-2 指出此前无任何顺序断言）。
+  const dbE6 = mkBook("order6.docx");
+  const derivedE6 = seedDerived("order6.docx");
+  const realRmE6 = fs.rmSync;
+  fs.rmSync = (p, o) => {
+    if (String(p).endsWith("order6.docx.db")) throw Object.assign(new Error("busy"), { code: "EBUSY" });
+    return realRmE6(p, o);
+  };
+  let orderRes;
+  try { orderRes = await invoke("books:purge", "order6.docx"); }
+  finally { fs.rmSync = realRmE6; }
+  ok(orderRes.ok === false, "P1-E6: 删库失败 → 整单报错，不谎报「已彻底删除」");
+  ok(fs.existsSync(dbE6), "P1-E6: 库确实还在（注入点生效）");
+  ok(derivedE6.every((f) => fs.existsSync(f)),
+    "P1-E6: 删库失败时派生六项原样——顺序契约（先库后派生）有了机器断言");
+
+  // E7：补刀路——库与原件都没了、派生还留着（上次删到一半/被占用）。
+  // 再点一次「彻底删除」必须能清掉残留，而不是只回「找不到」（评审 OBSERVE-1）
+  const derivedE7 = seedDerived("orphan7.docx"); // 只有派生，无库无原件
+  const purOrphan = await invoke("books:purge", "orphan7.docx");
+  ok(purOrphan.ok === true && purOrphan.data.removedDerived === 6,
+    `P1-E7: 无库无原件但派生还在 → 补刀清掉（实测 ${purOrphan.ok ? `removedDerived=${purOrphan.data.removedDerived}` : "报错"}）`);
+  ok(derivedE7.every((f) => !fs.existsSync(f)), "P1-E7: 残留六项确实没了");
+  ok(String(purOrphan.data.note).includes("残留派生"), "P1-E7: note 明说清的是残留派生（不冒充删了书）");
+  const purOrphan2 = await invoke("books:purge", "orphan7.docx");
+  ok(purOrphan2.ok === false && String(purOrphan2.error?.message || "").includes("找不到"),
+    "P1-E7: 补刀完再点 → 回到「找不到」（清干净了就不谎报）");
+
+  // E8：Unicode case-fold 不许删错书——K（U+212A KELVIN SIGN）与 ASCII "k" 在 NTFS
+  // 上是两个不同文件，但 JS 的 toLowerCase 会把它们折叠成同一个字符串。用字符串
+  // 证明「同一本」会删错书（实测：purge("k.docx") 删掉了 K.docx 那本）。
+  // 注意语义：k.docx 自己在 books/ 里有原件，删它是**正确**的；要证明的是
+  // 「删自己的同时没顺手删掉隔壁」。
+  const dbE8 = mkBook("\u212a.docx"); // Kelvin 那本（库里只有它）
+  fs.writeFileSync(path.join(booksDir, "k.docx"), "ASCII k 的原件", "utf8");
+  const purK = await invoke("books:purge", "k.docx");
+  ok(purK.ok === true && !fs.existsSync(path.join(booksDir, "k.docx")),
+    "P1-E8: k.docx 自己的原件正常删掉（它确实存在，删它是对的）");
+  ok(fs.existsSync(dbE8), "P1-E8: K.docx 的库一格不动（字符串小写会误删它，这是风险点）");
+  ok(purK.data?.removedDerived === 0, "P1-E8: 没有清掉 K 的派生（它不在候选名上）");
+  // 若 books/ 里没有 k.docx，则应当干脆报「找不到」，而不是顺着 Unicode 折叠去删 K
+  const dbE8b = mkBook("\u212b.docx", false); // Å（U+212B），与 ASCII "Å" 同理
+  const purKb = await invoke("books:purge", "\u00e5.docx");
+  ok(purKb.ok === false, "P1-E8b: 无原件的近似书名 → 拒绝（不折叠、不猜）");
+  ok(fs.existsSync(dbE8b), "P1-E8b: Å.docx 的库一格不动");
+
+  // E9：跨扩展兜底不许删隔壁的原件——foo9.pdf 的库没有自己的 books/ 原件时，
+  // resolveAsset 会兜到 books/foo9.docx（阅读场景是容错，删除场景就是误删）。
+  const dbE9pdf = mkBook("foo9.pdf", false);
+  const dbE9docx = mkBook("foo9.docx", false);
+  fs.writeFileSync(path.join(booksDir, "foo9.docx"), "另一本的原件", "utf8");
+  const purPdf = await invoke("books:purge", "foo9.pdf");
+  ok(purPdf.ok === true && !fs.existsSync(dbE9pdf), "P1-E9: foo9.pdf 的库正常删掉");
+  ok(fs.existsSync(dbE9docx) && fs.existsSync(path.join(booksDir, "foo9.docx")),
+    "P1-E9: 隔壁 foo9.docx 的库与原件一格不动（跨扩展兜底不许进删除路径）");
 
   delete process.env.BSP_LIB_DIR;
   fs.rmSync(tmp, { recursive: true, force: true });

@@ -136,5 +136,35 @@ try {
 const back = await invoke("books:list");
 ok(back.data.filter(b => b.status === "processed").length === 17, "状态复位后十七本已加工书回来（finally 保护生效）");
 
+// ---------- P5 派生六落点：真库只读定位（一格都不删） ----------
+// 真删行为由 archive-config-fuzz P1-E1/E3 在 tmp 自建库上验（走同一份真 IPC handler）。
+// 这里只锁两件事：① 定位不越界（每条都落在书库上级的四个派生目录内）；
+// ② dryRun 在真库上零副作用——规划 §2.4 的「真库只读验收」落进测试里。
+{
+  const { derivedCandidates, purgeDerived } = await import("../src/lib/derived.mjs");
+  const libDir = engine.dirs().libDir;
+  const root = path.resolve(path.join(libDir, ".."));
+  const allowed = new Set(["catalog-tasks", "catalog-results", "enrich-tasks", "enrich-results"]);
+  const processed = back.data.filter((b) => b.status === "processed");
+  let six = true, inBounds = true;
+  for (const b of processed) {
+    const c = derivedCandidates(libDir, b.id);
+    if (!c.ok || c.items.length !== 6) { six = false; continue; }
+    for (const it of c.items) {
+      const rel = path.relative(root, it.path).replace(/\\/g, "/");
+      if (!allowed.has(rel.split("/")[0])) inBounds = false;
+    }
+  }
+  ok(six, `P5: ${processed.length} 本 processed 每本都定位出六项候选（真库只读）`);
+  ok(inBounds, "P5: 六项候选全部落在四个派生目录内（不越界、不穿到书库或更上层）");
+  const dries = processed.map((b) => purgeDerived(libDir, b.id, { dryRun: true }));
+  const totalWould = dries.reduce((s, r) => s + r.wouldRemove.length, 0);
+  // totalWould > 0 是「路径真的拼对了」的实测证据：若后缀整体写错（.json 拼成 .JSON），
+  // 全库会静默空转、上面两条断言照样全绿（陆回测 OBSERVE-3）
+  ok(dries.every((r) => r.removedCount === 0 && r.failed.length === 0 && r.rejected === false)
+    && totalWould > 0,
+    `P5: 真库 dryRun 零删除零失败，且账上确有派生（本会删 ${totalWould} 项）`);
+}
+
 console.log(`===== ipc-test: ${pass} PASS / ${fail} FAIL =====`);
 process.exit(fail ? 1 : 0);

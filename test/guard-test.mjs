@@ -424,13 +424,66 @@ const copyDb = (src) => {
   ok(/const delBtns = raw\s*\n\s*\?\s*`[^`]*data-action="purge"[^`]*`\s*\n\s*:\s*`[^`]*data-action="del"[^`]*data-action="purge"/.test(cardBody),
     "静态: raw 卡仅彻底删除 / processed 卡移出+彻底两档（#168 按钮分流）");
   // ④ 两个动作都拨通 IPC + 彻底删除带确认清单（asset/chunks 数从书架数据来）
-  ok(/act === "purge"[\s\S]{0,600}window\.study\.purgeBook/.test(viewsSrc),
+  // 窗口 900 而非 600：P5 在确认清单里加了一行派生说明，把 purgeBook 调用点推远了——
+  // 这条断言的语义是「该分支拨通的确实是 purgeBook」，不是精确距离（距离型断言本就脆）
+  ok(/act === "purge"[\s\S]{0,900}window\.study\.purgeBook/.test(viewsSrc),
     "静态: 彻底删除动作拨通 purgeBook（#168）");
   ok(/act === "purge"[\s\S]{0,900}不可恢复/.test(viewsSrc) && /asset\?\.exists/.test(viewsSrc),
     "静态: 彻底删除确认清单先行（books/ 原件在不在按 asset.exists 说实情）");
   // ⑤ 通道契约同步：ipc-test EXPECTED 含 books:purge
   const ipcTestSrc = readSrc("test", "ipc-test.mjs");
   ok(ipcTestSrc.includes('"books:purge"'), "静态: ipc-test EXPECTED 含 books:purge（#168 通道对账）");
+
+  // ⑥ P5 一体删除（2026-10-18）：派生六落点只挂在 purgeBook，deleteBook 明确不清。
+  // 本节用比 stripComments 更严的剥离器：整行注释、块注释、行尾注释全剔——
+  // includes/正则型断言在行尾注释面前会被骗过（陆回测 OBSERVE-4 实测：
+  // `const id = bookId; // safeBookId(bookId)` 能让 §15 的闸门断言假绿）。
+  const stripAll = (s) => s
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split("\n")
+    .map((l) => {
+      if (l.trimStart().startsWith("//")) return "";
+      const i = l.indexOf("//");
+      // 行尾注释：仅当 "//" 前没有引号时剔除（避免切坏字符串字面量里的 //）
+      return i >= 0 && !/["'`]/.test(l.slice(0, i)) ? l.slice(0, i) : l;
+    })
+    .join("\n");
+  const engStrict = stripAll(readSrc("src", "desktop", "engine.mjs"));
+  const purgeAtS = engStrict.indexOf("export function purgeBook(");
+  const purgeBodyS = engStrict.slice(purgeAtS, engStrict.indexOf("\nexport ", purgeAtS + 10));
+  const delAtS = engStrict.indexOf("export function deleteBook(");
+  const delBodyS = engStrict.slice(delAtS, purgeAtS);
+  const derivedSrc = stripAll(readSrc("src", "lib", "derived.mjs"));
+  // 参数名不绑死：P5 大小写归一后调用是 purgeDerived(libDir, id)，早先写死 bookId
+  // 会让 guard 在「已修正」的代码上报红（本轮实测）。锁的是「传了 libDir + 一个 id 变量」
+  ok(/purgeDerived\(\s*libDir\s*,\s*[A-Za-z_$][\w$]*\s*\)/.test(purgeBodyS),
+    "静态: purgeBook 调 purgeDerived 清派生（参数=libDir + 归一后的 id 变量）");
+  ok(!/purgeDerived\(/.test(delBodyS),
+    "静态: deleteBook 不调 purgeDerived（移出书架不清派生——重建可复用，省一次云端洗数据）");
+  ok(derivedSrc.includes("safeBookId(") && !/readdirSync|glob|\.match\(/.test(derivedSrc),
+    "静态: derived.mjs 过 safeBookId 闸门、不 glob 不扫目录（精确拼接，防前缀误伤）");
+  ok(!/recursive/.test(derivedSrc),
+    "静态: derived.mjs 不递归删除（只删单个普通文件，目录/链接跳过）");
+  // 六落点必须「目录↔后缀」成对且恰好 6 条：老写法分别断言「三个后缀都出现 +
+  // 四个目录都出现」，互换后缀（catalog-tasks/.jsonl, enrich-results/.json）照样全绿
+  const pairs = [
+    ["catalog-tasks", ".json"], ["catalog-tasks", ".prompt.md"],
+    ["catalog-results", ".json"], ["enrich-tasks", ".json"],
+    ["enrich-results", ".json"], ["enrich-results", ".jsonl"],
+  ];
+  const entryLines = derivedSrc.split("\n").filter((l) => /dir:\s*"/.test(l) && /suffix:\s*"/.test(l));
+  ok(entryLines.length === 6
+    && pairs.every(([d, s]) => entryLines.some((l) => l.includes(`"${d}"`) && l.includes(`"${s}"`))),
+    `静态: 六落点「目录↔后缀」成对且恰好 6 条（实测 ${entryLines.length} 条；互换或增删都会红）`);
+  // ⑦ 防漂移：上面 ⑥ 锁的是 derived 自己写的那张表，锁错了对象照样全绿。
+  // 真正的雷是「生产写入方改了文件名，derived 没跟」——直接对写入方断言命名。
+  const jobsSrc = stripAll(readSrc("src", "desktop", "jobs.mjs"));
+  ok(jobsSrc.includes("`${id}.json`") && jobsSrc.includes("`${id}.prompt.md`"),
+    "静态: jobs.mjs 落盘命名 <id>.json / <id>.prompt.md 与 derived 候选一致（防漂移）");
+  const enrichSrc = stripAll(readSrc("src", "lib", "enrich.mjs"));
+  ok(enrichSrc.includes('dbName.replace(/\\.db$/, "") + ".jsonl"')
+    && enrichSrc.includes('dbName.replace(/\\.db$/, "") + ".json"'),
+    "静态: enrich.mjs 产物命名 <id>.json / <id>.jsonl 与 derived 候选一致（防漂移）");
 }
 
 // ========== 16) 静态防回归：结构化改造接线契约（V3 第四波 P2） ==========
