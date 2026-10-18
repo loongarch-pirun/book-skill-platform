@@ -10,6 +10,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import crypto from "node:crypto";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import { clusterChunks, buildTask, parseResultText, importCatalog, buildPromptText } from "../lib/catalog.mjs";
@@ -39,12 +40,24 @@ export function jobDirs() {
 // ---------- 任务注册表 + 进度订阅 ----------
 const jobs = new Map();   // bookId → { stage, label, detail, error, filePath, taskPath, child }
 const cancelled = new Set();
+const gens = new Map();   // bookId → 代际号（每次 start / 取消都 bump）
 const subs = new Set();
 
 // 事件/状态出海前剥掉 child（ChildProcess 不可 structured clone，带上会炸 IPC）
 const plain = (j) => { const { child, ...rest } = j; return rest; };
 
-function emit(bookId, patch) {
+// 代际（评审对抗官 F6-F1：墓碑是 bookId 级的「取消态」，挡不住「取消后立刻
+// 重导入 → 旧管线收尾污染新条目甚至 cancelResult 删掉新条目」——生产窗口是
+// 旧管线整段剩余运行时间，秒级到分钟级）。旧管线每处 emit/cancelResult 都带
+// 启动时的代际号，代际不符一律落空/不碰条目
+const curGen = (bookId) => gens.get(bookId) || 0;
+const nextGen = (bookId) => { const g = curGen(bookId) + 1; gens.set(bookId, g); return g; };
+
+function emit(bookId, patch, g) {
+  if (g !== undefined && g !== curGen(bookId)) return;   // 旧代落空（不许污染新代条目）
+  // 墓碑：取消后管线还在收尾，其后的 emit 不许复活条目——否则取消的书仍挂
+  // 「结构化改造中」/「加工失败」幽灵横幅，卡住重导入（C21/C1/C2 坐实）
+  if (cancelled.has(bookId)) return;
   const j = jobs.get(bookId) || { stage: "slice", startedAt: Date.now() };
   Object.assign(j, patch, { bookId });
   jobs.set(bookId, j);
@@ -77,7 +90,8 @@ export async function startImport(filePath) {
     throw new UserError(`《${base}》正在${cur.phase === "process" ? "加工" : "导入"}中（${cur.label || cur.stage}），稍候或先取消`);
   }
   cancelled.delete(bookId);
-  emit(bookId, { phase: "import", stage: "slice", label: "放进书架", detail: path.basename(file), error: null, filePath: file });
+  const g = nextGen(bookId); // 新代：旧管线的 emit/cancelResult 从此落空
+  emit(bookId, { phase: "import", stage: "slice", label: "放进书架", detail: path.basename(file), error: null, filePath: file }, g);
 
   // 0) 原件进 books/（自包含：以后加工/重导入不依赖 Downloads 里的原始文件）；
   //    txt 保持 .txt 落盘（bookId 才是 <base>.docx——转 docx 是加工段的事）
@@ -86,12 +100,12 @@ export async function startImport(filePath) {
     if (path.resolve(dest) !== file) fs.copyFileSync(file, dest);
   } catch (e) {
     const why = e instanceof UserError ? e.message : `放进书架失败：${e.message || e}`;
-    emit(bookId, { phase: "import", stage: "failed", label: "导入失败", error: why });
+    emit(bookId, { phase: "import", stage: "failed", label: "导入失败", error: why }, g);
     throw new UserError(why);
   }
-  if (cancelled.has(bookId)) return cancelResult(bookId);
+  if (cancelled.has(bookId)) return cancelResult(bookId, g);
 
-  emit(bookId, { phase: "import", stage: "done", label: "已放进书架", detail: "点「开始加工」才会切片/向量化/编目", error: null });
+  emit(bookId, { phase: "import", stage: "done", label: "已放进书架", detail: "点「开始加工」才会切片/向量化/编目", error: null }, g);
   return { bookId, stage: "imported", note: "原件已复制进 books/——先看原文，点「开始加工」才建库" };
 }
 
@@ -114,26 +128,31 @@ export async function startProcessing(bookId) {
   if (!EXT_FMT[asset.ext]) throw new UserError(`不支持的格式 .${asset.ext}（支持 .epub / .docx / .pdf / .txt）`);
   const outDb = path.join(libDir, `${id}.db`);
   cancelled.delete(id);
-  emit(id, { phase: "process", stage: "slice", label: "准备文件", detail: path.basename(asset.path), error: null, filePath: asset.path });
+  const g = nextGen(id); // 新代：取消后旧管线残留的 emit/cancelResult 全部落空
+  // 本管线统一经 emitG 发声（带代际号）——直接 emit 会绕过代际校验
+  const emitG = (patch) => emit(id, patch, g);
+  emitG({ phase: "process", stage: "slice", label: "准备文件", detail: path.basename(asset.path), error: null, filePath: asset.path });
 
-  // 0) 切片源：txt 先转 docx（稳定临时路径：重跑时源文件 hash 稳定，重灌保护认得出）；
+  // 0) 切片源：txt 先转 docx（输出名带内容 hash：重跑幂等、换源不碰撞）；
   //    其余直接用 books/ 里的原件。失败落 failed 态（P2 逮到的 0 步卡死缺陷）
   let source;
   try {
-    source = asset.ext === "txt" ? await txtToDocx(asset.path) : asset.path;
+    source = asset.ext === "txt" ? await txtToDocx(asset.path, id) : asset.path;
   } catch (e) {
+    // 取消导致的转换中断：按取消收尾，不弹「加工失败」（用户主动取消不是错误，毛 O3）
+    if (cancelled.has(id)) return cancelResult(id, g);
     const why = e instanceof UserError ? e.message : `准备文件失败：${e.message || e}`;
-    emit(id, { phase: "process", stage: "failed", label: "加工失败", error: why });
+    emitG({ phase: "process", stage: "failed", label: "加工失败", error: why });
     throw new UserError(why);
   }
-  if (cancelled.has(id)) return cancelResult(id);
+  if (cancelled.has(id)) return cancelResult(id, g);
 
   // 1) 结构化改造 + 切片：require 复用 build-book.main（H2-② 显式 -o）。main 是 CLI 出身：
   //    失败时不抛错，只打 console.error + 置 process.exitCode——这里截获输出人话化，
   //    并把 exitCode 还回去（否则会把 Electron 主进程的退出码毒成 1）。
   //    V3 第四波 P2：结构化改造（清洗坏数据/不全数据/乱码符号）是切片前的独立一步，
   //    经 onStage 回调在横幅上单独占一格——硬拦（修不动的乱码/内容太少）发生在烧算力之前。
-  emit(id, { stage: "slice", label: "结构化改造中", detail: "清洗坏数据/不全数据/乱码符号，过了才切片" });
+  emitG({ stage: "slice", label: "结构化改造中", detail: "清洗坏数据/不全数据/乱码符号，过了才切片" });
   const buildBook = require("../build-book.js");
   const keepExit = process.exitCode;
   const captured = [];
@@ -143,7 +162,7 @@ export async function startProcessing(bookId) {
   try {
     r = await buildBook.main([source, "-o", outDb], {
       onStage: (s) => {
-        if (s === "slice") emit(id, { stage: "slice", label: "切片中", detail: "解析原文 → 分块（≤900 字/块）" });
+        if (s === "slice") emitG({ stage: "slice", label: "切片中", detail: "解析原文 → 分块（≤900 字/块）" });
       },
     });
   }
@@ -151,35 +170,35 @@ export async function startProcessing(bookId) {
   if (!r) {
     const why = captured.join(" / ").replace(/\s+/g, " ").slice(0, 200);
     const msg = `加工失败：${why || "文件可能损坏、是扫描版 PDF 或格式不符"}`;
-    emit(id, { stage: "failed", label: "加工失败", error: msg });
+    emitG({ stage: "failed", label: "加工失败", error: msg });
     throw new UserError(msg);
   }
   // 结构化改造账（P2）：真洗了东西横幅说一声，干净的书零刷屏（存量行为零变化）
   const st = r.struct;
   if (st && (st.droppedEmpty || st.droppedGarbage || st.repairedMojibake || st.strippedControls || st.strippedPua || st.strippedFffd || st.strippedSurrogates)) {
-    emit(id, { stage: "slice", detail: `结构化改造：去空块 ${st.droppedEmpty} · 去垃圾块 ${st.droppedGarbage} · 修乱码块 ${st.repairedMojibake} · 清符号 ${st.strippedControls + st.strippedPua + st.strippedFffd + st.strippedSurrogates} 处` });
+    emitG({ stage: "slice", detail: `结构化改造：去空块 ${st.droppedEmpty} · 去垃圾块 ${st.droppedGarbage} · 修乱码块 ${st.repairedMojibake} · 清符号 ${st.strippedControls + st.strippedPua + st.strippedFffd + st.strippedSurrogates} 处` });
   }
-  if (cancelled.has(id)) return cancelResult(id);
+  if (cancelled.has(id)) return cancelResult(id, g);
 
   // 2) 向量化：spawn embed-book.js <db>（显式传参；环境变量由 engine.init 回写的是
   //    BSP_LIB_DIR/BSP_SKILLS_DIR/BSP_MODELS_DIR 三个目录，nodeEnv() 另行补 ELECTRON_RUN_AS_NODE）
-  emit(id, { stage: "vector", label: "向量化中", detail: r.skipped ? "库已存在，补向量/概念图谱" : "首次要下嵌入模型（约 112MB）" });
-  const code = await runEmbed(id, outDb);
-  if (cancelled.has(id)) return cancelResult(id);
+  emitG({ stage: "vector", label: "向量化中", detail: r.skipped ? "库已存在，补向量/概念图谱" : "首次要下嵌入模型（约 112MB）" });
+  const code = await runEmbed(id, outDb, g);
+  if (cancelled.has(id)) return cancelResult(id, g);
   if (code !== 0) {
-    emit(id, { stage: "failed", label: "加工失败", error: "向量化失败（模型下载失败或磁盘空间不足）" });
+    emitG({ stage: "failed", label: "加工失败", error: "向量化失败（模型下载失败或磁盘空间不足）" });
     throw new UserError("向量化失败：模型下载失败或磁盘空间不足（详细输出在启动终端里）");
   }
 
   // 3) 编目：聚堆 → 任务书落 catalog-tasks/（H1 直调 lib）。结果已在 → 直接入库；
   //    否则暂停在「待编目」——不卡死书架，等智能体/用户产出结果后点「导入编目结果」。
-  emit(id, { stage: "catalog", label: "编目中", detail: "聚堆 → 生成任务书" });
+  emitG({ stage: "catalog", label: "编目中", detail: "聚堆 → 生成任务书" });
   const dbRo = new Database(outDb, { readonly: true });
   let clusterRes, task;
   try { clusterRes = clusterChunks(dbRo); task = buildTask(dbRo, clusterRes); }
   catch (e) {
     const why = `编目聚堆失败：${e.message || e}`;
-    emit(id, { stage: "failed", label: "加工失败", error: why });
+    emitG({ stage: "failed", label: "加工失败", error: why });
     throw new UserError(why);
   } finally { dbRo.close(); }
   fs.mkdirSync(tasksDir, { recursive: true });
@@ -187,13 +206,14 @@ export async function startProcessing(bookId) {
   fs.writeFileSync(taskPath, JSON.stringify(task, null, 1), "utf8");
 
   const rp = path.join(resultsDir, `${id}.json`);
-  if (fs.existsSync(rp)) return resumeCatalog(id, rp); // 结果已在 → 顺着入库
-  emit(id, { stage: "catalog", label: "待编目", detail: `任务书已生成（${task.clusters.length} 堆），等编目结果`, taskPath });
+  if (fs.existsSync(rp)) return resumeCatalog(id, rp, g); // 结果已在 → 顺着入库
+  emitG({ stage: "catalog", label: "待编目", detail: `任务书已生成（${task.clusters.length} 堆），等编目结果`, taskPath });
   return { bookId: id, stage: "catalog", taskPath, clusters: task.clusters.length };
 }
 
 // ---------- 恢复：导入编目结果（五重校验 + 入库；校验失败整批拒收） ----------
-export async function resumeCatalog(bookId, resultPath) {
+// g：代际号（startProcessing 内部续跑时透传；IPC 直调时缺省=当前代）
+export async function resumeCatalog(bookId, resultPath, g) {
   // 入口闸门（C2/C10）：id 用于拼 taskPath/dbPath/默认 rp——不过闸可 `../` 逃逸；
   // resultPath 是用户「选择文件」直传的结果 JSON（设计如此，非 id 派生，不在闸范围）
   const id = safeBookId(bookId);
@@ -210,30 +230,32 @@ export async function resumeCatalog(bookId, resultPath) {
   const dbPath = path.join(libDir, `${id}.db`);
   if (!fs.existsSync(dbPath)) throw new UserError(`书库文件不见了：${dbPath}`);
 
-  emit(id, { stage: "catalog", label: "编目入库中", detail: "五重校验 → 入库", error: null });
+  emit(id, { stage: "catalog", label: "编目入库中", detail: "五重校验 → 入库", error: null }, g);
   // 坏库文件/库被外部改坏：new Database 与 importCatalog 都要包住——裸 SqliteError
   // 冒泡到 IPC 是一屏英文堆栈，不是人话（P2 逮到）
   let db;
   try { db = new Database(dbPath); } catch (e) {
     const why = `书库打不开（${e.message}）——文件可能损坏或被占用`;
-    emit(id, { stage: "failed", label: "入库失败", error: why });
+    emit(id, { stage: "failed", label: "入库失败", error: why }, g);
     throw new UserError(why);
   }
   try {
     const stats = await importCatalog(db, task, result);
-    emit(id, { stage: "done", label: "完成", detail: `主题 ${stats.themes} · 人物 ${stats.persons} · 关系 ${stats.relations}`, error: null });
+    emit(id, { stage: "done", label: "完成", detail: `主题 ${stats.themes} · 人物 ${stats.persons} · 关系 ${stats.relations}`, error: null }, g);
     return { bookId: id, stage: "done", ...stats };
   } catch (e) {
     const why = e.errors?.length ? `校验失败：${e.errors[0]}` : (e.message || "入库失败");
-    emit(id, { stage: "failed", label: "入库失败", error: why });
+    emit(id, { stage: "failed", label: "入库失败", error: why }, g);
     throw new UserError(why);
   } finally { db.close(); }
 }
 
-// 取消：杀掉向量化子进程；切片阶段（进程内）拦不住，跑完即止（cancelled 集合把着后续步骤）
+// 取消：杀掉子进程；切片阶段（进程内）拦不住，跑完即止（墓碑把着后续步骤）。
+// bump 代际：旧管线（main/embed 还在跑）之后的所有 emit/cancelResult 全部失效
 export function cancelImport(bookId) {
   const j = jobs.get(bookId);
   if (!j) return { cancelled: false, note: "没有进行中的任务" };
+  nextGen(bookId);
   cancelled.add(bookId);
   if (j.child) { try { j.child.kill(); } catch { /* 已退出 */ } }
   const wasSlice = j.stage === "slice";
@@ -284,8 +306,8 @@ export function catalogPrompt(bookId) {
   return { bookId: id, chars: text.length, path: outPath, text };
 }
 
-// ---------- 内部：向量化子进程（进度行透传为 detail） ----------
-function runEmbed(bookId, dbPath) {
+// ---------- 内部：向量化子进程（进度行透传为 detail；g=代际号） ----------
+function runEmbed(bookId, dbPath, g) {
   return new Promise((resolve) => {
     const child = spawn(process.execPath, [EMBED_SCRIPT, dbPath], { env: nodeEnv() });
     const j = jobs.get(bookId);
@@ -294,7 +316,7 @@ function runEmbed(bookId, dbPath) {
     child.stdout.on("data", (d) => {
       buf += d.toString();
       const m = buf.match(/进度\s+(\d+)\/(\d+)/);
-      if (m) emit(bookId, { stage: "vector", detail: `向量 ${m[1]}/${m[2]} 块` });
+      if (m) emit(bookId, { stage: "vector", detail: `向量 ${m[1]}/${m[2]} 块` }, g);
       if (buf.length > 4000) buf = buf.slice(-1000);
     });
     child.stderr.on("data", (d) => { buf += d.toString(); });
@@ -303,26 +325,51 @@ function runEmbed(bookId, dbPath) {
   });
 }
 
-// txt → docx（复用 txt2docx.js CLI；稳定临时路径保证重导入幂等）。
-// stderr 要拼进错误——txt2docx 的人话提示（如「UTF-16 请另存为 UTF-8」）被吞掉
-// 只剩「转换失败」，用户等于没得到可执行的修复指引（P2 逮到的 D-09）
-async function txtToDocx(txtPath) {
-  const out = path.join(os.tmpdir(), "bsp-import", path.basename(txtPath).replace(/\.txt$/, ".docx"));
+// txt → docx（复用 txt2docx.js CLI）。输出名带内容 hash：同源重跑幂等覆盖无害，
+// 换源重跑不碰撞（C33/C3 坐实：稳定路径下同 base 换源会覆盖旧转换结果，重灌保护
+// 误判成「另一本书」）。stderr 拼进错误——txt2docx 的人话提示（如「UTF-16 请
+// 另存为 UTF-8」）被吞掉只剩「转换失败」，用户等于没得到可执行的修复指引（D-09）
+async function txtToDocx(txtPath, bookId) {
+  // 流式 hash（16 hex=64bit）：不整读大文件、不阻塞事件循环（评审对抗官 O2）；
+  // 16 hex 让跨书同 base 碰撞可忽略（毛 O1：32bit 在千本级库约 1e-4）
+  const hash = await new Promise((resolve, reject) => {
+    const h = crypto.createHash("sha1");
+    fs.createReadStream(txtPath)
+      .on("data", (d) => h.update(d))
+      .on("end", () => resolve(h.digest("hex").slice(0, 16)))
+      .on("error", reject);
+  });
+  const out = path.join(os.tmpdir(), "bsp-import", `${path.basename(txtPath).replace(/\.txt$/, "")}.${hash}.docx`);
   fs.mkdirSync(path.dirname(out), { recursive: true });
   await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [TXT2DOCX_SCRIPT, txtPath, out], { env: nodeEnv() });
+    // 挂到 jobs 条目上：cancelImport 靠 j.child.kill() 杀子进程（C22/C6 坐实）。
+    // plain() 会把 child 剥掉再出海。流式 hash 的 await 让取消有机会插入——条目
+    // 已删（=已取消）时不许留 orphan 子进程跑完落盘（毛 F3 窄缝）：杀掉并短路
+    const cur = jobs.get(bookId);
+    if (!cur) {
+      try { child.kill(); } catch { /* 已退出 */ }
+      reject(new UserError("已取消"));
+      return;
+    }
+    cur.child = child;
+    const clearChild = () => { const j = jobs.get(bookId); if (j && j.child === child) delete j.child; };
     let err = "";
     child.stderr.on("data", d => err += d);
-    child.on("close", (code) => code === 0
-      ? resolve()
-      : reject(new UserError(`txt 转 docx 失败：${err.trim().split("\n")[0].slice(0, 150) || `退出码 ${code}`}`)));
-    child.on("error", reject);
+    child.on("close", (code) => {
+      clearChild();
+      code === 0 ? resolve() : reject(new UserError(`txt 转 docx 失败：${err.trim().split("\n")[0].slice(0, 150) || `退出码 ${code}`}`));
+    });
+    child.on("error", (e) => { clearChild(); reject(e); });
   });
   return out;
 }
 
-function cancelResult(bookId) {
-  jobs.delete(bookId);
-  cancelled.delete(bookId);
+function cancelResult(bookId, g) {
+  // 代际校验（评审对抗官 F6-F1 删除路径）：旧代收尾不许删掉新代条目——「取消 →
+  // 立刻重导入 → 旧管线走到检查点」会把用户的新任务凭空删掉。
+  // 墓碑不清（毛 F2）：留作该 id 的「取消态」标记，只在 startImport/startProcessing
+  // 入口清——cancelResult 清墓碑会让之后落地的迟到 emit 复活幽灵
+  if (g === undefined || g === curGen(bookId)) jobs.delete(bookId);
   return { bookId, stage: "cancelled" };
 }

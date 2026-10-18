@@ -449,8 +449,8 @@ const copyDb = (src) => {
   const jobsSrc = stripComments(readSrc("src", "desktop", "jobs.mjs"));
   ok(/label: "结构化改造中"/.test(jobsSrc) && /detail: "清洗坏数据\/不全数据\/乱码符号，过了才切片"/.test(jobsSrc),
     "静态: jobs 横幅「结构化改造中」一格（P2 阶段可见）");
-  ok(/onStage: \(s\) => \{[\s\S]{0,200}?if \(s === "slice"\) emit\(id, \{ stage: "slice", label: "切片中"/.test(jobsSrc),
-    "静态: onStage slice → 横幅转「切片中」（结构化改造/切片两格分明）");
+  ok(/onStage: \(s\) => \{[\s\S]{0,200}?if \(s === "slice"\) emitG?\((?:id, )?\{ stage: "slice", label: "切片中"/.test(jobsSrc),
+    "静态: onStage slice → 横幅转「切片中」（结构化改造/切片两格分明；emit/emitG 两写法兼容）");
   ok(/const st = r\.struct;[\s\S]{0,300}?结构化改造：去空块/.test(jobsSrc),
     "静态: 真洗了东西横幅才刷账（干净的书零刷屏——存量行为零变化）");
 

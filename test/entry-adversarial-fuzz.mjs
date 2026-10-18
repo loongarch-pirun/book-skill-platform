@@ -448,6 +448,25 @@ const bspImport = path.join(TMP, "bsp-import");
   off();
   ok(ghosts.length === 0, "C1 取消后无复活事件（墓碑挡住 struct emit 幽灵横幅）",
     ghosts.length ? `复活 ${ghosts.length} 条：${ghosts.map((e) => `${e.stage}/${e.label}`).join("\uff1b")}` : "");
+  ok(jobsStatus()["c1.docx"] === undefined, "C1b 取消后 jobsStatus 无残留条目（横幅重挂载数据源干净）",
+    `残留=${JSON.stringify(jobsStatus()["c1.docx"])?.slice(0, 60)}`);
+  // C1c（代际防线回归锁，测试验证师 F2 补）：取消 → 立刻重导入 → 旧管线收尾
+  // 的 emit 必须落空，不许改写新条目。无代际时旧管线 emit(failed) 会把刚重导
+  // 入的 done 覆盖成 failed（HEAD 差分实证）
+  {
+    const origMain2 = bb.main;
+    bb.main = async () => { await sleep(300); return null; }; // 旧管线 300ms 后失败收尾
+    const p2 = settle(startProcessing("c1.docx"));            // 旧代
+    await sleep(80);                                          // 管线已进 await main
+    cancelImport("c1.docx");                                  // bump 代际 + 墓碑
+    await startImport(path.join(TMP, "c1.txt"));              // 立刻重导入（新代，清墓碑）
+    await p2;                                                 // 旧管线收尾：emit 应代际落空
+    bb.main = origMain2;
+    const after = jobsStatus()["c1.docx"];
+    ok(after?.stage === "done" && after?.label === "\u5df2\u653e\u8fdb\u4e66\u67b6",
+      "C1c 取消→立即重导入 → 旧管线收尾不改写新条目（代际防线）",
+      `旧管线后 stage=${after?.stage}/${after?.label}（应 done/已放进书架）`);
+  }
 }
 // C2（红 C21）：取消后 main 返 null → failed emit 复活（持久幽灵横幅，卡住重导入）
 {
@@ -470,6 +489,10 @@ const bspImport = path.join(TMP, "bsp-import");
 }
 // C3（红 C33）：tmp 稳定路径碰撞——换源重跑同名 base 覆盖 → 重灌保护误判「另一本书」
 {
+  // 清跨轮残留（bsp-import 是稳定 tmp 目录：上一轮的 swap.* 会让「两份都在」假绿）
+  if (fs.existsSync(bspImport)) for (const f of fs.readdirSync(bspImport).filter((x) => x.startsWith("swap"))) {
+    try { fs.rmSync(path.join(bspImport, f), { force: true }); } catch { /* 占用就算了 */ }
+  }
   fs.writeFileSync(path.join(TMP, "swap.txt"), "\u7532\u6807\u8bb0\u5185\u5bb9\uff1a\u9053\u53ef\u9053\u975e\u5e38\u9053\u3002\n".repeat(10), "utf8");
   await startImport(path.join(TMP, "swap.txt"));
   const origMain = bb.main;
@@ -477,13 +500,18 @@ const bspImport = path.join(TMP, "bsp-import");
   await settle(startProcessing("swap.docx"));
   fs.writeFileSync(path.join(booksDir, "swap.txt"), "\u4e59\u6807\u8bb0\u5185\u5bb9\uff1a\u540d\u53ef\u540d\u975e\u5e38\u540d\u3002\n".repeat(10), "utf8"); // 同 base 换源
   await settle(startProcessing("swap.docx"));
+  // C3b（测试验证师 O3 补）：同内容重跑幂等——hash 同名覆盖，文件数不增
+  // （若改成时间戳/随机后缀命名，这里会红：幂等被静默破坏）
+  const nBefore = fs.existsSync(bspImport) ? fs.readdirSync(bspImport).filter((f) => f.startsWith("swap")).length : 0;
+  await settle(startProcessing("swap.docx")); // 第三次：乙内容原样重跑
+  const nAfter = fs.existsSync(bspImport) ? fs.readdirSync(bspImport).filter((f) => f.startsWith("swap")).length : 0;
   bb.main = origMain;
   const files = fs.existsSync(bspImport) ? fs.readdirSync(bspImport).filter((f) => f.startsWith("swap")) : [];
   const texts = files.map((f) => readDocxText(path.join(bspImport, f)));
   const hasJia = texts.some((t) => t.includes("\u7532\u6807\u8bb0")), hasYi = texts.some((t) => t.includes("\u4e59\u6807\u8bb0"));
-  ok(files.length >= 2 && hasJia && hasYi,
-    "C3 tmp 转换文件按内容区分（换源不碰撞：甲/乙两份都在）",
-    `swap 文件 ${files.length} 个（${files.join(",")}）；甲=${hasJia} 乙=${hasYi}`);
+  ok(files.length >= 2 && hasJia && hasYi && nAfter === nBefore,
+    "C3 tmp 转换文件按内容区分（换源不碰撞：甲/乙两份都在；同内容重跑幂等不增）",
+    `swap 文件 ${files.length} 个（${files.join(",")}）；甲=${hasJia} 乙=${hasYi} \u5e42\u7b49 ${nBefore}\u2192${nAfter}`);
 }
 // C4（观 C4/C37）：Windows 保留设备名/尾空格文件名——libuv 逐字创建实证 + 书架层不崩
 {
@@ -515,6 +543,10 @@ const bspImport = path.join(TMP, "bsp-import");
 }
 // C6（红 C22）：txt2docx 子进程未挂 j.child → 取消杀不到 → 32MB 转换取消后仍跑完落盘
 {
+  // 清跨轮残留（上一轮的 big.*.docx 会让「已落盘」判定假红）
+  if (fs.existsSync(bspImport)) for (const f of fs.readdirSync(bspImport).filter((x) => x.startsWith("big"))) {
+    try { fs.rmSync(path.join(bspImport, f), { force: true }); } catch { /* 占用就算了 */ }
+  }
   const bigLine = "\u9053\u53ef\u9053\uff0c\u975e\u5e38\u9053\uff1b\u540d\u53ef\u540d\uff0c\u975e\u5e38\u540d\uff1b\u65e0\u540d\u5929\u5730\u4e4b\u59cb\uff1b\u6709\u540d\u4e07\u7269\u4e4b\u6bcd\u3002"; // 30 字 ≈ 91 字节
   fs.writeFileSync(path.join(TMP, "big.txt"), bigLine.repeat(360000), "utf8"); // ≈32MB，实测转换 ~0.9s
   await startImport(path.join(TMP, "big.txt"));
@@ -525,10 +557,16 @@ const bspImport = path.join(TMP, "bsp-import");
   await sleep(120); // 转换进行中（约 0.9s 总时长）
   cancelImport("big.docx");
   await p6;
-  const landed = await waitFor(() => fs.existsSync(path.join(bspImport, "big.docx")), 8000, 100);
+  const landed = await waitFor(() => fs.existsSync(bspImport)
+    && fs.readdirSync(bspImport).some((f) => f.startsWith("big")), 8000, 100); // F6 起输出名带内容 hash（big.<hash>.docx），按前缀扫
   off();
-  ok(!landed, "C6 取消杀掉 txt2docx 子进程（转换不落地）",
-    landed ? "取消后转换仍跑完并落盘（子进程没挂上取消闸门）" : "");
+  // 幽灵断言（测试验证师 F3 补）：kill 后 txtToDocx 的 reject → catch → emit(failed)
+  // 必须被墓碑/代际挡住——取消后除 cancelled 外不许有新事件
+  const ci6 = ev6.findIndex((e) => e.stage === "cancelled");
+  const ghosts6 = ci6 >= 0 ? ev6.slice(ci6 + 1).filter((e) => e.stage !== "cancelled") : [];
+  ok(!landed && ghosts6.length === 0,
+    "C6 取消杀掉 txt2docx 子进程（转换不落地、取消后无幽灵事件）",
+    landed ? "取消后转换仍跑完并落盘（子进程没挂上取消闸门）" : (ghosts6.length ? `幽灵 ${ghosts6.length} 条：${ghosts6.map((e) => e.stage).join(",")}` : ""));
 }
 // C7（绿 C7）：损坏 docx 双入口人话——协议层 500 + 加工层 failed 态
 {
