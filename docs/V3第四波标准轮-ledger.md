@@ -6,7 +6,7 @@
 - **代码基线**：HEAD=8296a3d（P2 收官 4 commit 975a176/43b34bd/27b2a8b/8296a3d 已于本轮补推 origin/main，前置阻塞解除）；不变性对拍父提交 d18a447
 - **双轨说明**：P2 轨（#169）优先修；P1 轨源 C1~C41（Review Surface Map 附录 A）随行
 
-## 状态：步骤 3（S3 分组修复）进行中 —— F1 已修（3b81aa9），F2a 起按组推进
+## 状态：步骤 3（S3 分组修复）上段完成 —— F1/F2a/F2b/F3/F4 全修，下段 F5~F8 待启动
 
 S1 完成判据：全量入账 + 疑点逐条核验归级（本文档）。S2 起每会话开头只喂「方法论 + 本 ledger」。
 S2 完成判据：51 发探针实跑、红绿预判全坐实（下文硬证据节）；套件挂载 test:fast/test:ci + guard §17 对账（同 commit）。
@@ -104,11 +104,11 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 | C8 | src/desktop/book-view.mjs:100/107 | docx zip 炸弹：只挡文件体积，无解压尺寸/超时闸门 | 严重 | 挂起→候选解压尺寸闸门 | |
 | C9 | src/desktop/book-view.mjs:47-51 | UTF-16BE/无 BOM UTF-16 静默乱码（P2 后部分缓解） | 一般 | 登记+探针 | |
 | C10 | src/desktop/book-view.mjs:100-104 | 49MB 临界 txt 双倍内存 + 渲染进程 ~100MB HTML | 严重 | 挂起→候选流式/早闸门 | |
-| C11 | src/desktop/book-view.mjs:103/108 | TOCTOU：exists 后文件被删 → readFileSync/statSync 未捕获 → 协议请求无状态码失败 | 严重 | 待修（F4）｜坐实 B1 | |
-| C12 | src/desktop/book-view.mjs:109 | 缓存 key 无 libDir → applyConfig 换库后同名同尺寸同 mtime 串味 | 严重 | 待修（F4）｜坐实 B2 | |
+| C11 | src/desktop/book-view.mjs:103/108 | TOCTOU：exists 后文件被删 → readFileSync/statSync 未捕获 → 协议请求无状态码失败 | 严重 | **已修 b3810f7（F4）**｜坐实 B1/B1b｜双 PASS |
+| C12 | src/desktop/book-view.mjs:109 | 缓存 key 无 libDir → applyConfig 换库后同名同尺寸同 mtime 串味 | 严重 | **已修 b3810f7（F4）**｜坐实 B2｜双 PASS |
 | C13 | src/desktop/book-view.mjs:80-83 | LRU 淘汰序未测（只测命中内容一致） | 一般 | 待修（F4/F8 补探针） | |
 | C14 | src/desktop/book-view.mjs:89-91 | "%zz"/主机名变体靠 catch 无显式测试 | 一般 | 待修（F8 补断言） | |
-| C15 | src/desktop/book-view.mjs:112-116 | 并发同 docx 双 mammoth 转换（无 in-flight 去重） | 一般 | 待修（F4） | |
+| C15 | src/desktop/book-view.mjs:112-116 | 并发同 docx 双 mammoth 转换（无 in-flight 去重） | 一般 | **已修 b3810f7（F4）**｜B6 OBSERVE 2→1 翻转登记｜双 PASS |
 | C16/C35 | src/desktop/engine.mjs:104-107 | deleteBook rmSync 无 try：Windows EBUSY → 半删（db 没 -wal 在）+ 裸抛 | 严重 | 待修（F5）｜坐实 D1 | |
 | C17 | src/desktop/engine.mjs:124-133 | purgeBook 第二步 db rmSync 无 try：原件已删库删失败 → 书架 processed 但 asset 消失；purgeArchives 在 engine 返回后才跑 → 存档未清 | 严重 | 待修（F5）｜坐实 D2 | |
 | C18 | src/desktop/engine.mjs:108/134；src/lib/skill-state.mjs:29 | setSkillEnabled writeFileSync 无兜底：文件已删但整调用报错（用户见失败实则成功） | 一般 | 待修（F5）｜坐实 D3 | |
@@ -183,6 +183,17 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 | F2a surrogate 剥离 + null 对称 | **已修** | 802a9d2 | structurize-test 43 PASS（第 7 节 9 字段全零精确相等）；fuzz 53 PASS/19 FAIL/2 OBSERVE/1 SKIP，转绿恰 {A3,A4,F2a}，集合差新红空（19⊆22），A11c strippedSurrogates=1→true；guard 91 绿；jobs-test 全 PASS；ipc-test 29 PASS；eslint 0 | 毛求疵 PASS（高 0/中 3/低 5/观察 2：M1/M2/L1/L2 同 commit 采纳；M3 grep 坐实构造点唯一=关闭；余登记）；陆回测 PASS（FAIL 无） |
 | F2b 开关 + 回调 | **已修** | bbc9c80 | fuzz 56 PASS/16 FAIL/2 OBSERVE/1 SKIP，转绿恰 {F4,F5,F6}（19→16），F4 十值矩阵全绿（含零宽/全角/前导空/制表换行）；F5/F6 加调用序列断言；guard 91 绿（③ 放宽为语义存在性）；structurize/jobs/ipc（29 PASS）全绿；eslint 0 | 毛求疵 PASS（无 FAIL，5 OBSERVE 全部同 commit 处置：零宽换脸复现→归一化、async 契约注释、catch 留日志、guard 放宽、onStage 两处 grep 坐实）；陆回测 PASS（FAIL 0，O1 补跑 ipc、O5 加序列断言、余登记） |
 | F3 bookId 闸门统一 | **已修** | 1365b91 | fuzz 61 PASS/13 FAIL/2 OBSERVE/1 SKIP，转绿恰 {C8,C10,C11}（16→13），C8b/C8c win32 冒号/尾点双平台语义锁；jobs/ipc（29）/guard（91）/enrich-job（30）/book-view（31）全绿；eslint 0 | 毛求疵 PASS（无 FAIL；OBSERVE-2 ADS 冒号/OBSERVE-3 尾点/OBSERVE-4 留痕/OBSERVE-5b resultPath 澄清同 commit 处置；C1 区间/误伤面/includes 过宽/scanPending 直证登记）；陆回测 PASS（FAIL 0；OBSERVE-4 → G-08；OBSERVE-5 enrich 补跑闭环） |
+| F4 协议 handler | **已修** | b3810f7 | fuzz 65 PASS/11 FAIL/2 OBSERVE/1 SKIP，转绿恰 {B1,B2}（13→11），B1b docx statSync TOCTOU/B6b 不同书并发不折叠 新断言全绿；B3 LRU calls=10 绿锁未破；B6 OBSERVE calls 2→1 翻转；book-view 31 pass；ipc 29 PASS；guard 91；eslint 0 | 毛求疵 PASS（无硬阻断；O1 currentLibDir 契约核实恒返字符串→条件阻断关闭；O2 ctimeMs/O3 状态码/O4 单次 stat/O6 归一化 同 commit；O5 超时/O8 纯函数 登记）；陆回测 PASS（FAIL 0，第 11 条红经核为 C6 无缺项） |
+
+## S3 上段检查点（2026-10-18）
+
+- **已完成组**：F1 乱码权重 / F2a surrogate+null / F2b 开关+回调（**P2 轨全清**）+ F3 bookId 闸门 / F4 协议 handler（P1 轨 C1/C2/C11/C12/C15/C27 清）
+- **commit 序列**（一组一 commit，每组之前有专家团双 PASS）：3b81aa9（F1）→ 71666e2（ledger）→ 802a9d2（F2a）→ 7729b60（ledger）→ bbc9c80（F2b）→ dc5e6de（ledger）→ 1365b91（F3）→ e2d6090（ledger）→ b3810f7（F4）
+- **fuzz 红数轨迹**：25（S2 基线）→ 22（F1：A1/A8/F9 转绿）→ 19（F2a：A3/A4/F2a）→ 16（F2b：F4/F5/F6）→ 13（F3：C8/C10/C11）→ **11（F4：B1/B2）**；断言总数 74 → 79（65 PASS + 11 FAIL + 2 OBSERVE + 1 SKIP）
+- **剩余 11 条红（全部属下段组，无清单外）**：C1/C2/C3/C6（探针名；缺陷 C21/C22/C33/C3/C6 → F6/F8 组）、C12/C13/C14（缺陷 C3/C7/C13/C14 → F8 组）、D1/D2/D3（缺陷 C16/C35/C17/C18/C20 → F5 组）、E3（缺陷 C30/C29/C32 → F7 组）
+- **下段计划**：F5 删除半途失败（D1/D2/D3）→ F6 jobs 竞态/tmp/幽灵条目（C1/C2/C3/C6）→ F7 渲染转义+挂载+guard §17（E3）→ F8 一般项收尾（C12/C13/C14）→ S4 五门复跑 → S5 归档
+- **工单登记**：G-05 签名白名单缺口 / G-06 CONTROL∩mojibake 双计 ratio>1 / G-07 jobs 横幅 emit 直证 / G-08 scanPending continue 直证
+- **观察备查**：O5 in-flight 无超时（畸形 docx 挂起放大）、O8 txt 的 readTextBuffer/TXT_SHELL 在 try 外（纯函数不抛）、F1 的 L3/L4/L5/O1/O2、F2b 的「onStage 无条件触发」提示
 
 ### F1 顺手采纳与工单登记（毛求疵 OBSERVE 处置）
 
@@ -215,3 +226,11 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 - **工单 G-08（新登记，后续波次）**：scanPending continue 分支直证——真实文件系统造不出含 NUL/`/` 的文件名，须 mock 注入 readdir 返回 `["../evil.json","正常书.json"]` 断言只含正常书（陆 OBSERVE-4 + 毛 OBSERVE-4 后半）。注意加探针会动「51 发索引」计数体系（guard §17），故本轮登记不加。
 - **观察 A（含与 C3 修复的耦合）**：`id.includes("..")` 过宽会误拒 "Vol.2..3" 类合法名——但过严是安全侧偏差、误伤极罕见，且 C12/C13（派生 id 含 ..）的修复锚点正在此处：**F6/F8 修 C3 时若要依赖 safeBookId 拒 ..，不得先收紧 includes**；若改收紧为「整段 . / ..」，须同 commit 把 C12/C13 拒点移到 startImport 派生规则。
 - 观察 B/C 登记：C10 读侧直证已由「修复前走到『书库文件不见了』=已读库外任务书」隐证（人话文案即读侧证据），不另加 canary；C27（ipc 通道参数形状）随 C2 处置——三入口在 jobs 层过闸 + UserError 经 handle() 统一 {ok:false,error}，ipc 层无需重复校验；缺陷号 C1/C2 与 fuzz 用例号 C1/C2 同号不同义，汇编时以「缺陷 C1/C2」与「探针 C1/C2」区分。
+
+### F4 OBSERVE 处置（毛求疵/陆回测）
+
+- 已采纳（同 commit b3810f7）：毛 O2 ctimeMs 入 key（挡 stat→open 间隙同 size 同整秒替换的缓存中毒）；毛 O3 ENOENT→404 / EBUSY/EPERM/EACCES→500 状态码语义分开；毛 O4 docx 单次 stat 供闸门与 key + txt 读后长度校验；毛 O6 key 的 libDir 归一化（path.resolve + win32 小写，只影响命中率不影响正确性）。
+- O1 已核实关闭：currentLibDir 三级兜底 `_libDir || ENV_LIB_DIR || DEFAULT_LIB_DIR`，DEFAULT_LIB_DIR 是 path.join 常量——恒返字符串，resolveAsset 不会因 undefined 裸抛；条件阻断候选不成立。
+- 陆 OBSERVE 采纳：B1b 补 docx statSync TOCTOU 直证（patch statSync 按调用序只让第二次抛，锁「读不出来」文案区分 resolveAsset 的「原件不在」404）；B6b 补不同 docx 并发不折叠；ipc-test 29 PASS 补跑。
+- 陆「第 11 条红缺字号」经核：11 = C1/C2/C3/C6（4）+ C12/C13/C14（3）+ D1/D2/D3（3）+ E3（1），陆漏算 C6，**无缺项**。
+- 观察登记：O5 in-flight 无超时（畸形 docx 挂起会放大为该 key 全部等待者 pending——mammoth 对坏 docx 通常 reject 不挂起，加超时需 AbortSignal 且 mammoth 不支持，登记不修）；O8 txt 的 readTextBuffer/TXT_SHELL 在 try 外（两者均为纯函数，不抛，登记）；陆「fuzz 常红建议 xfail 语义」登记（S4 五门阶段评估，当前以 FAIL 清单人工核对）。
