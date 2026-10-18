@@ -99,8 +99,17 @@ export function bookCatalog(bookId) {
 // books/ 原件保留——书架回到 raw 态，点「开始加工」即可重建，不用重新拖文件。
 export function deleteBook(bookId) {
   const libDir = currentLibDir();
-  const b = listBooks(libDir, { includeDisabled: true }).find(x => x.id === bookId);
-  if (!b) throw new UserError(`书库里找不到「${bookId}」——移出书架只删书库；只有原件的书请用「彻底删除」`);
+  const shelf = listBooks(libDir, { includeDisabled: true });
+  const b = shelf.find(x => x.id === bookId);
+  if (!b) {
+    // 大小写/空白变体（C20）：Windows 文件系统大小写不敏感，"D1.docx" 与
+    // "d1.docx" 是同一本——直接说「找不到」会让用户以为书没了，给正确书名
+    const want = String(bookId ?? "").trim().toLowerCase();
+    const near = shelf.find(x => x.id.toLowerCase() === want);
+    throw new UserError(near
+      ? `书库里没有「${bookId}」，但有《${near.id}》——请按书架上的书名操作`
+      : `书库里找不到「${bookId}」——移出书架只删书库；只有原件的书请用「彻底删除」`);
+  }
   // 删除顺序：先 wal/shm 后主库——主库是「书还在不在」的判定依据，主库删不掉
   // 时书还在、状态一致；反序会让主库没了 wal/shm 残留成僵尸。EBUSY（另一进程
   // 开着库/杀软扫描）时 rmSync 会抛——裸抛到 IPC 是一屏英文堆栈，包成人话
