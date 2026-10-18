@@ -53,7 +53,7 @@
 //   F1 绿 build-book 导出面含 main（jobs 猴子补丁契约）
 //   F2 红 P2-02 struct_report 无 strippedSurrogates 字段（a）；账平/零账/非零账锁定（b/c/d 绿）
 //   F3 绿 干净 md 书全链零变化（report 全零 + 库内文本与解析产物逐字一致）
-//   F4 红 P2-04 BSP_STRUCT 六值矩阵："0 " 尾空格开关失灵（修复前=开）
+//   F4 红 P2-04 BSP_STRUCT 十值矩阵：尾空格/前导空格/制表换行/零宽空格/全角"０" 五种变体视同关（修复前全=开）
 //   F5 红 P2-05 onStage("structurize") 抛错无 try → 穿出 main → 横幅卡「结构化改造中」
 //   F6 红 P2-05 onStage("slice") 抛错无 try → 穿出 main（同缺陷第二触发点）
 //   F7 绿 BSP_STRUCT=0 逃生开关真关（脏文本原样入库，不洗不拦）
@@ -891,11 +891,16 @@ ok(typeof bb.main === "function" && typeof bb.parseDocx === "function" && typeof
     "F3 干净 md 书全链零变化（report 全零 + 逐字对拍）",
     `\u5757\u6570 ${actual.length}/${expected.length} report=${JSON.stringify(w.report)}`);
 }
-// F4（红 P2-04）：BSP_STRUCT 六值矩阵——"0 " 尾空格开关失灵（修复前=开）
+// F4（红 P2-04）：BSP_STRUCT 十值矩阵——尾空格/前导空格/制表换行视同关，
+// 零宽空格（trim 删不掉）与全角"０"（NFKC 归一）也须视同关（修复前全部=开）
 {
   const matrix = [
     { flag: "0", off: true, name: '"0" \u7cbe\u786e\u5173' },
     { flag: "0 ", off: true, name: '"0 " \u5c3e\u7a7a\u683c\u89c6\u540c\u5173\uff08\u4fee\u590d\u524d\u5931\u7075=\u5f00\uff09' },
+    { flag: " 0", off: true, name: '"\u524d\u5bfc\u7a7a\u683c 0"\u89c6\u540c\u5173' },
+    { flag: "\t0\n", off: true, name: '"\u5236\u8868\u7b26+\u6362\u884c\u5305\u7684 0"\u89c6\u540c\u5173' },
+    { flag: "0\u200b", off: true, name: '"\u96f6\u5bbd\u7a7a\u683c 0"\u89c6\u540c\u5173\uff08trim \u5220\u4e0d\u6389\uff0cP2-04 \u6362\u8138\uff09' },
+    { flag: "\uff10", off: true, name: '\u5168\u89d2"\uff10"\u89c6\u540c\u5173\uff08NFKC \u5f52\u4e00\uff09' },
     { flag: "", off: false, name: "\u7a7a\u4e32\u9ed8\u8ba4\u5f00" },
     { flag: "1", off: false, name: '"1" \u5f00' },
     { flag: "false", off: false, name: '"false" \u5f00\uff08\u53ea\u8ba4\u7cbe\u786e "0"\uff09' },
@@ -907,33 +912,37 @@ ok(typeof bb.main === "function" && typeof bb.parseDocx === "function" && typeof
     const ran = w.report !== null;
     if (ran === m.off) bad.push(`${m.name}\uff1a\u671f\u671b${m.off ? "\u5173" : "\u5f00"}\u5b9e\u9645${ran ? "\u5f00" : "\u5173"}`);
   }
-  ok(bad.length === 0, "F4 BSP_STRUCT \u516d\u503c\u77e9\u9635\uff08\u53ea\u6709 \"0 \" \u5206\u652f\u4fee\u590d\u524d\u4e3a\u7ea2\uff09", bad.join("\uff1b"));
+  ok(bad.length === 0, "F4 BSP_STRUCT \u5341\u503c\u77e9\u9635\uff08\u5c3e\u7a7a\u683c/\u96f6\u5bbd/\u5168\u89d2\u4e09\u79cd\u53d8\u4f53\u4fee\u590d\u524d\u4e3a\u7ea2\uff09", bad.join("\uff1b"));
 }
 // F5（红 P2-05 触发点 1）：onStage("structurize") 抛错无 try → 穿出 main → 横幅卡「结构化改造中」
 {
   const out = path.join(TMP, "out", "f5.db");
   for (const s of ["", "-wal", "-shm"]) fs.rmSync(out + s, { force: true });
   const keepExit = process.exitCode;
+  const seen = [];
   let err = null;
   try {
-    await bb.main([cleanDir, "-o", out], { onStage: (s) => { if (s === "structurize") throw new Error("boom-onstage-1"); } });
+    await bb.main([cleanDir, "-o", out], { onStage: (s) => { seen.push(s); if (s === "structurize") throw new Error("boom-onstage-1"); } });
   } catch (e) { err = e; }
   finally { process.exitCode = keepExit; }
-  ok(!err && fs.existsSync(out), "F5 onStage(structurize) \u629b\u9519\u4e0d\u7a7f\u51fa main\uff08\u5305\u5e95\uff0c\u7ee7\u7eed\u5efa\u5e93\uff09",
-    err ? `\u7a7f\u51fa\uff1a${err.message}` : "\u672a\u5efa\u5e93");
+  ok(!err && fs.existsSync(out) && seen.includes("slice"),
+    "F5 onStage(structurize) \u629b\u9519\u4e0d\u7a7f\u51fa main\uff08\u5305\u5e95\uff0c\u7ee7\u7eed\u5efa\u5e93\u4e14 slice \u4ecd\u6295\u9012\uff09",
+    err ? `\u7a7f\u51fa\uff1a${err.message}` : (!fs.existsSync(out) ? "\u672a\u5efa\u5e93" : `slice \u672a\u6295\u9012\uff08seen=${seen.join(",")}\uff09`));
 }
 // F6（红 P2-05 触发点 2）：onStage("slice") 抛错无 try → 穿出 main
 {
   const out = path.join(TMP, "out", "f6.db");
   for (const s of ["", "-wal", "-shm"]) fs.rmSync(out + s, { force: true });
   const keepExit = process.exitCode;
+  const seen = [];
   let err = null;
   try {
-    await bb.main([cleanDir, "-o", out], { onStage: (s) => { if (s === "slice") throw new Error("boom-onstage-2"); } });
+    await bb.main([cleanDir, "-o", out], { onStage: (s) => { seen.push(s); if (s === "slice") throw new Error("boom-onstage-2"); } });
   } catch (e) { err = e; }
   finally { process.exitCode = keepExit; }
-  ok(!err && fs.existsSync(out), "F6 onStage(slice) \u629b\u9519\u4e0d\u7a7f\u51fa main\uff08\u5305\u5e95\uff0c\u7ee7\u7eed\u5efa\u5e93\uff09",
-    err ? `\u7a7f\u51fa\uff1a${err.message}` : "\u672a\u5efa\u5e93");
+  ok(!err && fs.existsSync(out) && seen.includes("structurize") && seen.includes("slice"),
+    "F6 onStage(slice) \u629b\u9519\u4e0d\u7a7f\u51fa main\uff08\u5305\u5e95\uff0c\u4e24\u9636\u6bb5\u90fd\u6295\u9012\u4e14\u5efa\u5e93\u5b8c\u6210\uff09",
+    err ? `\u7a7f\u51fa\uff1a${err.message}` : (!fs.existsSync(out) ? "\u672a\u5efa\u5e93" : `\u9636\u6bb5\u6295\u9012\u4e0d\u5168\uff08seen=${seen.join(",")}\uff09`));
 }
 // F7（绿）：BSP_STRUCT=0 逃生开关真关——脏文本原样入库（用户明确要关，就不洗不拦）
 {

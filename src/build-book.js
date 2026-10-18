@@ -486,8 +486,17 @@ async function main(argv = process.argv.slice(2), opts = {}) {
   // 老板定的新流程：结构化改造 → 切片 → 洗数据（原来是切完片直接洗）。
   // 铁律：干净的书零变化（存量四书块数锁定不受影响）；硬拦只发生在烧算力之前；
   //   BSP_STRUCT=0 可整段关掉（排障用）。修不动的乱码才拦，能修的当场修。
-  opts.onStage?.("structurize");
-  if (process.env.BSP_STRUCT !== "0") {
+  // onStage 是桌面横幅通知回调（副作用，不是建库本体）：回调抛错不能把建库
+  // 拖死——横幅坏了书还得建（P2-05 实测穿出 main 卡「结构化改造中」）。
+  // 契约：onStage 必须是同步回调（当前唯一调用方 jobs.mjs 的 emit 即同步）；
+  // try 只捕同步抛错——传 async 回调并抛错会变 unhandledRejection，比穿出更糟。
+  // 回调异常留一行日志（全程仅 2 次不可能刷屏；空吞会让「横幅永不更新」零信号）
+  try { opts.onStage?.("structurize"); } catch (e) { console.error(`  横幅回调异常（不阻断建库）: ${e?.message || e}`); }
+  // 开关判定：归一化后只认精确 "0"（P2-04）。容错三件事——首尾空白、零宽
+  // 字符（\u200B 不在 trim 的 WhiteSpace 类里，隐形字符会让逃生开关静默
+  // 失灵）、全角数字（NFKC 把 "０" 归一成 "0"）
+  const structOff = String(process.env.BSP_STRUCT ?? "").replace(/[\u200b-\u200d]/g, "").normalize("NFKC").trim() === "0";
+  if (!structOff) {
     const { structurizeChunks, assessCleaned } = await import("./lib/structurize.mjs");
     const st = structurizeChunks(parsed.chunks);
     parsed.chunks = st.chunks;
@@ -503,7 +512,7 @@ async function main(argv = process.argv.slice(2), opts = {}) {
       console.log(`  结构化改造: 去空块 ${r.droppedEmpty} · 去垃圾块 ${r.droppedGarbage} · 修乱码块 ${r.repairedMojibake} · 清控制符 ${r.strippedControls} / 私用区 ${r.strippedPua} / 替换符 ${r.strippedFffd} / 孤立代理对 ${r.strippedSurrogates} 处`);
     }
   }
-  opts.onStage?.("slice");
+  try { opts.onStage?.("slice"); } catch (e) { console.error(`  横幅回调异常（不阻断建库）: ${e?.message || e}`); }
 
   // 语义分块（BSP_SEMANTIC=1，默认关——存量行为零变化）：本地 e5 零成本，先并后切——
   // ① merge：同章/同页相邻小块并到 ~400 字符（本语料块长 p50≈40~113，检索每问只取 6 段，

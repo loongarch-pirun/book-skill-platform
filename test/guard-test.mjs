@@ -427,8 +427,10 @@ const copyDb = (src) => {
   ok(structAt > -1 && sliceAt > -1 && structAt < sliceAt,
     "静态: build-book 先结构化改造后语义分块（P2 流程顺序：结构化改造→切片→洗数据）");
   // ③ 开关 + 后置硬闸门：BSP_STRUCT=0 整段跳过；修不完的拦在烧算力之前（不建库）
-  ok(/process\.env\.BSP_STRUCT !== "0"/.test(bbSrc) && /await import\("\.\/lib\/structurize\.mjs"\)/.test(bbSrc),
-    "静态: BSP_STRUCT=0 逃生开关在（排障通道，整段跳过不清洗）");
+  // 开关判定须归一化后与 "0" 精确比较（P2-04）——存在性判定不锁写法（?? / || 等价
+  // 实现不误红），精确语义由 fuzz F4 十值矩阵行为断言兜底
+  ok(/BSP_STRUCT[\s\S]{0,300}?\.trim\(\)\s*===?\s*"0"/.test(bbSrc) && /await import\("\.\/lib\/structurize\.mjs"\)/.test(bbSrc),
+    "静态: BSP_STRUCT=0 逃生开关在（归一化后精确比较，语义由 F4 行为矩阵锁）");
   const gateAt = bbSrc.indexOf("assessCleaned(parsed.chunks, st.report)");
   ok(gateAt > -1 && /if \(!gate\.ok\) \{[\s\S]{0,200}?process\.exitCode = 1;[\s\S]{0,80}?return;/.test(bbSrc.slice(gateAt)),
     "静态: assessCleaned 硬闸门拦在切片前（exitCode=1 + return，不烧算力不建库）");
