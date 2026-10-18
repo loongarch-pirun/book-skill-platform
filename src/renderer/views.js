@@ -7,6 +7,16 @@ import { shelfJobAction } from "./views-ask.js";
 
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+// 引用徽标（问一问 results/云端 citations + 对话三处共用一份实现）：
+// data-cid 来自检索结果 id（书库内容/云端引用，可含引号），是属性注入面（C30）——
+// 单点定义让「漏一处 esc」从结构上不可能，也让探针只测一个入口（评审对抗官 F7-F2/O14）
+export const renderCite = (x, withBook = true) => {
+  const label = withBook
+    ? `${esc(x.book || "")} · ${esc(x.loc || "定位")} · 跳原文`
+    : `${esc(x.loc || "定位")} · 跳原文`;
+  return `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${esc(x.id ?? "")}">${label}</span>`;
+};
+
 // ---------- ① 书架 ----------
 export function renderShelf() {
   const books = state.books;
@@ -87,7 +97,7 @@ function enrichTag(b) {
   const e = b.enrich;
   if (!e || !e.ready) return '<span class="tag nocat">未洗数据</span>';
   const s = e.summaries || {};
-  return `<span class="tag enr" title="标签 ${e.tags} 个 · 摘要 ${s.chunk || 0} 块 / ${s.chapter || 0} 章 / ${s.book ? 1 : 0} 全书">已洗 ${e.pct}% · 标签 ${e.tags}</span>`;
+  return `<span class="tag enr" title="标签 ${esc(e.tags)} 个 · 摘要 ${s.chunk || 0} 块 / ${s.chapter || 0} 章 / ${s.book ? 1 : 0} 全书">已洗 ${esc(e.pct)}% · 标签 ${esc(e.tags)}</span>`;
 }
 
 // ---------- 拖拽导入（V3 #167：第一段只放进书架，加工是第二步） ----------

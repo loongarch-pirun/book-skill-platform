@@ -3,7 +3,7 @@
 // 对话历史放渲染层（主进程无状态），每次发送带上近几轮（净化在主进程边界做）。
 import { $, state, call, toast, refresh, show, RETRIEVE_TOPN } from "./app.js";
 import { cloudBarHtml } from "./views-ask.js"; // C5：云端状态条/配置卡与问一问共用一份实现
-import { esc } from "./views.js";
+import { esc, renderCite } from "./views.js";
 
 // ---------- 渲染 ----------
 export function renderChat() {
@@ -59,7 +59,7 @@ function msgHtml(m) {
     return `<div class="msg ai"><div class="bubble err">${esc(m.error)}${variantChipsHtml(m.rewrite)}${deg}</div></div>`;
   }
   const cites = (m.citations || []).map((x) =>
-    `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${x.id ?? ""}">${esc(x.book || "")} · ${esc(x.loc || "定位")} · 跳原文</span>`).join("");
+    `${renderCite(x)}`).join("");
   // V3-R7：引用为空 = 大概率书里没有——诚实标注而不是让用户猜
   const noHit = (m.citations || []).length === 0 ? ` · <span class="dropwarn">书里可能没有相关内容——换个问法试试</span>` : "";
   const meta = m.segments ? `<div class="chatmeta">取材 ${m.segments} 段原文${m.book ? " · 《" + esc(m.book) + "》" : ""}${m.mode === "library" ? " · 全库模式" : ""}${noHit}</div>` : "";
@@ -85,7 +85,7 @@ function variantChipsHtml(rw) {
 function degItemHtml(x) {
   return `<div class="degitem">
     <div class="deghead"><span class="degbook">${esc(x.book || "")}</span>
-      <span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${x.id ?? ""}">${esc(x.loc || "定位")} · 跳原文</span></div>
+      ${renderCite(x, false)}</div>
     <div class="degtext">${esc(x.text || "")}</div>
   </div>`;
 }
@@ -113,7 +113,7 @@ function archivePanelHtml() {
       <div class="archmeta">${esc(fmtTs(e.ts))} · ${e.mode === "library" ? "全库模式" : "《" + esc(e.book || "?") + "》"} · ${esc(e.model || "")}${e.dropped ? ` · ${e.dropped} 条引用未过核验已隐藏` : ""}</div>
       <div class="archq">问：${esc(e.question || "")}</div>
       <div class="archa">${esc(e.answer || "")}</div>
-      ${(e.citations || []).length ? `<div class="cacites">${e.citations.map((x) => `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${x.id ?? ""}">${esc(x.book || "")} · ${esc(x.loc || "定位")} · 跳原文</span>`).join("")}</div>` : ""}
+      ${(e.citations || []).length ? `<div class="cacites">${e.citations.map((x) => renderCite(x)).join("")}</div>` : ""}
     </div>`).join("");
   return `<div class="archpanel">${head}<div class="archlist">${items}</div></div>`;
 }

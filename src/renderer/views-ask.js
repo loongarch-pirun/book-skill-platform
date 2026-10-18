@@ -1,7 +1,7 @@
 // 视图三/四：问一问（双模式 + 技能包参考 + 引用跳转）+ 技能开关（每本书开关 + 技能包查看器）。
 // 铁律同 views.js：顶层不碰 DOM，事件绑定走 bindAskEvents()。
 import { $, state, call, toast, refresh, show, RETRIEVE_TOPN, paintCloudChip } from "./app.js";
-import { esc } from "./views.js";
+import { esc, renderCite } from "./views.js";
 
 // ---------- ③ 问一问 ----------
 export function renderAsk() {
@@ -51,7 +51,7 @@ function askResultHtml(r) {
     <div class="result">
       <div class="rhead">
         <span class="rbook">${esc(x.book || "")}</span>
-        <span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${x.id ?? ""}">${esc(x.loc || "定位")} · 跳原文</span>
+        ${renderCite(x, false)}
         <span class="rscore">${x.rerank != null ? "相关度 " + x.rerank.toFixed(3) : ""}</span>
       </div>
       <div class="rtext">${esc(x.text)}</div>
@@ -120,7 +120,7 @@ function cloudAnswerHtml(r) {
       <div class="cloudans">
         <div class="chead">云端总结 · ${esc(c.model || "")}${a.book ? " · 取材《" + esc(a.book) + "》" : ""}${a.dropped ? ` · <span class="dropwarn">${a.dropped} 条引用未通过核验已隐藏</span>` : ""}${noHit}</div>
         <div class="catext">${esc(a.answer)}</div>
-        ${a.citations?.length ? `<div class="cacites">${a.citations.map((x) => `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${x.id ?? ""}">${esc(x.book)} · ${esc(x.loc || "定位")} · 跳原文</span>`).join("")}</div>` : ""}
+        ${a.citations?.length ? `<div class="cacites">${a.citations.map((x) => renderCite(x)).join("")}</div>` : ""}
         ${chips.length ? `<div class="cacites"><span class="chip">换个问法试试：</span>${chips.map((v) => `<button class="ghost sm" data-action="askre" data-q="${esc(v)}">${esc(v)}</button>`).join("")}</div>` : ""}
         <div class="cfoot"><button class="ghost sm" data-action="clsummary">重新总结</button></div>
       </div>`;

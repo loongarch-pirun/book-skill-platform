@@ -169,6 +169,27 @@ const copyDb = (src) => {
   const preloadSrc = readSrc("src", "preload.js");
   ok(preloadSrc.includes("getPathForFile"), "静态: preload 暴露 webUtils.getPathForFile");
 
+  // F7 渲染转义护栏（C30 防回退）：引用徽标单点定义 renderCite（ask/chat 五处共用，
+  // 「漏一处 esc」结构上不可能）；views-reader 的 data-bid/id 前缀必须 esc（自查扩面）；
+  // 高亮定位走 getElementById（querySelector 拼 raw id 会因特殊字符抛选择器异常）
+  const askSrc = stripComments(readSrc("src", "renderer", "views-ask.js"));
+  const chatSrc = stripComments(readSrc("src", "renderer", "views-chat.js"));
+  const readerSrc = stripComments(readSrc("src", "renderer", "views-reader.js"));
+  ok(/export const renderCite = /.test(stripComments(viewsSrc))
+    && /renderCite\(x\)/.test(askSrc) && /renderCite\(x\)/.test(chatSrc)
+    && !/data-cid="\$\{x\.id/.test(askSrc) && !/data-cid="\$\{x\.id/.test(chatSrc),
+    "静态: 引用徽标走 renderCite 单点（ask/chat 无裸 data-cid 拼装，C30 防回退）");
+  ok(/data-bid="\$\{esc\(x\.id \?\? ""\)\}"/.test(readerSrc) && /id="blk-\$\{esc\(x\.id \?\? ""\)\}"/.test(readerSrc),
+    "静态: views-reader 的 data-bid/id 前缀都过 esc（C30 同族自查扩面）");
+  ok(/function scrollToHighlight[\s\S]{0,300}?getElementById/.test(readerSrc),
+    "静态: 高亮定位走 getElementById（不解析选择器，id 含特殊字符不崩——F7-O4）");
+  // 转义纪律通用红线（测试验证师 F7-O2）：所有渲染文件的 data-cid/data-bid/id="blk-
+  // 插值必须 esc 开头——比逐处断言通用，今后新增引用徽标忘了走 renderCite 也会红
+  const allRenderSrc = ["views.js", "views-ask.js", "views-chat.js", "views-reader.js", "app.js"]
+    .map((f) => stripComments(readSrc("src", "renderer", f))).join("\n");
+  ok(!/data-(?:cid|bid)="\$\{(?!esc\()/.test(allRenderSrc) && !/id="blk-\$\{(?!esc\()/.test(allRenderSrc),
+    "静态: 渲染层 data-cid/data-bid/id 前缀插值必须 esc 开头（转义纪律通用红线）");
+
   // G-03：拖拽拦在 document 级（防浏览器把文件当页面打开 / 落空区静默）
   ok(viewsSrc.includes('document.addEventListener("drop"') && viewsSrc.includes('document.addEventListener("dragover"'),
     "静态: 拖拽监听在 document 级（防 G-03 复活）");

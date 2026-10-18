@@ -206,9 +206,9 @@ async function loadPersonBlocks(person) {
 function renderBlocks(blocks, label) {
   const r = state.reader;
   $("#blockList").innerHTML = (blocks.length ? blocks : [{ id: 0, n: 0, page: null, text: "（这个筛选下没有块）" }]).map((x) => `
-    <div class="block ${x.id === r.highlightId ? "hl" : ""}" id="blk-${x.id}">
+    <div class="block ${x.id === r.highlightId ? "hl" : ""}" id="blk-${esc(x.id ?? "")}">
       <div class="loc">${esc(label)} · 第 ${x.n} 块${x.page ? " · 第 " + x.page + " 页" : ""}
-        ${x.id ? `<button class="askthis" data-action="askthis" data-bid="${x.id}">问这段</button><button class="askthis" data-action="askthischat" data-bid="${x.id}">带去对话</button>` : ""}</div>
+        ${x.id ? `<button class="askthis" data-action="askthis" data-bid="${esc(x.id ?? "")}">问这段</button><button class="askthis" data-action="askthischat" data-bid="${esc(x.id ?? "")}">带去对话</button>` : ""}</div>
       <div class="text">${esc(x.text)}</div>
     </div>`).join("");
 }
@@ -222,7 +222,10 @@ function refreshFilterBar() {
 
 function scrollToHighlight() {
   const r = state.reader;
-  const hl = $("#blk-" + r.highlightId);
+  // getElementById 不解析 CSS 选择器：highlightId 来自检索结果（可含引号/空格/
+  // 特殊字符），走 $("#blk-"+id)（querySelector）会抛 SyntaxError 让跳转静默失败
+  // （评审对抗官 F7-O4/O6）。id 前缀 blk- 也用同一份拼法，读写对称
+  const hl = document.getElementById("blk-" + r.highlightId);
   if (hl) hl.scrollIntoView({ block: "center" });
   r.highlightId = null;
 }

@@ -841,7 +841,7 @@ console.log("\n----- E 段：渲染层转义与状态 -----");
 
   const app = await import("../src/renderer/app.js");
   await sleep(60); // boot 是异步的，等几个 IPC 往返
-  const { esc } = await import("../src/renderer/views.js");
+  const { esc, renderCite } = await import("../src/renderer/views.js");
 
   // E1（绿）：esc 全字符（& < > " ' 一个不落）
   ok(esc('<a>&"\'') === "&lt;a&gt;&amp;&quot;&#39;", "E1 esc 全字符转义（&<>\"'）", esc('<b>'));
@@ -862,7 +862,33 @@ console.log("\n----- E 段：渲染层转义与状态 -----");
       && h.includes("&lt;script&gt;") && h.includes("&quot;&gt;&lt;img"),
       "E2 书架书名/徽标全 esc（无裸 script、无属性穿越，恶意 id 以转义形态在场）", h.slice(0, 120));
   }
-  // E3（红 C30）：views-ask data-cid 未 esc——引用徽标属性注入面（results cite + cloud citations 两处）
+  // E3（C30；评审对抗官 F1 强化）：引用徽标属性注入面——三载荷（双引号闭合 /
+  // 免引号事件值 / 单引号）性质断言：无任何 on*= 属性形态、data-cid 在场且为
+  // 转义形态。原断言是载荷字面量匹配，可被「onmouseover=alert(1)」免引号变体
+  // 绕过（假绿）；渲染由 renderCite 单点产出（五处引用徽标共用一份实现）
+  {
+    const PAYLOADS = [
+      '9" onmouseover="alert(1)" data-z="',
+      '9" onmouseover=alert(1) x="',
+      "9' onfocus='alert(1)' x='",
+    ];
+    const leak = [];
+    for (const EVIL of PAYLOADS) {
+      const h = renderCite({ id: EVIL, book: "\u6d4b\u8bd5\u4e66", bookId: "evil.docx", loc: "\u7b2c\u4e00\u7ae0" });
+      // 精确性质断言：转义后引号以 &quot;/&#39; 形态留在属性值内 → 值可完整捕获，
+      // 且必须逐字等于 esc(id)。esc 漏字符/丢弃 id/属性被闭合（值被截断）都会红。
+      // 不用「无 on*=」正则：&quot; onmouseover=&quot; 里的 on* 在属性值内部，浏览器
+      // 不当属性，直接正则匹配会假红（渲染层 stub 无 HTML 解析器，只能按文本精确判）
+      const m = h.match(/data-cid="([^"]*)"/);
+      if (!m || m[1] !== esc(EVIL)) {
+        leak.push(`data-cid \u503c\u4e0d\u7b49\u4e8e esc(id)\uff1a${EVIL.slice(0, 24)}\uff08\u5f97 ${m ? m[1].slice(0, 24) : "\u7f3a\u5931"}\uff09`);
+      }
+    }
+    ok(leak.length === 0,
+      "E3 renderCite \u4e09\u8f7d\u8377\uff08\u53cc\u5f15\u53f7/\u514d\u5f15\u53f7/\u5355\u5f15\u53f7\uff09\uff1adata-cid \u503c\u9010\u5b57\u7b49\u4e8e esc(id)",
+      leak.join("\uff1b"));
+  }
+  // E3b（绿 C30 集成）：ask 视图 results+cloud 两处引用徽标走同一入口 renderCite
   {
     const EVIL = '9" onmouseover="alert(1)" data-z="';
     app.state.ask = {
@@ -876,10 +902,10 @@ console.log("\n----- E 段：渲染层转义与状态 -----");
     };
     app.show("ask");
     const h = mainEl.innerHTML;
-    const cites = (h.match(/data-cid="[^"]*"/g) || []).length;
-    ok(!h.includes('onmouseover="alert(1)"'),
-      "E3 data-cid 转义（引用徽标属性注入面，results+cloud 两处）",
-      `data-cid ${cites} 处${h.includes('onmouseover="alert(1)"') ? "，含裸 onmouseover 注入" : ""}`);
+    const cites = (h.match(/data-cid="/g) || []).length;
+    ok(!h.includes('onmouseover="alert(1)"') && cites === 2,
+      "E3b ask \u89c6\u56fe results+cloud \u4e24\u5904\u5f15\u7528\u5fbd\u6807\u65e0\u88f8 onmouseover\uff08\u96c6\u6210\u63a5\u7ebf\uff0c\u8ba1\u6570\u6070 2\uff09",
+      `data-cid ${cites} \u5904${h.includes('onmouseover="alert(1)"') ? "\uff0c\u542b\u88f8 onmouseover \u6ce8\u5165" : ""}`);
   }
   // E4（绿 C32）：state.jobs 以 bookId 为键 spread——"__proto__" 计算键建自有属性不污染原型
   {
@@ -896,6 +922,24 @@ console.log("\n----- E 段：渲染层转义与状态 -----");
     const t = getEl("#toast");
     ok(t.textContent === '<img src=x onerror=alert(1)>' && t.innerHTML === "",
       "E5 toast 走 textContent（无 HTML 注入）", `innerHTML=${JSON.stringify(t.innerHTML)}`);
+  }
+  // E6（绿 C30 常驻，测试验证师 F7-O1 补）：chat 视图引用徽标走 renderCite——
+  // 转义形态在场（&quot; 包裹的载荷原文）+ 计数恰 1 + 无裸注入。此前 chat 三处
+  // 修复零护栏（探针面落差 1/9）
+  {
+    const EVIL = '9" onmouseover="alert(1)" data-z="';
+    app.state.books = [{ id: "evil.docx", title: "\u6d4b\u8bd5\u4e66", skillEnabled: true, processed: true, chunks: 1 }];
+    app.state.chat = {
+      mode: "book", bookId: "evil.docx", skillSlug: null, draft: "", loading: false, memory: "",
+      messages: [{ role: "assistant", content: "\u7b54", segments: 1, citations: [{ id: EVIL, book: "\u6d4b\u8bd5\u4e66", bookId: "evil.docx", loc: "\u7b2c\u4e00\u7ae0" }], dropped: 0 }],
+      archive: { open: false, items: [], loaded: false, busy: false },
+    };
+    app.show("chat");
+    const h = mainEl.innerHTML;
+    const n = (h.match(/data-cid="/g) || []).length;
+    ok(!h.includes('onmouseover="alert(1)"') && h.includes(esc(EVIL)) && n === 1,
+      "E6 chat \u89c6\u56fe\u5f15\u7528\u5fbd\u6807\u8f6c\u4e49\uff08\u8f6c\u4e49\u5f62\u6001\u5728\u573a + \u8ba1\u6570 1\uff0c\u65e0\u88f8\u6ce8\u5165\uff09",
+      `data-cid ${n} \u5904${h.includes('onmouseover="alert(1)"') ? "\uff0c\u542b\u88f8 onmouseover" : ""}`);
   }
 }
 
