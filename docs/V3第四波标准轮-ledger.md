@@ -82,8 +82,8 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 | ID | 文件:行号 | 描述 | 级别 | 状态 | 修复commit |
 | --- | --- | --- | --- | --- | --- |
 | P2-01 | src/lib/structurize.mjs:41（权重×2）、:14/:16/:81（阈值）、:112（块级） | 拒修乱码块按 0.3 边界隐形入库、report 全零——违反「库内无乱码残留」不变量；根因=权重×2 低估 3 字符双重编码签名实际占用（100 字符块 15 签名实测真实乱码率 45% 被算成 30%）；repairMojibake 又被 >0xff 闸门拒修 | 致命（静默篡改持久化状态+审计失效，实测复现） | **已修 3b81aa9（F1）**｜坐实 A1/A8/F9｜专家团毛求疵/陆回测双 PASS | |
-| P2-02 | src/lib/structurize.mjs:89-126（无 surrogate 处理）；build-book.js 入库点 | lone surrogate 经 sqlite 绑定静默转 U+FFFD 穿库，无夹具；structurize 跑在绑定之前原样穿层 | 致命（静默数据损坏，实测坐实） | 待修（F2a）｜坐实 A3/F2a（A9 机理） | |
-| P2-03 | src/lib/structurize.mjs:73/:74 | assessCleaned 直取 `c.text`（[null] 抛 TypeError），structurizeChunks 却 `c?.text ?? ""`——契约不对称，违 lib 层不 throw 铁律 | 严重 | 待修（F2a）｜坐实 A4 | |
+| P2-02 | src/lib/structurize.mjs:89-126（无 surrogate 处理）；build-book.js 入库点 | lone surrogate 经 sqlite 绑定静默转 U+FFFD 穿库，无夹具；structurize 跑在绑定之前原样穿层 | 致命（静默数据损坏，实测坐实） | **已修 802a9d2（F2a）**｜坐实 A3/F2a（A9 机理）｜毛求疵/陆回测双 PASS |
+| P2-03 | src/lib/structurize.mjs:73/:74 | assessCleaned 直取 `c.text`（[null] 抛 TypeError），structurizeChunks 却 `c?.text ?? ""`——契约不对称，违 lib 层不 throw 铁律 | 严重 | **已修 802a9d2（F2a）**｜坐实 A4｜毛求疵/陆回测双 PASS |
 | P2-04 | src/lib/structurize.mjs:14/:16/:18/:81/:112；src/build-book.js:490 | 100 字符/0.3 ratio/块级 0.5 三档边界无夹具；BSP_STRUCT `"0 "` 尾空格陷阱（`"0 " !== "0"` 开关失灵，实测） | 一般 | 待修（F2b）｜坐实 F4（尾空格）/A12（字数档） | |
 | P2-05 | src/build-book.js:489/:506 | onStage 抛错无 try → 穿出 main → jobs 横幅卡「结构化改造中」，重导入被拒 | 一般 | 待修（F2b）｜坐实 F5/F6 | |
 | P2-06 | src/build-book.js:490-505 × src/desktop/jobs.mjs 管线 | BSP_SEMANTIC 同开无测；结构化闸门经 jobs 全链无行为测 | 一般（测试缺口） | 探针（F 段） | |
@@ -180,6 +180,7 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 | 组 | 状态 | commit | 验证硬证据 | 成员结论 |
 | --- | --- | --- | --- | --- |
 | F1 乱码权重精确化 | **已修** | 3b81aa9 | structurize-test 九节全绿（含新钉子 bad=20/30）；fuzz 49 PASS/22 FAIL/2 OBSERVE/1 SKIP，转绿恰 {A1,A8,F9}，集合级 diff 新红=空（22⊆25）；guard 91 绿；eslint 0 | 毛求疵 PASS（7 OBSERVE：3 条采纳同 commit=lastIndex 硬化/白名单注释/钉子测试；2 条登记工单见下）；陆回测 PASS（FAIL 无） |
+| F2a surrogate 剥离 + null 对称 | **已修** | 802a9d2 | structurize-test 43 PASS（第 7 节 9 字段全零精确相等）；fuzz 53 PASS/19 FAIL/2 OBSERVE/1 SKIP，转绿恰 {A3,A4,F2a}，集合差新红空（19⊆22），A11c strippedSurrogates=1→true；guard 91 绿；jobs-test 全 PASS；ipc-test 29 PASS；eslint 0 | 毛求疵 PASS（高 0/中 3/低 5/观察 2：M1/M2/L1/L2 同 commit 采纳；M3 grep 坐实构造点唯一=关闭；余登记）；陆回测 PASS（FAIL 无） |
 
 ### F1 顺手采纳与工单登记（毛求疵 OBSERVE 处置）
 
@@ -188,3 +189,12 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 - **工单 G-06（新登记，后续波次）**：CONTROL_RE 与 mojibake 第二字符类交叠 [\u0080-\u009f] 双计——输入「\u00c3\u009f」×N 时 ratio 可达 1.5（如 50 对 = 150/100），report 输出不可审计数字。建议计数去重或 ratio 封顶 1.0 并注释。预存、新旧逐位一致。
 - OBSERVE-4（bad 语义由估算变实测）：下游 report 消费方改为直读 `bad` 字段——已随 3b81aa9 注释隐覆盖，F2a 起各 report 消费点复核时顺带核对，不另立工单。
 - OBSERVE-7（签名跨块边界两侧各算一半）：分块检测固有，全文层 >0.3 阈值构成兜底，登记备查不修。
+
+### F2a 顺手采纳与观察登记（毛求疵/陆回测 OBSERVE 处置）
+
+- 已采纳（同 commit 802a9d2）：M1 assessCleaned 循环 `detectGarbled(String(c?.text ?? ""))` 与主链逐字对称（null 元素/缺 text/数字 text 全形态不抛）；M2 repair 出口复检 lone surrogate（不赌解码器实现，「绑定前无孤立代理对」不变量出口兜底）；L1 stripLoneSurrogates 单遍 replace 回调计数（不双扫）；L2 LONE_SURROGATE_RE 注释警示勿走 .test() 循环。
+- M3 已关闭：grep `strippedFffd: 0` 坐实 report 字面量构造点唯一（structurize.mjs:111），无第二处副本。
+- O1 已核：struct 账消费点全景 = meta 落账（JSON 整体自动入）+ build-book console + jobs 横幅 + main 返回值透传，无第五处；docs 无 report 字段表需同步。
+- **工单 G-07（新登记，后续波次）**：jobs 横幅 emit 直证用例——构造 st.strippedSurrogates>0 的正常加工路径，断言 detail「清符号 N 处」含该计数。C1 墓碑探针时序上注定吃掉 slice emit，不能复用。
+- **观察 L3/L4/L5 登记备查**：L3（structurize-test:232 走 JSON 精确相等=键序即契约，保持现状）；L4（ratio 分母从 raw 变剥后 text——单调不减、只多丢不少丢，保守方向已由 A8/F9 边界锁覆盖）；L5（lookbehind 需 Node≥9，测试绿已证语法层无恙，打包链待真机验收顺带确认）。
+- O2（mock struct 键集 meta 测试）：本次三处 mock/期望已手工同步，防复发靠 commit 纪律，不另立套件。
