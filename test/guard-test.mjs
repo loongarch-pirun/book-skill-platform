@@ -603,6 +603,55 @@ const copyDb = (src) => {
   ok((pkgSrc.scripts["test:ci"] || "").includes("entry-adversarial-fuzz"),
     "静态: package.json test:ci 含 entry-adversarial-fuzz（对抗套件挂 ci）");
 }
+
+// ========== 18) P3 切片 v4 三件套（表格整表成块 / chapter_path / 邻块扩展） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const bbSrc = readSrc("src", "build-book.js");
+  const stripAll = (s) => s
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split("\n")
+    .map((l) => l.replace(/(^|\s)\/\/.*$/, "$1"))
+    .join("\n");
+  const bb = stripAll(bbSrc);
+  const searchSrc = stripAll(readSrc("src", "lib", "search.mjs"));
+  const llmSrc = stripAll(readSrc("src", "lib", "llm.mjs"));
+  const viewsSrc = stripAll(readSrc("src", "renderer", "views.js"));
+  const pkgSrc = JSON.parse(readSrc("package.json"));
+
+  // ① 表格整表成块：合并函数在位 + 整表块跳过 sentenceSplit + 逃生开关归一化
+  ok(bb.includes("function packTable") && bb.includes("function mergeTableRows"),
+    "静态: packTable/mergeTableRows 落盘（P3-① 表格整表成块）");
+  ok((bb.match(/if \(it\.fromTable\) \{ chunks\.push/g) || []).length === 2,
+    "静态: docx/md 两路整表块都跳过 sentenceSplit（行内句号不切表）");
+  ok(/BSP_TABLE \?\? ""/.test(bb) && /normalize\("NFKC"\)/.test(bb),
+    "静态: BSP_TABLE=0 逃生走零宽剥离+NFKC 归一化（P2-04 同款）");
+  ok(bb.includes("promotePlainHeadings(items)") || bb.includes("promotePlainHeadings("),
+    "静态: 合并在 promote 之后调用序保留（防「下一段更长」误触发回归）");
+
+  // ② chapter_path：解析器建路径 + 建库带列 + 检索探测回退 + 引用/UI 渐进采用
+  ok(bb.includes("const chapterPathOf") && bb.includes("chapter_path TEXT"),
+    "静态: chapterPathOf 建路径 + 建库 chunks 表带 chapter_path 列");
+  ok(bb.includes("INSERT INTO chunks(chapter, chapter_path, page, text)"),
+    "静态: 建库 INSERT 写 chapter_path");
+  ok(searchSrc.includes("pragma_table_info('chunks')") && searchSrc.includes("chapterPath: hasPath"),
+    "静态: search 探测列再取 chapter_path（老库无列回退，不做写迁移）");
+  ok(llmSrc.includes("chapterPath: target.chapterPath || null"),
+    "静态: 引用构造搭载 chapterPath（additive）");
+  ok(/x\.chapterPath \|\| x\.loc/.test(viewsSrc),
+    "静态: renderCite 有路径优先展示（老库回退 loc）");
+
+  // ③ 邻块扩展：开关门 + 终排限定 + 衰减 + 同章判据 + 只附加 + 套件挂载
+  ok(searchSrc.includes('process.env.BSP_NEIGHBOR === "1" && rerank'),
+    "静态: 邻块 BSP_NEIGHBOR=1 开且只跟终排（变体快路 rerank:false 不扩）");
+  ok(/\* 0\.5\)\.toFixed\(4\)/.test(searchSrc) && searchSrc.includes("added.length >= 4"),
+    "静态: 邻块衰减 ×0.5 计分 + 总数 ≤4（提示词增量可控）");
+  ok(searchSrc.includes("c.chapter !== s.chapter"),
+    "静态: 邻块同章判据（跨章/空章不扩）");
+  ok((pkgSrc.scripts["test:fast"] || "").includes("neighbor-test"),
+    "静态: package.json test:fast 含 neighbor-test（P3-③ 挂载）");
+}
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);
 if (fail) { console.error(`${fail} 项 FAIL`); process.exit(1); }

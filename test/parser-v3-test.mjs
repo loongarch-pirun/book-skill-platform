@@ -87,10 +87,20 @@ console.log("===== 1) docx 表格提取 =====");
   const { rows, meta } = readDb(dbPath);
   assert(r && r.chunkCount === rows.length, `建库成功且块数账实相符（${rows.length}）`);
   const tbl = rows.filter(x => x.text.includes(" | "));
-  assert(tbl.length === 3, `3 个表格行全部入库（实际 ${tbl.length}——老代码这里是 0，2 表全丢）`);
-  assert(tbl.some(x => x.text === "序号 | 检测项目 | 依据条款 | 样本数 | 合格数 | 判定"), "表头行逐格保序");
-  assert(tbl.some(x => x.text.includes("介电强度试验") && x.text.includes("1 台不合格")), "数据行含不合格单元格");
+  assert(tbl.length === 1, `整表成块（P3-①：3 行合成 1 块，实际 ${tbl.length}）`);
+  const HDR = "序号 | 检测项目 | 依据条款 | 样本数 | 合格数 | 判定";
+  assert(tbl[0]?.text.startsWith(HDR + "\n"), "表头行逐格保序（整表块首行）");
+  assert(tbl[0]?.text.includes("1 | 动作特性验证 | 6.3.2 | 12 | 12 | 合格"), "数据行 1 保序入块");
+  assert(tbl[0]?.text.includes("2 | 介电强度试验 | 6.4.1 | 12 | 11 | 1 台不合格"), "数据行 2（含不合格单元格）保序入块");
   assert(tbl.every(x => x.chapter === "二、检测项目汇总表"), `表格行归属正确章节（${tbl[0]?.chapter}）`);
+  const ts = JSON.parse(meta.table_stats || "{}");
+  assert(ts.rows === 3 && ts.blocks === 1, `table_stats 记账（rows=3→blocks=1，实际 ${JSON.stringify(ts)}）`);
+  // 逃生开关：BSP_TABLE=0 还原逐行旧行为（3 行 3 块）
+  process.env.BSP_TABLE = "0";
+  const esc = await runBuild(f, ["--force"]);
+  delete process.env.BSP_TABLE;
+  const escTbl = readDb(esc.dbPath).rows.filter(x => x.text.includes(" | "));
+  assert(escTbl.length === 3, `BSP_TABLE=0 逃生：逐行旧行为（3 块，实际 ${escTbl.length}）`);
   const jsLen = rows.reduce((a, x) => a + x.text.length, 0);
   assert(jsLen === +meta.total_chars, `字符账平（JS ${jsLen} = meta ${meta.total_chars}）`);
   assert(rows.every(x => x.text.length <= 900), "900 字上限仍在");
@@ -171,11 +181,9 @@ arr = [0] * 5
   assert(chs.includes("数组") && chs.includes("数组常用操作") && chs.includes("访问元素"),
     `md 标题 → 章节（${JSON.stringify(chs)}）`);
   assert(!rows.some(x => /代码注释|arr = \[0\] \* 5|title="array/.test(x.text)), "代码围栏整段去（含围栏内 # 注释）");
-  const py = rows.find(x => x.text.startsWith("Python |"));
-  const java = rows.find(x => x.text.startsWith("Java |"));
-  assert(py && py.text === "Python | `[0] * 5`" && java && java.text === "Java | `new int[5]`",
-    `md 表格行逐行成块（${JSON.stringify(py && py.text)} / ${JSON.stringify(java && java.text)}）`);
-  assert(rows.some(x => x.text === "语言 | 初始化写法"), "表头行同样保留");
+  const py = rows.find(x => x.text.startsWith("语言 | 初始化写法"));
+  assert(py && py.text === "语言 | 初始化写法\nPython | `[0] * 5`\nJava | `new int[5]`",
+    `md 表格整表成块（P3-①，表头随数据行一组：${JSON.stringify(py && py.text)}）`);
   assert(rows.some(x => x.text.includes("参见 初始化章节") && !x.text.includes("./init.md")), "链接留文字去地址");
   assert(!rows.some(x => x.text.trim() === "数组定义"), "图片行已去");
   assert(rows.some(x => x.text.includes("数组（array）是一种线性数据结构")), "正文保真（<u> 标签剥掉、文字保留）");

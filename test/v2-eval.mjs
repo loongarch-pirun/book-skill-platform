@@ -10,7 +10,9 @@ const Database = require("better-sqlite3");
 import { hybridSearch } from "../src/lib/search.mjs";
 import { getEmbedder, DEFAULT_EMBED } from "../src/lib/models.mjs";
 
-const LIB = path.join(import.meta.dirname, "..", "library");
+// BSP_EVAL_LIB：影子库评测覆盖（P3-⑤ 渐进重建对照用——新切片影子库先跑考卷，
+// 与基线对账后才替换正式库；不设=正式库，门语义不变）
+const LIB = process.env.BSP_EVAL_LIB || path.join(import.meta.dirname, "..", "library");
 
 const GOLDEN = [
   // ===== 论语·学（繁体版原文，金标准用书中原字） =====
