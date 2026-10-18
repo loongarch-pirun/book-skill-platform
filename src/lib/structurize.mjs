@@ -33,12 +33,19 @@ const MOJIBAKE_RE = /(?:\u00c3[\u0080-\u00bf]|\u00c2[\u0080-\u00bf]|\u00e2\u20ac
 // 乱码体检：数出四类乱码符号，返回计数与占比（ratio 按字符数加权由调用方汇总）
 export function detectGarbled(text) {
   const s = String(text ?? "");
-  const mojibake = (s.match(MOJIBAKE_RE) || []).length;
+  // 签名实际占用按匹配长度求和：双重编码签名拖 2~3 个字符，按 2 估会把
+  // 「100 字符 15 签名 = 真实乱码率 45%」低估成 30% 从而放过（P2-01，
+  // A1/A8/F9 三处坐实：乱码隐形入库 + report 全零 = 审计失效）。
+  // 注意：MOJIBAKE_RE 是已知经典签名白名单，类外双重编码（如 â€™
+  // 撇号乱码）不在其列——检测集非完备，白名单缺口已登记后续波次工单。
+  // 用 match 而非 matchAll：match 前置清零 lastIndex，外部若推进过
+  // MOJIBAKE_RE.lastIndex 也不会从污染偏移起匹配而静默漏计前缀。
+  let mojibake = 0, mojibakeChars = 0;
+  for (const m of s.match(MOJIBAKE_RE) || []) { mojibake++; mojibakeChars += m.length; }
   const controls = (s.match(CONTROL_RE) || []).length;
   const pua = (s.match(PUA_RE) || []).length;
   const fffd = (s.match(FFFD_RE) || []).length;
-  // 签名命中通常拖 2~3 个字符，按 2 估——占比只做拦闸门，不需要精确
-  const bad = mojibake * 2 + controls + pua + fffd;
+  const bad = mojibakeChars + controls + pua + fffd;
   return { mojibake, controls, pua, fffd, bad, ratio: s.length ? bad / s.length : 0 };
 }
 

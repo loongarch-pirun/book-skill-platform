@@ -44,6 +44,12 @@ console.log("===== 1) detectGarbled 四类乱码体检 =====");
   const m = detectGarbled(MOJI);
   assert(m.mojibake >= 2, `双重编码签名计数（实测 ${m.mojibake}）`);
   assert(detectGarbled("Voilà le café déjà vu").bad === 0, "正常法文重音字符不是乱码（Ã 签名不误伤）");
+  // 钉子：签名按实测字符数计费——五个 2 字符分支（Ã©/Â/å/æ/è）与
+  // â‚¬ 三重分支各行其道，防未来改动把 2 字符分支误按 3 字符估（误伤干净书）
+  const two = "\u00c3\u00a9".repeat(10);
+  assert(detectGarbled(two).bad === 20, `2 字符签名 bad=2N=20（实测 ${detectGarbled(two).bad}）`);
+  const three = "\u00e2\u20ac\u201c".repeat(10);
+  assert(detectGarbled(three).bad === 30, `3 字符签名 bad=3N=30（实测 ${detectGarbled(three).bad}）`);
 }
 
 console.log("===== 2) repairMojibake 保守修复 =====");
