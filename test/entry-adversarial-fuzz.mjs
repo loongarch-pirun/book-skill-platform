@@ -322,6 +322,18 @@ fs.writeFileSync(ddjTxt, "\u9053\u53ef\u9053\uff0c\u975e\u5e38\u9053\u3002".repe
   ok(r2 && [404, 500].includes(r2.status) && !thrown,
     "B1 TOCTOU：读取失败给人话状态码（不裸抛穿层）",
     thrown ? `裸抛 ${thrown.code || thrown.message}` : `status=${r2?.status}`);
+  // B1b：docx 分支 statSync 的 TOCTOU 同构（C12-TOCTOU 面无独立坐证——陆回测
+  // OBSERVE）。resolveAsset 内部先 statSync 一次（成功），handler 的 st0 是第二
+  // 次——只让第二次抛，模拟「exists 检查后文件被删」。锁「读不出来」文案是为
+  // 区分 resolveAsset 的「原件不在」404（两条 404 路径靠人话区分）
+  fs.writeFileSync(path.join(booksDir, "toctou.docx"), mkDocxBuf(["\u4e34\u754c\u533a\u6d4b\u8bd5"]));
+  const unp2 = patchFs("statSync", (() => { let n = 0; return () => (++n === 2); })(), enoent(path.join(booksDir, "toctou.docx")));
+  let r3 = null, thrown2 = null, body3 = "";
+  try { r3 = await req("book://asset/toctou.docx"); body3 = r3 ? await r3.text() : ""; } catch (e) { thrown2 = e; }
+  unp2();
+  ok(r3 && r3.status === 404 && body3.includes("\u8bfb\u4e0d\u51fa\u6765") && !thrown2,
+    "B1b docx statSync 失败给人话 404（handler 层不裸抛；第二次 stat=st0）",
+    thrown2 ? `裸抛 ${thrown2.code || thrown2.message}` : `status=${r3?.status} body=${body3.slice(0, 18)}`);
 }
 // B2（红 C12）：缓存 key 无 libDir → 换库后同名同尺寸同 mtime 串味
 {
@@ -398,6 +410,18 @@ fs.writeFileSync(ddjTxt, "\u9053\u53ef\u9053\uff0c\u975e\u5e38\u9053\u3002".repe
     `convert 调用 ${calls} 次`);
   ok(r1.status === 200 && r2.status === 200 && t1 === t2 && t1.includes("conc"),
     "B6 并发同 docx 两请求都 200 且内容一致（正确性不依赖去重）", `status ${r1.status}/${r2.status}`);
+  // B6b：不同 docx 并发不误去重（inflight key 含 libDir/id/mtime/ctime/size——
+  // 两本不同书必须各转一次，防「去重把不同书折叠成一份」串内容）
+  fs.writeFileSync(path.join(booksDir, "conc3.docx"), mkDocxBuf(["\u4e19\u4e19\u5e76\u53d1"]));
+  fs.writeFileSync(path.join(booksDir, "conc4.docx"), mkDocxBuf(["\u4e01\u4e01\u5e76\u53d1"]));
+  let calls2 = 0;
+  const unp2 = patchMammoth(async ({ path: p }) => { calls2++; await sleep(30); return { value: `<p>${path.basename(p)}</p>` }; });
+  const [s3, s4] = await Promise.all([req("book://asset/conc3.docx"), req("book://asset/conc4.docx")]);
+  const [t3, t4] = [await s3.text(), await s4.text()];
+  unp2();
+  ok(calls2 === 2 && t3.includes("conc3.docx") && t4.includes("conc4.docx"),
+    "B6b 不同 docx 并发各自转换（去重键不折叠不同书、内容不串）",
+    `convert ${calls2} \u6b21\uff08\u671f\u671b 2\uff09 t3=\u4e19${t3.includes("conc3.docx")} t4=\u4e01${t4.includes("conc4.docx")}`);
 }
 
 // =====================================================================
