@@ -5,12 +5,13 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import crypto from "node:crypto";
 import { createRequire } from "node:module";
 import {
   ENRICH_DEFAULTS, buildEnrichTasks, makeBatches, estimateEnrich, buildEnrichMessages,
   parseEnrich, validateEnrichEntry, matchEntries, enrichBatch, runEnrich, runSummaryPass,
   loadEnrichCache, compactEnrichArtifact, validateEnrichResult, buildEnrichTaskFile,
-  enrichResultPath, enrichArtifactPath,
+  enrichResultPath, enrichArtifactPath, chunkFingerprint,
 } from "../src/lib/enrich.mjs";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
@@ -165,12 +166,40 @@ const goodBatch = (req) => idxsOf(req).map(i => ({
   const r3 = await runEnrich(dbOther, { config: CFG, chatFn: fakeChat(goodBatch), resultsDir: dir, batchSize: 4, summaries: false });
   assert(!r3.ok && r3.code === "STALE", "content_hash 变 → STALE 拒续跑");
 
-  // 孤儿条目：库里块少了（idx 7,8 不在），同 hash → 旧条目被清
+  // 孤儿条目：库里块少了（idx 7,8 不在），同 hash → **结构变 = STALE_STRUCT**（P4 新契约）：
+  // content_hash 相同只说明源文件没变，块结构变了旧缓存按 idx 硬套就会串味——拒续跑，
+  // 人话指「先移走缓存再跑」。这比旧行为的「静默清孤儿后继续」安全（清掉的条目若其实
+  // 对应着还在的块，就是无声的数据丢失）。
   const dbLess = makeDb("run.db", CHUNKS.slice(0, 6), { content_hash: "hash-aaa" });
   const r4 = await runEnrich(dbLess, { config: CFG, chatFn: fakeChat(goodBatch), resultsDir: dir, batchSize: 4, summaries: false });
-  assert(r4.ok, "孤儿清理后可正常收尾");
-  const art4 = JSON.parse(fs.readFileSync(enrichArtifactPath(dir, "run.db"), "utf8"));
-  assert(art4.entries.every(e => e.idx <= 6), "越界旧条目被清（块已不存在）");
+  assert(!r4.ok && r4.code === "STALE" && /切片结构|重新加工/.test(r4.message), "同 hash 但块结构变 → STALE_STRUCT 拒续跑（P4）", r4.message);
+  // A7 修复（毛求疵对抗审查实证）：旧版缓存（meta 行无 chunk_fp，模拟 P4 之前写的缓存）+
+  // 同 content_hash 重加工 → 缓存结构不可判，照样 STALE_STRUCT 拒收。「无指纹」不等于
+  // 「没变过」——旧条目按 idx 硬套新块就是静默串味（串味全链路实证），拒收发生在任何
+  // 云端调用之前，缓存一个字节都不改（无 meta 补写、无 entries 追加）。
+  const legacyJsonl = enrichResultPath(dir, "run.db");
+  const legacyLines = fs.readFileSync(legacyJsonl, "utf8").split(/\r?\n/)
+    .map(l => { try { const r = JSON.parse(l); if (r && r.t === "meta") delete r.chunk_fp; return JSON.stringify(r); } catch { return l; } });
+  fs.writeFileSync(legacyJsonl, legacyLines.join("\n"), "utf8");
+  const legacySha = crypto.createHash("sha256").update(fs.readFileSync(legacyJsonl)).digest("hex");
+  const chat4b = fakeChat(goodBatch);
+  const r4b = await runEnrich(dbLess, { config: CFG, chatFn: chat4b, resultsDir: dir, batchSize: 4, summaries: false });
+  assert(!r4b.ok && r4b.code === "STALE" && /旧格式|无法判断|重新加工/.test(r4b.message), "A7：旧版缓存（无 chunk_fp）→ 结构不可判 STALE_STRUCT 拒收", r4b.message);
+  assert(chat4b.calls.length === 0, "A7：拒收发生在任何云端调用之前（零花费）");
+  assert(crypto.createHash("sha256").update(fs.readFileSync(legacyJsonl)).digest("hex") === legacySha, "A7：STALE 不写缓存（无 meta 补写、无 entries 追加）");
+  // 孤儿清理路径仍在（结构判据相符时）：fp 相符的缓存里手加一条越界 ok 记录（idx 99）→
+  // 不 stale、越界条目被清、续跑零调用、产物只有合法 6 条
+  const dir2 = path.join(TMP, "run2");
+  const db6 = makeDb("run2.db", CHUNKS.slice(0, 6), { content_hash: "hash-aaa" });
+  const rA = await runEnrich(db6, { config: CFG, chatFn: fakeChat(goodBatch), resultsDir: dir2, batchSize: 4, summaries: false });
+  assert(rA.ok, "run2 首跑收尾（fp 相符基线）");
+  const j2 = enrichResultPath(dir2, "run2.db");
+  fs.appendFileSync(j2, JSON.stringify({ t: "ok", idxs: [99], entries: [{ idx: 99, tags: ["幽灵"], questions: [], prefix: "x", summary: "y" }], mode: "byIdx", at: new Date().toISOString() }) + "\n", "utf8");
+  const chat4c = fakeChat(goodBatch);
+  const rC = await runEnrich(db6, { config: CFG, chatFn: chat4c, resultsDir: dir2, batchSize: 4, summaries: false });
+  assert(rC.ok && chat4c.calls.length === 0, "fp 相符 → 不 stale，续跑零调用（全命中）");
+  const art4c = JSON.parse(fs.readFileSync(enrichArtifactPath(dir2, "run2.db"), "utf8"));
+  assert(art4c.entries.length === 6 && !art4c.entries.some(e => e.idx === 99), "越界旧条目被清（块已不存在，孤儿清理路径仍在）");
 }
 
 // ---------- 7) 章摘要/书摘要 ----------
@@ -225,6 +254,8 @@ const goodBatch = (req) => idxsOf(req).map(i => ({
   const { outPath } = buildEnrichTaskFile(db, dir);
   const file = JSON.parse(fs.readFileSync(outPath, "utf8"));
   assert(file.instructions.length === 3 && file.batches.length === 2 && file.book.content_hash === "hash-aaa", "任务书：instructions/batches/hash 齐全");
+  assert(typeof file.book.chunk_fp === "string" && file.book.chunk_fp.length === 16 && file.book.eligible === 8,
+    "任务书带 chunk_fp/eligible（P4：外部智能体通道也能带指纹回去）", JSON.stringify(file.book).slice(0, 120));
   assert(file.batches[0].every(b => typeof b.idx === "number" && b.text), "任务书批次带全局 idx 与原文");
   const dTask = new Database(db, { readonly: true });
   const task = buildEnrichTasks(dTask);
@@ -257,6 +288,48 @@ const goodBatch = (req) => idxsOf(req).map(i => ({
   const chatE = fakeChat(goodBatch);
   const rE = await runEnrich(dbEmpty, { config: CFG, chatFn: chatE, resultsDir: path.join(TMP, "empty"), summaries: false });
   assert(rE.ok && chatE.calls.length === 0 && rE.stats.chunks === 0 && rE.stats.skipped === 1, "全短块 → 0 调用直接收尾");
+}
+
+// ---------- 9b) P4：块结构指纹 chunkFingerprint + 缓存结构判据 ----------
+{
+  const shaped = CHUNKS.map((c, i) => ({ idx: i + 1, ...c }));
+  const fp = chunkFingerprint(shaped);
+  assert(/^[0-9a-f]{16}$/.test(fp), `chunkFingerprint：16 位十六进制（${fp}）`);
+  assert(fp === chunkFingerprint(shaped), "chunkFingerprint：同输入同值（稳定）");
+  const changed = shaped.map((c) => ({ ...c }));
+  changed[3] = { ...changed[3], text: changed[3].text + "。" };
+  assert(chunkFingerprint(changed) !== fp, "chunkFingerprint：换一字即变");
+  assert(chunkFingerprint([...shaped].reverse()) !== fp, "chunkFingerprint：顺序敏感（逐块序列化）");
+  assert(chunkFingerprint([{ idx: 1, text: "x" }]) !== chunkFingerprint([{ idx: 2, text: "x" }]),
+    "chunkFingerprint：idx 进指纹（同文本不同编号=不同结构）");
+  assert(chunkFingerprint([{ idx: 1, text: "x" }]) === chunkFingerprint([{ id: 1, text: "x" }]),
+    "chunkFingerprint：idx/id 两种形状同值（任务书与库行两处调用）");
+  assert(chunkFingerprint([]) === chunkFingerprint(null) && /^[0-9a-f]{16}$/.test(chunkFingerprint([])),
+    "chunkFingerprint：空数组/非数组有确定值不抛");
+  // 任务书带指纹与 eligible
+  const d = new Database(makeDb("fp.db", CHUNKS), { readonly: true });
+  const t = buildEnrichTasks(d);
+  d.close();
+  assert(t.book.chunk_fp === fp && t.book.eligible === 8, "buildEnrichTasks：book.chunk_fp/eligible 随任务书出海");
+  // 缓存结构判据：meta 带 chunk_fp 不符 → stale/STRUCT；相符 → 不 stale；hash 不符优先 HASH
+  const jp = path.join(TMP, "fp.jsonl");
+  fs.writeFileSync(jp, JSON.stringify({ t: "meta", db: "fp.db", content_hash: "hash-aaa", chunk_fp: "a".repeat(16) }) + "\n", "utf8");
+  const c1 = loadEnrichCache(jp, "hash-aaa", "b".repeat(16));
+  assert(c1.stale && c1.staleReason === "STRUCT", "loadEnrichCache：chunk_fp 不符 → stale + STRUCT");
+  const c2 = loadEnrichCache(jp, "hash-aaa", "a".repeat(16));
+  assert(!c2.stale && c2.staleReason === null, "loadEnrichCache：chunk_fp 相符 → 不 stale");
+  const c3 = loadEnrichCache(jp, "hash-zzz", "a".repeat(16));
+  assert(c3.stale && c3.staleReason === "HASH", "loadEnrichCache：hash 不符优先报 HASH（先内容后结构）");
+  const c4 = loadEnrichCache(jp, "hash-aaa");
+  assert(!c4.stale, "loadEnrichCache：两参旧调用不判结构（兼容）");
+  // A7：三参调用 + meta 无 chunk_fp → 结构不可判，stale STRUCT（「无指纹」≠「没变过」——
+  // 同 content_hash 重加工后旧条目按 idx 硬套新块即静默串味，对抗审查实证全链路）
+  const jpNoFp = path.join(TMP, "nofp.jsonl");
+  fs.writeFileSync(jpNoFp, JSON.stringify({ t: "meta", db: "fp.db", content_hash: "hash-aaa" }) + "\n", "utf8");
+  const c5 = loadEnrichCache(jpNoFp, "hash-aaa", "a".repeat(16));
+  assert(c5.stale && c5.staleReason === "STRUCT", "loadEnrichCache：meta 无 chunk_fp + 三参 → stale STRUCT（A7）");
+  const c6 = loadEnrichCache(jpNoFp, "hash-aaa");
+  assert(!c6.stale, "loadEnrichCache：两参旧调用对无 fp 缓存照样不判（compactEnrichArtifact 重读路径）");
 }
 
 // ---------- 10) 默认参数快照（防误改） ----------

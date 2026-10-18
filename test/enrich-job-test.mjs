@@ -252,6 +252,59 @@ fs.writeFileSync(path.join(TMP, "userData", "llm.json"), JSON.stringify({
   ok(r.ok === false && r.error.code === "user", "IPC 层错误包装 {ok:false,error}（M3）");
 }
 
+// ========== 9) P4：闸门 warn 进 done detail / block 落 failed / DIRTY 标签 ==========
+{
+  // 9-1 warn：env 把黄线抬到 1.5（全量产物也被判 warn——生产里 warn 来自外部产物/部分覆盖，
+  // 这里用 env 强制走 warn 分支锁接线）→ done 态 detail 带「闸门标记」，书架摘要带 enrichGate=warn
+  const db = makeDb("warn.md.db");
+  process.env.BSP_GATE_COVERAGE_WARN = "1.5";
+  try {
+    await startEnrich("warn.md", { chatFn: goodChat });
+    const j = await waitTerminal("warn.md");
+    ok(j.stage === "done", `warn 不拦入库——照样 done（detail: ${j.detail}）`);
+    ok(j.gate && j.gate.verdict === "warn", "warn 的 gate 随终态出海", JSON.stringify(j.gate));
+    ok(/闸门标记：覆盖 100%（部分覆盖）/.test(j.detail || ""), "warn 进 done detail（用户看得见）", j.detail);
+    const g = JSON.parse(cell(db, "SELECT value FROM meta WHERE key='enrich_gate'").value);
+    ok(g.verdict === "warn", "meta.enrich_gate 落 warn", JSON.stringify(g));
+    const b = booksList().find((x) => x.id === "warn.md");
+    ok(b && b.enrich && b.enrich.enrichGate === "warn", "书架摘要带 enrichGate=warn（徽标数据源）", JSON.stringify(b?.enrich));
+  } finally { delete process.env.BSP_GATE_COVERAGE_WARN; }
+}
+{
+  // 9-2 block：env 把硬线抬到 1.5（全量产物也被硬线拦）→ failed 态 + 人话 + DB 零印记
+  const db = makeDb("gate.md.db");
+  process.env.BSP_GATE_COVERAGE_HARD = "1.5";
+  try {
+    await startEnrich("gate.md", { chatFn: goodChat });
+    const j = await waitTerminal("gate.md");
+    ok(j.stage === "failed" && j.code === "GATE", `GATE block 落 failed 态（code=${j.code}）`);
+    ok(j.label === "入库被拦（质量闸门）", "GATE 单给标签「入库被拦（质量闸门）」", j.label);
+    ok(/闸门|重跑/.test(j.error || ""), "GATE 错误消息是人话且带补救", (j.error || "").slice(0, 60));
+    ok(!cell(db, "SELECT value FROM meta WHERE key='enrich_gate'"), "block 后 meta 无 enrich_gate（没写成已完成）");
+    ok(cell(db, "SELECT COUNT(*) c FROM pragma_table_info('chunks') WHERE name='ctx'").c === 0,
+      "block 后 ctx 列都没建（事务前判定）");
+    const b = booksList().find((x) => x.id === "gate.md");
+    ok(b && b.enrich && b.enrich.ready === false, "block 后书架显示未洗（无半成品印记）");
+  } finally { delete process.env.BSP_GATE_COVERAGE_HARD; }
+}
+{
+  // 9-3 DIRTY：1/6 合格块带控制符 → 拒洗落 failed，标签说「书太脏」，零云端调用
+  const dirty = CHUNKS.map((c, i) => (i === 1
+    ? { chapter: c.chapter, text: "控制符块：" + "\u0001\u0002".repeat(10) + "正文内容继续写下去凑够四十个字符的长度要求。" }
+    : c));
+  const db = makeDb("dirty.md.db", dirty);
+  const chat = fakeChat(goodChat);
+  await startEnrich("dirty.md", { chatFn: chat });
+  const j = await waitTerminal("dirty.md");
+  ok(j.stage === "failed" && j.code === "DIRTY", `DIRTY 落 failed 态（code=${j.code}）`);
+  ok(j.label === "洗数据被拒（书太脏）", "DIRTY 单给标签「洗数据被拒（书太脏）」", j.label);
+  ok(/重新加工/.test(j.error || ""), "DIRTY 消息带补救（结构化改造）", (j.error || "").slice(0, 50));
+  ok(chat.calls.length === 0, "DIRTY 零云端请求（体检在调用前）");
+  ok(!fs.existsSync(path.join(RESULTS, "dirty.md.jsonl")), "DIRTY 连缓存都没建");
+  ok(cell(db, "SELECT COUNT(*) c FROM pragma_table_info('chunks') WHERE name='ctx'").c === 0,
+    "DIRTY 后库里连 ctx 列都没建（体检在写任何东西之前）");
+}
+
 // ---------- 收尾 ----------
 console.log(`\n===== enrich-job-test: ${pass} PASS / ${fail} FAIL =====`);
 fs.rmSync(TMP, { recursive: true, force: true });

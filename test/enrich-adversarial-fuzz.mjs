@@ -6,6 +6,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import crypto from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
@@ -520,6 +521,132 @@ console.log("\n===== W5 chatFn 抛异常与库层容错（V3R-D02 家族）=====
   const chat = fakeChat(goodHandler);
   const r = await runEnrich(db, { config: CFG, chatFn: chat, resultsDir: RESULTS, summaries: false, batchSize: 3 });
   ok(r.ok && chat.calls.length <= 2, "W5-2 失败批续跑补齐", `calls=${chat.calls.length} code=${r.code}`);
+}
+
+// ---------- W6：P4 前门体检（DIRTY）与闸门 block 的缓存保勾 ----------
+console.log("\n===== W6 P4 脏库拒洗与质量闸门 =====");
+
+// W6-1：脏库（1/6=17% 合格块带乱码）→ DIRTY 拒洗，零云端请求，连缓存文件都没建
+{
+  const dirty = CH.map((c, i) => (i === 0
+    ? { chapter: c.chapter, text: "乱码块开头：" + "Ã©Ã¨Ã ".repeat(12) + "后面还有内容凑长度。" }
+    : c));
+  const db = makeDb("w6-dirty.db", dirty);
+  const chat = fakeChat(goodHandler);
+  let threw = null, r = null;
+  try { r = await runEnrich(db, { config: CFG, chatFn: chat, resultsDir: path.join(TMP, "w6d"), summaries: false }); } catch (e) { threw = e; }
+  ok(!threw && r && !r.ok && r.code === "DIRTY", "W6-1 脏库 → DIRTY 拒洗（不抛穿层）", threw ? String(threw).slice(0, 80) : r?.code);
+  ok(/乱码|控制符/.test(r?.message || "") && /重新加工/.test(r?.message || ""), "W6-1 DIRTY 消息是人话且带补救（重新加工）", (r?.message || "").slice(0, 60));
+  ok(chat.calls.length === 0, "W6-1 DIRTY 在任何云端调用之前——零请求");
+  ok(!fs.existsSync(enrichResultPath(path.join(TMP, "w6d"), "w6-dirty.db")), "W6-1 DIRTY 连 JSONL 缓存都没建（先体检再落盘）");
+}
+
+// W6-2：控制符型脏块同样检出（CONTROL_RE 域）+ 逃生开关 BSP_ENRICH_DIRTY=0 放行
+{
+  const dirty = CH.map((c, i) => (i === 2
+    ? { chapter: c.chapter, text: "控制符块：" + "\u0001\u0002".repeat(10) + "正文内容继续写下去凑够四十个字符的长度要求。" }
+    : c));
+  const db = makeDb("w6-ctl.db", dirty);
+  const chat = fakeChat(goodHandler);
+  const r = await runEnrich(db, { config: CFG, chatFn: chat, resultsDir: path.join(TMP, "w6c"), summaries: false });
+  ok(!r.ok && r.code === "DIRTY", "W6-2 控制符块 → DIRTY（不只会查乱码签名）", r?.code);
+  process.env.BSP_ENRICH_DIRTY = "0";
+  try {
+    const chat2 = fakeChat(goodHandler);
+    const r2 = await runEnrich(db, { config: CFG, chatFn: chat2, resultsDir: path.join(TMP, "w6c2"), summaries: false });
+    ok(r2.ok && chat2.calls.length > 0, "W6-2 BSP_ENRICH_DIRTY=0 → 放行照洗（逃生开关有效）", r2?.code);
+  } finally { delete process.env.BSP_ENRICH_DIRTY; }
+}
+
+// W6-3：干净书零打扰（同一批正常块不误拦）
+{
+  const db = makeDb("w6-clean.db", CH);
+  const chat = fakeChat(goodHandler);
+  const r = await runEnrich(db, { config: CFG, chatFn: chat, resultsDir: path.join(TMP, "w6cl"), summaries: false });
+  ok(r.ok && chat.calls.length > 0, "W6-3 干净书零打扰（不误拦）", r?.code);
+}
+
+// W6-4：边界——1/20=5% 恰好压线（阈值是 >5%）→ 不拦；2/20=10% → 拦
+{
+  const many = Array.from({ length: 20 }, (_, i) => ({ chapter: `第${Math.floor(i / 5) + 1}章`, text: `第 ${i + 1} 块正文：低压电器与电动机的保护、符号、结构与调速原理，内容足够长以成为合格块。` }));
+  const one = many.map((c, i) => (i === 0 ? { ...c, text: c.text + "\u0001".repeat(3) } : c));
+  const dbOne = makeDb("w6-edge5.db", one);
+  const chat = fakeChat(goodHandler);
+  const r5 = await runEnrich(dbOne, { config: CFG, chatFn: chat, resultsDir: path.join(TMP, "w6e5"), summaries: false });
+  ok(r5.ok, "W6-4 1/20=5% 恰好压线 → 放行（阈值是严格大于）", r5?.code);
+  const two = many.map((c, i) => (i < 2 ? { ...c, text: c.text + "\u0001".repeat(3) } : c));
+  const dbTwo = makeDb("w6-edge10.db", two);
+  const chat2 = fakeChat(goodHandler);
+  const r10 = await runEnrich(dbTwo, { config: CFG, chatFn: chat2, resultsDir: path.join(TMP, "w6e10"), summaries: false });
+  ok(!r10.ok && r10.code === "DIRTY", "W6-4 2/20=10% → DIRTY（阈值真在起作用）", r10?.code);
+}
+
+// W6-5：GATE block 不毒化缓存——拦后 DB 零印记，全量产物再入库成功且零重复调用
+{
+  const db = makeDb("w6-gate.db", CH);
+  const chat = fakeChat(goodHandler);
+  const r = await runEnrich(db, { config: CFG, chatFn: chat, resultsDir: path.join(TMP, "w6g"), summaries: false });
+  ok(r.ok && chat.calls.length > 0, "W6-5 跑批先成功（缓存+产物落盘）", r?.code);
+  // 手改产物成 30% 覆盖率（3/6，模拟坏产物）→ 入库被闸门拦
+  const art = JSON.parse(fs.readFileSync(r.artifactPath, "utf8"));
+  art.entries = art.entries.slice(0, 2);
+  fs.writeFileSync(r.artifactPath, JSON.stringify(art), "utf8");
+  let threw = null, imp = null;
+  try { imp = importEnrich(db, r.artifactPath); } catch (e) { threw = e; }
+  ok(!threw && imp && !imp.ok && imp.code === "GATE" && imp.gate.verdict === "block",
+    "W6-5 GATE block：2/6=33% 覆盖率被拦（不抛）", threw ? String(threw).slice(0, 80) : imp?.code);
+  ok(!cell(db, "SELECT value v FROM meta WHERE key='enrich_gate'")
+    && !cell(db, "SELECT value v FROM meta WHERE key='enrich_at'"),
+    "W6-5 GATE block：meta 零印记（没写成「已完成」）");
+  ok(cell(db, "SELECT COUNT(*) c FROM pragma_table_info('chunks') WHERE name='ctx'").c === 0,
+    "W6-5 GATE block：ctx 列都没建（事务前判定，一个字符都不写）");
+  // 缓存完好：重跑 runEnrich 应从缓存直接压回全量产物（零调用），再入库成功
+  const chat2 = fakeChat(goodHandler);
+  const r2 = await runEnrich(db, { config: CFG, chatFn: chat2, resultsDir: path.join(TMP, "w6g"), summaries: false });
+  ok(r2.ok && chat2.calls.length === 0, "W6-5 缓存没被毒化——重跑零调用直接出全量产物", `calls=${chat2.calls.length}`);
+  const imp2 = importEnrich(db, r2.artifactPath);
+  ok(imp2.ok && imp2.gate.verdict === "pass" && cell(db, "SELECT COUNT(*) c FROM chunks WHERE ctx IS NOT NULL").c === 6,
+    "W6-5 全量产物再入库 → pass（闸门只拦坏产物，不拦正路）", imp2?.code);
+}
+
+// W6-6：A7 缓存盲区（毛求疵对抗审查实证的唯一真实缺口）——P4 前格式缓存（meta 无
+// chunk_fp）+ 同 content_hash 重加工 → 结构不可判照样拒收。修复前全链路：runEnrich
+// 不拒 → 旧结构条目按 idx 硬套新块 → 压出的产物带**新鲜** fp → 入库侧结构判据形同虚设
+// → 旧 prefix/summary 串味入库。修复后：一个云端调用都不发，缓存/产物一个字节都不改。
+{
+  const dir = path.join(TMP, "w6a7");
+  const db1 = makeDb("w6-a7.db", CH);
+  const chat1 = fakeChat(goodHandler);
+  const r1 = await runEnrich(db1, { config: CFG, chatFn: chat1, resultsDir: dir, summaries: false });
+  ok(r1.ok && chat1.calls.length > 0, "W6-6 首跑成功（缓存+产物落盘）", r1?.code);
+  const jsonl = enrichResultPath(dir, "w6-a7.db");
+  // ① 旧格式缓存：删掉 meta 行的 chunk_fp（模拟 P4 之前写的缓存）
+  const stripped = fs.readFileSync(jsonl, "utf8").split(/\r?\n/)
+    .map(l => { try { const r = JSON.parse(l); if (r && r.t === "meta") delete r.chunk_fp; return JSON.stringify(r); } catch { return l; } });
+  fs.writeFileSync(jsonl, stripped.join("\n"), "utf8");
+  // ② 同 content_hash 重加工：同书名同 hash（makeDb 默认 hash-<name>），块结构变（6 块并成 5 块）
+  const merged = [CH[0], { chapter: "第1章", text: CH[1].text + CH[2].text }, CH[3], CH[4], CH[5]];
+  const db2 = makeDb("w6-a7.db", merged, { content_hash: "hash-w6-a7.db" });
+  const shaBefore = crypto.createHash("sha256").update(fs.readFileSync(jsonl)).digest("hex");
+  const artShaBefore = crypto.createHash("sha256").update(fs.readFileSync(r1.artifactPath)).digest("hex");
+  const chat2 = fakeChat(goodHandler);
+  let threw = null, r2 = null;
+  try { r2 = await runEnrich(db2, { config: CFG, chatFn: chat2, resultsDir: dir, summaries: false }); } catch (e) { threw = e; }
+  ok(!threw && r2 && !r2.ok && r2.code === "STALE" && /旧格式|无法判断/.test(r2.message || ""),
+    "W6-6 A7：旧格式缓存 + 同 hash 重加工 → STALE 拒收（结构不可判）", threw ? String(threw).slice(0, 80) : r2?.code);
+  ok(chat2.calls.length === 0, "W6-6 A7：零云端调用（拒收在发请求之前）");
+  ok(crypto.createHash("sha256").update(fs.readFileSync(jsonl)).digest("hex") === shaBefore
+    && crypto.createHash("sha256").update(fs.readFileSync(r1.artifactPath)).digest("hex") === artShaBefore,
+    "W6-6 A7：缓存与产物一个字节都没改（不补写 meta、不重压产物）");
+  // ③ 同族：meta 行整个缺失的缓存（只剩 ok 行）——无哈希无指纹，同样按不可判拒收
+  const jsonl2 = enrichResultPath(dir, "w6-a7b.db");
+  fs.writeFileSync(jsonl2, JSON.stringify({ t: "ok", idxs: [1], entries: [{ idx: 1, tags: ["旧"], questions: [], prefix: "旧", summary: "旧" }], mode: "byIdx" }) + "\n", "utf8");
+  const db3 = makeDb("w6-a7b.db", CH);
+  const chat3 = fakeChat(goodHandler);
+  let r3 = null;
+  try { r3 = await runEnrich(db3, { config: CFG, chatFn: chat3, resultsDir: dir, summaries: false }); } catch (e) { threw = e; }
+  ok(!threw && r3 && !r3.ok && r3.code === "STALE" && chat3.calls.length === 0,
+    "W6-6 同族：meta 行缺失的缓存照样拒收（无哈希无指纹=不可判）", r3?.code);
 }
 
 // ---------- 收尾 ----------

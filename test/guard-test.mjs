@@ -309,6 +309,55 @@ const copyDb = (src) => {
   const engSrc = readSrc("src", "desktop", "engine.mjs");
   ok(/enrich: enrichSummary/.test(engSrc) && engSrc.includes("function enrichSummary"),
     "静态: booksList 挂 enrich 摘要（#140 书架徽标）");
+
+  // ⑧ P4 洗数据闸门四件套（块结构指纹 / 双档闸门 / 前门体检 / 桌面可见性）
+  // stripAll：整行+块注释+行尾注释全剔——行尾注释 `const id = bookId; // safeBookId(bookId)`
+  // 能让 includes 断言假绿（P5 §15 同款教训，本节复用）
+  const stripAll = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((l) => {
+    if (l.trimStart().startsWith("//")) return "";
+    const i = l.indexOf("//");
+    return i >= 0 && !/["'`]/.test(l.slice(0, i)) ? l.slice(0, i) : l;
+  }).join("\n");
+  const eiSrc = stripAll(readSrc("src", "lib", "enrich-import.mjs"));
+  const enSrc = stripAll(readSrc("src", "lib", "enrich.mjs"));
+  // a. 指纹：chunkFingerprint 存在且 buildEnrichTasks 带 chunk_fp/eligible 出海
+  ok(/export function chunkFingerprint\(/.test(enSrc) && /chunk_fp: chunkFingerprint\(/.test(enSrc)
+    && /eligible: eligible\.length/.test(enSrc),
+    "静态: chunkFingerprint 存在且任务书带 chunk_fp/eligible（P4 结构判据）");
+  // b. 缓存结构判据：loadEnrichCache 第三参 + STRUCT 原因
+  ok(/loadEnrichCache\(jsonlPath, contentHash, chunkFp\)/.test(enSrc) && /"STRUCT"/.test(enSrc),
+    "静态: loadEnrichCache 读 meta.chunk_fp，不符 → staleReason=STRUCT");
+  // b2. A7 修复（毛求疵对抗审查）：调用方传了 chunkFp 而 meta 无 chunk_fp → 结构不可判同样
+  // stale——「无指纹」不等于「没变过」，旧条目按 idx 硬套新块就是静默串味（同 content_hash
+  // 重加工全链路实证）。两参旧调用不传 chunkFp 故不受影响（compactEnrichArtifact 重读）。
+  ok(/const fpStale = !!chunkFp && \(out\.fp == null \|\| out\.fp !== chunkFp\);/.test(enSrc),
+    "静态: A7 修复——无 chunk_fp 的缓存按结构不可判 stale（fpStale 含 out.fp == null）");
+  ok(/缓存是旧格式（没有块结构指纹）/.test(enSrc),
+    "静态: 无指纹缓存的 STALE 消息分叉说人话（不渲染 null → fp）");
+  // c. 闸门：importEnrich 在事务与 schema 之前调用 evaluateEnrichGate（源码顺序断言；
+  //    ensureEnrichSchema(db) 要带分号才是调用点——函数定义也在本文件里，不带会误命中定义）
+  const gateCall = eiSrc.indexOf("evaluateEnrichGate({");
+  const schemaCall = eiSrc.search(/ensureEnrichSchema\(db\)\s*;/);
+  ok(gateCall > 0 && schemaCall > 0 && gateCall < schemaCall
+    && gateCall < eiSrc.indexOf("const tx = db.transaction"),
+    "静态: evaluateEnrichGate 在 ensureEnrichSchema/事务之前（block 才可能一个字符都不写）");
+  // d. STALE_STRUCT 拒收码 + meta.enrich_gate 写入点
+  ok(/"STALE_STRUCT"/.test(eiSrc) && /'enrich_gate'/.test(eiSrc),
+    "静态: STALE_STRUCT 拒收码与 meta.enrich_gate 落账点俱在");
+  // e. 前门体检：runEnrich 调 detectGarbled + DIRTY 码 + BSP_ENRICH_DIRTY 逃生
+  ok(/detectGarbled\(/.test(enSrc) && /code: "DIRTY"/.test(enSrc) && /BSP_ENRICH_DIRTY/.test(enSrc),
+    "静态: 脏库前门体检（detectGarbled→DIRTY→BSP_ENRICH_DIRTY 逃生）");
+  ok(/detectGarbled/.test(enSrc) && enSrc.indexOf("detectGarbled(") < enSrc.indexOf("const batches = makeBatches"),
+    "静态: 脏库体检在任何批次组织之前（云端调用之前拒洗）");
+  // f. 桌面可见性：GATE/DIRTY 分支标签 + 徽标 warn 样式 + engine 读 enrich_gate
+  const ejSrc2 = stripAll(readSrc("src", "desktop", "enrich-job.mjs"));
+  ok(ejSrc2.includes('imp.code === "GATE"') && ejSrc2.includes('r.code === "DIRTY"'),
+    "静态: enrich-job 分流 GATE/DIRTY（标签分开，病因不混）");
+  ok(/enrichGate/.test(engSrc) && /enrich_gate/.test(engSrc),
+    "静态: engine 书架摘要读 meta.enrich_gate（warn 徽标数据源）");
+  const cssSrc = readSrc("src", "renderer", "app.css");
+  ok(cssSrc.includes(".tag.enr.warn") && viewsSrc.includes("enr warn"),
+    "静态: warn 徽标有样式且 views 认这个态（P4 书架可见性）");
 }
 
 // ========== 13) 静态防回归：原书视图接线契约（V3 第四波 #166） ==========

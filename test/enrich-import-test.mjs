@@ -9,6 +9,7 @@ const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 
 import { ensureEnrichSchema, importEnrich, auditEnrich, defaultArtifactPath } from "../src/lib/enrich-import.mjs";
+import { buildEnrichTasks, chunkFingerprint, evaluateEnrichGate } from "../src/lib/enrich.mjs";
 
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-enrich-import-"));
 const SLICE = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, "fixtures", "enrich-xueer-slice.json"), "utf8"));
@@ -198,8 +199,22 @@ const synArtifact = (over = {}) => ({
   const full = synArtifact();
   full.entries = SYN_ENTRIES.slice(4);
   const r3 = importEnrich(dbPath, writeJson("partial-art2.json", full));
-  ok(r3.ok && r3.stats.imported === 2 && one(dbPath, "SELECT COUNT(*) c FROM chunks WHERE ctx IS NOT NULL").c === 6,
-    "增量: 补导入剩余 2 块后全覆盖（与原 4 条共存）");
+  // P4 闸门（拍板口径）：2/6=33% 覆盖率低于硬线 60% → GATE 拒收，一个字符都不写。
+  // 「切一半产物硬塞」这条路被关掉是对的——真实续跑口径是重跑 enrich-book 走缓存
+  // 补齐后拿**全量**产物再入库（下面 r3b 锁这条正路）。
+  ok(!r3.ok && r3.code === "GATE", "增量: 2/6=33% 覆盖率 → GATE 硬线拒收（P4）", r3.message);
+  ok(one(dbPath, "SELECT COUNT(*) c FROM chunks WHERE ctx IS NOT NULL").c === 4,
+    "增量: 被拦后库里还是原 4 条（事务前判定，一个字符都没写）");
+  const gateMeta = one(dbPath, "SELECT value FROM meta WHERE key='enrich_gate'");
+  ok(gateMeta && JSON.parse(gateMeta.value).verdict === "warn",
+    "增量: 被拦不抹掉上次入库的闸门印记（还是 warn）", gateMeta?.value);
+  // 真实续跑口径：全量产物 → pass，覆盖补齐到 6，印记升 pass
+  const r3b = importEnrich(dbPath, writeJson("partial-art3.json", synArtifact()));
+  ok(r3b.ok && r3b.gate.verdict === "pass"
+    && one(dbPath, "SELECT COUNT(*) c FROM chunks WHERE ctx IS NOT NULL").c === 6,
+    "增量: 全量产物入库 → pass 且覆盖补齐到 6（真实续跑口径）", r3b.message);
+  const gateMeta2 = one(dbPath, "SELECT value FROM meta WHERE key='enrich_gate'");
+  ok(JSON.parse(gateMeta2.value).verdict === "pass", "增量: 闸门印记升 pass", gateMeta2.value);
 }
 
 // ========== 7) auditEnrich：没洗过 / 洗过 / 坏路径 ==========
@@ -241,7 +256,153 @@ const synArtifact = (over = {}) => ({
   ok(r6.code === 0, "CLI: --min-chars 40 位置参数解析不互相污染");
 }
 
-// ========== 9) 静态断言（判断标准①代码级盯防）+ 收尾 ==========
+// ========== 10) P4：块结构指纹 STALE_STRUCT + 双档闸门 GATE/warn/pass + env 覆盖 ==========
+{
+  // 10 块两章夹具（覆盖率好凑整：3/10=30% 硬线，9/10=90% 黄线，10/10=pass）
+  const CH10 = [
+    { chapter: "第1章", text: "熔断器是一种保护电器，当电流超过额定值时自动切断电路，防止设备烧毁。断路器则兼有开关作用，两者常配合使用。" },
+    { chapter: "第1章", text: "低压电器的符号在图纸上用特定图形表示，交流接触器的主触点绘制成常开触点形式，便于工程识图与施工放样。" },
+    { chapter: "第1章", text: "热继电器利用电流的热效应动作，双金属片受热弯曲推动触点，用于电动机的过载保护场合，整定电流可以调节。" },
+    { chapter: "第1章", text: "接触器通过电磁线圈的通断来控制主触点的闭合，适用于频繁启动的电动机控制回路，选型时看线圈电压与触点容量。" },
+    { chapter: "第1章", text: "刀开关与组合开关结构简单，有明显断开点，常用于电源隔离和不频繁接通断开的场合，安装时手柄向上为合闸。" },
+    { chapter: "第2章", text: "异步电动机的转子分为笼型与绕线型两类，笼型结构简单可靠，绕线型可在起动时串入电阻改善起动性能指标。" },
+    { chapter: "第2章", text: "电动机的额定电压指线电压，接线时应核对铭牌标注，星形与三角形接法不可随意混用，否则可能烧毁绕组绝缘。" },
+    { chapter: "第2章", text: "变频器通过改变电源频率调节电动机转速，调速范围宽且节能，已在风机水泵类负载中广泛替代阀门节流调节方式。" },
+    { chapter: "第2章", text: "伺服电动机以高精度定位著称，编码器把转角换成脉冲反馈给驱动器，构成半闭环控制系统，数控机床广泛采用。" },
+    { chapter: "第2章", text: "步进电动机按脉冲信号步进转动，开环控制即可精确定位，适合轻载低速场合，过载容易失步需要留出扭矩裕量。" },
+  ];
+  const ENT10 = (n) => Array.from({ length: n }, (_, i) => ({
+    idx: i + 1,
+    prefix: `第 ${i + 1} 块的前置：介绍本篇要点与原理。`,
+    tags: [CH10[i].text.slice(0, 4)],
+    questions: ["这块讲了什么"],
+    summary: `第 ${i + 1} 块摘要：${CH10[i].text.slice(0, 12)}。`,
+  }));
+  const syn10 = (over = {}) => ({
+    version: 1,
+    book: { db: "gate.db", title: "gate", content_hash: "abc123", chunk_count: 10 },
+    stats: {},
+    entries: ENT10(10),
+    failed_batches: [],
+    updated_at: "2026-10-18T00:00:00.000Z",
+    chapter_summaries: { "第1章": "第一章合述低压电器：保护元件、图纸符号与配电电器。", "第2章": "第二章合述电动机：结构、接线、调速与伺服步进。" },
+    book_summary: "全书介绍低压电器与电动机的基础知识，涵盖保护、符号、结构与调速。",
+    ...over,
+  });
+
+  // 10-1 老产物路径：无 chunk_fp，chunk_count 与库不符 → STALE_STRUCT（源文件没变但重新加工过）
+  {
+    const dbPath = makeDb("struct-old.db", CH10);
+    const art = syn10(); art.book.chunk_count = 99;
+    const r = importEnrich(dbPath, writeJson("struct-old.json", art));
+    ok(!r.ok && r.code === "STALE_STRUCT" && /块数 99 → 10/.test(r.message),
+      "STALE_STRUCT: 老产物（无指纹）块数 99≠10 → 拒收", r.message);
+    const cols = rows(dbPath, "PRAGMA table_info(chunks)").map(c => c.name);
+    ok(!cols.includes("ctx"), "STALE_STRUCT: 连 schema 都没建（一个字符都不写）");
+  }
+  // 10-2 新产物路径：两边都有 chunk_fp 且不符 → STALE_STRUCT（message 带两个指纹）
+  {
+    const dbPath = makeDb("struct-new.db", CH10);
+    const d = new Database(dbPath, { readonly: true });
+    const realFp = buildEnrichTasks(d).book.chunk_fp;
+    d.close();
+    ok(/^[0-9a-f]{16}$/.test(realFp), "buildEnrichTasks 带 16 位块结构指纹", realFp);
+    const art = syn10(); art.book.chunk_fp = "0123456789abcdef";
+    const r = importEnrich(dbPath, writeJson("struct-new.json", art));
+    ok(!r.ok && r.code === "STALE_STRUCT" && r.message.includes(realFp) && r.message.includes("0123456789abcdef"),
+      "STALE_STRUCT: 指纹 0123456789abcdef ≠ 库指纹 → 拒收", r.message);
+  }
+  // 10-3 兼容：老产物无指纹且 chunk_count 相符 → 照常入库（判 pass）
+  {
+    const dbPath = makeDb("compat.db", CH10);
+    const r = importEnrich(dbPath, writeJson("compat.json", syn10()));
+    ok(r.ok && r.gate.verdict === "pass" && r.stats.imported === 10,
+      "兼容: 无指纹老产物（块数相符）照常入库且判 pass", r.message);
+    const g = JSON.parse(one(dbPath, "SELECT value FROM meta WHERE key='enrich_gate'").value);
+    ok(g.verdict === "pass" && g.coverage === 1, "兼容: meta.enrich_gate 落 pass+coverage", JSON.stringify(g));
+  }
+  // 10-4 GATE block：30% 覆盖率 → 拒收，三列全空、meta 无 enrich_gate
+  {
+    const dbPath = makeDb("gateblk.db", CH10);
+    const art = syn10(); art.entries = ENT10(3);   // 3/10 = 30% < 60% 硬线
+    const r = importEnrich(dbPath, writeJson("gateblk.json", art));
+    ok(!r.ok && r.code === "GATE" && r.gate.verdict === "block", "GATE: 30% 覆盖率 → block 拒收", r.message);
+    ok(r.gate.reasons.some(x => x.includes("硬线")), "GATE: reasons 点明硬线", JSON.stringify(r.gate.reasons));
+    const cols = rows(dbPath, "PRAGMA table_info(chunks)").map(c => c.name);
+    ok(!cols.includes("ctx") && !cols.includes("tags") && !cols.includes("questions"),
+      "GATE block: ctx/tags/questions 三列都没建（事务前判定）");
+    const keys = rows(dbPath, "SELECT key FROM meta").map(x => x.key);
+    ok(!keys.includes("enrich_gate") && !keys.includes("enrich_at") && !keys.includes("enrich_entries"),
+      "GATE block: meta 无 enrich 三印记（没写成已完成）");
+    const tables = rows(dbPath, "SELECT name FROM sqlite_master WHERE type='table'").map(x => x.name);
+    ok(!tables.includes("summaries") && !tables.includes("chunk_tags"), "GATE block: summaries/chunk_tags 两表都没建");
+  }
+  // 10-5 warn：90% 覆盖率 → 照常入库 + meta.enrich_gate.verdict === "warn"
+  {
+    const dbPath = makeDb("gatewarn.db", CH10);
+    const art = syn10(); art.entries = ENT10(9);   // 9/10 = 90%（黄线 95% 与硬线 60% 之间）
+    const r = importEnrich(dbPath, writeJson("gatewarn.json", art));
+    ok(r.ok && r.gate.verdict === "warn" && r.gate.coverage === 0.9, "GATE: 90% 覆盖率 → warn 但照常入库", r.message);
+    ok(r.stats.imported === 9 && r.stats.uncovered === 1, "GATE: warn 入库 9 条、报 1 个未覆盖块", JSON.stringify(r.stats));
+    const g = JSON.parse(one(dbPath, "SELECT value FROM meta WHERE key='enrich_gate'").value);
+    ok(g.verdict === "warn", "GATE: meta.enrich_gate 落 warn（书架徽标读它）", JSON.stringify(g));
+  }
+  // 10-6 pass：全量 → verdict=pass
+  {
+    const dbPath = makeDb("gatepass.db", CH10);
+    const r = importEnrich(dbPath, writeJson("gatepass.json", syn10()));
+    ok(r.ok && r.gate.verdict === "pass" && r.gate.coverage === 1 && r.gate.dropRate === 0,
+      "GATE: 全量产物 → pass", JSON.stringify(r.gate));
+  }
+  // 10-7 env 覆盖阈值（回归对比不改代码）：HARD=1.5 → 全量也被硬线拦；复原后放行
+  {
+    const dbPath = makeDb("gateenv.db", CH10);
+    const artPath = writeJson("gateenv.json", syn10());
+    process.env.BSP_GATE_COVERAGE_HARD = "1.5";
+    let r;
+    try { r = importEnrich(dbPath, artPath); } finally { delete process.env.BSP_GATE_COVERAGE_HARD; }
+    ok(!r.ok && r.code === "GATE", "env 覆盖: BSP_GATE_COVERAGE_HARD=1.5 → 全量产物也被拦（阈值可调）", r.message);
+    const r2 = importEnrich(dbPath, artPath);
+    ok(r2.ok && r2.gate.verdict === "pass", "env 复原: 同一产物放行（env 真在起作用，不是缓存）");
+  }
+  // 10-8 闸门纯函数直判（不建库）：覆盖率/丢弃率/章摘要缺口三维各自触发点
+  {
+    const g = (o) => evaluateEnrichGate(o);
+    ok(g({ eligible: 100, covered: 100 }).verdict === "pass", "纯函数: 满分 pass");
+    ok(g({ eligible: 100, covered: 59 }).verdict === "block", "纯函数: 覆盖率 59% → block");
+    ok(g({ eligible: 100, covered: 60 }).verdict === "warn", "纯函数: 覆盖率 60% → warn（硬线是 <60%）");
+    ok(g({ eligible: 100, covered: 94 }).verdict === "warn", "纯函数: 覆盖率 94% → warn");
+    ok(g({ eligible: 100, covered: 95 }).verdict === "pass", "纯函数: 覆盖率 95% → pass（黄线是 <95%）");
+    ok(g({ eligible: 100, covered: 100, tagsDropped: 50, tagsKept: 50 }).verdict === "warn", "纯函数: 丢弃率 50% → warn（硬线是 >50%，压线不过）");
+    ok(g({ eligible: 100, covered: 100, tagsDropped: 51, tagsKept: 49 }).verdict === "block", "纯函数: 丢弃率 51% → block");
+    ok(g({ eligible: 100, covered: 100, tagsDropped: 11, tagsKept: 89 }).verdict === "warn", "纯函数: 丢弃率 11% → warn");
+    ok(g({ eligible: 100, covered: 100, tagsDropped: 10, tagsKept: 90 }).verdict === "pass", "纯函数: 丢弃率 10% → pass（黄线是 >10%）");
+    ok(g({ eligible: 100, covered: 100, chapterCount: 6, chapterTotal: 10 }).verdict === "warn", "纯函数: 章摘要缺口 40% → warn");
+    ok(g({ eligible: 100, covered: 100, chapterCount: 4, chapterTotal: 10 }).verdict === "block", "纯函数: 章摘要缺口 60% → block（>50%）");
+    ok(g({ eligible: 100, covered: 100, chapterCount: 0, chapterTotal: 0 }).verdict === "pass", "纯函数: 未开摘要不参与判定（chapterTotal=0）");
+    ok(g({ eligible: 0, covered: 0 }).verdict === "pass", "纯函数: 0 合格块不误杀（全短块书）");
+    ok(g({}).verdict === "pass" && g(null).verdict === "pass", "纯函数: 空输入不炸");
+    const g2 = g({ eligible: 10, covered: 10, tagsDropped: 1, tagsKept: 3 });
+    ok(Math.abs(g2.dropRate - 0.25) < 1e-9, "纯函数: dropRate = 丢弃/(丢弃+保留)", String(g2.dropRate));
+  }
+  // 10-9 指纹与 eligible 直判
+  {
+    const d = new Database(makeDb("fp.db", CH10), { readonly: true });
+    const t = buildEnrichTasks(d);
+    d.close();
+    ok(t.book.eligible === 10 && t.book.chunk_count === 10 && /^[0-9a-f]{16}$/.test(t.book.chunk_fp),
+      "任务书: eligible/chunk_count/chunk_fp 三字段齐", JSON.stringify(t.book));
+    ok(t.book.chunk_fp === chunkFingerprint(CH10.map((c, i) => ({ idx: i + 1, ...c }))),
+      "任务书指纹与 chunkFingerprint 直算一致（同一函数两处调用）");
+    const dShort = new Database(makeDb("fp2.db", [...CH10, { chapter: "第3章", text: "短块" }]), { readonly: true });
+    const t2 = buildEnrichTasks(dShort);
+    dShort.close();
+    ok(t2.book.eligible === 10 && t2.book.chunk_count === 11 && t2.book.chunk_fp !== t.book.chunk_fp,
+      "短块进 chunk_count 不进 eligible，且改变指纹（结构敏感）");
+  }
+}
+
+// ========== 11) 静态断言（判断标准①代码级盯防）+ 收尾 ==========
 {
   const src = fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "enrich-import.mjs"), "utf8");
   const strip = src.split("\n").filter(l => !l.trimStart().startsWith("//")).join("\n");
