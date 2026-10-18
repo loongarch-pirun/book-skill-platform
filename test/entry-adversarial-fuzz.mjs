@@ -663,8 +663,24 @@ console.log("\n----- D 段：engine 两档删除 -----");
   let e1 = null;
   try { deleteBook("d1.docx"); } catch (e) { e1 = e; }
   unp();
-  ok(e1 instanceof UserError, "D1 rmSync EBUSY → UserError 人话（不半删不裸抛）",
+  ok(e1 instanceof UserError && fs.existsSync(dbP), "D1 rmSync EBUSY → UserError 人话且零删除（不半删不裸抛）",
     e1 ? `${e1.constructor.name}: ${String(e1.message).slice(0, 60)}` : "\u7adf\u6ca1\u629b");
+}
+// D1b（顺序直证）：wal 先删且被占用 → 零删除（主库/shm/wal 都在=「书还在」，状态一致可重试）
+{
+  const dbP = makeBookDb("d1b.docx.db", "\u5220\u4e66\u4e00\u4e59");
+  fs.writeFileSync(dbP + "-wal", "wal", "utf8");
+  fs.writeFileSync(dbP + "-shm", "shm", "utf8");
+  const unp = patchFs("rmSync", dbP + "-wal", ebusy(dbP + "-wal"));
+  let e1b = null;
+  try { deleteBook("d1b.docx"); } catch (e) { e1b = e; }
+  unp();
+  // 断言值先算再清理（d1b 不在后续名单，删净免污染）
+  const kept = fs.existsSync(dbP) && fs.existsSync(dbP + "-wal") && fs.existsSync(dbP + "-shm");
+  for (const s of ["", "-wal", "-shm"]) fs.rmSync(dbP + s, { force: true });
+  ok(e1b instanceof UserError && kept,
+    "D1b wal 先删且被占用 → 零删除（主库/shm/wal 都在；顺序契约：主库是书还在的判定依据）",
+    e1b ? `kept=${kept}` : "\u7adf\u6ca1\u629b");
 }
 // D2（红 C17）：purgeBook 第二步 db rmSync 无 try——原件已删、库删失败 → 裸抛 + 不一致态
 {
@@ -673,21 +689,23 @@ console.log("\n----- D 段：engine 两档删除 -----");
   let e2 = null;
   try { purgeBook("d2.docx"); } catch (e) { e2 = e; }
   unp();
-  ok(e2 instanceof UserError && fs.existsSync(dbP),
-    "D2 db rmSync EBUSY → UserError 人话且库文件不动（半途失败可描述）",
-    e2 ? `${e2.constructor.name}: ${String(e2.message).slice(0, 60)}` : "\u7adf\u6ca1\u629b");
+  ok(e2 instanceof UserError && fs.existsSync(dbP) && /\u518d\u70b9\u4e00\u6b21/.test(e2.message),
+    "D2 db rmSync EBUSY → UserError 人话且库文件不动（半途失败可描述，话术给出「再点一次」路径）",
+    e2 ? `${e2.constructor.name}: ${String(e2.message).slice(0, 80)}` : "\u7adf\u6ca1\u629b");
 }
 // D3（红 C18）：setSkillEnabled writeFileSync 无兜底——删成功却整调用报错（用户见失败实则成功）
 {
   const dbP = makeBookDb("d3.docx.db", "\u5220\u4e66\u4e09");
   const statePath = path.join(LIB, "skill-state.json");
-  const unp = patchFs("writeFileSync", statePath, ebusy(statePath));
+  // 命中计数直证 patch 生效：若路径没对上，setSkillEnabled 正常写成功也会让断言全绿（假绿）
+  let hits = 0;
+  const unp = patchFs("writeFileSync", (p) => { const hit = String(p) === statePath; if (hit) hits++; return hit; }, ebusy(statePath));
   let e3 = null, r3 = null;
   try { r3 = deleteBook("d3.docx"); } catch (e) { e3 = e; }
   unp();
-  ok(!e3 && r3 && !fs.existsSync(dbP),
-    "D3 开关状态写失败不拖垮删除（书库照删，用户不看到假失败）",
-    e3 ? `\u88c5\u629b ${String(e3.message).slice(0, 60)}` : `deleted=${!!r3}`);
+  ok(!e3 && r3 && !fs.existsSync(dbP) && hits >= 1,
+    "D3 开关状态写失败不拖垮删除（书库照删，patch 命中直证不假绿）",
+    e3 ? `\u88c5\u629b ${String(e3.message).slice(0, 60)}` : `deleted=${!!r3} 写状态尝试=${hits}`);
 }
 // D4（绿 C19）：并发双 purge——终态干净；任一拒绝必须是 UserError（拒绝计数 NOTE 登记）
 {

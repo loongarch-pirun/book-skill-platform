@@ -101,11 +101,24 @@ export function deleteBook(bookId) {
   const libDir = currentLibDir();
   const b = listBooks(libDir, { includeDisabled: true }).find(x => x.id === bookId);
   if (!b) throw new UserError(`书库里找不到「${bookId}」——移出书架只删书库；只有原件的书请用「彻底删除」`);
-  for (const suffix of ["", "-wal", "-shm"]) {
+  // 删除顺序：先 wal/shm 后主库——主库是「书还在不在」的判定依据，主库删不掉
+  // 时书还在、状态一致；反序会让主库没了 wal/shm 残留成僵尸。EBUSY（另一进程
+  // 开着库/杀软扫描）时 rmSync 会抛——裸抛到 IPC 是一屏英文堆栈，包成人话
+  for (const suffix of ["-wal", "-shm", ""]) {
     const p = b.db + suffix;
-    if (fs.existsSync(p)) fs.rmSync(p, { force: true });
+    if (!fs.existsSync(p)) continue;
+    try { fs.rmSync(p, { force: true }); }
+    catch (e) {
+      // 只带 errno 码不带 e.message：后者含绝对路径+英文串（书名为用户可控，
+      // 渲染层转义面未覆盖前不拼进响应——毛求疵 F5 O3）
+      throw new UserError(`书库文件删除失败（${e.code || "未知错误"}）——文件可能正被占用，请关掉占用程序后重试；若持续失败可重启应用再试`);
+    }
   }
-  setSkillEnabled(libDir, bookId, true); // 删记录，不留垃圾状态
+  // 开关记录清理是副作用：写失败（状态文件被占用/磁盘满）不该把「删书已成功」
+  // 变成用户看到报错——书库已删是既成事实，残留记录最多多一条无效键
+  // （loadSkillState 各消费点按 bookId 查，未知键无害），留一行痕迹供排障（C18/D3）
+  try { setSkillEnabled(libDir, bookId, true); }
+  catch (e) { console.warn(`  开关记录清理失败（${e?.code || e?.message}）——书库已删，残留记录无害`); }
   const hasAsset = resolveAsset(libDir, bookId).exists;
   return { deleted: bookId, removedAsset: false, note: hasAsset
     ? "已移出书架——书库文件已删，books/ 原件还在；点「开始加工」可重建"
@@ -126,12 +139,20 @@ export function purgeBook(bookId) {
     catch (e) { throw new UserError(`books/ 原件删除失败（${e.message}）——书库未动，请关掉占用该文件的程序后重试`); }
   }
   if (b) {
-    for (const suffix of ["", "-wal", "-shm"]) {
+    // 同 deleteBook：先 wal/shm 后主库；任何一步失败都要人话——注意原件已删
+    // 不可逆，必须告诉用户「再点一次彻底删除」就能清掉剩余书库（C17/D2）
+    for (const suffix of ["-wal", "-shm", ""]) {
       const p = b.db + suffix;
-      if (fs.existsSync(p)) fs.rmSync(p, { force: true });
+      if (!fs.existsSync(p)) continue;
+      try { fs.rmSync(p, { force: true }); }
+      catch (e) {
+        // 同 deleteBook：只带 errno 码；原件已删不可逆，话术必须给出「再点一次」路径
+        throw new UserError(`书库文件删除失败（${e.code || "未知错误"}）——books/ 原件已删，请关掉占用程序后再点一次「彻底删除」清掉剩余书库`);
+      }
     }
   }
-  setSkillEnabled(libDir, bookId, true); // 删记录，不留垃圾状态
+  try { setSkillEnabled(libDir, bookId, true); }
+  catch (e) { console.warn(`  开关记录清理失败（${e?.code || e?.message}）——书库已删，残留记录无害`); }
   const parts = [];
   if (b) parts.push("书库文件");
   if (asset.exists) parts.push("books/ 原件");

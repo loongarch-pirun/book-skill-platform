@@ -384,6 +384,10 @@ const copyDb = (src) => {
   const delBody = engSrc.slice(delAt, purgeAt);
   ok(!/rmSync\(asset\.path/.test(delBody),
     "静态: deleteBook 不删 books/ 原件（第一档=删库留原件，书架回 raw 可重建）");
+  // 删除顺序契约：先 wal/shm 后主库——主库是「书还在不在」的判定依据，反序会留
+  // wal/shm 僵尸且「书还在却丢了未 checkpoint 写入」（F5 顺序改动锁）
+  const orderHits = (engSrc.match(/\["-wal", "-shm", ""\]/g) || []).length;
+  ok(orderHits === 2, "静态: 两档删除都先 wal/shm 后主库（顺序契约，命中 2 处）", `命中 ${orderHits} 处`);
 
   // ② 三处接线：ipc 通道 / preload 暴露 / 渲染层两档按钮与确认清单
   const ipcRegSrc = readSrc("src", "desktop", "ipc.mjs");
