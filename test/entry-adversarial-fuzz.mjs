@@ -284,7 +284,7 @@ console.log("\n----- A 段：structurize 纯文本层 -----");
 // A11（绿 M-07）：structChanged 逐字段真值表——6 计数器各 +1 均 true、全零 false、null false。
 // F2a（report 增 strippedSurrogates）同 commit 扩 7 字段：zero 表补该键，循环自动多断言一项。
 {
-  const zero = { droppedEmpty: 0, droppedGarbage: 0, repairedMojibake: 0, strippedControls: 0, strippedPua: 0, strippedFffd: 0 };
+  const zero = { droppedEmpty: 0, droppedGarbage: 0, repairedMojibake: 0, strippedControls: 0, strippedPua: 0, strippedFffd: 0, strippedSurrogates: 0 };
   ok(structChanged(null) === false, "A11a structChanged(null) → false（null 安全不抛）");
   ok(structChanged({ ...zero }) === false, "A11b 全零 → false（干净书零变化）");
   for (const k of Object.keys(zero)) {
@@ -413,7 +413,7 @@ const bspImport = path.join(TMP, "bsp-import");
   const events = [];
   const off = onJobsProgress((e) => events.push(e));
   const origMain = bb.main;
-  bb.main = async () => { await sleep(600); return { struct: { repairedMojibake: 1, droppedEmpty: 0, droppedGarbage: 0, strippedControls: 0, strippedPua: 0, strippedFffd: 0 }, skipped: false }; };
+  bb.main = async () => { await sleep(600); return { struct: { repairedMojibake: 1, droppedEmpty: 0, droppedGarbage: 0, strippedControls: 0, strippedPua: 0, strippedFffd: 0, strippedSurrogates: 0 }, skipped: false }; };
   const p = settle(startProcessing("c1.docx"));
   await waitFor(() => events.some((e) => e.label === "\u7ed3\u6784\u5316\u6539\u9020\u4e2d"), 5000);
   cancelImport("c1.docx"); // 广播 cancelled + 删条目

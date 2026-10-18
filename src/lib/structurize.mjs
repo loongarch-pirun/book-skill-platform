@@ -26,6 +26,23 @@ const CONTROL_RE = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/g;
 const PUA_RE = /[\ue000-\uf8ff]/g;
 // 替换符 U+FFFD：解不出来的字节的占位——就是「乱码符号」本人
 const FFFD_RE = /\ufffd/g;
+// 孤立代理对（lone surrogate）：字符串层面就损坏的半个 UTF-16 代理对。
+// 成对的天文字符（代理对）不动，只剥孤立的——高代理后不跟低代理、
+// 低代理前不接高代理（lookaround 两侧查岗，成对的一个不误伤）。
+// 必须在 sqlite 绑定前剥掉：绑定会把 lone surrogate 静默变成 U+FFFD
+// 入库——等于绕过上面的 FFFD 清洗让它换件马甲再进（P2-02，A3/F2a
+// 坐实「库内 FFFD 残留」）。剥了多少记入 report.strippedSurrogates。
+// 注意：/g 正则的 lastIndex 是模块级共享可变状态——只走 match/replace
+// 入口（两者均前置清零），勿用于 .test() 循环或跨异步边界复用。
+const LONE_SURROGATE_RE = /(?:[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff])/g;
+
+// lone surrogate 剥离：单遍 replace 回调计数（不 match+replace 双扫），
+// 返回 [剥后文本, 剥掉几个]。成对的天文字符一个不误伤
+function stripLoneSurrogates(text) {
+  let n = 0;
+  const out = text.replace(LONE_SURROGATE_RE, () => { n++; return ""; });
+  return [out, n];
+}
 // 经典双重编码签名（显式 \u 转义，不靠字面字符——文件编码一动正则就废）：
 //   é(C3A9)→é(C3 A9)  â‚¬(E282AC)→â‚¬  ä¸­(E4B8AD)→ä¸­  ä½ (E4B9A6)→ä½
 const MOJIBAKE_RE = /(?:\u00c3[\u0080-\u00bf]|\u00c2[\u0080-\u00bf]|\u00e2\u20ac[\u2013\u2014\u201c\u201d\u2022\u2026\u0152\u0153]|\u00e5[\u0080-\u00bf]|\u00e6[\u0080-\u00bf]|\u00e8[\u0080-\u00bf])/g;
@@ -77,8 +94,8 @@ export function assessCleaned(chunks, report = null) {
   }
   let totalChars = 0, bad = 0;
   for (const c of chunks) {
-    const g = detectGarbled(c.text);
-    totalChars += String(c.text ?? "").length;
+    const g = detectGarbled(String(c?.text ?? ""));
+    totalChars += String(c?.text ?? "").length;
     bad += g.bad;
   }
   if (totalChars < STRUCT_MIN_CHARS) {
@@ -91,8 +108,8 @@ export function assessCleaned(chunks, report = null) {
   return { ok: true, report: { totalChars, garbledRatio: Number(garbled.toFixed(4)), dropped: report?.droppedGarbage || 0 } };
 }
 
-// 清洗通道：坏数据（空块/纯符号块/乱码 majority 块）丢、乱码符号（控制符/PUA/替换符）
-// 清、经典双重编码修。干净文本逐字节原样返回——report 全零即零变化。
+// 清洗通道：坏数据（空块/纯符号块/乱码 majority 块）丢、乱码符号（控制符/PUA/替换符/
+// 孤立代理对）清、经典双重编码修。干净文本逐字节原样返回——report 全零即零变化。
 export function structurizeChunks(chunks) {
   const report = {
     total: chunks.length,
@@ -102,6 +119,7 @@ export function structurizeChunks(chunks) {
     strippedControls: 0,
     strippedPua: 0,
     strippedFffd: 0,
+    strippedSurrogates: 0, // 孤立代理对（剥晚了会被 sqlite 绑定变 FFFD 入库）
     kept: 0,
   };
   const out = [];
@@ -109,12 +127,28 @@ export function structurizeChunks(chunks) {
     const raw = String(c?.text ?? "");
     if (!raw.trim()) { report.droppedEmpty++; continue; }
     let text = raw;
-    let g = detectGarbled(raw);
+    // lone surrogate 前置剥离：赶在修乱码/清符号之前——绑定前剥掉才轮不到
+    // sqlite 把它静默变成 U+FFFD（P2-02）。剥完只剩空白的按空块丢
+    let surN = 0;
+    [text, surN] = stripLoneSurrogates(text);
+    if (surN) {
+      report.strippedSurrogates += surN;
+      if (!text.trim()) { report.droppedEmpty++; continue; }
+    }
+    let g = detectGarbled(text);
     // 先修乱码再评垃圾：双重编码的字节里含 C1 控制符（\u0080-\u009f），
     // 先评会把「可修」误判成「垃圾」；修完重算体检，修不动的才按垃圾丢
     if (g.mojibake >= MOJIBAKE_MIN_HINTS) {
       const fix = repairMojibake(text);
-      if (fix.repaired) { text = fix.text; g = detectGarbled(text); report.repairedMojibake++; }
+      if (fix.repaired) {
+        text = fix.text; g = detectGarbled(text); report.repairedMojibake++;
+        // 出口复检（纵深防御）：修复产物按说不该再产 lone surrogate——
+        // 严格 UTF-8 解码产的是 U+FFFD，会被回读闸门拦下；但「绑定前无
+        // 孤立代理对」这条不变量不赌解码器实现，谁产的在这里统一剥掉
+        let surFix = 0;
+        [text, surFix] = stripLoneSurrogates(text);
+        if (surFix) report.strippedSurrogates += surFix;
+      }
     }
     if (g.ratio > CHUNK_GARBLED_MAX) { report.droppedGarbage++; continue; }
     text = text.replace(CONTROL_RE, "");
@@ -136,5 +170,5 @@ export function structurizeChunks(chunks) {
 export function structChanged(report) {
   if (!report) return false;
   return report.droppedEmpty + report.droppedGarbage + report.repairedMojibake
-    + report.strippedControls + report.strippedPua + report.strippedFffd > 0;
+    + report.strippedControls + report.strippedPua + report.strippedFffd + report.strippedSurrogates > 0;
 }

@@ -156,8 +156,8 @@ export async function startProcessing(bookId) {
   }
   // 结构化改造账（P2）：真洗了东西横幅说一声，干净的书零刷屏（存量行为零变化）
   const st = r.struct;
-  if (st && (st.droppedEmpty || st.droppedGarbage || st.repairedMojibake || st.strippedControls || st.strippedPua || st.strippedFffd)) {
-    emit(id, { stage: "slice", detail: `结构化改造：去空块 ${st.droppedEmpty} · 去垃圾块 ${st.droppedGarbage} · 修乱码块 ${st.repairedMojibake} · 清符号 ${st.strippedControls + st.strippedPua + st.strippedFffd} 处` });
+  if (st && (st.droppedEmpty || st.droppedGarbage || st.repairedMojibake || st.strippedControls || st.strippedPua || st.strippedFffd || st.strippedSurrogates)) {
+    emit(id, { stage: "slice", detail: `结构化改造：去空块 ${st.droppedEmpty} · 去垃圾块 ${st.droppedGarbage} · 修乱码块 ${st.repairedMojibake} · 清符号 ${st.strippedControls + st.strippedPua + st.strippedFffd + st.strippedSurrogates} 处` });
   }
   if (cancelled.has(id)) return cancelResult(id);
 

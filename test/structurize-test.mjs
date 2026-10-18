@@ -229,7 +229,7 @@ console.log("===== 7) 干净语料零变化：STRUCT=1 与 =0 两次建库逐字
   const off = read(path.join(TMP, "struct-clean-0.db"));
   assert(JSON.stringify(on.rows) === JSON.stringify(off.rows),
     `干净语料块文本逐字节一致（开 ${on.rows.length} 块 / 关 ${off.rows.length} 块）`);
-  assert(JSON.stringify(JSON.parse(on.meta.struct_report || "{}")) === JSON.stringify({ total: off.rows.length, droppedEmpty: 0, droppedGarbage: 0, repairedMojibake: 0, strippedControls: 0, strippedPua: 0, strippedFffd: 0, kept: off.rows.length }),
+  assert(JSON.stringify(JSON.parse(on.meta.struct_report || "{}")) === JSON.stringify({ total: off.rows.length, droppedEmpty: 0, droppedGarbage: 0, repairedMojibake: 0, strippedControls: 0, strippedPua: 0, strippedFffd: 0, strippedSurrogates: 0, kept: off.rows.length }),
     "干净语料 struct_report 全零（铁律：零变化可审计）");
 }
 

@@ -499,8 +499,8 @@ async function main(argv = process.argv.slice(2), opts = {}) {
       return;
     }
     const r = st.report;
-    if (r.droppedEmpty || r.droppedGarbage || r.repairedMojibake || r.strippedControls || r.strippedPua || r.strippedFffd) {
-      console.log(`  结构化改造: 去空块 ${r.droppedEmpty} · 去垃圾块 ${r.droppedGarbage} · 修乱码块 ${r.repairedMojibake} · 清控制符 ${r.strippedControls} / 私用区 ${r.strippedPua} / 替换符 ${r.strippedFffd} 处`);
+    if (r.droppedEmpty || r.droppedGarbage || r.repairedMojibake || r.strippedControls || r.strippedPua || r.strippedFffd || r.strippedSurrogates) {
+      console.log(`  结构化改造: 去空块 ${r.droppedEmpty} · 去垃圾块 ${r.droppedGarbage} · 修乱码块 ${r.repairedMojibake} · 清控制符 ${r.strippedControls} / 私用区 ${r.strippedPua} / 替换符 ${r.strippedFffd} / 孤立代理对 ${r.strippedSurrogates} 处`);
     }
   }
   opts.onStage?.("slice");
