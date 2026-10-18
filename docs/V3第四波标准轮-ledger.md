@@ -384,3 +384,165 @@ S3 完成判据（上段 F1~F4 + 检查点）：P2 轨四组缺陷全清、每�
 - **阅读场景的容错，就是删除场景的误删**：`resolveAsset` 有跨扩展兜底（`foo.pdf` 的库会兜到 `books/foo.docx`）——**打开书时这是好心，删书时这就是偷隔壁的原件**（FAIL-4，实测复现：`purge("foo.pdf")` 把 `foo.docx` 那本的原件删了）。修法是在删除路径上加归属校验：只认同扩展，或 `jobs.mjs EXT_FMT` 的 txt→docx 映射；无扩展的旧库 id 才允许任意扩展。**同一个函数在不同语义下风险等级不同，删除前必须重新问一遍。**
 - **「拒绝」也是一条要测的路径**：E5b/E5c 锁的不是「能删掉」，而是「拒绝时零副作用」——带空白的书名要报人话、隔壁书一格不动、自己那本也没动。删除类功能里，「什么都没做」比「做对了」更需要证明。
 
+
+---
+
+## P4 洗数据闸门（2026-10-18）
+
+**背景**：P3 将改切片规则。源文件不变时 `content_hash` 相同，旧洗数据产物会按 idx 硬套新块、
+静默串味（条目对得上号、内容全错位）。P4 在 P3 之前补四道保险，外加两道质量闸门。
+顺序：P5 → P4 → P3（P4 是 P3 重建的保险，必须先于 P3）。
+
+### 四项拍板（开工前）
+
+| # | 问题 | 拍板 |
+|---|---|---|
+| 1 | 指纹覆盖范围 | 对**全部块**算（`[idx, text.length, sha1(text).slice(0,8)]` → sha256 截 16 位）——短块也算，任何结构变动都算「重新加工过」 |
+| 2 | 闸门强度 | **双档**：硬线拦（block，拒收）+ 黄线标记（warn，入库+meta 落账） |
+| 3 | 老产物兼容 | 无 `chunk_fp` → 退化为 `chunk_count` 比对；都不写 → 放行（外部智能体通道同族纪律，W2-2 先例） |
+| 4 | 脏库阈值 | **5%** 合格块带乱码/控制符即拒洗（DIRTY），逃生开关 `BSP_ENRICH_DIRTY=0` |
+
+### 改动清单
+
+- `src/lib/enrich.mjs`：
+  - 新增 `chunkFingerprint(chunks)`（纯函数，idx/id 两形状同值，空数组/非数组有确定值不抛）；
+  - `buildEnrichTasks` 返回值加 `book.chunk_fp`、`book.eligible`（三处流转：任务书/产物/缓存 meta）；
+  - `buildEnrichTaskFile` 的 book 块带 `chunk_fp/eligible`——外部智能体通道也能把指纹带回来（堵「P3 重建后块数巧合不变、chunk_count 兜底漏判」）；
+  - `loadEnrichCache(jsonlPath, contentHash, chunkFp)` 第三参——meta 行带 `chunk_fp` 且不符 → `stale:true, staleReason:"STRUCT"`（hash 不符优先报 HASH）；**A7 修复后：调用方传了 chunkFp 而 meta 无 `chunk_fp`（P4 之前格式/meta 行整个缺失）→ 同样 stale STRUCT（「无指纹」不等于「没变过」，旧条目按 idx 硬套新块即静默串味）；两参旧调用不传 chunkFp 故不判结构（compactEnrichArtifact 重读路径，兼容不变）**；STALE 消息按 `cache.fp==null` 分叉（旧格式说人话，不渲染 `null → fp`）；
+  - `compactEnrichArtifact` 写 `book.chunk_fp/eligible`（老调用方不传写 null，入库侧按「无指纹」兜底）；
+  - `runEnrich` 前门体检：`buildEnrichTasks` 之后、**任何云端调用之前**，合格块逐块 `detectGarbled(text).bad>0`，`dirtyRatio>0.05` → `{ok:false, code:"DIRTY", message}`（连缓存文件都不建）；STALE 消息按 `staleReason` 分叉（HASH=书被重建过 / STRUCT=书被重新加工过）；
+  - 新增纯函数 `evaluateEnrichGate({eligible,covered,tagsDropped,tagsKept,chapterCount,chapterTotal})` → `{verdict,coverage,dropRate,summaryGap,reasons}`；阈值 env 可覆盖（`BSP_GATE_COVERAGE_WARN/HARD` 0.95/0.60、`BSP_GATE_DROP_WARN/HARD` 0.10/0.50、`BSP_GATE_SUMMARY_WARN/HARD` 0.20/0.50）；覆盖率按**合格块**算（论语 9/16 按总块数算只有 56% 会被误杀）；章摘要缺口仅 `chapterTotal>0` 时判（未开摘要/全失败不冤枉）；0 合格块不误杀。
+- `src/lib/enrich-import.mjs`：判定顺序 content_hash→STALE → `chunk_fp` 不符→STALE_STRUCT（老产物退化为 chunk_count）→ `evaluateEnrichGate`（**在 ensureEnrichSchema 与事务之前**，block 一个字符都不写）→ warn/pass 写 `meta.enrich_gate=JSON.stringify({verdict,coverage,dropRate,at})`；成功返回值带 `gate`。
+- `src/desktop/enrich-job.mjs`：`r.code==="DIRTY"` → failed 标签「洗数据被拒（书太脏）」；`imp.code==="GATE"` → failed 标签「入库被拦（质量闸门）」；warn → done detail 追加「闸门标记：覆盖 N%（部分覆盖）」+ gate 随终态出海。
+- `src/desktop/engine.mjs`：`enrichSummary` 读 `meta.enrich_gate` → `enrichGate`（内层 try 兜底：meta 表缺失/值坏不打翻整份摘要）。
+- `src/renderer/views.js` + `app.css`：warn 徽标文案「洗数据·部分覆盖」（.tag.enr.warn 琥珀色）。
+
+### 测试
+
+| 套件 | 结果 |
+|---|---|
+| `enrich-fuzz`（+9b 指纹节） | 75→**81 PASS / 0 FAIL**（指纹稳定性/换字即变/顺序敏感/idx 进指纹/idx·id 同值/空值不抛；缓存 STRUCT/HASH/兼容三判；任务书带 chunk_fp/eligible；**A7：r4b 旧格式缓存拒收+零调用+缓存字节不变、§9b c5/c6 无 fp 单测、r4c 孤儿清理路径保留**） |
+| `enrich-import-test`（+§10 十条） | 58→**93 PASS / 0 FAIL**（STALE_STRUCT 两路、老产物兼容、GATE block/warn/pass、env 覆盖、纯函数 14 条边界、指纹与 eligible 直判） |
+| `enrich-job-test`（+§9 三块） | 30→**47 PASS / 0 FAIL**（warn 进 done detail + 书架 enrichGate=warn、block 落 failed 标签人话 + DB 零印记、DIRTY 标签 + 零请求 + 连 ctx 列都没建） |
+| `enrich-adversarial-fuzz`（+W6 五块） | 32→**52 PASS / 0 FAIL / 0 OBSERVE**（DIRTY 零请求连缓存都不建、控制符型脏块、逃生开关、1/20=5% 压线放行 vs 2/20=10% 拦、GATE 拦后缓存保勾+全量再入库零重复调用；**A7：W6-6 旧格式缓存+同 hash 重加工全链路拒收 + meta 缺失同族**） |
+| `guard-test` §12 ⑧ | 103→**114 项**（指纹存在+任务书出海/缓存 STRUCT/闸门在 schema 与事务之前的源码顺序/STALE_STRUCT 码+落账点/前门体检三件套+体检在批次组织之前/GATE·DIRTY 分流/engine 读 enrich_gate/warn 徽标样式；**A7：b2 fpStale 含 out.fp==null + b3 旧格式消息分叉**） |
+
+**既有测试契约变化（新设计有意取代，均已改断言锁新语义）**：
+- enrich-fuzz「孤儿条目」场景：同 hash 但块数 8→6 → 旧行为「静默清孤儿后继续」，新契约 **STALE_STRUCT 拒续跑**（清掉的条目若其实对应还在的块，就是无声的数据丢失）；另补「旧版缓存（meta 无 chunk_fp）→ 孤儿清理照旧」锁兼容路径。
+- enrich-import-test「增量补导入」：2/6=33% 覆盖率 → 旧行为放行，新契约 **GATE 硬线拒收**（拍板口径 30% 都拦）；真实续跑口径改为「重跑跑批走缓存补齐 → 全量产物入库 → pass」，两路都锁。
+
+### 验收
+
+- **脏库阈值实测（17 本真库只读扫）**：16 本零乱码块，最高 `system-design-primer-en.md.db` **0.08%**（1/1188）——5% 阈值离真实分布 60 倍安全边际，不误伤任何真书。成本实测：d2l（5506 块/5333 合格/1.8M 字符）体检 **19ms**（纯正则、e5 不加载），比规划估的 <1s 好两个量级。
+- **三份真产物回放（只读）**：awesome-fenix / lunyu-xueer / mapreduce 全部 **verdict=pass**（覆盖率 100%、dropRate 0%、summaryGap ≤14.85% 低于黄线）；结构判据全部 COUNT-MATCH（老产物无 fp 走 chunk_count 兜底）、content_hash 全 MATCH。
+- 六门（终态，A7 修复后的最终字节）：`test:fast` 31 套 **EXIT=0**（1m34s，1448+ PASS / 0 FAIL；受影响五套件实数——enrich-fuzz **81 / 0**、enrich-import-test **93 / 0**、enrich-job-test **47 / 0**、enrich-adversarial-fuzz **52 / 0 / 0**、guard **114 项** 含 §17 索引对账 57 发）；`test:ci` 17 套 **EXIT=0**（55s，entry-adversarial 98/0/2/1）；`test:slow` 10 套 **EXIT=0**，eval-gate **86/92 = 93 ≥ 基线 93，漏题 6 条不变**（P4 不碰检索）；eslint **EXIT=0**（真退出码）。
+- 变异测试 M1~M12 + 自选追加：见「专家团报告」小节（陆回测，**已收官：16 变异 15 红 1 等价，结论 PASS**）。
+- 对抗审查 A1~A10：见「专家团报告」小节（毛求疵，**已收官：PASS 无阻断级，A7 唯一真实缺口已修复闭环**）。
+
+### 专家团报告（P4）
+
+**陆回测·变异测试（16 变异，15 红 / 1 等价，结论 PASS）**。方法：备份→改→跑五套件→守卫式还原（还原前活文件 md5 必须正是变异版，否则 ABORT——16 次全部 RESTORE-OK，零覆盖队友保存）；收尾逐一 diff 四份 src 与金快照字节级一致、git status 与开工相同、五套件复跑全绿。
+
+| # | 变异（文件:行 → 改动） | 结果 | 变红的测试 | 判定 |
+|---|---|---|---|---|
+| M1 | enrich.mjs:49 指纹序列去掉 `text.length` | **全绿** | 无 | **等价变异**（见缺口①） |
+| M2 | enrich.mjs:134 `chunkFingerprint(chunks)`→`chunkFingerprint(eligible)` | 红 | import-test §10-9「短块…改变指纹」 | 符合预期 |
+| M3 | enrich-import.mjs:93 fp 比对分支 `if (false && ...)` | 红 | import-test §10-2 指纹拒收 | 符合预期 |
+| M4 | enrich-import.mjs:99 chunk_count 兜底分支 `if (false && ...)` | 红 | import-test §10-1 两断言（拒收+schema 未建） | 符合预期 |
+| M5 | enrich-import.mjs:121 `eligible: task.chunks.length`→`task.book.chunk_count`（分母） | 红+测试进程崩溃 | import-test §3 学而 9/16=56% 被误杀 | 符合预期，论语误杀场景锁死 |
+| M6 | enrich.mjs:70-71 coverageWarn/Hard 默认 0.95/0.60 对调 | 红+崩溃 | import-test §6「缺号 4/6 覆盖」（66.7% 被硬线拦） | 符合预期 |
+| M7 | enrich.mjs:392 DIRTY 前门条件 `if (false && ...)` | 红 | job-test 5 条（§9-3 全挂）+ adversarial 6 条 | 符合预期 |
+| M8 | enrich-import.mjs:172 meta.enrich_gate 写入整句包进 `if (false)` | 红 | import-test §6 印记断言 + job-test §9-1（含书架 enrichGate=warn） | 符合预期 |
+| M9 | enrich-job.mjs:142 GATE 标签恒「入库失败」 | 红 | job-test §9-2 标签断言 + **guard §12-f 静态断言**（额外抓到） | 符合预期 |
+| M10 | engine.mjs:69 `gateRaw` 恒 null | 红 | job-test §9-1 书架断言 + guard §12-f 静态断言 | 符合预期 |
+| M11 | enrich.mjs:330 `fpStale` 恒 false | 红 | enrich-fuzz §5 r4 + 9b「chunk_fp 不符 → STRUCT」 | 符合预期 |
+| M12 | enrich-import.mjs:120-132 闸门整块挪到 `ensureEnrichSchema(db);` 之后 | 红 | **guard §12-c 顺序断言** + import-test §10-4 + job-test §9-2 + adversarial W6-5，四套件全红 | 符合预期，顺序断言有效 |
+| X1 | enrich.mjs:396 DIRTY 阈值 `>`→`>=` | 红 | adversarial W6-4「1/20=5% 恰好压线 → 放行」 | 压线边界锁死 |
+| X2 | enrich.mjs:62-67 `gateNum` 恒返回默认（env 失效） | 红 | import-test §10-7 + job-test 10 条（§9-1/9-2 全挂） | env 覆盖路径锁死 |
+| X3 | enrich.mjs:101 judge 硬线 `>`→`>=` | 红 | import-test §10-8 压线两断言（覆盖率 60%、丢弃率 50%） | 硬线压线锁死 |
+| X4 | enrich-import.mjs:100 兜底条件 `!==`→`===`（取反） | 红 | import-test §2 首条（该放的被拒）+ adversarial | 兼容路径双向锁死 |
+
+变异覆盖地图：边界压线（X1/X3）、env 覆盖（X2）、老产物兼容（X4/M4）、DIRTY 前门（M7）、GATE 双档与位置（M12）、桌面可见性（M9/M10）、缓存结构判据（M11）、论语误杀（M5）均有实测佐证。
+
+**陆回测覆盖缺口清单**：
+- ①**M1 等价变异（低风险观察项）**：源码注释声称指纹对「编号/长度/内容」三维敏感，测试只独立钉了编号与内容两维；`text.length` 与 `sha1(text)` 信息冗余，任何内容变化必变 sha1，去掉长度语义上不可观测。「同 sha1 不同长度」实际无法构造，等于建议保留现状——登记不改。
+- ②**测试健壮性（登记不修）**：import-test §3/§6 与 adversarial W6-5 在 importEnrich 返回非 ok 时直接访问 `r.stats.imported`，M5/M6/M8/X4 实测抛 TypeError 令测试进程崩溃（FAIL 行已打印、结论不丢）。正常流程必 ok 所以不炸；未来若新增合法拒收码，测试会崩而非干净 FAIL。建议后续给这几处加 `r.stats?.` 保护——按铁律只登记不动手。
+- ③**guard 静态断言超额命中**（加分项）：M9/M10 除行为测试外还被 guard §12-f 静态断言抓到（源码字符串消失即红），双重覆盖。
+
+**第二轮全量重跑（A7 修复后，团队解散后单独恢复执行，17 变异：16 击杀 / 1 等价存活，PASS）**。变异锚点按新树重新定位（M1-M12 落 enrich.mjs、X1-X4 落 enrich-import.mjs），另按团队指定加 M1-R（A7 判据改回旧判据）与 M11（fpStale 恒 false）。**关键对照**：M11 红集 = {fuzz r4/r4b/§9b c5、guard b2、adv W6-6×3}（连「有指纹但不符」也放过）；M1-R 红集 = {fuzz r4b/§9b c5、guard b2、adv W6-6×3}（只放过「无指纹」盲区）——红集差异精确刻画 A7 判据的语义边界，新契约（r4b 三断言、§9b c5/c6、W6-6、guard b2/b3）全部焊死。唯一存活 M1 为等价变异（指纹删 `\n` 分隔符——逐块 JSON 括号唯一可切分，不改变任何相等/不等关系；与第一轮删 `text.length` 同属 sha1 已覆盖的冗余维）。收尾核验：四生产文件 md5 与开工基线逐字节一致、git status 13 改 + 1 未跟踪、五套件终态复跑全绿、17/17 还原 RESTORED OK 零 ABORT、全程零 git checkout/restore/stash/reset、library/ 与个人文件未碰。
+
+**毛求疵·对抗审查 A1~A10（11 个自写探针，结论 PASS，无阻断级）**。方法：只读代码 + 探针（books/_work/，跑完已删；临时库全在 os.tmpdir()；library/ 17 本真库零写——find 验证 mtime 无变化；三份真产物回放入临时副本）；全部结论已用 20:18 后的当前代码重跑复核。
+
+| # | 对抗面 | 判定 | 严重度 |
+|---|--------|------|--------|
+| A1 | 结构判据绕过（产物缺三字段） | 可容忍缺口（与 W2-2 同族：三道结构判据全是信任输入，缺任一即跳过；idx 对齐验真仍兜底；**修正：buildEnrichTaskFile 已带 chunk_fp/eligible，实际暴露面比报告初稿更小**） | 中 |
+| A2 | fp 伪造（手改产物 fp=库 fp + 旧结构 entries） | 已防住意外/可容忍手改（16hex=64bit，偶然碰撞需 ~2^32；信任输入与 content_hash 同族，防意外不防恶意） | 低 |
+| A3 | DIRTY 判据（短脏块/计时/env 七值） | 已防住（假阴为设计内：脏短块不喂云端；d2l 5506 块体检 12~19ms 纯正则；仅精确 "0" 放行，fail-safe） | 低 |
+| A4 | 闸门假阳（0 条目/重跑补齐/全短块书） | 已防住（0 条目→block 但缓存不毒化；重跑只补失败批→pass；eligible=0 不误杀） | 无 |
+| A5 | 老库兼容（17 本只读 audit + 三产物回放 + MCP 静态） | 已防住（17 本全过；回放 9/9、70/70、1171/1171 全 pass） | 无 |
+| A6 | 闸门 env 覆盖（13 种垃圾值） | 已防住（回落默认或可用，无静默错误；"0" 更严但只降黄线不降硬线） | 无 |
+| A7 | runEnrich 缓存路径（老缓存+同 hash 重加工） | **漏洞→已修复闭环**（见下） | 中 |
+| A8 | 桌面侧（8 种坏 gate 值/徽标 7 值/端到端四场景） | 已防住（+3 项 OBSERVE） | 低 |
+| A9 | 事务边界（delete-journal + WAL 双模式快照 + PRAGMA） | 已防住（block 时主库 sha 不变、无新文件残留、ctx 列未加——一个字符都不写坐实） | 无 |
+| A10 | 顺序盲区（章摘要 0/3 vs 1/3 vs 未开 vs 孤儿章） | 可容忍缺口（0/3 全失败→pass 而 1/3→block，非单调；未开与全失败不区分——登记） | 低-中 |
+
+**A7 缓存盲区（唯一真实缺口，已修复）**：P4 前格式缓存（meta 无 `chunk_fp`）+ 同 `content_hash` 重加工 → runEnrich 不拒（旧判据要求 `out.fp != null`）→ 旧结构条目按 idx 硬套新块 → 压出的产物带**新鲜** fp → 入库侧结构判据形同虚设 → 旧 prefix/summary 串味入库（实证：库内 ctx="旧结构第 1 块前置"）。**修复**（2026-10-18 20:35-20:38 落地）：`loadEnrichCache` 的 `fpStale` 改 `!!chunkFp && (out.fp == null || out.fp !== chunkFp)`——调用方传了 chunkFp 而 meta 无指纹（含 meta 行整个缺失，此时 hashStale 也短路、fpStale 是唯一结构后门）→ 一律 stale STRUCT；两参旧调用（compactEnrichArtifact 重读）行为不变；STALE 消息按 `cache.fp==null` 分叉说人话。**测试**：enrich-fuzz r4b 改锁新契约（拒收+零调用+缓存字节不变）+ §9b c5/c6 单测 + r4c 保孤儿清理覆盖；adversarial W6-6 端到端（拒收+零请求+缓存产物零改+meta 缺失同族）；guard b2/b3 静态断言。**复测（毛求疵，团队解散后单独恢复执行，对当前字节实跑：62 PASS / 0 FAIL / 2 OBSERVE）**：V1-V4 四场景全绿（V1 旧格式缓存+同 hash 重加工 → STALE+「旧格式」消息分叉+零调用+缓存产物字节不变；V2 meta 行整个缺失 → 同拒，fpStale 是唯一结构后门；V3 两参兼容不变、压缩只做瘦身；V4 fp 相符零误伤、断点续跑照常）；7 探针面全量重跑（A1 判据面 14 个攻击向量含 fp 类型伪装四形态/垃圾行/双 meta/孤儿条目全堵；A2/A3/A4/A6 复核通过；A8-2 桌面侧四场景端到端复现同一契约、DB 零印记）；A5/A9/A10 依据「enrich-import.mjs 本轮未动、字节与金快照一致」且有 A2-4 交叉验过入库侧作补偿观测而略过。**结论：A7 改判「已修复」，许可给出。**
+
+**毛求疵 OBSERVE 清单**（A7 外 6 项全部登记不修，见下「登记不修」）：内部通道丢弃率闸门盲区 / warn 真因不可见 / 桌面 PARTIAL 路由事实 / A1 同族信任输入 / 短脏块假阴 / 「已洗 0%」显示副产物。复测轮新增 2 项（均为本地文件信任模型内的契约边界，非缺陷非回归）：**双 meta 行**（一条有 fp 相符 + 一条无 fp → out.fp 取有指纹者、不拒；多 meta 非正常写入路径，只可能来自手工篡改/历史遗留）；**伪造 fp=当前书 fp**（缓存实为旧结构条目 → 放行零调用出产物，产物带当前 fp 使入库侧 artFp 比对失去意义——与 import 侧同一威胁模型：防无意重加工、不防恶意手改本地文件，与 A2 结论互证）。
+
+### 登记不修（本波次）
+
+- **产物既无 `chunk_fp` 又无 `chunk_count`** → 结构判据整体缺失（外部智能体通道可能产这种形状）。与 W2-2「artifact 缺 content_hash 三条件放行」同族：idx 对齐验真仍兜底，登记不改语义。
+- **「章摘要全失败」与「未开摘要」被同等放过**（`chapter_summaries` 为空都不判缺口）：失败数在 `stats.summariesFailed` 机器可验，闸门不重复判——防「失败一次就永远 block」比「惩罚失败」重要。
+- **DIRTY 只数合格块**：<40 字符的脏短块不计入——短块无检索价值，进不了提示词。
+- **测试健壮性（陆回测缺口②）**：import-test §3/§6 与 adversarial W6-5 在 importEnrich 返回非 ok 时直接访问 `r.stats.imported`，变异实测抛 TypeError 令测试进程崩溃（FAIL 行照打、结论不丢）。未来新增合法拒收码时测试会崩而非干净 FAIL，建议加 `r.stats?.` 保护——本轮不动手（变异窗口内改测试会污染基线）。
+- **指纹长度维无独立测试背书（陆回测缺口①）**：`text.length` 与 `sha1(text)` 信息冗余，「同 sha1 不同长度」不可构造——保留现状，只登记。
+- **内部通道丢弃率闸门盲区（毛求疵 OBSERVE-2，中）**：enrichBatch 写缓存前已过滤 tags → 入库再验无非丢标签 → 内部通道 dropRate 恒 0（实证：模型标签 100% 不可回源时桌面显示 done「标签 0」、闸门 pass；`stats.tagsDropped` 有记录但闸门不读 artifact.stats）。外部产物通道有效（50%→warn 实证）。数据完整性无亏——存活的标签 100% 回源、用户在 done 统计里看得到「标签 0」；这是监测缺口不是串味缺口。建议后续闸门补读 `artifact.stats.tagsDropped`（取 max）——改闸门语义需配套变异覆盖，留专门轮次。
+- **warn 真因不可见（毛求疵 OBSERVE-3，低）**：done detail 与徽标只报覆盖率，`gate.reasons`（丢弃率/章摘要缺口）UI 不展示。
+- **桌面路由事实（毛求疵 OBSERVE-4，低，知悉即可）**：runEnrich PARTIAL 即短路「洗数据失败」，导入从不发生 → 覆盖率闸门实际由 CLI/外部产物通道把守；桌面 GATE block 只经章摘要缺口可达。
+- **A1 同族信任输入（毛求疵 OBSERVE-5，低）**：三道结构判据（content_hash/chunk_fp/chunk_count）均为信任输入——防意外不防恶意，手改产物=用户自伤；建议在洗数据文档明记。
+- **「已洗 0%」显示副产物（毛求疵 OBSERVE-7，低）**：全短块书（eligible=0）入库后徽标显示「已洗 0% · 标签 0」——coverage 定义 1 不误杀是对的，显示层可后续美化。
+
+### 教训
+
+- **「覆盖率」的分母能杀人**：按总块数算，论语 9/16=56% 会被硬线误杀；按合格块算才是 100%。任何比率型闸门，先问「分母是什么、谁会落在分母里」。
+- **压线值必须成对测**：60%/50%/95%/10% 每个阈值都测「压线不过」与「越线一分」两侧——本次第一版测试自己就把 50% 丢弃率写成 block（正确是 warn）、章摘要缺口 60% 写成 warn（正确是 block），全是边界想反。
+- **env 覆盖不是装饰**：`BSP_GATE_COVERAGE_HARD=1.5` 让全量产物也被拦——回归对比时不想改代码就能调档；但 env 名进入生产后就成了契约，测试必须锁「设了生效、删了复原」。
+- **真库实测先于阈值拍板**：5% 不是拍脑袋——17 本扫完最高 0.08% 才敢定。闸门阈值没有真实分布数据就是赌博。
+- **fail-open 面要逐个摸**：`evaluateEnrichGate(null)` 会抛（lib 铁律：不许抛）——默认参数只兜 undefined 不兜 null，自写探针才逮到。
+- **顺序断言要防「定义误命中」**：`indexOf("ensureEnrichSchema(db)")` 命中的是函数定义（第 20 行）而不是调用点，断言假红；改成带分号的调用点正则才锁住「闸门在 schema 之前」。
+- **变异实验照旧是覆盖率唯一实测**：本轮 M1~M12 见专家团报告。
+- **「无指纹」不等于「没变过」**：A7 盲区的根源是旧判据把「缓存没有指纹」当作「无需判结构」——兼容思维用错了地方。信任输入缺字段时，安全方向是「不可判即拒收」，不是「不可判即放过」；放过的代价是静默串味，拒收的成本只是重跑一次（缓存是优化，正确性是底线）。
+- **多人并发编辑工作树要有窗口纪律**：本轮两次竞态（陆回测变异还原盖编辑、毛求疵探针撞上编辑中间态）都靠「金快照 + 冻结窗口 + 守卫式还原」化解——凡有队友在跑变异/探针，主对话只做只读与 docs；窗口开关必须团队内明示。
+
+### 当前状态与后续窗口（2026-10-18 21:40 更新）
+
+- **代码态**：A7 修复 + 全部测试改动已落盘；主对话的 src/test 保存已全部完成。git status = **14 个已修改 + 1 个未跟踪**（`books/新建 文本文档.txt`，用户个人文件）——3 docs + 6 src + 5 test，即 P4 全集（此前口播的「13」为计数口误，以 14 为准）。
+- **字节态注意**：陆回测变异循环的还原工具把 `src/lib/enrich.mjs`、`src/lib/enrich-import.mjs`、`test/enrich-adversarial-fuzz.mjs` 写成了 CRLF（内容经 `git diff` 验证与预期一致）。**终态决定：不做行尾归一化**——本仓库 `core.autocrlf=true`，CRLF 是 checkout 原生态，提交时 git 自动归一化为 LF（`git diff` 实测只有预期内容差异），归一化对仓库是 no-op 却有改写风险与 golden-src 失配成本。毛求疵已把 golden-src/enrich.mjs 刷新为当前字节（md5 3c506c4a，四份快照与磁盘全 MATCH）。
+- **窗口执行情况（全部收官）**：① 陆回测 17 变异全量重跑 **PASS**（16 击杀 / 1 等价存活，M11/M1-R 红集精确符合新契约，收尾四文件 md5 与开工基线一致、五套件全绿）→ ② 毛求疵 V1-V4 + 7 探针面复测 **PASS**（62 PASS / 0 FAIL / 2 OBSERVE，A7 改判「已修复」许可给出；金快照已刷新）→ ③ 六门全量 **全绿**（fast 1m34s / ci 55s / slow eval-gate 93≥93 漏题 6 不变 / guard 114 / eslint 0，见「验收」节终态）→ ④ ledger 六门终值已补 → ⑤ 三组 commit + push（见下）。
+- **commit 分组预案**：`feat(P4)` 生产六文件（enrich.mjs/enrich-import.mjs/enrich-job.mjs/engine.mjs/views.js/app.css）/ `test(P4)` 测试五文件（enrich-fuzz/enrich-import-test/enrich-job-test/enrich-adversarial-fuzz/guard-test）/ `docs(P4)` 文档三文件（ledger/规划/勾选单）。
+
+---
+
+## P3 切片 v4（2026-10-18 立项，P4 入账后开工）
+
+**背景**：P4 四道保险已就位（块结构指纹/双档闸门/前门体检/桌面可见性），P3 可以安全改切片规则。
+顺序仍是 P5 → P4 → P3；P3 是渐进重建前最后一块拼图。
+
+### 三项拍板（开工前）
+
+| # | 问题 | 拍板 |
+|---|---|---|
+| 1 | 表格整表成块 | 新增 `splitTableRows`：连续 `fromTable` 行合成一个块（表格是结构化单元，逐行进块=行与上下文混溶、表头与数据行分离）；整表超过长度上限时按行组切（表头+数据行一组） |
+| 2 | 章节层级 | 新增 `chapter_path` 字段（如「第3章 › 3.2 节」）：DB 加列惰性迁移；编目/检索/展示层渐进采用，存量库 NULL 不报错 |
+| 3 | 邻块扩展 | `BSP_NEIGHBOR` 默认关（0）：开（1）后对 topN 结果按同章 id±k 扩展、衰减计分、不重跑复试官（成本可控）；evals 双门验证后才考虑默认开 |
+
+### 执行记录（待填）
+
+- （P3-1 表格整表成块）
+- （P3-2 chapter_path 章节层级）
+- （P3-3 邻块扩展）
+- （P3-4 测试与 guard）
+- （P3-5 全量重建 17 本：影子库 `library-new/` 先行，考卷对照 + eval-gate 双门，净提升才替换）
+
+### 验收（待填）
