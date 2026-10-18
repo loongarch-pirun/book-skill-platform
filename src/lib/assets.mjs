@@ -15,10 +15,23 @@ import { listBooks } from "./search.mjs";
 // 支持的原件扩展（md 仅 CLI 建库场景的容错查找，应用导入不含 md）
 const ASSET_EXTS = [".pdf", ".epub", ".docx", ".txt", ".md"];
 
-// bookId 合法性：非空、不含路径分隔符与 ..——防目录穿越的唯一闸门
+// bookId 合法性：非空、不含路径分隔符/../控制字符——防目录穿越的唯一闸门
 export function safeBookId(bookId) {
   const id = String(bookId ?? "").trim();
   if (!id || id.includes("/") || id.includes("\\") || id.includes("..")) return null;
+  // 控制字符（含 NUL）文件名里不允许——NUL 是实测放行过的那一个（C1/C8）：
+  // 下游 path.join 容错 + existsSync 吞 ERR_INVALID_ARG_VALUE，链路靠吞错降级
+  // 兜底，闸门名不副实。此处拒 C0 + DEL（C1 区 0x80-0x9F 在 Win 文件名中合法）。
+  // eslint-disable-next-line no-control-regex -- 文件名闸门必须显式匹配控制符
+  if (/[\u0000-\u001f\u007f]/.test(id)) return null;
+  // win32 特有面：冒号是 ADS 别名（"a:b.json" 是 base "a" 的隐藏流，静默产
+  // 怪文件却不报错——与 NUL 同型的「靠下游兜底」）；尾点会被系统剥除撞名
+  // （"a." 与 "a" 落同一文件）。只在 win32 拒——macOS/Linux 上冒号/尾点是
+  // 合法文件名字符（如书名「第1章:开始」），不许误伤。
+  if (process.platform === "win32") {
+    if (id.includes(":")) return null;
+    if (id.endsWith(".")) return null;
+  }
   return id;
 }
 

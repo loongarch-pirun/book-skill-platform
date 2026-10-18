@@ -528,6 +528,15 @@ const bspImport = path.join(TMP, "bsp-import");
   const evil = "a" + String.fromCharCode(0) + "b";
   const id = safeBookId(evil);
   ok(id === null, "C8 safeBookId 拒 NUL（修复前放行带 NUL 的 id）", `返回=${JSON.stringify(id)}`);
+  // win32 特有面（毛求疵 F3 OBSERVE-2/3）：冒号是 ADS 别名（"a:b.json" 是
+  // base "a" 的隐藏流，静默产怪文件却不报错=闸门名不副实同型）；尾点被系统
+  // 剥除会撞名（"a." 与 "a" 同文件）。只在 win32 拒——macOS/Linux 上冒号/
+  // 尾点是合法文件名字符（书名「第1章:开始」），不许误伤。
+  const win = process.platform === "win32";
+  const colon = safeBookId("a:b");
+  ok(colon === (win ? null : "a:b"), "C8b win32 拒冒号（ADS 别名）/ 非 win32 放行（书名合法）", `平台=${process.platform} 返回=${JSON.stringify(colon)}`);
+  const dot = safeBookId("a.");
+  ok(dot === (win ? null : "a."), "C8c win32 拒尾点（系统剥点会撞名）/ 非 win32 放行", `返回=${JSON.stringify(dot)}`);
 }
 // C9（绿 C1 行为锁）：startProcessing NUL id 管线不崩——safeBookId 修复前放行，但 resolveAsset
 // 候选路径含 NUL、existsSync 全 false（stat 抛被吞）→ UserError「找不到原件」，无 jobs 残留条目。

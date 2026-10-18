@@ -194,7 +194,10 @@ export async function startProcessing(bookId) {
 
 // ---------- 恢复：导入编目结果（五重校验 + 入库；校验失败整批拒收） ----------
 export async function resumeCatalog(bookId, resultPath) {
-  const id = String(bookId || "");
+  // 入口闸门（C2/C10）：id 用于拼 taskPath/dbPath/默认 rp——不过闸可 `../` 逃逸；
+  // resultPath 是用户「选择文件」直传的结果 JSON（设计如此，非 id 派生，不在闸范围）
+  const id = safeBookId(bookId);
+  if (!id) throw new UserError("书名不合法");
   const { libDir, tasksDir, resultsDir } = jobDirs();
   const taskPath = path.join(tasksDir, `${id}.json`);
   if (!fs.existsSync(taskPath)) throw new UserError(`找不到「${id}」的编目任务书（${taskPath}）——这本书还没走到编目这步`);
@@ -245,7 +248,14 @@ export function scanPending() {
   if (!fs.existsSync(tasksDir)) return [];
   const out = [];
   for (const f of fs.readdirSync(tasksDir).filter((x) => x.endsWith(".json"))) {
-    const bookId = f.replace(/\.json$/, "");
+    // 文件名派生的 id 也要过闸（C2/scanPending）：历史脏文件（含 ../ 等）
+    // 不上横幅——否则任务书路径可指向库外，且后续 resume 流程接手脏 id
+    const bookId = safeBookId(f.replace(/\.json$/, ""));
+    if (!bookId) {
+      // 脏任务书静默跳过会埋排障坑（用户看不到也删不掉）——留一行痕迹
+      console.warn(`  跳过非法任务书文件名: ${f}`);
+      continue;
+    }
     if (fs.existsSync(path.join(resultsDir, f))) continue;       // 结果已在：等用户点导入或已入库
     if (!fs.existsSync(path.join(libDir, `${bookId}.db`))) continue; // 库没了，任务书作废
     out.push(bookId);
@@ -257,7 +267,10 @@ export function scanPending() {
 // ---------- 一键提示词：任务书 → 可直粘给任意 AI 的完整提示词（落盘 + 返回全文） ----------
 // 编目第④步保持半自动设计：提示词不代打 AI，只把「人工整理任务书」变成「复制粘贴」。
 export function catalogPrompt(bookId) {
-  const id = String(bookId || "");
+  // 入口闸门（C2/C11）：taskPath/outPath 都由 id 派生——不过闸可读库外任务书、
+  // 还能把 prompt.md 写到上级目录（逃逸写）
+  const id = safeBookId(bookId);
+  if (!id) throw new UserError("书名不合法");
   const { tasksDir } = jobDirs();
   const taskPath = path.join(tasksDir, `${id}.json`);
   if (!fs.existsSync(taskPath)) throw new UserError(`找不到《${id}》的编目任务书——这本书还没走到编目这步`);
