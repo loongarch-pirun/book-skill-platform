@@ -84,6 +84,73 @@ const promotePlainHeadings = (items) => items.map((it, i) => {
   return it;
 });
 
+// ---------- P3-① 表格整表成块 ----------
+// 表格是结构化单元：逐行进块会被 sentenceSplit 打散混进上下文（表头与数据行
+// 分离、行与正文混溶）。连续 fromTable 行合成一个块；整表超过 TABLE_MAX 时
+// 按行组切——表头（首行）随每组重复，保证每组可独立读懂。
+// 必须在 promotePlainHeadings 之后调用：promote 的「下一段更长才认」不看
+// fromTable，先合并会让原本不触发的标题提升触发（干净书零变化红线）。
+// 返回新数组（不改入参）；无表书 / 单行表逐字零变化。
+const TABLE_MAX = 900;   // 与 sentenceSplit 的 900 字上限同标尺
+
+// 把一组表格行装箱成块：每组 ≤ TABLE_MAX（单行超长保持原子——行是不可分单元，
+// 永不跨行切）；表头只在非首组重复（首组自带）。
+function packTable(rows) {
+  if (rows.length <= 1) return rows.map(t => ({ tag: "p", text: t, fromTable: true }));
+  const header = rows[0];
+  const groups = [];
+  let cur = [header];
+  let curLen = header.length;
+  for (let k = 1; k < rows.length; k++) {
+    const row = rows[k];
+    if (curLen + 1 + row.length > TABLE_MAX && cur.length > 1) {
+      groups.push(cur);                                   // 当前组收口
+      cur = [header, row];                                // 新组：表头随行重复
+      curLen = header.length + 1 + row.length;
+    } else {
+      cur.push(row);
+      curLen += 1 + row.length;
+    }
+  }
+  groups.push(cur);
+  return groups.map(rs => ({ tag: "p", text: rs.join("\n"), fromTable: true }));
+}
+
+// 连续 fromTable 行合并——但只并「同一张表」的行：tid 相同才算同表（md 里
+// 空行/任何非表行就是表边界，parseMdFile 逐行维护 tid；docx 每个 <table>
+// 元素一个 tid）。ranges = 每个文件的 [start, end) 区间（md 目录书跨文件
+// 不相并——不同文件是不同的表）；不传 ranges 视为单一文档（docx）。
+function mergeTableRows(items, ranges) {
+  const n = ranges ? ranges.length : 1;
+  const out = [];
+  for (let g = 0; g < n; g++) {
+    const [start, end] = ranges ? ranges[g] : [0, items.length];
+    let i = start;
+    while (i < end) {
+      const it = items[i];
+      if (!it || !it.fromTable) { out.push(it); i++; continue; }
+      const tid = it.tid;
+      let j = i + 1;
+      while (j < end && items[j].fromTable && (items[j].tid ?? tid) === tid) j++;
+      const rows = items.slice(i, j).map(r => r.text).filter(t => t && t.trim());
+      out.push(...packTable(rows));
+      i = j;
+    }
+  }
+  return out;
+}
+
+// BSP_TABLE=0 逃生（排障/对照用）：归一化判定与 BSP_STRUCT 同款——剥零宽字符、
+// NFKC（全角 "０"→"0"）、trim 后精确比 "0"（P2-04 先例）。
+const tableOff = () => String(process.env.BSP_TABLE ?? "").replace(/[\u200b-\u200d]/g, "").normalize("NFKC").trim() === "0";
+
+// P3-② 章节层级 → 路径串（「卷 › 章 › 节」）。空栈/空洞过滤后为空 → null
+// （pdf/epub 与无标题书 chapter_path 为 NULL，消费侧回退扁平 chapter）。
+const chapterPathOf = (stack) => {
+  const parts = (stack || []).filter(s => s && String(s).trim());
+  return parts.length ? parts.join(" › ") : null;
+};
+
 // ---------- PDF：按页提取，识别重复页眉页脚 ----------
 // 双栏论文重排：扫描中部候选栏界，选「跨越项最少且左右份额均衡」的位置 → 按「通栏行 + 左栏 + 右栏」阅读序重组。
 // 单栏页行文通宽，任何中部栏界都有大量项跨越 → 检测不触发，走原同行 x 序拼接路径，行为零变化
@@ -262,12 +329,14 @@ async function parseDocx(file) {
   const { value: html } = await mammoth.convertToHtml({ path: file });
   // 第一遍：按文档顺序收集块级元素（h1-6 / p / table→文本行），不过滤
   const items = [];
+  let tableSeq = 0;   // P3-①：每个 <table> 元素 = 一张表，元素内所有行同 tid
   const tagRe = /<(h[1-6]|p|table)[^>]*>([\s\S]*?)<\/\1>/gi;
   let m;
   while ((m = tagRe.exec(html)) !== null) {
     const tag = m[1].toLowerCase();
     if (tag === "table") {
-      for (const row of tableToText(m[2])) items.push({ tag: "p", text: row, fromTable: true });
+      const tid = ++tableSeq;
+      for (const row of tableToText(m[2])) items.push({ tag: "p", text: row, fromTable: true, tid });
       continue;
     }
     const t = collapse(decodeHtml(m[2].replace(/<[^>]+>/g, "")));
@@ -282,19 +351,43 @@ async function parseDocx(file) {
     ? items
     : promotePlainHeadings(items);
 
+  // P3-① 表格整表成块（promote 之后——见 mergeTableRows 注释；BSP_TABLE=0 关）
+  let tableStats = null;
+  let slicedItems = withHeadings;
+  if (!tableOff()) {
+    const before = withHeadings.filter(it => it.fromTable).length;
+    if (before > 1) {
+      slicedItems = mergeTableRows(withHeadings);
+      const blocks = slicedItems.filter(it => it.fromTable).length;
+      if (blocks !== before) tableStats = { rows: before, blocks };
+    }
+  }
+
   const chunks = [];
   let chapter = "前言";
   let chapterNo = 0;
-  for (const it of withHeadings) {
-    if (it.heading) { chapterNo++; chapter = it.text; continue; }
-    if (/^h[1-6]$/.test(it.tag)) { chapterNo++; chapter = it.text; continue; }
+  // P3-② 章节层级：docx 按 h1-h6 标签层级入栈；扁平 chapter 行为逐字不变
+  let pathStack = [];
+  for (const it of slicedItems) {
+    if (it.heading) { chapterNo++; chapter = it.text; pathStack = [it.text]; continue; }
+    if (/^h[1-6]$/.test(it.tag)) {
+      chapterNo++; chapter = it.text;
+      const lv = +it.tag[1];
+      pathStack = pathStack.slice(0, lv - 1);
+      pathStack[lv - 1] = it.text;
+      continue;
+    }
     const cm = it.text.match(/^(第[0-9一二三四五六七八九十百]+章)\s*(.*)$/);
-    if (cm) { chapterNo++; chapter = cm[1]; }
+    if (cm) { chapterNo++; chapter = cm[1]; pathStack = [cm[1]]; }
+    // P3-①：整表块原样进块（不过 sentenceSplit——行内的句号不该把表格切碎）。
+    // 首行的「第X章」匹配仍生效（与旧行为对齐）；行内不再切章（旧行为把表内
+    // 文字误读成章节标记，合并后消失——这是修复不是回归）。
+    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text }); continue; }
     // 长段落也要过 sentenceSplit（同 epub，900 字上限）
     for (const seg of sentenceSplit(it.text))
-      chunks.push({ chapter, page: null, text: seg });
+      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg });
   }
-  return { format: "docx", chapters: chapterNo, chunks, cleanedJunk: [] };
+  return { format: "docx", chapters: chapterNo, chunks, cleanedJunk: [], tableStats };
 }
 
 // ---------- MD：单文件或目录（一章一文件），markdown 语法剥离，标题 → 章节 ----------
@@ -317,8 +410,13 @@ function parseMdFile(file) {
   const items = [];
   let droppedCode = 0;
   let fence = null;   // { char, len } 围栏开启中
+  let tableSeq = 0;          // P3-① 表格 id：每张表一个（空行/任何非表行 = 表边界）
+  let prevWasTableRow = false;
   for (const line of raw.split(/\r?\n/)) {
     const bare = line.replace(/^\s*(?:>\s*)+/, "");         // 先剥 blockquote 标记
+    // P3-①：任何非表格行（含空行/围栏/标题/段落）都断表——放在所有分支之前，
+    // 围栏等提前 continue 的路径也不会漏断
+    if (!/^\s*\|.*\|\s*$/.test(bare)) prevWasTableRow = false;
     const fm = bare.match(/^\s*(`{3,}|~{3,})(.*)$/);        // info 串可带空格（python title=""）
     if (fm) {
       const [mark, info] = [fm[1], fm[2].trim()];
@@ -330,14 +428,16 @@ function parseMdFile(file) {
     const hm = bare.match(/^(#{1,6})\s+(.*?)\s*#*\s*$/);
     if (hm) {
       const ht = collapse(mdInline(hm[2]));
-      if (/[\u4e00-\u9fffA-Za-z]/.test(ht)) items.push({ tag: "h", text: ht });
+      if (/[\u4e00-\u9fffA-Za-z]/.test(ht)) items.push({ tag: "h", text: ht, level: hm[1].length });
       continue;
     }
     if (/^\s*\|.*\|\s*$/.test(bare)) {                      // 表格行 → 文本行
+      if (!prevWasTableRow) tableSeq++;                     // 新表开始（分隔行不断表）
+      prevWasTableRow = true;
       const cells = bare.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
       if (cells.every(c => /^:?-{2,}:?$/.test(c))) continue; // 分隔行
       const row = cells.join(" | ");
-      if (row.replace(/\|/g, "").trim()) items.push({ tag: "p", text: row, fromTable: true });
+      if (row.replace(/\|/g, "").trim()) items.push({ tag: "p", text: row, fromTable: true, tid: tableSeq });
       continue;
     }
     if (/^\s*(?:={3,}|-{3,}|\*{3,}|:{3,}|={2,}\s*".*")\s*$/.test(bare)) continue; // 分隔线/mkdocs tab
@@ -358,24 +458,54 @@ function parseMd(file) {
     : [file];
   const items = [];
   let droppedCode = 0;
+  const fileRanges = [];   // 每个文件在 items 里的 [start, end)——表格合并不跨文件
   for (const f of files) {
+    const start = items.length;
     const { items: fitems, droppedCode: dc } = parseMdFile(f);
     droppedCode += dc;
     if (!fitems.some(it => it.tag === "h")) {
       items.push({ tag: "h", text: path.basename(f).replace(/\.md$/i, "") });
     }
     items.push(...fitems);
+    fileRanges.push([start, items.length]);
   }
   const withHeadings = promotePlainHeadings(items);
+
+  // P3-① 表格整表成块（promote 之后——见 mergeTableRows 注释；BSP_TABLE=0 关；
+  // ranges 保证 A 文件的尾表与 B 文件的首表不相并）
+  let tableStats = null;
+  let slicedItems = withHeadings;
+  if (!tableOff()) {
+    const before = withHeadings.filter(it => it.fromTable).length;
+    if (before > 1) {
+      slicedItems = mergeTableRows(withHeadings, fileRanges);
+      const blocks = slicedItems.filter(it => it.fromTable).length;
+      if (blocks !== before) tableStats = { rows: before, blocks };
+    }
+  }
+
   const chunks = [];
   let chapter = "前言";
   let chapterNo = 0;
-  for (const it of withHeadings) {
-    if (it.tag === "h" || it.heading) { chapterNo++; chapter = it.text; continue; }
+  // P3-② 章节层级：pathStack 维护「卷 › 章 › 节」栈（md 按 # 层级）；
+  // 扁平 chapter 行为逐字不变（chapter 仍是叶节点名），chapter_path 是新增字段
+  let pathStack = [];
+  for (const it of slicedItems) {
+    if (it.tag === "h" || it.heading) {
+      chapterNo++; chapter = it.text;
+      // 真标题按 # 层级入栈（越级深跳也稳：栈截断到本级再放）；启发式提升的
+      // 标题（tag=p）无层级信息，按顶层重置
+      pathStack = it.level ? [...pathStack.slice(0, it.level - 1)] : [];
+      pathStack[it.level ? it.level - 1 : 0] = it.text;
+      pathStack = pathStack.slice(0, it.level ? it.level : 1);
+      continue;
+    }
+    // P3-①：整表块原样进块（不过 sentenceSplit——行内句号不切表）
+    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text }); continue; }
     for (const seg of sentenceSplit(it.text))
-      chunks.push({ chapter, page: null, text: seg });
+      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg });
   }
-  return { format: "md", chapters: chapterNo, chunks, cleanedJunk: [], droppedCode, files: files.length };
+  return { format: "md", chapters: chapterNo, chunks, cleanedJunk: [], droppedCode, files: files.length, tableStats };
 }
 
 function walkMd(dir) {
@@ -398,6 +528,7 @@ function buildDb(file, outPath, parsed) {
       CREATE TABLE chunks(
         id INTEGER PRIMARY KEY,
         chapter TEXT,
+        chapter_path TEXT,
         page INTEGER,
         text TEXT NOT NULL
       );
@@ -419,11 +550,12 @@ function buildDb(file, outPath, parsed) {
     if (parsed.files) setMeta.run("md_files", String(parsed.files));
     if (parsed.droppedCode) setMeta.run("dropped_code", String(parsed.droppedCode));
     if (parsed.struct) setMeta.run("struct_report", JSON.stringify(parsed.struct));
+    if (parsed.tableStats) setMeta.run("table_stats", JSON.stringify(parsed.tableStats));
 
     const tx = db.transaction(() => {
-      const ins = db.prepare("INSERT INTO chunks(chapter, page, text) VALUES (?,?,?)");
+      const ins = db.prepare("INSERT INTO chunks(chapter, chapter_path, page, text) VALUES (?,?,?,?)");
       for (const c of parsed.chunks) {
-        const r = ins.run(c.chapter, c.page, c.text);
+        const r = ins.run(c.chapter, c.chapter_path ?? null, c.page, c.text);
         db.prepare("INSERT INTO chunks_fts(rowid, text) VALUES (?, ?)").run(r.lastInsertRowid, c.text);
       }
     });
@@ -480,6 +612,11 @@ async function main(argv = process.argv.slice(2), opts = {}) {
     console.error("解析出 0 块：文件可能是空的、扫描图片型 PDF 或加密文档。");
     process.exitCode = 1;
     return;
+  }
+
+  // P3-① 表格整表成块的账（BSP_TABLE=0 或无表书不打印）
+  if (parsed.tableStats) {
+    console.log(`  表格整表成块: ${parsed.tableStats.rows} 行 → ${parsed.tableStats.blocks} 块（表头随组重复，单块 ≤900 字）`);
   }
 
   // 结构化改造（V3 第四波 P2）：解析之后、切片之前——清洗坏数据/不全数据/乱码符号。

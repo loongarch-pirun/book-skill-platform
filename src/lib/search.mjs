@@ -248,10 +248,13 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
     .slice(0, Math.max(RECALL - nominations.length, 4));
   const merged = [...regular, ...nominations].sort((a, b) => b.score - a.score);
 
-  const get = db.prepare("SELECT id, chapter, page, text FROM chunks WHERE id = ?");
+  // P3-② chapter_path 渐进采用：列随重建出现（老库无列），探测后再取——
+  // 只搭载不动 loc（loc 喂提示词，动它=动模型输入）；展示层自行选用
+  const hasPath = db.prepare("SELECT COUNT(*) n FROM pragma_table_info('chunks') WHERE name='chapter_path'").get().n > 0;
+  const get = db.prepare(`SELECT id, chapter, page, text${hasPath ? ", chapter_path" : ""} FROM chunks WHERE id = ?`);
   let final = merged.map(m => {
     const c = get.get(m.id);
-    return { ...m, loc: c.page ? `第${c.page}页` : (c.chapter || ""), text: c.text };
+    return { ...m, chapter: c.chapter || null, loc: c.page ? `第${c.page}页` : (c.chapter || ""), chapterPath: hasPath ? (c.chapter_path || null) : null, text: c.text };
   });
 
   // 复试官：对（问题, 块原文）逐对精算相关度，重排
@@ -266,7 +269,36 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
         .sort((a, b) => (b.rerank + TIE * ((b.catW || 0) + (b.enrW || 0))) - (a.rerank + TIE * ((a.catW || 0) + (a.enrW || 0))));
     }
   }
-    return final.slice(0, topN);
+  // P3-③ 邻块扩展（BSP_NEIGHBOR=1 开，默认关）：复试官终排后，对终排结果按
+  // 同章 id±1 各补一席紧邻上下文——衰减计分 ×0.5、只附加不挤位（原 topN 一个
+  // 不动）、不重跑复试官（邻居不进复试，成本零）；总数 ≤4 控提示词增量。
+  // 变体快路径（rerank:false）不扩展——邻块只跟终排走；同章判据用扁平 chapter
+  // （null 章 / 跨章不扩）。双门（evals 漏题⊆基线）过了才考虑默认开。
+  const topFinal = final.slice(0, topN);
+  if (process.env.BSP_NEIGHBOR === "1" && rerank && topFinal.length) {
+    const inSet = new Set(topFinal.map(r => r.id));
+    const nbrGet = db.prepare("SELECT id, chapter, page, text FROM chunks WHERE id = ?");
+    const added = [];
+    outer:
+    for (const s of topFinal) {
+      for (const d of [-1, 1]) {
+        if (added.length >= 4) break outer;
+        const nid = s.id + d;
+        if (inSet.has(nid)) continue;
+        const c = nbrGet.get(nid);
+        if (!c || !c.chapter || c.chapter !== s.chapter) continue;
+        inSet.add(nid);
+        added.push({
+          ...s, id: nid, chapter: c.chapter, loc: c.page ? `第${c.page}页` : (c.chapter || ""),
+          chapterPath: s.chapterPath ?? null, text: c.text,
+          score: +(((s.rerank ?? s.score) || 0) * 0.5).toFixed(4), rerank: undefined,
+          nbr: Math.abs(d), nbrOf: s.id,
+        });
+      }
+    }
+    if (added.length) return [...topFinal, ...added];
+  }
+  return topFinal;
   } finally {
     db.close();  // 错误路径也必须关库（引擎不一致抛错/模型加载失败时不能泄漏句柄）
   }
@@ -366,7 +398,7 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 3, libDir 
   for (const b of picked)
     for (const r of await hybridSearch(b.db, question, topN, { qv }))
       // bookId/id 是桌面端引用跳转要的直通字段（纯加法，不碰排序与打分）
-      results.push({ book: b.title, bookId: b.id, id: r.id, loc: r.loc, score: r.rerank ?? r.score, fts: r.fts, sem: r.sem, rerank: r.rerank, text: r.text });
+      results.push({ book: b.title, bookId: b.id, id: r.id, loc: r.loc, chapterPath: r.chapterPath ?? null, score: r.rerank ?? r.score, fts: r.fts, sem: r.sem, rerank: r.rerank, text: r.text });
   results.sort((a, b) => b.score - a.score);
   const out = {
     routed_books: picked.map(b => ({ title: b.title, best_sim: +b.best.toFixed(3) })),

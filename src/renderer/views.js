@@ -11,9 +11,11 @@ export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&a
 // data-cid 来自检索结果 id（书库内容/云端引用，可含引号），是属性注入面（C30）——
 // 单点定义让「漏一处 esc」从结构上不可能，也让探针只测一个入口（评审对抗官 F7-F2/O14）
 export const renderCite = (x, withBook = true) => {
+  // P3-②：有章节层级路径优先展示（「卷 › 章 › 节」比扁平章名更能定位）；老库/无路径书回退 loc
+  const where = x.chapterPath || x.loc || "定位";
   const label = withBook
-    ? `${esc(x.book || "")} · ${esc(x.loc || "定位")} · 跳原文`
-    : `${esc(x.loc || "定位")} · 跳原文`;
+    ? `${esc(x.book || "")} · ${esc(where)} · 跳原文`
+    : `${esc(where)} · 跳原文`;
   return `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${esc(x.id ?? "")}">${label}</span>`;
 };
 

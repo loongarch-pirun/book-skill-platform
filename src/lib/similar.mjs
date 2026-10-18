@@ -27,16 +27,18 @@ export async function similarChunks(dbPath, { chunkId = null, text = null, topN 
   try {
     const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
     if (!cols.includes("emb")) return { error: "no-vectors", hint: "这个书库没有向量列（跑 embed-book 重灌才有）" };
+    const hasPath = cols.includes("chapter_path");   // P3-② 渐进：列随重建出现，老库回退扁平 chapter
+    const getChunk = db.prepare(`SELECT id, chapter, page, text, emb${hasPath ? ", chapter_path" : ""} FROM chunks WHERE id = ?`);
 
     let src = null;      // 查询侧描述（回给智能体，让它知道比的是谁）
     let srcVec = null;   // 查询向量
     let embedKey = null; // 只在 text 入口有（chunk 入口没有模型参与）
 
     if (chunkId !== null && chunkId !== undefined && chunkId !== "") {
-      const row = db.prepare("SELECT id, chapter, page, text, emb FROM chunks WHERE id = ?").get(Number(chunkId));
+      const row = getChunk.get(Number(chunkId));
       if (!row) return { error: "chunk-not-found", hint: `书里没有块 #${chunkId}（块号来自 query_book 结果的 id）` };
       if (!row.emb) return { error: "chunk-no-vector", hint: `块 #${chunkId} 没有向量——灌库时该块被跳过` };
-      src = { chunk: row.id, loc: row.page ? `第${row.page}页` : (row.chapter || ""), chapter: row.chapter || "", page: row.page ?? null };
+      src = { chunk: row.id, loc: row.page ? `第${row.page}页` : (row.chapter || ""), chapter: row.chapter || "", chapterPath: hasPath ? (row.chapter_path || null) : null, page: row.page ?? null };
       srcVec = new Float32Array(row.emb.buffer, row.emb.byteOffset, row.emb.byteLength / 4);
     } else if (text && String(text).trim()) {
       const q = String(text).trim();
@@ -54,13 +56,13 @@ export async function similarChunks(dbPath, { chunkId = null, text = null, topN 
       return { error: "missing-query", hint: "必须给 chunk_id 或 text 之一——这是以块找块的入口" };
     }
 
-    const rows = db.prepare("SELECT id, chapter, page, text, emb FROM chunks WHERE emb IS NOT NULL").all();
+    const rows = db.prepare(`SELECT id, chapter, page, text, emb${hasPath ? ", chapter_path" : ""} FROM chunks WHERE emb IS NOT NULL`).all();
     const out = [];
     for (const r of rows) {
       if (src.chunk !== undefined && r.id === src.chunk) continue; // 自相似排除（最像自己没有意义）
       const v = new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4);
       out.push({
-        id: r.id, chapter: r.chapter || "", page: r.page ?? null,
+        id: r.id, chapter: r.chapter || "", chapterPath: hasPath ? (r.chapter_path || null) : null, page: r.page ?? null,
         loc: r.page ? `第${r.page}页` : (r.chapter || ""),
         score: +cosine(srcVec, v).toFixed(4), text: r.text,
       });

@@ -173,7 +173,7 @@ export function verifyAnswer(parsed, results) {
     if (!quote) { dropped.push({ n, reason: "empty-quote" }); continue; }
     const r = hitRate(target.text, quote);
     if (r.ok) {
-      passed.push({ n, quote, book: target.book || "", bookId: target.bookId || null, id: target.id ?? null, loc: target.loc || "" });
+      passed.push({ n, quote, book: target.book || "", bookId: target.bookId || null, id: target.id ?? null, loc: target.loc || "", chapterPath: target.chapterPath || null });
     } else {
       dropped.push({ n, quote, reason: r.tooShort ? "quote-too-short" : "quote-not-found", hits: r.hits, total: r.total });
     }
