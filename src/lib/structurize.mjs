@@ -129,8 +129,8 @@ export function structurizeChunks(chunks) {
     let text = raw;
     // lone surrogate 前置剥离：赶在修乱码/清符号之前——绑定前剥掉才轮不到
     // sqlite 把它静默变成 U+FFFD（P2-02）。剥完只剩空白的按空块丢
-    let surN = 0;
-    [text, surN] = stripLoneSurrogates(text);
+    const [cleanText, surN] = stripLoneSurrogates(text);
+    text = cleanText;
     if (surN) {
       report.strippedSurrogates += surN;
       if (!text.trim()) { report.droppedEmpty++; continue; }
@@ -145,8 +145,8 @@ export function structurizeChunks(chunks) {
         // 出口复检（纵深防御）：修复产物按说不该再产 lone surrogate——
         // 严格 UTF-8 解码产的是 U+FFFD，会被回读闸门拦下；但「绑定前无
         // 孤立代理对」这条不变量不赌解码器实现，谁产的在这里统一剥掉
-        let surFix = 0;
-        [text, surFix] = stripLoneSurrogates(text);
+        const [fixedText, surFix] = stripLoneSurrogates(text);
+        text = fixedText;
         if (surFix) report.strippedSurrogates += surFix;
       }
     }
