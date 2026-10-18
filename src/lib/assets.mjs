@@ -31,6 +31,10 @@ export function safeBookId(bookId) {
   if (process.platform === "win32") {
     if (id.includes(":")) return null;
     if (id.endsWith(".")) return null;
+    // 保留设备名（CON/PRN/AUX/NUL/COM1-9/LPT1-9，忽略扩展、大小写、尾点空格）：
+    // 过闸后会写到设备/控制台或抛通用错误（评审对抗官 F8-F3）
+    const stem = id.replace(/\.[^.]*$/, "").replace(/[. ]+$/, "").toLowerCase();
+    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/.test(stem)) return null;
   }
   return id;
 }

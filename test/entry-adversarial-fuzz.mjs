@@ -73,7 +73,7 @@ const mammoth = require("mammoth"); // 仅用于打桩 convertToHtml 计次（�
 const { detectGarbled, repairMojibake, structurizeChunks, assessCleaned, structChanged, STRUCT_GARBLED_MAX } = await import("../src/lib/structurize.mjs");
 const { startImport, startProcessing, cancelImport, scanPending, jobsStatus, jobDirs, onJobsProgress, resumeCatalog, catalogPrompt } = await import("../src/desktop/jobs.mjs");
 const { createAssetProtocol } = await import("../src/desktop/book-view.mjs");
-const { deleteBook, purgeBook, UserError } = await import("../src/desktop/engine.mjs");
+const { deleteBook, purgeBook, humanizeError, UserError } = await import("../src/desktop/engine.mjs");
 const { listShelf, safeBookId } = await import("../src/lib/assets.mjs");
 const { configureSearch } = await import("../src/lib/search.mjs");
 const bb = require(require.resolve("../src/build-book.js"));
@@ -599,6 +599,10 @@ const bspImport = path.join(TMP, "bsp-import");
   ok(colon === (win ? null : "a:b"), "C8b win32 拒冒号（ADS 别名）/ 非 win32 放行（书名合法）", `平台=${process.platform} 返回=${JSON.stringify(colon)}`);
   const dot = safeBookId("a.");
   ok(dot === (win ? null : "a."), "C8c win32 拒尾点（系统剥点会撞名）/ 非 win32 放行", `返回=${JSON.stringify(dot)}`);
+  // C8d（评审对抗官 F8-F3）：win32 保留设备名过闸会写设备/控制台或抛通用错误
+  const reserved = ["CON.pdf", "NUL.docx", "AUX.pdf", "COM1.txt", "LPT1.pdf"];
+  const leaked = reserved.filter((x) => safeBookId(x) !== null);
+  ok(!win || leaked.length === 0, "C8d win32 拒保留设备名（CON/NUL/AUX/COM1/LPT1，含扩展）", `漏=${leaked.join(",") || "无"}`);
 }
 // C9（绿 C1 行为锁）：startProcessing NUL id 管线不崩——safeBookId 修复前放行，但 resolveAsset
 // 候选路径含 NUL、existsSync 全 false（stat 抛被吞）→ UserError「找不到原件」，无 jobs 残留条目。
@@ -669,6 +673,15 @@ const bspImport = path.join(TMP, "bsp-import");
       + `\uff1b\u6b8b\u7559\u6761\u76ee=${!!entry} \u5e7d\u7075\u6587\u4ef6=${fs.existsSync(ghost)} \u602a\u884c=${weird}`);
   cancelImport("..docx");
   fs.rmSync(ghost, { force: true });
+  // C13b（评审对抗官 F8-F2）：纯扩展名文件（.txt）base="" ——不过闸会派生
+  // ".docx" 隐藏点文件 + 空 title；坏形态塌成 "." 让怪行在 POSIX 复活
+  // 注意：".txt" 这种纯点扩展名 path.extname 返回 ""，走「不支持的格式」早拒
+  // （不可达 base 检查）；F2 的实质面是「ext 合法但 base 点开头」的隐藏文件
+  fs.writeFileSync(path.join(TMP, ".hidden.txt"), "\u4e19\u6807\u8bb0\uff1a\u9690\u85cf\u540d", "utf8");
+  const r2 = await settle(startImport(path.join(TMP, ".hidden.txt")));
+  ok(!r2.ok && r2.e instanceof UserError && /\u4e66\u540d/.test(String(r2.e.message)),
+    "C13b \u9690\u85cf\u6587\u4ef6\uff08.hidden.txt\uff09\u2192 \u4eba\u8bdd\u62d2\uff08base \u70b9\u5f00\u5934\u4e0d\u8bb8\u8fc7\u95f8\uff09",
+    r2.ok ? `\u7adf\u5bfc\u5165 bookId=${r2.v?.bookId}` : `${r2.e?.constructor?.name}: ${String(r2.e?.message).slice(0, 60)}`);
 }
 // C14（红 C6）：dest 大小写折叠碰撞——win32 文件系统大小写不敏感：books/ 已有 book.docx（甲），
 // 再导 Book.docx（乙）→ copyFileSync 落到同一 inode，甲内容被静默覆盖（用户的书没了）。
@@ -680,13 +693,36 @@ const bspImport = path.join(TMP, "bsp-import");
   const r = await settle(startImport(src));
   const after = fs.readFileSync(path.join(booksDir, "book.docx"), "utf8");
   const kept = after.includes("\u7532") && !after.includes("\u4e59");
-  ok(!r.ok && r.e instanceof UserError && kept,
-    "C14 dest 大小写碰撞 → 人话拒且原书内容不动（win32 折叠语义：修复前静默覆盖）",
-    r.ok ? `竟导入 bookId=${r.v?.bookId}` : `${r.e?.constructor?.name}: ${String(r.e?.message).slice(0, 60)}`
-      + `\uff1b\u539f\u6587\u4ef6\u4ecd\u4e3a\u7532=${kept}`);
+  // 折叠 FS 前提探测（陆 F8-O-3）：Linux ext4 不折叠时说「拒」是假红——用与实现
+  // 同款的运行时探测（建临时文件反大小写 lookup），非折叠 FS 该用例前提不成立
+  const foldFs = (() => { try {
+    const p = path.join(booksDir, ".c14-probe");
+    fs.writeFileSync(p, "x");
+    const hit = fs.existsSync(p.toUpperCase());
+    fs.rmSync(p, { force: true });
+    return hit;
+  } catch { return false; } })();
+  ok(!foldFs || (!r.ok && r.e instanceof UserError && /\u5927\u5c0f\u5199|\u6539\u540d/.test(String(r.e.message)) && kept && !jobsStatus()["Book.docx"]),
+    "C14 dest \u5927\u5c0f\u5199\u78b0\u649e \u2192 \u4eba\u8bdd\u62d2\u4e14\u539f\u4e66\u4e0d\u52a8\uff08\u96f6\u72b6\u6001\uff1a\u65e0 failed \u810f\u884c\uff1b\u6298\u53e0 FS \u524d\u63d0\u63a2\u6d4b=" + foldFs + "\uff09",
+    r.ok ? `\u7adf\u5bfc\u5165 bookId=${r.v?.bookId}` : `${r.e?.constructor?.name}: ${String(r.e?.message).slice(0, 60)}`
+      + `\uff1b\u539f\u6587\u4ef6\u4ecd\u4e3a\u7532=${kept} \u72b6\u6001\u6b8b\u7559=${!!jobsStatus()["Book.docx"]}`);
   cancelImport("Book.docx");
   fs.rmSync(path.join(booksDir, "book.docx"), { force: true });
   fs.rmSync(path.join(booksDir, "Book.docx"), { force: true });
+}
+// C14b（陆 F8-FAIL-4）：id 级折叠——library/ 已有 x14.docx.db（books/ 无孪生，
+// 逼走 id 级检查）时，导 X14.docx 的新库与旧库在折叠 FS 上同 inode → 必须拒
+{
+  makeBookDb("x14.docx.db", "\u7532\u6807\u8bb0\u5e93");
+  fs.rmSync(path.join(booksDir, "x14.docx"), { force: true }); // 只留库，逼走 id 级检查
+  const src = path.join(TMP, "X14.docx");
+  fs.writeFileSync(src, "\u4e19\u6807\u8bb0\u65b0\u5bfc\u5165", "utf8");
+  const r = await settle(startImport(src));
+  ok(!r.ok && r.e instanceof UserError && /\u5927\u5c0f\u5199|\u6539\u540d/.test(String(r.e.message)) && !jobsStatus()["X14.docx"],
+    "C14b id \u7ea7\u6298\u53e0 \u2192 \u4eba\u8bdd\u62d2\uff08library \u5df2\u6709\u4ec5\u5927\u5c0f\u5199\u4e0d\u540c\u7684\u5e93 id\uff09",
+    r.ok ? `\u7adf\u5bfc\u5165 bookId=${r.v?.bookId}` : `${r.e?.constructor?.name}: ${String(r.e?.message).slice(0, 60)}`);
+  cancelImport("X14.docx");
+  fs.rmSync(path.join(LIB, "x14.docx.db"), { force: true });
 }
 
 // =====================================================================
@@ -761,6 +797,15 @@ console.log("\n----- D 段：engine 两档删除 -----");
   ok(allUserErr && shelfClean, "D4 并发双 purge 终态干净（书架无痕 + 拒绝皆 UserError）",
     `\u62d2\u7edd ${rejects.length} 个\uff1a${rejects.map((e) => e.message).join(" / ") || "\u65e0"}`);
   note("D4 \u5e76\u53d1\u53cc purge \u884c\u4e3a\u767b\u8bb0", `\u4e00\u6210\u4e00\u62d2=${rejects.length === 1} \u90fd\u6210=${rejects.length === 0} \u5171\u62d2=${rejects.length}`);
+}
+// D5（C25）：humanizeError ENOENT 保真——只有 .db 缺失说「书库文件不见了」，
+// 原件/任务书等别的 ENOENT 一律保真原文（此前任何 ENOENT 都被误报成书库缺失）
+{
+  const h1 = humanizeError(new Error("ENOENT: no such file or directory, open 'C:////lib////x.docx.db'"));
+  const h2 = humanizeError(new Error("ENOENT: no such file or directory, open 'C:////lib////books////x.pdf'"));
+  ok(h1.code === "db-missing" && /\u4e66\u5e93/.test(h1.message) && h2.code !== "db-missing" && /books/.test(h2.message),
+    "D5 humanizeError ENOENT \u4fdd\u771f\uff08.db \u7f3a\u5931\u2192\u4e66\u5e93\u6587\u4ef6\uff1b\u539f\u4ef6\u7f3a\u5931\u2192\u4fdd\u771f\u539f\u6587\uff09",
+    `db=${h1.code} \u539f\u4ef6=${h2.code}: ${h2.message.slice(0, 40)}`);
 }
 
 // =====================================================================

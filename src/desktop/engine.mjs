@@ -397,7 +397,12 @@ export class UserError extends Error {
 export function humanizeError(e) {
   const m = String((e && e.message) || e);
   if (/引擎不一致|维度不一致/.test(m)) return { code: "engine-mismatch", message: m }; // 原文已带修复指引
-  if (/ENOENT|no such file/i.test(m)) return { code: "db-missing", message: "书库文件不见了（可能被移走或删除）" };
+  // ENOENT 保真（C25）：只有「书库文件（.db）」缺失才说「书库文件不见了」——
+  // 原件（books/）、任务书、prompt 等别的 ENOENT 一律保真原文，别用同一句话误导
+  if (/ENOENT|no such file/i.test(m)) {
+    if (/\.db\b/i.test(m)) return { code: "db-missing", message: "书库文件不见了（可能被移走或删除）" };
+    return { code: e instanceof UserError ? e.code : "missing", message: m };
+  }
   if (e instanceof UserError) return { code: e.code, message: m };
   return { code: "unknown", message: m };
 }

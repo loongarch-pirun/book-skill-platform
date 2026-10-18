@@ -37,6 +37,25 @@ export function jobDirs() {
   return { libDir, root, tasksDir: path.join(root, "catalog-tasks"), resultsDir: path.join(root, "catalog-results"), booksDir: path.join(root, "books") };
 }
 
+// 文件系统是否大小写不敏感（运行时探测，评审对抗官 F8-F1）：win32 是，macOS
+// 默认 APFS 也是（大小写不敏感、保留大小写）——只按 win32 判会让 C14 的
+// 「book.docx 被 Book.docx 静默覆盖」在 Mac 原样复现（数据丢失级）。
+// 探测法：在**目标目录**建临时文件用大写名 lookup——存在=不敏感（必须测目标
+// FS，挪去 tmpdir 会测错盘）。探测失败（杀软锁/权限/磁盘满）按不敏感处理：
+// 数据丢失级闸门必须 fail-safe，fail-open 会让覆盖静默发生（陆 F8-O1）
+function fsCaseInsensitive(dir) {
+  try {
+    const probe = path.join(dir, `.bsp-case-probe-${process.pid}`);
+    fs.writeFileSync(probe, "x");
+    const upper = probe.toUpperCase();
+    const hit = upper !== probe && fs.existsSync(upper);
+    fs.rmSync(probe, { force: true });
+    return hit;
+  } catch {
+    return process.platform === "win32" || process.platform === "darwin";
+  }
+}
+
 // ---------- 任务注册表 + 进度订阅 ----------
 const jobs = new Map();   // bookId → { stage, label, detail, error, filePath, taskPath, child }
 const cancelled = new Set();
@@ -81,10 +100,40 @@ export async function startImport(filePath) {
   const ext = (path.extname(file).match(/^\.(.+)$/) || [])[1]?.toLowerCase();
   const fmt = EXT_FMT[ext];
   if (!fmt) throw new UserError(`不支持的格式 .${ext || "?"}（支持 .epub / .docx / .pdf / .txt）`);
-  const { booksDir } = jobDirs();
+  const { booksDir, libDir } = jobDirs();
   fs.mkdirSync(booksDir, { recursive: true }); // 连带把 libDir 上级建出来
   const base = path.basename(file).replace(/\.[^.]+$/, "");
   const bookId = `${base}.${fmt}`;
+  // 空 base / 点开头（评审对抗官 F8-F2）：".pdf" 这类纯扩展名文件 base="" →
+  // bookId=".pdf" 过闸变隐藏点文件 + 空 title；坏形态还会塌成 "." 让 C13 的
+  // 「title "." 怪行」在 POSIX 复活（尾点检查只在 win32）
+  if (!base || base.startsWith(".")) {
+    throw new UserError(`书名不合法：「${path.basename(file)}」文件名不能以点开头或只有扩展名——请改名后再导入`);
+  }
+  // 派生 id 过闸（C3/C12/C13）：文件名可派生含 ../控制字符的 id（x..pdf →
+  // "x..pdf"、..txt → "..docx"）——不过闸会放行出永卡条目（startProcessing
+  // 侧才拒）+ books/ 幽灵文件 + 书架 title "." 怪行
+  if (!safeBookId(bookId)) throw new UserError(`书名不合法：「${bookId}」含路径分隔符、..或控制字符——请改名后再导入`);
+  // dest 与碰撞预检前移到 job 注册之前（评审对抗官 F8-OBSERVE）：clash 属
+  // 「改名即可」的输入错误，应与 id 闸同款零状态抛出——留在 try 内会 emit
+  // failed 让书架留一条「导入失败」脏行
+  const destName = ext === "txt" ? `${base}.txt` : path.basename(file);
+  const dest = path.join(booksDir, destName);
+  // dest 折叠碰撞（C6/C14）：文件系统大小写/归一化不敏感（win32 与 macOS 默认）
+  // 时，已有 book.docx 导 Book.docx 会落同一 inode 静默覆盖。比较前做 NFC 归一
+  // （APFS 归一化不敏感：NFC/NFD 视为同文件）+ 尾点尾空格归一（OS 会剥）
+  if (fsCaseInsensitive(booksDir)) {
+    const norm = (f) => f.normalize("NFC").replace(/[. ]+$/, "").toLowerCase();
+    const dn = norm(destName);
+    const booksClash = fs.readdirSync(booksDir).some((f) => f !== destName && norm(f) === dn);
+    // id 级折叠（陆 F8-FAIL-4）：books/ dest 只是投影——library/ 里已有「仅大小写
+    // 不同」的库 id（如 x.docx.db、原件走的异扩展兜底）时，新库 X.docx.db 在折叠
+    // FS 上是同一 inode，会与已加工库数据混合（重灌保护按字符串判，拦不住）
+    const dbName = `${bookId}.db`;
+    const libClash = fs.existsSync(libDir) && fs.readdirSync(libDir)
+      .some((f) => f.endsWith(".db") && f !== dbName && norm(f) === norm(dbName));
+    if (booksClash || libClash) throw new UserError(`已有仅大小写不同的同名书籍（${destName}）——请改名后再导入`);
+  }
   const cur = jobs.get(bookId);
   if (cur && !["done", "failed", "catalog", "cancelled"].includes(cur.stage)) {
     throw new UserError(`《${base}》正在${cur.phase === "process" ? "加工" : "导入"}中（${cur.label || cur.stage}），稍候或先取消`);
@@ -96,7 +145,6 @@ export async function startImport(filePath) {
   // 0) 原件进 books/（自包含：以后加工/重导入不依赖 Downloads 里的原始文件）；
   //    txt 保持 .txt 落盘（bookId 才是 <base>.docx——转 docx 是加工段的事）
   try {
-    const dest = path.join(booksDir, ext === "txt" ? `${base}.txt` : path.basename(file));
     if (path.resolve(dest) !== file) fs.copyFileSync(file, dest);
   } catch (e) {
     const why = e instanceof UserError ? e.message : `放进书架失败：${e.message || e}`;
