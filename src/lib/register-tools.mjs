@@ -6,6 +6,7 @@ import { similarChunks } from "./similar.mjs";
 import { lookupEntry } from "./lookup.mjs";
 import { readChapter, readRange, readFullBook } from "./browse.mjs";
 import { getOutline } from "./outline.mjs";
+import { checkCitation } from "./cite-check.mjs";
 import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
 
 // 按 book 片段找书（与 query_book 同一套匹配；找不到返回 null 和可选书目）
@@ -114,6 +115,22 @@ export function registerServerTools(server) {
     if (!matches.length)
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
     const out = lookupEntry(matches[0].db, key, { maxBlocks });
+    out.book = matches[0].title;
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  server.registerTool("cite_check", {
+    title: "引文回验（防幻觉自检）",
+    description: "检查一段引文是否真在某本书里逐字存在：命中返回所在块号/章节/页码（可跳原文），未命中明确告知不要采用。写完带引用的答案后用它自检——宁可报告「书中没有依据」，也不许编造引文。",
+    inputSchema: {
+      book: z.string().describe("书名或书名片段，如 论语、pride"),
+      quote: z.string().describe("要验证的引文原文（从检索/翻章结果里照抄的那句）"),
+    },
+  }, async ({ book, quote }) => {
+    const matches = matchBook(book);
+    if (!matches.length)
+      return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
+    const out = checkCitation(matches[0].db, quote);
     out.book = matches[0].title;
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });

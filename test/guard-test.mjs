@@ -779,7 +779,33 @@ const copyDb = (src) => {
   ok(big.error === "too-big" && big.tokens > 10000 && /get_outline/.test(big.hint || ""),
     `read_full_book 大书拒喂并指路（P&P ${big.tokens} token）`);
 }
+
+// ========== 22) V3R7-③ cite_check（第3批门禁） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripAll = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((l) => l.replace(/(^|\s)\/\/.*$/, "$1")).join("\n");
+  const rtSrc = stripAll(readSrc("src", "lib", "register-tools.mjs"));
+  ok(rtSrc.includes('server.registerTool("cite_check"'),
+    "静态: register-tools.mjs 注册 cite_check（MCP 契约在位）");
+  const pkgSrc3 = JSON.parse(readSrc("package.json"));
+  ok((pkgSrc3.scripts["test:fast"] || "").includes("cite-check-test"),
+    "静态: package.json test:fast 含 cite-check-test（挂载对账）");
+}
+{
+  const handlers = new Map();
+  const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };
+  registerServerTools(mockServer);
+  const db = new Database(GOOD, { readonly: true });
+  const firstText = db.prepare("SELECT text FROM chunks ORDER BY id LIMIT 1").get().text;
+  db.close();
+  const clause = firstText.split(/[。；！？!?;]/).map(s => s.trim()).find(s => s.replace(/\s/g, "").length >= 6) || firstText.slice(0, 10);
+  const good = JSON.parse((await handlers.get("cite_check")({ book: "lunyu", quote: clause })).content[0].text);
+  ok(good.hit && good.chunk_id === 1, `cite_check 真库原文照抄命中（chunk#${good.chunk_id} level=${good.level}）`);
+  const bad = JSON.parse((await handlers.get("cite_check")({ book: "lunyu", quote: "这本书里绝对没有的捏造句子 xyz" })).content[0].text);
+  ok(!bad.hit && /不要采用/.test(bad.hint || ""), "cite_check 捏造引文拒收并指路");
+}
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);
 if (fail) { console.error(`${fail} 项 FAIL`); process.exit(1); }
-console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造/云端清洗/get_outline数据层/read_full_book全文闸 ${pass} 项全过`);
+console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造/云端清洗/get_outline数据层/read_full_book全文闸/cite_check回验 ${pass} 项全过`);

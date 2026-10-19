@@ -18,6 +18,7 @@ const ROOT = path.join(__dirname, "..");
 
 process.env.BSP_RERANK = "0"; // 复试官与云端编排无关，读于调用时（getReranker），此处设置即生效
 process.env.BSP_REWRITE = "0"; // V3 查询改写默认开会多发一次请求——本套件测 V2 编排链路（reqCount 精确断言），改写由 query-rewrite-test.mjs 专测
+process.env.BSP_FULL_READ = "0"; // V3R7-③ 小书全文模式默认开（道德经 5.6K token 会触发）——本套件测检索编排链路（segments/citation 下标精确断言），全文模式由下方 E5 段专测
 
 const { init, ask } = await import("../src/desktop/engine.mjs");
 const { cloudSummary, archiveClear } = await import("../src/desktop/chat.mjs");
@@ -225,6 +226,33 @@ console.log("\n--- P4-E4 反馈池回写 ---");
   pool = listFeedback(libDir, { kind: "no-results" });
   ok(pool.length === 1 && pool[0].question === "zzz qqq xyz" && pool[0].bookId === EMPTY_ID,
     "E4g: no-results 条目入池（带问题与书）");
+}
+
+// ---------- E5：V3R7-③ 小书全文模式（BSP_FULL_READ=1） ----------
+{
+  // 道德经 81 块 ≈5.6K token ≤10K → 跳过检索全书直读：segments 应为全书块数（81），
+  // 引用回源天然成立（verifyAnswer 的 target 就是原文），reqCount 与检索路径同为 1 次。
+  // 注意：全文模式片段 1 = 全书第一块（不是检索首段）——引文要从第一块原文摘
+  delete process.env.BSP_FULL_READ;
+  const dbF = new Database(BOOK_DB, { readonly: true });
+  const firstText = dbF.prepare("SELECT text FROM chunks ORDER BY id LIMIT 1").get().text;
+  dbF.close();
+  const FULL_QUOTE = firstText.split(/[。；！？!?;]/).map(s => s.trim()).find(s => s.replace(/\s/g, "").length >= 8) || firstText.slice(0, 10);
+  reply = goodReply(FULL_QUOTE, 1);
+  const before = reqCount;
+  const rF = await cloudSummary({ bookId: BOOK_ID, question: Q, topN: 6 });
+  ok(!rF.degraded && rF.full_read === true && rF.segments === 81,
+    `E5a: 小书全文模式生效（full_read=${rF.full_read}，segments=${rF.segments}=全书 81 块）`);
+  ok(reqCount === before + 1, `E5b: 全文模式不多发请求（${before}→${reqCount}，跳过改写与检索）`);
+  ok(rF.citations?.length === 1 && rF.citations[0].id !== undefined && rF.citations[0].bookId === BOOK_ID,
+    `E5c: 全文模式引用仍过回源校验（chunk#${rF.citations?.[0]?.id}）`);
+  // 回退开关：BSP_FULL_READ=0 → 回到检索 top-6 路径（引文也要切回检索首段的 QUOTE）
+  process.env.BSP_FULL_READ = "0";
+  reply = goodReply(QUOTE, 1);
+  const rOff = await cloudSummary({ bookId: BOOK_ID, question: Q, topN: 6 });
+  ok(rOff.full_read === false && rOff.segments === 6,
+    `E5d: BSP_FULL_READ=0 回退检索路径（segments=${rOff.segments}）`);
+  delete process.env.BSP_FULL_READ;
 }
 
 // ---------- 收尾 ----------

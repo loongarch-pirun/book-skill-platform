@@ -10,9 +10,10 @@ import { loadLlmConfig, readLlmKey, saveLlmConfig } from "./llm-config.mjs";
 import { askCloud, chat, sanitizeHistory } from "../lib/llm.mjs";
 import { appendArchive, listArchive, purgeBook, clearArchive } from "./chat-archive.mjs";
 import { appendFeedback, purgeBook as purgeFeedbackBook } from "./feedback-pool.mjs";
-import { findBook, multiVariantSearch, currentLibDir } from "../lib/search.mjs";
+import { findBook, listBooks, multiVariantSearch, currentLibDir } from "../lib/search.mjs";
 import { loadSkillState } from "../lib/skill-state.mjs";
 import { rewriteQuery } from "../lib/query-rewrite.mjs";
+import { readFullBook, FULL_READ_TOKEN_CAP } from "../lib/browse.mjs";
 
 // ---------- 配置读写（给 UI；get 不含明文 key，set 不落半成品） ----------
 export function configGet() {
@@ -87,12 +88,46 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
   const key = readLlmKey();
   if (!key) throw new UserError("云端 AI 还没配置——先在问一问页面填 API key");
 
-  // 1) 本地检索：单书模式先查询改写 → 多问法检索（V3-R1）；
+  // 1) 单书小书全文模式（V3R7-③）：≤10K token 的书跳过检索，全书作 passages 直接进
+  //    云端——小书走 top-6 检索是纯损耗（还可能漏），全文进上下文零检索误差，且引用
+  //    回源天然成立（verifyAnswer 的 target 就是原文）。闸门按书体量自动开关，
+  //    BSP_FULL_READ=0 回退；全库模式（无 bookId）不适用。
+  const fullReadOff = String(process.env.BSP_FULL_READ ?? "").trim() === "0";
+  let fullRead = null;
+  if (bookId && !fullReadOff) {
+    const b = findBook(bookId);
+    if (b) {
+      const meta = listBooks(currentLibDir()).find(x => x.id === b.id);
+      if (meta && typeof meta.total_tokens === "number" && meta.total_tokens <= FULL_READ_TOKEN_CAP) {
+        const fr = readFullBook(b.db);
+        if (!fr.error) {
+          const st = loadSkillState(currentLibDir());
+          if (st[b.id] === false) throw new UserError(`《${b.title}》的 skill 已关——去「技能开关」面板打开才能问`);
+          fullRead = { book: b, blocks: fr.blocks, tokens: fr.tokens };
+        }
+      }
+    }
+  }
+
+  // 2) 本地检索：单书模式先查询改写 → 多问法检索（V3-R1）；
   //    改写失败/超时/无 key/BSP_REWRITE=0/全库模式 → ask() 现状单路（零变化原则）
-  const { base, rewrite } = await askWithRewrite({
-    bookId, question: q, topN, skillSlug, history,
-    config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model },
-  });
+  let base, rewrite;
+  if (fullRead) {
+    base = {
+      mode: "book", book: fullRead.book.title, bookId: fullRead.book.id,
+      results: fullRead.blocks.map(bk => ({
+        id: bk.id, book: fullRead.book.title, bookId: fullRead.book.id,
+        loc: bk.page ? `第${bk.page}页` : (bk.chapter || ""), text: bk.text,
+      })),
+    };
+    rewrite = { used: false, variants: [] };
+    if (skillSlug) base = await attachSkill(base, String(skillSlug), q);
+  } else {
+    ({ base, rewrite } = await askWithRewrite({
+      bookId, question: q, topN, skillSlug, history,
+      config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model },
+    }));
+  }
   const raw = base.results || [];
   if (!raw.length) {
     // 第三波-③：检索空手 = 最高价值失败样本（应查到而没查到）——带上试过的改写变体入池
@@ -127,7 +162,7 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
     } catch { /* 回写失败不影响降级返回 */ }
     // 降级通道（UI 对齐 A1）：云端失败不丢本地果实——已检索到的原文一并回给 UI，
     // 对话页在错误气泡下挂「本地原文」折叠区；问一问页本地结果本就在下方，天然降级。
-    return { degraded: true, error: r.message, results, mode: base.mode, book: base.book || null, rewrite };
+    return { degraded: true, error: r.message, results, mode: base.mode, book: base.book || null, rewrite, full_read: !!fullRead };
   }
   // P4 引用快照：每次成功回答落一份（问题 + 引用片段原文 + 回答）——失败不落（没答案可存）。
   // citations 的 n 是 1 基片段编号，回填整段 text：书哪天没了，存档里仍留着当初的依据。
@@ -157,7 +192,7 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
       });
     } catch { /* 回写失败不影响回答 */ }
   }
-  return { answer: r.answer, citations: r.citations, dropped: r.dropped, usage: r.usage, segments: raw.length, mode: base.mode, book: base.book || null, rewrite };
+  return { answer: r.answer, citations: r.citations, dropped: r.dropped, usage: r.usage, segments: raw.length, mode: base.mode, book: base.book || null, rewrite, full_read: !!fullRead };
 }
 
 // ---------- P4 存档：列表 / 删书联动 / 清空（UI 消费；libDir 取不到时安全退化） ----------
