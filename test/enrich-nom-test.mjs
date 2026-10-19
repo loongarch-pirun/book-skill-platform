@@ -14,7 +14,22 @@ import { hybridSearch } from "../src/lib/search.mjs";
 
 const LIB = path.join(__dirname, "..", "library");
 const LUNYU = path.join(LIB, "lunyu-xueer-zh.docx.db");   // 真库：唯一洗过数据的书
-const NOENR = path.join(LIB, "attention-is-all-you-need-en.pdf.db"); // 未洗数据的库
+// 未洗数据的库：合成夹具——真实 library 里的书随时可能被 enrich（attention 2026-10-19
+// 就洗过了），拿真库当「未洗」夹具会随管线推进假红；合成库零依赖 library 状态。
+// 形态对齐 build-book 直出：chunks + external content FTS，无 tags/questions 列。
+const NOENR_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-enrnom-noenr-"));
+const NOENR = path.join(NOENR_DIR, "noenr.db");
+{
+  const db = new Database(NOENR);
+  db.exec(`CREATE TABLE chunks(id INTEGER PRIMARY KEY, text TEXT, chapter TEXT, page INTEGER);
+    CREATE VIRTUAL TABLE chunks_fts USING fts5(text, content='chunks', content_rowid='id', tokenize='trigram');`);
+  const ins = db.prepare("INSERT INTO chunks(id, text, chapter, page) VALUES (?,?,?,?)");
+  ins.run(1, "The Transformer architecture relies entirely on self-attention mechanisms.", "Abstract", 1);
+  ins.run(2, "Multi-head attention allows the model to attend to information from different representation subspaces.", "Model Architecture", 2);
+  ins.run(3, "We report results on machine translation tasks with BLEU scores.", "Experiments", 3);
+  db.prepare("INSERT INTO chunks_fts(chunks_fts) VALUES('rebuild')").run();
+  db.close();
+}
 let failed = 0;
 const assert = (cond, msg, extra = "") => {
   console.log((cond ? "PASS" : "FAIL") + " - " + msg + (cond ? "" : ` ${extra}`));
@@ -120,5 +135,6 @@ const TDB = path.join(dir, "t.db");
 }
 
 fs.rmSync(dir, { recursive: true, force: true });
+fs.rmSync(NOENR_DIR, { recursive: true, force: true });
 console.log(`===== enrich-nom-test: ${failed ? failed + " FAIL" : "全部 PASS"} =====`);
 process.exit(failed ? 1 : 0);

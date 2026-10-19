@@ -28,7 +28,7 @@ for (const id of Object.keys(beforeState).filter((id) => beforeState[id] === fal
 // 1. 工具清单
 const tools = await client.listTools();
 const names = tools.tools.map(t => t.name).sort();
-assert(JSON.stringify(names) === JSON.stringify(["expand", "get_chapter", "get_person", "get_theme", "list_books", "list_catalog", "list_skills", "lookup", "query_book", "query_library", "read_range", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 14 个工具: ${names.join(", ")}`);
+assert(JSON.stringify(names) === JSON.stringify(["expand", "get_chapter", "get_outline", "get_person", "get_theme", "list_books", "list_catalog", "list_skills", "lookup", "query_book", "query_library", "read_range", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 15 个工具: ${names.join(", ")}`);
 
 // 2. list_books（V3 第五波：书架随用户增删动态——数量对账 library/*.db 实数，≥5 防空转）
 const lb = await client.callTool({ name: "list_books", arguments: {} });

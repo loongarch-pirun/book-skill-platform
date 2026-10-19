@@ -5,6 +5,7 @@ import { getCatalogSummary, getPersonDetail, getThemeDetail, expandNeighborhood 
 import { similarChunks } from "./similar.mjs";
 import { lookupEntry } from "./lookup.mjs";
 import { readChapter, readRange } from "./browse.mjs";
+import { getOutline } from "./outline.mjs";
 import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
 
 // 按 book 片段找书（与 query_book 同一套匹配；找不到返回 null 和可选书目）
@@ -113,6 +114,22 @@ export function registerServerTools(server) {
     if (!matches.length)
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
     const out = lookupEntry(matches[0].db, key, { maxBlocks });
+    out.book = matches[0].title;
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  server.registerTool("get_outline", {
+    title: "全书地图",
+    description: "列出某本书的章节清单：每章章名 + 块数 + ≈token + 起始块号，附全书 token 总量与章节质量标记。这是翻书动线的第一跳：先看地图决定读哪章，再用 get_chapter/read_range 翻目标章。PDF 无章节时报 no-chapters（改用 read_range/query_book）；EPUB 章节名不可靠时标 messy（按名翻章可能落空，优先 read_range）。",
+    inputSchema: {
+      book: z.string().describe("书名或书名片段，如 凤凰架构、pride、mengzi"),
+      maxChapters: z.number().int().min(1).max(500).optional().describe("最多返回几章，默认 100，最多 500；超出会在 note 里告知总数"),
+    },
+  }, async ({ book, maxChapters }) => {
+    const matches = matchBook(book);
+    if (!matches.length)
+      return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
+    const out = getOutline(matches[0].db, { maxChapters });
     out.book = matches[0].title;
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });

@@ -511,6 +511,9 @@ function parseMd(file) {
 function walkMd(dir) {
   const out = [];
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    // V3R7-①：_private 开头的路径段（目录或文件）整段跳过——作者简历/私人备注类污染
+    // 清洗层删不掉（GG 护栏把它们当正常文本保护），只能在入口拦。md 目录书才有此问题。
+    if (/^_private/i.test(e.name)) continue;
     const p = path.join(dir, e.name);
     if (e.isDirectory()) out.push(...walkMd(p));
     else if (/\.md$/i.test(e.name)) out.push(p);
@@ -546,6 +549,13 @@ function buildDb(file, outPath, parsed) {
     setMeta.run("num_chapters", String(parsed.chapters || ""));
     setMeta.run("chunk_count", String(parsed.chunks.length));
     setMeta.run("total_chars", String(totalChars));
+    // V3R7-①：token 账 + 章节质量（get_outline / read_full_book 闸门 / list_books 展示的地基）。
+    // main() 里算好随 parsed 传下来（ESM 动态导入只能发生在 async 的 main）；直调 buildDb
+    // 的老测试不传即不写这两个键（回补脚本与 list_books 兜底会补上）。
+    if (parsed.token_meta) {
+      setMeta.run("total_tokens", String(parsed.token_meta.total_tokens));
+      setMeta.run("chapter_quality", JSON.stringify(parsed.token_meta.chapter_quality));
+    }
     setMeta.run("content_hash", contentHash(file));
     if (parsed.files) setMeta.run("md_files", String(parsed.files));
     if (parsed.droppedCode) setMeta.run("dropped_code", String(parsed.droppedCode));
@@ -679,6 +689,15 @@ async function main(argv = process.argv.slice(2), opts = {}) {
     : path.basename(file).replace(/\.[^.]+$/, ""));
   parsed.title = title;
 
+  // V3R7-①：token 账 + 章节质量 meta——必须在语义分块之后算（块边界变了字符总数才锁定），
+  // 建库时一次算好落 meta，读时（get_outline/read_full_book/list_books）零成本。
+  const { detectLang, bookTokenTotal, chapterQuality } = await import("./lib/token-estimate.mjs");
+  const finalChars = parsed.chunks.reduce((a, c) => a + c.text.length, 0);
+  parsed.token_meta = {
+    total_tokens: bookTokenTotal(finalChars, detectLang(parsed.chunks.map(c => c.text))),
+    chapter_quality: chapterQuality(parsed.chunks),
+  };
+
   const out = outArg || path.join(path.dirname(file), "..", "library",
     title + "." + parsed.format + ".db");
   fs.mkdirSync(path.dirname(out), { recursive: true });
@@ -724,7 +743,7 @@ async function main(argv = process.argv.slice(2), opts = {}) {
   const { chunkCount, totalChars } = buildDb(file, out, parsed);
 
   console.log(`建库完成: ${path.basename(out)}`);
-  console.log(`  格式: ${parsed.format} | 切片: ${chunkCount} 块 | 原文: ${totalChars} 字符`);
+  console.log(`  格式: ${parsed.format} | 切片: ${chunkCount} 块 | 原文: ${totalChars} 字符 ≈ ${parsed.token_meta ? Math.round(parsed.token_meta.total_tokens / 1000) + "K" : "?"} token`);
   if (parsed.numPages) console.log(`  页数: ${parsed.numPages}`);
   if (parsed.chapters) console.log(`  章节: ${parsed.chapters}`);
   if (parsed.files) console.log(`  md 文件: ${parsed.files} 篇`);

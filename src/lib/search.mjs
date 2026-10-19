@@ -13,6 +13,7 @@ import { getMatrix, matrixScores } from "./vec-cache.mjs";
 import { loadCatalogSignal, entityAliasTerms } from "./catalog.mjs";
 import { loadEnrichSignal } from "./enrich-signal.mjs";
 import { loadSkillState } from "./skill-state.mjs";
+import { bookTokenTotal, detectLang, qualityFromStats } from "./token-estimate.mjs";
 export { getEmbedder, cosine };
 
 const DEFAULT_LIB_DIR = path.join(import.meta.dirname, "..", "..", "library");
@@ -59,8 +60,25 @@ function scanBooks(libDir) {
     try {
       db = new Database(dbPath, { readonly: true });
       const meta = Object.fromEntries(db.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
+      // V3R7-①：token 账 + 章节质量。新库 build-book 直接写 meta；回补前的旧库现场估算
+      // （同一把尺子见 lib/token-estimate.mjs）——旧库不跑回补脚本也有正确展示。
+      let totalTokens = +meta.total_tokens > 0 ? +meta.total_tokens : null;
+      if (totalTokens === null && +meta.total_chars > 0) {
+        try {
+          const sample = db.prepare("SELECT text FROM chunks LIMIT 50").all().map(r => r.text);
+          totalTokens = bookTokenTotal(+meta.total_chars, detectLang(sample));
+        } catch { /* 坏库/空表：保持 null，调用方按未知处理 */ }
+      }
+      let chapterQuality = null;
+      try { chapterQuality = meta.chapter_quality ? JSON.parse(meta.chapter_quality) : null; } catch { /* 坏 JSON 现场算 */ }
+      if (!chapterQuality) {
+        try {
+          const st = db.prepare("SELECT COUNT(*) total, SUM(CASE WHEN chapter IS NOT NULL AND chapter != '' THEN 1 ELSE 0 END) named, AVG(CASE WHEN chapter IS NOT NULL AND chapter != '' THEN length(chapter) ELSE NULL END) avg_len FROM chunks").get();
+          chapterQuality = qualityFromStats({ total: st.total || 0, withChapter: st.named || 0, avgNameLen: st.avg_len || 0 });
+        } catch { chapterQuality = null; }
+      }
       db.close();
-      return { id: f.replace(/\.db$/, ""), db: dbPath, title: meta.title || f, format: meta.format, model: meta.model || null, chunks: +meta.chunk_count, chars: +meta.total_chars, pages: meta.num_pages || null, chapters: meta.num_chapters || null };
+      return { id: f.replace(/\.db$/, ""), db: dbPath, title: meta.title || f, format: meta.format, model: meta.model || null, chunks: +meta.chunk_count, chars: +meta.total_chars, pages: meta.num_pages || null, chapters: meta.num_chapters || null, total_tokens: totalTokens, chapter_quality: chapterQuality };
     } catch {
       // 坏库过滤：句柄必须先 close——Windows 上泄漏会让删库/清理临时目录报 EBUSY
       try { db?.close(); } catch { /* close 失败无从补救，继续过滤 */ }

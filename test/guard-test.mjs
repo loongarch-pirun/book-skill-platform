@@ -7,7 +7,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 
-import { hybridSearch, routeAndSearch } from "../src/lib/search.mjs";
+import { hybridSearch, routeAndSearch, listBooks } from "../src/lib/search.mjs";
 import { assertEngine, DEFAULT_EMBED } from "../src/lib/models.mjs";
 import { importCatalog } from "../src/lib/catalog.mjs";
 import { registerServerTools, TOPN_SCHEMA, clampTopN } from "../src/lib/register-tools.mjs";
@@ -714,7 +714,48 @@ const copyDb = (src) => {
   ok((pkgSrc.scripts["test:fast"] || "").includes("clean-test"),
     "静态: package.json test:fast 含 clean-test（挂载对账）");
 }
+
+// ========== 20) V3R7-① 数据层 + get_outline（第1批门禁） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripAll = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((l) => l.replace(/(^|\s)\/\/.*$/, "$1")).join("\n");
+  const te = await import("../src/lib/token-estimate.mjs");
+  ok(te.ZH_COEFF === 0.75 && te.EN_COEFF === 0.25 && te.bookTokenTotal(710791, "en") === Math.round(710791 * 0.25),
+    "静态: token 系数校准锁（P&P 710,791 字符 × 0.25 = 177.7K 实测账）");
+  const bbSrc = stripAll(readSrc("src", "build-book.js"));
+  ok(bbSrc.includes("total_tokens") && bbSrc.includes("chapter_quality") && bbSrc.includes("token_meta"),
+    "静态: build-book 写 total_tokens/chapter_quality meta（数据层契约在位）");
+  ok(bbSrc.includes("_private"),
+    "静态: build-book walkMd 拦 _private 路径段（作者简历类污染入口拦截）");
+  const rtSrc = stripAll(readSrc("src", "lib", "register-tools.mjs"));
+  ok(rtSrc.includes('server.registerTool("get_outline"'),
+    "静态: register-tools.mjs 注册 get_outline（MCP 契约在位）");
+  const pkgSrc2 = JSON.parse(readSrc("package.json"));
+  ok((pkgSrc2.scripts["test:fast"] || "").includes("outline-test"),
+    "静态: package.json test:fast 含 outline-test（挂载对账）");
+}
+{
+  const handlers = new Map();
+  const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };
+  registerServerTools(mockServer);
+  ok(handlers.has("get_outline"), "get_outline 工具已注册（处理器在位）");
+  const resp = await handlers.get("get_outline")({ book: "lunyu" });
+  const out = JSON.parse(resp.content[0].text);
+  ok(!out.error && out.chapters.length === 16 && out.total_blocks === 16
+    && out.chapter_quality.verdict === "reliable" && out.chapters.every(c => c.tokens > 0 && c.first_id > 0),
+    `get_outline 真库通（论语 ${out.chapters?.length} 章 / ${out.total_blocks} 块，带 token 账）`);
+  const noMatch = JSON.parse((await handlers.get("get_outline")({ book: "不存在的书xyz" })).content[0].text);
+  ok(noMatch.error && Array.isArray(noMatch.available), "get_outline 书名未命中给书目清单");
+}
+{
+  const books = listBooks(LIB);
+  ok(books.length > 0 && books.every(b => typeof b.total_tokens === "number" && b.total_tokens > 0),
+    `list_books 每本带 total_tokens（新库 meta 或旧库现场估算，${books.length} 本）`);
+  ok(books.every(b => b.chapter_quality && ["reliable", "messy", "none"].includes(b.chapter_quality.verdict)),
+    "list_books 每本带 chapter_quality（none/messy/reliable 三态）");
+}
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);
 if (fail) { console.error(`${fail} 项 FAIL`); process.exit(1); }
-console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造/云端清洗 ${pass} 项全过`);
+console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造/云端清洗/get_outline数据层 ${pass} 项全过`);
