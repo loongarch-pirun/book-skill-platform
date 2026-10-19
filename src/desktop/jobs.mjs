@@ -16,11 +16,13 @@ import { createRequire } from "node:module";
 import { clusterChunks, buildTask, parseResultText, importCatalog, buildPromptText } from "../lib/catalog.mjs";
 import { currentLibDir } from "../lib/search.mjs";
 import { resolveAsset, safeBookId } from "../lib/assets.mjs";
+import { loadLlmConfig, readLlmKey, llmConfigReady } from "./llm-config.mjs";
 import { UserError } from "./engine.mjs";
 
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 const EMBED_SCRIPT = path.join(import.meta.dirname, "..", "embed-book.js");
+const CLEAN_SCRIPT = path.join(import.meta.dirname, "..", "clean-book.mjs");
 const TXT2DOCX_SCRIPT = path.join(import.meta.dirname, "..", "txt2docx.js");
 const EXT_FMT = { pdf: "pdf", epub: "epub", docx: "docx", txt: "docx" }; // txt 先转 docx 再建库
 
@@ -228,6 +230,34 @@ export async function startProcessing(bookId) {
   }
   if (cancelled.has(id)) return cancelResult(id, g);
 
+  // 1.5) 云端清洗（clean-book）：本地结构化只管字节级脏数据（乱码/控制符），水贴/广告/
+  //      时间戳这类「看着像字但不是书」要 LLM 语义判定。必在向量化之前——删块后所有
+  //      索引对着干净库建，emb 不白烧。无 LLM 配置跳过不报错（检索不受影响）；判定
+  //      清单走 JSONL 缓存，取消/中断重跑续跑。失败/GATE 中断管线：清洗没过就 embed
+  //      等于白烧算力再返工，且 GATE=疑似模型抽风要删四成块，必须人工核查后显式放行。
+  const llmCfg = llmConfigReady() ? loadLlmConfig() : null;
+  const llmKey = llmCfg?.hasKey ? readLlmKey() : null;
+  if (llmKey && llmCfg.baseUrl && llmCfg.model) {
+    emitG({ stage: "clean", label: "云端清洗中", detail: `大模型逐块审读（${llmCfg.model}），删水贴/广告/乱入内容` });
+    const cleanCode = await runCleanBook(id, outDb, path.join(jobDirs().root, "clean-results"), g, {
+      BSP_LLM_BASE: llmCfg.baseUrl, BSP_LLM_MODEL: llmCfg.model, BSP_LLM_KEY: llmKey,
+    });
+    if (cancelled.has(id)) return cancelResult(id, g);
+    if (cleanCode !== 0) {
+      const why = cleanCode === 2
+        ? "云端清洗被拒：大模型要删的块超过四成，疑似抽风，已整单拒收（书库未动）。核查确认书真的很脏后，在终端跑 node src/clean-book.mjs <库路径> --force --force-gate 放行"
+        : "云端清洗失败（接口报错或网络问题）——已完成部分走缓存，重跑「开始加工」续跑";
+      emitG({ stage: "failed", label: "加工失败", error: why });
+      throw new UserError(why);
+    }
+    const rep = readCleanReport(outDb);
+    emitG(rep
+      ? { stage: "clean", detail: `云端清洗：审 ${rep.total} 块 · 删 ${rep.dropped}（${Math.round((rep.drop_ratio || 0) * 100)}%）· 护栏拦回 ${(rep.guarded_g1 ?? 0) + (rep.guarded_g2 ?? 0) + (rep.guarded_g3 ?? 0)}` }
+      : { stage: "clean", detail: "云端清洗：跳过（块太少或已洗过）" });
+  } else {
+    emitG({ stage: "clean", detail: "未配置或读不到云端 AI，跳过云端清洗（检索不受影响）" });
+  }
+
   // 2) 向量化：spawn embed-book.js <db>（显式传参；环境变量由 engine.init 回写的是
   //    BSP_LIB_DIR/BSP_SKILLS_DIR/BSP_MODELS_DIR 三个目录，nodeEnv() 另行补 ELECTRON_RUN_AS_NODE）
   emitG({ stage: "vector", label: "向量化中", detail: r.skipped ? "库已存在，补向量/概念图谱" : "首次要下嵌入模型（约 112MB）" });
@@ -371,6 +401,38 @@ function runEmbed(bookId, dbPath, g) {
     child.on("close", (code) => resolve(code ?? 1));
     child.on("error", () => resolve(1));
   });
+}
+
+// ---------- 内部：云端清洗子进程（clean-book CLI；llmEnv=主进程解出的明文配置走 env，不进 argv） ----------
+// enc 加密 key 只有主进程能解（safeStorage）——CLI 子进程解不了 enc:，所以判断/解密都在
+// 这边做完，env 传明文（任务管理器只见命令行不见 env；与 CLI 三级解析的 env 层天然兼容）。
+// 取消杀 child：JSONL 缓存保住已完成批，重跑「开始加工」续跑不重复烧钱。
+function runCleanBook(bookId, dbPath, resultsDir, g, llmEnv) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [CLEAN_SCRIPT, dbPath, "--results-dir", resultsDir], { env: { ...nodeEnv(), ...llmEnv } });
+    const j = jobs.get(bookId);
+    if (j) j.child = child;
+    let buf = "";
+    child.stdout.on("data", (d) => {
+      buf += d.toString();
+      const m = buf.match(/进度\s+(\d+)\/(\d+)/);
+      if (m) emit(bookId, { stage: "clean", detail: `云端清洗 ${m[1]}/${m[2]} 块` }, g);
+      if (buf.length > 4000) buf = buf.slice(-1000);
+    });
+    child.stderr.on("data", (d) => { buf += d.toString(); });
+    child.on("close", (code) => resolve(code ?? 1));
+    child.on("error", () => resolve(1));
+  });
+}
+
+// 清洗落账（meta.clean_report JSON）只读取——拼横幅用，读不到返回 null（不拖垮管线）
+function readCleanReport(dbPath) {
+  try {
+    const db = new Database(dbPath, { readonly: true });
+    const row = db.prepare("SELECT value FROM meta WHERE key='clean_report'").get();
+    db.close();
+    return row ? JSON.parse(row.value) : null;
+  } catch { return null; }
 }
 
 // txt → docx（复用 txt2docx.js CLI）。输出名带内容 hash：同源重跑幂等覆盖无害，

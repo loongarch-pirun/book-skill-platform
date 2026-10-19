@@ -652,7 +652,69 @@ const copyDb = (src) => {
   ok((pkgSrc.scripts["test:fast"] || "").includes("neighbor-test"),
     "静态: package.json test:fast 含 neighbor-test（P3-③ 挂载）");
 }
+
+// ========== 19) 云端清洗接线契约（clean-book） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripAll = (s) => s
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split("\n")
+    .map((l) => l.replace(/(^|\s)\/\/.*$/, "$1"))
+    .join("\n");
+  const cleanSrc = stripAll(readSrc("src", "lib", "clean.mjs"));
+  const impSrc = stripAll(readSrc("src", "lib", "clean-import.mjs"));
+  const cliSrc = stripAll(readSrc("src", "clean-book.mjs"));
+  const restoreSrc = stripAll(readSrc("src", "clean-restore.mjs"));
+  const jobsSrc = stripAll(readSrc("src", "desktop", "jobs.mjs"));
+  const pkgSrc = JSON.parse(readSrc("package.json"));
+
+  // ① 导出在位：跑批+护栏 / 落库+恢复 两条链路的关键函数（动态 import 实证）
+  const clean = await import("../src/lib/clean.mjs");
+  const imp = await import("../src/lib/clean-import.mjs");
+  ok(typeof clean.runClean === "function" && typeof clean.applyGuards === "function"
+    && typeof clean.matchVerdicts === "function" && typeof clean.isSubstantiveShort === "function",
+    "静态: clean.mjs 导出 runClean/applyGuards/matchVerdicts/isSubstantiveShort（跑批+护栏链路）");
+  ok(typeof imp.importClean === "function" && typeof imp.rebuildFts === "function"
+    && typeof imp.restoreClean === "function" && typeof imp.auditClean === "function",
+    "静态: clean-import.mjs 导出 importClean/rebuildFts/restoreClean/auditClean（落库+恢复链路）");
+
+  // ② 检索路径零沾染：clean 四件不 import search/vec-cache（删块只动 chunks/FTS，检索层不感知）
+  const allClean = cleanSrc + impSrc + cliSrc + restoreSrc;
+  ok(!/search\.mjs|vec-cache|hybridSearch/.test(allClean),
+    "静态: clean 四件零沾染检索路径（不 import search.mjs/vec-cache/hybridSearch）");
+
+  // ③ lib 无裸 throw：lib 契约 {ok,code,message} 返回制——唯一穿层例外 CANCELLED（桌面取消闸门）
+  ok(!/throw new/.test(cleanSrc) && !/throw new/.test(impSrc),
+    "静态: clean lib 零 throw new（错误码返回制）");
+  ok(/CANCELLED"\) throw e/.test(cleanSrc),
+    "静态: clean.mjs CANCELLED 穿层在位（取消必须穿层，兜底 catch 不许吞）");
+
+  // ④ 落库事务铁律：external content FTS5 表 DELETE 后必须 rebuild（幽灵索引）+ 隔离账留原文
+  ok(impSrc.includes("INSERT INTO chunks_fts(chunks_fts) VALUES('rebuild')"),
+    "静态: FTS rebuild 命令在位（external content 表 DELETE 不同步索引）");
+  ok(impSrc.includes("text TEXT NOT NULL"),
+    "静态: quarantine.text NOT NULL（隔离账必须留原文，恢复才有得插）");
+
+  // ⑤ CLI：三级配置解析 + 不落库逃生 + 恢复薄壳
+  ok(cliSrc.includes("BSP_LLM_BASE") && cliSrc.includes("--no-import") && cliSrc.includes("--force-gate"),
+    "静态: clean-book CLI 含 BSP_LLM_* 解析/--no-import/--force-gate");
+  ok(restoreSrc.includes("restoreClean") && restoreSrc.includes("--ids") && restoreSrc.includes("--dry-run"),
+    "静态: clean-restore CLI 薄壳调 restoreClean（--ids/--dry-run 在位）");
+
+  // ⑥ jobs 接线：spawn 带 nodeEnv()（G-01 静态锁）+ enc key 主进程解出走 env + 跳过/GATE 文案
+  ok(jobsSrc.includes("CLEAN_SCRIPT") && /spawn\(process\.execPath, \[CLEAN_SCRIPT[^\n]*nodeEnv\(\)/.test(jobsSrc),
+    "静态: jobs clean 段 spawn 带 nodeEnv()（G-01 ELECTRON_RUN_AS_NODE 锁）");
+  ok(jobsSrc.includes("readLlmKey"),
+    "静态: jobs 主进程解 key 走 env（enc 加密 key 子进程解不了）");
+  ok(jobsSrc.includes("跳过云端清洗") && jobsSrc.includes("--force --force-gate"),
+    "静态: jobs 无配置跳过文案 + GATE 放行指引（--force --force-gate）在位");
+
+  // ⑦ 套件挂载
+  ok((pkgSrc.scripts["test:fast"] || "").includes("clean-test"),
+    "静态: package.json test:fast 含 clean-test（挂载对账）");
+}
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);
 if (fail) { console.error(`${fail} 项 FAIL`); process.exit(1); }
-console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造 ${pass} 项全过`);
+console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造/云端清洗 ${pass} 项全过`);

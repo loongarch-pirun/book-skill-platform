@@ -30,10 +30,11 @@ const tools = await client.listTools();
 const names = tools.tools.map(t => t.name).sort();
 assert(JSON.stringify(names) === JSON.stringify(["expand", "get_chapter", "get_person", "get_theme", "list_books", "list_catalog", "list_skills", "lookup", "query_book", "query_library", "read_range", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 14 个工具: ${names.join(", ")}`);
 
-// 2. list_books
+// 2. list_books（V3 第五波：书架随用户增删动态——数量对账 library/*.db 实数，≥5 防空转）
 const lb = await client.callTool({ name: "list_books", arguments: {} });
 const books = JSON.parse(lb.content[0].text);
-assert(books.length === 17 && books.every(b => b.title && b.format), `list_books 返回 17 本书: ${books.map(b => b.title).join(" / ")}`);
+const libDbCount = fs.readdirSync(path.join(import.meta.dirname, "..", "library")).filter(f => f.endsWith(".db")).length;
+assert(books.length === libDbCount && books.length >= 5 && books.every(b => b.title && b.format), `list_books 返回 ${books.length} 本书（=库数 ${libDbCount}）且全带 title/format`);
 
 // 3. query_book 单书（书名精确匹配到 PDF 版，带页码定位）
 const qb = await client.callTool({ name: "query_book", arguments: { book: "lunyu-xueer-zh.pdf", question: "不患人之不己知", topN: 3 } });

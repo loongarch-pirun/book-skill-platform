@@ -42,9 +42,13 @@ ok(cfg.ok && cfg.data.dirs.libDir.endsWith("library") && cfg.data.firstRun === f
 
 const books = await invoke("books:list");
 // V3 第四波 #165：书架 = library 库（processed）∪ books/ 未加工原件（raw，数量随用户文件变，不断言）。
-// 锁稳定契约：processed 恒等于库数（十七本），且每条带编目摘要。
-ok(books.ok && books.data.filter(b => b.status === "processed").length === 17 && !!books.data[0].catalog,
-  "books:list 十七本已加工书带编目摘要（2026-10-16 V3 第二波 md 书 5 本 + 第三波-3 epub 两本/论文三篇入列）");
+// 锁稳定契约：processed 恒等于 library 库数、每条带编目摘要。V3 第五波起书架随用户增删动态
+// （2026-10-19 删库重建后 17 本快照作废——数量改为与 library/*.db 实数对账，下限 5 防空转）。
+const libDbCount = fs.readdirSync(path.join(import.meta.dirname, "..", "library"))
+  .filter(f => f.endsWith(".db")).length;
+const processed = books.data.filter(b => b.status === "processed");
+ok(books.ok && processed.length === libDbCount && processed.length >= 5 && processed.every(b => !!b.catalog),
+  `books:list 已加工书（${processed.length}）与库数（${libDbCount}）一致且全带编目摘要`);
 ok(books.data.every(b => b.status === "processed" || b.status === "raw") && books.data.every(b => !!b.asset),
   "书架每条带 status/asset（raw=待加工，供渲染层分流）");
 const id = books.data[0].id;
@@ -134,7 +138,7 @@ try {
   if (backup === null) fs.rmSync(stateFile, { force: true }); else fs.writeFileSync(stateFile, backup);
 }
 const back = await invoke("books:list");
-ok(back.data.filter(b => b.status === "processed").length === 17, "状态复位后十七本已加工书回来（finally 保护生效）");
+ok(back.data.filter(b => b.status === "processed").length === libDbCount, `状态复位后已加工书回来（${libDbCount} 本，finally 保护生效）`);
 
 // ---------- P5 派生六落点：真库只读定位（一格都不删） ----------
 // 真删行为由 archive-config-fuzz P1-E1/E3 在 tmp 自建库上验（走同一份真 IPC handler）。
