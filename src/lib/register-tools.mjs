@@ -4,7 +4,7 @@ import { listBooks, hybridSearch, routeAndSearch } from "./search.mjs";
 import { getCatalogSummary, getPersonDetail, getThemeDetail, expandNeighborhood } from "./catalog.mjs";
 import { similarChunks } from "./similar.mjs";
 import { lookupEntry } from "./lookup.mjs";
-import { readChapter, readRange } from "./browse.mjs";
+import { readChapter, readRange, readFullBook } from "./browse.mjs";
 import { getOutline } from "./outline.mjs";
 import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
 
@@ -27,7 +27,7 @@ export const clampMaxBooks = (n) => Math.min(Math.max(1, Math.floor(Number(n) ||
 export function registerServerTools(server) {
   server.registerTool("list_books", {
     title: "书架清单",
-    description: "列出知识库里所有的书（标题/格式/切片数/定位方式）。回答前先调用它了解有哪些书可查。",
+    description: "列出知识库里所有的书（标题/格式/切片数/≈token 总量/章节质量）。回答前先调用它了解有哪些书可查，并按 total_tokens 决定读法：≤10K 用 read_full_book 全文直读，更大用 get_outline 看地图再翻章。",
     inputSchema: {},
   }, async () => {
     const books = listBooks();
@@ -103,7 +103,7 @@ export function registerServerTools(server) {
 
   server.registerTool("lookup", {
     title: "章节直达（工作资料寻址）",
-    description: "按章节标题/编号精确直达某章节的全部原文块（精确→前缀→包含三级匹配，如查错误码 E1001、条款号 3.2、流程步骤标题）。分工：查错误码/条款号/流程步骤标题用它精确直达；查概念/情节/术语解释用 query_book。文档需按 # 标题 约定导入才有章节可查（PDF 无章节、EPUB 章节值不可靠）。",
+    description: "按章节标题/编号精确直达某章节的全部原文块（精确→前缀→包含三级匹配，如查错误码 E1001、条款号 3.2、流程步骤标题）。分工：查错误码/条款号/流程步骤标题用它精确直达；查概念/情节/术语解释用 query_book。文档需按 # 标题 约定导入才有章节可查（PDF 无章节；EPUB 章节名可能是正文片段——get_outline 会标 messy，按名落空就用 read_range 按块号读）。",
     inputSchema: {
       book: z.string().describe("书名或书名片段，如 员工手册、mengzi"),
       key: z.string().describe("章节标题或编号，如 E1001、3.2 安装步骤、第一章"),
@@ -114,6 +114,21 @@ export function registerServerTools(server) {
     if (!matches.length)
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
     const out = lookupEntry(matches[0].db, key, { maxBlocks });
+    out.book = matches[0].title;
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  server.registerTool("read_full_book", {
+    title: "全文直读（小书）",
+    description: "≤10K token 的小书全文一口气端出（论语/道德经/attention 这个量级）——小书走检索是纯损耗还可能漏，全文进上下文零检索误差。超过 10K token 返回 too-big 并给体量与指路（get_outline 看地图 → get_chapter/read_range 翻章）。先用 list_books 看每本书的 total_tokens 再决定用不用它。",
+    inputSchema: {
+      book: z.string().describe("书名或书名片段，如 论语、道德经、attention"),
+    },
+  }, async ({ book }) => {
+    const matches = matchBook(book);
+    if (!matches.length)
+      return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
+    const out = readFullBook(matches[0].db);
     out.book = matches[0].title;
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
@@ -136,11 +151,11 @@ export function registerServerTools(server) {
 
   server.registerTool("get_chapter", {
     title: "整章通读",
-    description: "按章节名取某本书一章的完整原文（比 lookup 上限更高，为「通读/摘录全文」设计；三级匹配精确→前缀→包含，命中多章取文档序第一个）。读长章被截断时按 note 里的提示用 read_range 续读。PDF 无章节时报 no-chapters——改用 query_book 或 read_range。",
+    description: "按章节名取某本书一章的完整原文（比 lookup 上限更高，为「通读/摘录全文」设计；三级匹配精确→前缀→包含，命中多章取文档序第一个）。截断按 token 闸（8K）为主、块数上限 60 为辅，note 里带真实 token 账与续读块号。PDF 无章节时报 no-chapters——改用 query_book 或 read_range；EPUB 章节名可能是正文片段（get_outline 会标 messy）——按名落空时用 read_range。",
     inputSchema: {
       book: z.string().describe("书名或书名片段，如 pride、mengzi"),
       chapter: z.string().describe("章节名（或前缀/包含匹配），如 梁惠王上、Chapter 8"),
-      maxBlocks: z.number().int().min(1).max(60).optional().describe("最多返回块数，默认 60"),
+      maxBlocks: z.number().int().min(1).max(60).optional().describe("最多返回块数（硬上限），默认 60；token 闸 8K 可能提前截断"),
     },
   }, async ({ book, chapter, maxBlocks }) => {
     const matches = matchBook(book);
@@ -153,12 +168,12 @@ export function registerServerTools(server) {
 
   server.registerTool("read_range", {
     title: "原文区间读",
-    description: "按块号区间连续读某本书的原文（from/to 都是 query_book/lookup/get_chapter 结果里的 id）。适合「把这一段完整读给我」「从第 X 块接着往下读」。区间过宽会截断并给续读游标；区间为空会报本书块号范围。",
+    description: "按块号区间连续读某本书的原文（from/to 都是 query_book/lookup/get_chapter/read_full_book 结果里的 id）。适合「把这一段完整读给我」「从第 X 块接着往下读」。截断按 token 闸（8K）为主、块数上限 80 为辅，区间过宽会截断并给续读游标（带 token 账）；区间为空会报本书块号范围。无章节的书（PDF/ messy EPUB）优先用它。",
     inputSchema: {
       book: z.string().describe("书名或书名片段，如 pride、mengzi"),
       from: z.number().int().min(1).describe("起始块号（含）"),
       to: z.number().int().min(1).describe("结束块号（含）"),
-      maxBlocks: z.number().int().min(1).max(80).optional().describe("最多返回块数，默认 80"),
+      maxBlocks: z.number().int().min(1).max(80).optional().describe("最多返回块数（硬上限），默认 80；token 闸 8K 可能提前截断"),
     },
   }, async ({ book, from, to, maxBlocks }) => {
     const matches = matchBook(book);

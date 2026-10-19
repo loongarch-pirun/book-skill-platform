@@ -755,7 +755,31 @@ const copyDb = (src) => {
   ok(books.every(b => b.chapter_quality && ["reliable", "messy", "none"].includes(b.chapter_quality.verdict)),
     "list_books 每本带 chapter_quality（none/messy/reliable 三态）");
 }
+
+// ========== 21) V3R7-② read_full_book + token 闸（第2批门禁） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripAll = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((l) => l.replace(/(^|\s)\/\/.*$/, "$1")).join("\n");
+  const browseSrc = stripAll(readSrc("src", "lib", "browse.mjs"));
+  ok(/export const FULL_READ_TOKEN_CAP = 10000/.test(browseSrc) && /export const CHAPTER_TOKEN_CAP = 8000/.test(browseSrc),
+    "静态: FULL_READ_TOKEN_CAP=10000 / CHAPTER_TOKEN_CAP=8000 字面量在位（闸门可回退可断言）");
+  ok(browseSrc.includes("takeWithTokenCap") && browseSrc.includes("estimateTokens"),
+    "静态: browse token 闸走 estimateTokens（系数不散落硬编码）");
+}
+{
+  const handlers = new Map();
+  const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };
+  registerServerTools(mockServer);
+  ok(handlers.has("read_full_book"), "read_full_book 工具已注册");
+  const small = JSON.parse((await handlers.get("read_full_book")({ book: "lunyu" })).content[0].text);
+  ok(!small.error && small.blocks.length === 16 && small.total_blocks === 16 && small.tokens > 0,
+    `read_full_book 小书全文（论语 ${small.blocks?.length} 块 ≈${small.tokens} token）`);
+  const big = JSON.parse((await handlers.get("read_full_book")({ book: "pride" })).content[0].text);
+  ok(big.error === "too-big" && big.tokens > 10000 && /get_outline/.test(big.hint || ""),
+    `read_full_book 大书拒喂并指路（P&P ${big.tokens} token）`);
+}
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);
 if (fail) { console.error(`${fail} 项 FAIL`); process.exit(1); }
-console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造/云端清洗/get_outline数据层 ${pass} 项全过`);
+console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造/云端清洗/get_outline数据层/read_full_book全文闸 ${pass} 项全过`);

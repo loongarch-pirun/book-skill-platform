@@ -6,7 +6,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
-const { readChapter, readRange, clampChapterBlocks, clampRangeBlocks, CHAPTER_CAP, RANGE_CAP } =
+const { readChapter, readRange, readFullBook, clampChapterBlocks, clampRangeBlocks, CHAPTER_CAP, RANGE_CAP, CHAPTER_TOKEN_CAP, RANGE_TOKEN_CAP, FULL_READ_TOKEN_CAP } =
   await import("../src/lib/browse.mjs");
 
 let pass = 0, fail = 0;
@@ -118,6 +118,49 @@ ok(clampRangeBlocks(999) === RANGE_CAP && clampRangeBlocks() === RANGE_CAP
   ok(r.error === "db-broken", "readRange 坏库报 db-broken");
   const r2 = readChapter(badPath, "甲篇");
   ok(r2.error === "db-broken", "readChapter 坏库报 db-broken");
+}
+
+// ---------- 3) V3R7-② token 闸：大章按 token 截断（块数 cap 保留作硬上限） ----------
+const bigDb = path.join(tmp, "big-chapter.db");
+{
+  const db = new Database(bigDb);
+  db.exec(`CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT);
+    CREATE TABLE chunks(id INTEGER PRIMARY KEY, chapter TEXT, page INTEGER, text TEXT NOT NULL);
+    CREATE VIRTUAL TABLE chunks_fts USING fts5(text, content='chunks', content_rowid='id', tokenize='trigram');`);
+  db.prepare("INSERT INTO meta(key,value) VALUES('title','大章测试书')").run();
+  const ins = db.prepare("INSERT INTO chunks(id, chapter, page, text) VALUES (?,?,?,?)");
+  // 45 块 × 1000 英文字符 ≈ 11.25K token（>8K 闸且 >10K 全文闸）；块数 45 < cap 60——旧实现全给，新实现按 token 截
+  for (let i = 1; i <= 45; i++) ins.run(i, "大章", i, ("token " + i + " ").padEnd(1000, "x"));
+  db.prepare("INSERT INTO chunks_fts(chunks_fts) VALUES('rebuild')").run();
+  db.close();
+}
+{
+  const r = readChapter(bigDb, "大章");
+  ok(r.blocks.length < 45 && r.tokens <= CHAPTER_TOKEN_CAP && r.total === 45,
+    `readChapter token 闸截断（${r.blocks.length}/45 块，${r.tokens} token ≤ ${CHAPTER_TOKEN_CAP}）`);
+  ok(/token 闸/.test(r.note || "") && /read_range\(book, \d+, …\)/.test(r.note || ""),
+    `readChapter 截断 note 带 token 闸事由与续读游标（${r.note?.slice(0, 60)}…）`);
+  const r2 = readChapter(bigDb, "大章", { maxBlocks: 10 });
+  ok(r2.blocks.length === 10 && r2.tokens <= CHAPTER_TOKEN_CAP, "readChapter maxBlocks 小于 token 闸时块数 cap 先生效");
+  const r3 = readRange(bigDb, 1, 45);
+  ok(r3.blocks.length < 45 && r3.tokens <= RANGE_TOKEN_CAP && /token 闸/.test(r3.note || ""),
+    `readRange token 闸截断（${r3.blocks.length}/45 块，${r3.tokens} token）`);
+}
+
+// ---------- 4) V3R7-② read_full_book：小书全文 / too-big / 空书 / 坏库 ----------
+{
+  const r = readFullBook(dbPath);
+  ok(!r.error && r.blocks.length === 13 && r.total_blocks === 13 && r.tokens > 0
+    && r.blocks[0].id === 1 && r.blocks[12].id === 14, `readFullBook 小书全文端出（${r.blocks.length} 块 ≈${r.tokens} token）`);
+  const big = readFullBook(bigDb);
+  ok(big.error === "too-big" && big.tokens > FULL_READ_TOKEN_CAP && /get_outline/.test(big.hint || ""),
+    `readFullBook 超 10K token 拒喂并指路（${big.tokens} token > ${FULL_READ_TOKEN_CAP}）`);
+  const empty = path.join(tmp, "empty.db");
+  const dbe = new Database(empty);
+  dbe.exec("CREATE TABLE chunks(id INTEGER PRIMARY KEY, chapter TEXT, page INTEGER, text TEXT NOT NULL);");
+  dbe.close();
+  ok(readFullBook(empty).error === "empty-book", "readFullBook 空书报 empty-book");
+  ok(readFullBook(badPath).error === "db-broken", "readFullBook 坏库报 db-broken");
 }
 
 // ---------- 清理（尽力而为） ----------
