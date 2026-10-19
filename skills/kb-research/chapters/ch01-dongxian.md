@@ -15,7 +15,7 @@
 - get_chapter(book, chapter)：reliable 的书按章名整章通读（三级匹配 精确→前缀→包含）。截断按 token 闸 8K 算，note 里带真实 token 账和续读块号。
 - read_range(book, from, to)：按块号区间连续读。messy/none 的书（EPUB 脏章名、PDF 无章）**优先用它**；也是 get_chapter 截断后的续读通道。
 - query_book(book, question)：查「哪一段讲了 X」用检索；结果带定位，可再 get_chapter/read_range 取完整上下文。
-- 不知道查哪本书 → query_library(question) 自动挑书（默认 3 本，maxBooks 可调）。
+- 不知道查哪本书 → query_library(question) 自动挑书（默认 4 本，maxBooks 可调）。
 
 ## ④ cite_check(book, quote)
 把准备引用的句子贴回去：命中给块号/章节/页码；未命中明确说「不要采用」。**写完答案后逐条自检**，别等读者发现。

@@ -11,9 +11,13 @@
 // 落库单事务（顺序关键）：quarantine 先落账 → DELETE chunks → FTS rebuild → 悬空边清理 → meta 六键。
 //   FTS rebuild 是**必须**步骤：chunks_fts 是 external content FTS5 表（content='chunks'），
 //   DELETE 不会自动同步索引，不 rebuild 就有幽灵索引行（检索捞出已删块）。
+//   事务收尾 syncBookMeta：删块后 chunk_count/total_chars/total_tokens/chapter_quality 四本账
+//   对齐留存实况（restoreClean 恢复时同函数回涨）——不清则 meta 记的是加工前的数，
+//   newbook-check「账实相符」红、list_books 数字虚高（kk 正式收录实测踩到：记 809 实际 760）。
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import { buildCleanTasks, textHash16, CLEAN_DEFAULTS, CLEAN_VERSION } from "./clean.mjs";
+import { bookTokenTotal, detectLang, qualityFromStats } from "./token-estimate.mjs";
 const require = createRequire(import.meta.url);
 
 // 阈值 env 可覆盖（回归对比不改代码就能调档；与 enrichGateThresholds 同款）
@@ -48,6 +52,22 @@ export function ensureCleanSchema(db) {
 // FTS 全量重建：external content FTS5 的标准命令，DELETE 后必须调（探索已确认适用本项目 DDL）
 export function rebuildFts(db) {
   db.exec("INSERT INTO chunks_fts(chunks_fts) VALUES('rebuild')");
+}
+
+// 四本账与库里实况对齐（须在改动的同一事务内调）：
+//   chunk_count/total_chars 是建库账（newbook-check「账实相符」与 list_books 数字的数据源），
+//   total_tokens/chapter_quality 是 V3R7 数据层账（get_outline/read_full_book 闸门的地基）。
+// 尺子与 build-book 记账一致：JS .length（UTF-16 码元）；token/质量判定与 backfill-meta 同源。
+export function syncBookMeta(db) {
+  const rows = db.prepare("SELECT chapter, text FROM chunks").all();
+  const chars = rows.reduce((a, r) => a + r.text.length, 0);
+  const named = rows.filter(r => r.chapter);
+  const avgNameLen = named.length ? named.reduce((a, r) => a + r.chapter.length, 0) / named.length : 0;
+  const setMeta = db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES (?,?)");
+  setMeta.run("chunk_count", String(rows.length));
+  setMeta.run("total_chars", String(chars));
+  setMeta.run("total_tokens", String(bookTokenTotal(chars, detectLang(rows.slice(0, 50).map(r => r.text)))));
+  setMeta.run("chapter_quality", JSON.stringify(qualityFromStats({ total: rows.length, withChapter: named.length, avgNameLen })));
 }
 
 // 悬空边清理：被删块的 chunk 锚定边（embed 建的 rule 层相似边/章节边，src 是 TEXT 需 CAST）。
@@ -169,6 +189,7 @@ export function importClean(dbPath, artifactPath, opts = {}) {
       setMeta.run("clean_chunk_fp", task.book.chunk_fp);
       setMeta.run("clean_content_hash", task.book.content_hash);
       setMeta.run("clean_version", String(CLEAN_VERSION));
+      syncBookMeta(db);
     });
     try { tx(); }
     catch (e) {
@@ -250,6 +271,7 @@ export function restoreClean(dbPath, opts = {}) {
       const prev = (() => { try { return JSON.parse(db.prepare("SELECT value FROM meta WHERE key='clean_restore_log'").get()?.value || "[]"); } catch { return []; } })();
       prev.push({ at: now, restored, conflicts: [...conflicts], ids: rows.map(r => r.chunk_id) });
       db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('clean_restore_log',?)").run(JSON.stringify(prev.slice(-20)));
+      syncBookMeta(db);
     });
     try { tx(); }
     catch (e) { return { ok: false, code: "DBBROKEN", message: `恢复写库失败（已整单回滚）：${e?.message || e}` }; }

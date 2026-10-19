@@ -523,19 +523,21 @@ console.log("\n--- W4 清单缓存对抗 ---");
 // ========== W5 maxBooks + 链路对抗 ==========
 console.log("\n--- W5 maxBooks 链路 ---");
 {
-  // clampMaxBooks 矩阵（0/NaN/null → 默认 3、负 → 1、超 → 8、字符串数字可用）
+  // clampMaxBooks 矩阵（0/NaN/null → 默认 4、负 → 1、超 → 8、字符串数字可用）
   // 2026-10-16：默认 2→3（书库 7→12 本，2 本窗口切掉真相关书）
-  ok(clampMaxBooks(0) === 3 && clampMaxBooks(undefined) === 3 && clampMaxBooks(null) === 3 && clampMaxBooks("abc") === 3
+  // 2026-10-19：默认 3→4（kkndme 收录后 9 库，dense-book 效应：kk/凤凰 max-chunk 分 0.88
+  //  压过论语 0.862 只差 0.003，「和朋友相处要讲信用」终局答案错配到凤凰@数字证书章）
+  ok(clampMaxBooks(0) === 4 && clampMaxBooks(undefined) === 4 && clampMaxBooks(null) === 4 && clampMaxBooks("abc") === 4
     && clampMaxBooks(-5) === 1 && clampMaxBooks(99) === 8 && clampMaxBooks(5.9) === 5 && clampMaxBooks("7") === 7 && clampMaxBooks(true) === 1,
-    `W5-1: clampMaxBooks 矩阵（0→3/null→3/-5→1/99→8/5.9→5/"7"→7/true→1）`);
+    `W5-1: clampMaxBooks 矩阵（0→4/null→4/-5→1/99→8/5.9→5/"7"→7/true→1）`);
   // zod schema 与处理器夹取双层一致
   const zodOk = MAXBOOKS_SCHEMA.safeParse(8).success && MAXBOOKS_SCHEMA.safeParse(undefined).success
     && !MAXBOOKS_SCHEMA.safeParse(9).success && !MAXBOOKS_SCHEMA.safeParse(0).success && !MAXBOOKS_SCHEMA.safeParse(2.5).success;
   ok(zodOk, "W5-2: MAXBOOKS_SCHEMA zod 层 [1..8] 整数（8✓/undefined✓/9✗/0✗/2.5✗）");
   // 三方 clamp 家族语义一致：0→默认、负→下限 1、超→上限
-  // 2026-10-16：maxBooks 默认 2→3（书库 7→12 本，2 本窗口切掉真相关书）
-  ok(clampMaxBooks(0) === 3 && clampMaxBlocks(0) === 20 && clampMaxBooks(-1) === 1 && clampMaxBlocks(-1) === 1 && MAX_BLOCKS === 40,
-    "W5-3: clamp 家族一致性（maxBooks 默认3/上限8、maxBlocks 默认20/上限40、负→1 全同款语义）");
+  // 2026-10-16：maxBooks 默认 2→3（书库 7→12 本，2 本窗口切掉真相关书）；2026-10-19：3→4（同上）
+  ok(clampMaxBooks(0) === 4 && clampMaxBlocks(0) === 20 && clampMaxBooks(-1) === 1 && clampMaxBlocks(-1) === 1 && MAX_BLOCKS === 40,
+    "W5-3: clamp 家族一致性（maxBooks 默认4/上限8、maxBlocks 默认20/上限40、负→1 全同款语义）");
   // lookup 上限与 zod 1..40 对齐（clampMaxBlocks 夹取 = MAX_BLOCKS）
   ok(clampMaxBlocks(41) === 40 && clampMaxBlocks(MAX_BLOCKS + 1) === MAX_BLOCKS && clampMaxBlocks("39") === 39,
     "W5-4: clampMaxBlocks 上夹=MAX_BLOCKS=40（与 MCP schema 1..40 对齐）");
@@ -548,7 +550,7 @@ console.log("\n--- W5 maxBooks 链路 ---");
   const r0 = await routeAndSearch(qR, { maxBooks: 0, libDir: libR });
   obs(r0.routed_books.length === 0 && r0.results.length === 0 && r0.considered.length === 2,
     "W5-5 直调 maxBooks=0 登记",
-    `lib 层切片直通（slice(0,0)）→ 静默空结果不报错；工具层 clampMaxBooks 把 0 归一为 2，MCP 路径不暴露此口子（considered ${r0.considered.length} 本有分但 routed=0）`);
+    `lib 层切片直通（slice(0,0)）→ 静默空结果不报错；工具层 clampMaxBooks 把 0 归一为 4，MCP 路径不暴露此口子（considered ${r0.considered.length} 本有分但 routed=0）`);
   const r1 = await routeAndSearch(qR, { maxBooks: 1, libDir: libR });
   const r8 = await routeAndSearch(qR, { maxBooks: 8, libDir: libR });
   ok(r1.routed_books.length <= 1 && r8.routed_books.length <= 2 && r8.results.every(x => x.book && x.bookId),

@@ -15,6 +15,11 @@ import { getEmbedder, DEFAULT_EMBED } from "../src/lib/models.mjs";
 const LIB = process.env.BSP_EVAL_LIB || path.join(import.meta.dirname, "..", "library");
 
 const GOLDEN = [
+  // 名册说明（2026-10-19 考卷重建时盘点）：
+  //   · 在架书（library/ 有库）正常计分：论语×2 版/孟子/道德经/P&P/Frankenstein/attention/凤凰/kkndme；
+  //   · 【佚书】标记的条目（d2l/og-aws/SDP/hello-algo/简爱/福尔摩斯/三篇论文）——书曾建库编目，
+  //     但库不在本机（V3 第二波~第三波-3 的历史资产，catalog JSON 仍在 git），跑时自动丢弃不计分；
+  //     原料多在本机 books/_work/，哪天真重入库（第二波重入库波次），这些题自动复活。
   // ===== 论语·学（繁体版原文，金标准用书中原字） =====
   { book: "lunyu-xueer-zh.docx", q: "学了之后经常温习会怎么样", g: ["不亦說乎"] },
   { book: "lunyu-xueer-zh.docx", q: "别人不了解我我也不生气，算怎样的人", g: ["不亦君子乎"] },
@@ -76,7 +81,8 @@ const GOLDEN = [
   { book: "pride-and-prejudice-en.epub", q: "who tries to separate jane and bingley", g: ["caroline", "miss bingley"] },
   { book: "pride-and-prejudice-en.epub", q: "达西先生的庄园叫什么名字", g: ["pemberley"] },
   { book: "pride-and-prejudice-en.epub", q: "what legal arrangement means the estate passes to collins", g: ["entail"] },
-  // ===== V3 第二波新语料（2026-10-16，md 书 5 本冷接入；每题金词逐一回原文验真后进卷） =====
+  // ===== V3 第二波新语料（2026-10-16，md 书 5 本冷接入；每题金词逐一回原文验真后进卷）=====
+  // 【佚书】og-aws/SDP/hello-algo/d2l 四本库不在本机（凤凰已回架，见下）；条目保留，重入库自动复活
   // og-aws（英文工程手册；中英混问测跨语言——AZ 题实测中文问句跨不过去，与既有「文言边界」同理登记）
   { book: "og-aws-en.md", q: "S3 的数据持久性官方数字是多少", g: ["99.999999999"] },
   { book: "og-aws-en.md", q: "在 S3 里刚创建的对象做列表操作能保证马上出现吗", g: ["eventual consistency"] },
@@ -92,17 +98,19 @@ const GOLDEN = [
   { book: "hello-algo-zh.md", q: "队列遵循什么原则", g: ["先入先出"] },
   { book: "hello-algo-zh.md", q: "解决哈希冲突的链式方案叫什么名字", g: ["链式地址"] },
   { book: "hello-algo-zh.md", q: "栈的数组实现扩容时单次入栈的时间复杂度会劣化到多少", g: ["O(n)", "劣化至"] },
-  // 凤凰架构（中文；分布式架构教材）
-  { book: "awesome-fenix-zh.md", q: "微服务中的服务降级熔断异常注入等链路治理需要在几层负载均衡里做", g: ["七层"] },
-  { book: "awesome-fenix-zh.md", q: "Paxos Raft ZAB 这类分布式共识协议被称为什么协议", g: ["强一致性"] },
-  { book: "awesome-fenix-zh.md", q: "Redis 集群从数据一致性角度属于哪种类型", g: ["AP 式"] },
-  { book: "awesome-fenix-zh.md", q: "狭义的刚性 ACID 事务在分布式系统中为什么会矛盾", g: ["CAP 不可兼得"] },
+  // 凤凰架构（中文；分布式架构教材。2026-10-19 订正：库名 awesome-fenix-zh.md → fenix-architecture.md，
+  //  改名后这 4 题曾被静默丢弃——金词已在新库复核仍在（x21/x9/x2/x4））
+  { book: "fenix-architecture.md", q: "微服务中的服务降级熔断异常注入等链路治理需要在几层负载均衡里做", g: ["七层"] },
+  { book: "fenix-architecture.md", q: "Paxos Raft ZAB 这类分布式共识协议被称为什么协议", g: ["强一致性"] },
+  { book: "fenix-architecture.md", q: "Redis 集群从数据一致性角度属于哪种类型", g: ["AP 式"] },
+  { book: "fenix-architecture.md", q: "狭义的刚性 ACID 事务在分布式系统中为什么会矛盾", g: ["CAP 不可兼得"] },
   // 动手学深度学习（中英混排；d2l-zh 中英双语篇交替）
   { book: "d2l-zh.md", q: "Fashion-MNIST 的训练集有多少张图像", g: ["60000"] },
   { book: "d2l-zh.md", q: "Fashion-MNIST 每张图像的高度和宽度是多少", g: ["28像素"] },
   { book: "d2l-zh.md", q: "用什么方法可以减轻过拟合，比如随机水平翻转图像", g: ["图像增广"] },
   { book: "d2l-zh.md", q: "在注意力机制中，自主性提示被称为什么", g: ["（query）", "被称为*查询*"] },
-  // ===== V3 第三波-3 epub 两本（2026-10-16 冷接入；每题金词回原文验真+候选题探针实跑才入卷） =====
+  // ===== V3 第三波-3 epub 两本（2026-10-16 冷接入；每题金词回原文验真+候选题探针实跑才入卷）=====
+  // 【佚书】两本库不在本机（原料在 books/_work/epub/）；条目保留，重入库自动复活
   // 简·爱（Gutenberg pg1260；判分注：金词 "no possibility of taking a walk" 全书仅 1 处=开篇名句，
   //   top4 命中依赖复试官——与既有 og-aws AZ 题同理登记「英文文学细节题需复试官价值区」）
   { book: "jane-eyre-en.epub", q: "what was impossible to do on the day the novel opens", g: ["no possibility of taking a walk"] },
@@ -114,7 +122,8 @@ const GOLDEN = [
   { book: "sherlock-holmes-adventures-en.epub", q: "what is the address of sherlock holmes's london lodgings", g: ["Baker Street", "221B"] },
   { book: "sherlock-holmes-adventures-en.epub", q: "what kind of snake is the deadly serpent in the speckled band", g: ["swamp adder"] },
   { book: "sherlock-holmes-adventures-en.epub", q: "who is the friend and colleague who helps sherlock holmes and narrates the cases", g: ["Watson"] },
-  // ===== V3 第三波-3 论文三篇（2026-10-16 PDF 冷接入；双栏列感知解析后，金词回原文验真+探针实跑才入卷） =====
+  // ===== V3 第三波-3 论文三篇（2026-10-16 PDF 冷接入；双栏列感知解析后，金词回原文验真+探针实跑才入卷）=====
+  // 【佚书】三本库不在本机（原料在 books/_work/论文/）；条目保留，重入库自动复活
   // Dynamo（SOSP 2007；Amazon 高可用键值存储）
   { book: "dynamo-2007-en.pdf", q: "what partitioning technique does dynamo use to spread its keys across nodes", g: ["consistent hashing"] },
   { book: "dynamo-2007-en.pdf", q: "what mechanism does dynamo use to capture causality between different versions of the same object", g: ["vector clock"] },
@@ -130,6 +139,19 @@ const GOLDEN = [
   { book: "mapreduce-2004-en.pdf", q: "what is the primary mechanism mapreduce uses for fault tolerance", g: ["re-execut"] },
   { book: "mapreduce-2004-en.pdf", q: "what does the master launch to handle straggler machines that slow down completion", g: ["backup task"] },
   { book: "mapreduce-2004-en.pdf", q: "why does mapreduce schedule map tasks close to the data they process", g: ["locality", "network bandwidth"] },
+  // ===== V3R7 考卷重建（2026-10-19；kkndme 正式收录。每题金词已回库 instr 验真）=====
+  // 房地产主线（白话问、原文答；论坛体「作者：xxx的回复」噪声是检索难点，故 6 题里 4 题走主线）
+  { book: "kkndme-zh.pdf", q: "2010 年房地产调控真正为的是什么，不是降房价吗", g: ["维稳"] },
+  { book: "kkndme-zh.pdf", q: "楼主说通货膨胀对延缓灭亡来说是什么药", g: ["良药"] },
+  { book: "kkndme-zh.pdf", q: "公租房推出来之后市场上的房租会整体怎么走", g: ["房租整体上涨"] },
+  { book: "kkndme-zh.pdf", q: "人民币外升内贬的现象是怎么造成的", g: ["外升内贬"] },
+  { book: "kkndme-zh.pdf", q: "想了解一个片区房价，楼主说要聊几家中介公司", g: ["3个中介"] },
+  { book: "kkndme-zh.pdf", q: "读者问全款买房还是贷款买房更划算，楼主给了什么思路", g: ["贷款划算", "毋庸置疑"] },
+  // 以史喻今副线（同一本书的历史段落——考跨主题检索：房产书里问历史）
+  { book: "kkndme-zh.pdf", q: "楼主形容朱元璋发家前是个什么样的人", g: ["要饭吃的和尚"] },
+  { book: "kkndme-zh.pdf", q: "崇祯皇帝最后会上吊，楼主认为根子在哪", g: ["性格缺陷"] },
+  { book: "kkndme-zh.pdf", q: "宋史把贾似道写进了哪一部传", g: ["奸臣传"] },
+  { book: "kkndme-zh.pdf", q: "楼主说读史读的不是故事，那读的是什么", g: ["历史规律"] },
 ];
 
 const args = process.argv.slice(2);

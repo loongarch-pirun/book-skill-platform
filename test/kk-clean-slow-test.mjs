@@ -2,7 +2,7 @@
 // ① 材料存在性：kk-dirty-full.pdf（真跑验收料）/ kk-clean-louzhu.pdf（净版标准答案 552 块）
 // ② 假 chatFn 回放水贴特征全链路：真 build-book 建库（解析→切片→结构化，不 embed）
 //    → 预读块文本按水贴特征预判（与护栏同规则，保证回放 drop 全部能过 G1-G3）
-//    → runClean 产产物 → importClean 四道闸落库 → quarantine/chunks/FTS 三对账 → 恢复 dryRun
+//    → runClean 产产物 → importClean 四道闸落库 → quarantine/chunks/FTS 三对账 + 账目同步 → 恢复 dryRun + 真恢复回涨
 // 真钱真网络的 LLM 验收走手动命令（docs/V3规划.md 第九节 S8）。
 import fs from "node:fs";
 import os from "node:os";
@@ -91,13 +91,34 @@ assert(fs.existsSync(cleanVer), "材料: kk-clean-louzhu.pdf 在位（净版标�
   assert(ftsCount === after, `FTS rebuild 对账（${ftsCount} === chunks ${after}——无幽灵索引）`);
   assert(report.dropped === shuiIdx.length && report.total === before, `clean_report 落账对账（dropped=${report.dropped} total=${report.total}）`);
 
-  // 恢复链路：dryRun 列出全部隔离块（真恢复是 S8 手动命令的事）
+  // 账目同步（syncBookMeta）：清洗后 meta 四本账必须等于留存实况——
+  // 不清则 newbook-check「账实相符」红、list_books 虚高（kk 正式收录实测踩到）
+  {
+    const dbm = new Database(dbPath, { readonly: true });
+    const meta = Object.fromEntries(dbm.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
+    const sumChars = dbm.prepare("SELECT text FROM chunks").all().reduce((a, r) => a + r.text.length, 0);
+    dbm.close();
+    assert(String(after) === meta.chunk_count, `meta.chunk_count 同步（${meta.chunk_count} === 实际 ${after}）`);
+    assert(String(sumChars) === meta.total_chars, `meta.total_chars 同步（${meta.total_chars} === 实际 ${sumChars}）`);
+    assert(meta.total_tokens && meta.chapter_quality, `V3R7 数据层账同步（total_tokens=${meta.total_tokens} quality=${meta.chapter_quality}）`);
+  }
+
+  // 恢复链路：dryRun 列出全部隔离块，再真恢复一轮验证账目回涨（tmp 库，随便造）
   const rr = restoreClean(dbPath, { dryRun: true });
   assert(rr.ok && rr.candidates?.length === shuiIdx.length, `恢复 dryRun 列出 ${rr.candidates?.length} 候选（=隔离账）`);
+  const r2 = restoreClean(dbPath, { all: true });
+  assert(r2.ok && r2.restored === shuiIdx.length, `真恢复 ${r2.restored} 块回主库`);
+  const db2 = new Database(dbPath, { readonly: true });
+  const back = db2.prepare("SELECT COUNT(*) n FROM chunks").get().n;
+  const backChars = db2.prepare("SELECT text FROM chunks").all().reduce((a, r) => a + r.text.length, 0);
+  const meta2 = Object.fromEntries(db2.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
+  db2.close();
+  assert(back === before, `恢复后 chunks 回涨（${back} === ${before}）`);
+  assert(String(back) === meta2.chunk_count && String(backChars) === meta2.total_chars, `恢复后账目回涨（chunk_count=${meta2.chunk_count} total_chars=${meta2.total_chars}）`);
 
   fs.rmSync(tmp, { recursive: true, force: true });
 }
 
 console.log(`\n===== kk 轻量验收结果 =====`);
 if (failed) { console.error(`${failed} 项 FAIL`); process.exit(1); }
-console.log("全部 PASS：材料在位 + 真建库 + 假 chatFn 全链路落库对账 + 恢复 dryRun");
+console.log("全部 PASS：材料在位 + 真建库 + 假 chatFn 全链路落库对账 + 账目同步 + 恢复 dryRun/真恢复");
