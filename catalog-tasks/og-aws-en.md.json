@@ -1,115 +1,112 @@
 {
  "task_version": "1",
- "generated_at": "2026-10-16T13:11:34.353Z",
+ "generated_at": "2026-10-19T15:05:46.879Z",
  "book": {
   "db": "og-aws-en.md.db",
-  "title": "The Open Guide to Amazon Web Services",
+  "title": "OG-AWS（Amazon Web Services 工程手册）",
   "lang": "en",
-  "chunks": 579,
+  "chunks": 565,
   "chapters": 185,
-  "total_chars": 235278
+  "total_chars": 237198
  },
  "provenance": {
   "cluster_model": "e5",
   "cluster_method": "centered-greedy-th0.38-min5",
-  "clustered_at": "2026-10-16T13:11:34.355Z",
-  "clusters": 30,
-  "covered_chunks": 464
+  "clustered_at": "2026-10-19T15:05:46.881Z",
+  "clusters": 29,
+  "covered_chunks": 432
  },
  "clusters": [
   {
    "id": "c001",
-   "size": 40,
+   "size": 37,
    "members": [
-    250,
-    259,
-    283,
-    309,
-    315,
-    317,
-    327,
-    343,
-    358,
-    362,
-    399,
-    401,
-    421,
-    449,
-    467,
-    484,
+    236,
+    245,
+    269,
+    295,
+    301,
+    303,
+    313,
+    329,
+    344,
+    348,
+    385,
+    387,
+    407,
+    435,
+    453,
+    470,
+    472,
+    495,
+    516,
+    541,
+    558,
+    562,
+    340,
+    272,
     486,
     509,
-    530,
+    361,
+    316,
+    250,
+    311,
+    422,
+    299,
+    467,
     555,
-    572,
-    576,
-    42,
-    56,
-    58,
-    72,
-    90,
-    122,
-    127,
-    130,
-    132,
-    166,
-    533,
-    365,
-    331,
-    1,
-    244,
-    523,
-    303,
-    8
+    234,
+    256,
+    3
    ],
    "top_terms": [
     {
      "t": "back",
-     "n": 37
+     "n": 22
     },
     {
      "t": "top",
-     "n": 37
+     "n": 22
     },
     {
      "t": "arrow",
-     "n": 37
+     "n": 22
+    },
+    {
+     "t": "rds",
+     "n": 1
+    },
+    {
+     "t": "aurora",
+     "n": 1
+    },
+    {
+     "t": "load",
+     "n": 1
+    },
+    {
+     "t": "balancers",
+     "n": 1
+    },
+    {
+     "t": "redshift",
+     "n": 1
     },
     {
      "t": "kinesis",
-     "n": 5
+     "n": 1
     },
     {
-     "t": "emr",
-     "n": 5
+     "t": "streams",
+     "n": 1
     },
     {
-     "t": "gotchas",
-     "n": 5
+     "t": "dynamodb",
+     "n": 1
     },
     {
-     "t": "limitations",
-     "n": 5
-    },
-    {
-     "t": "fargate",
-     "n": 5
-    },
-    {
-     "t": "glacier",
-     "n": 5
-    },
-    {
-     "t": "iot",
-     "n": 5
-    },
-    {
-     "t": "firehose",
-     "n": 4
-    },
-    {
-     "t": "basics",
-     "n": 4
+     "t": "quicksight",
+     "n": 1
     }
    ],
    "chapters": [
@@ -136,164 +133,44 @@
    ],
    "samples": [
     {
-     "chunk": 250,
+     "chunk": 236,
      "text": "Back to top :arrow_up:"
     },
     {
-     "chunk": 259,
+     "chunk": 245,
      "text": "Back to top :arrow_up:"
     }
    ]
   },
   {
    "id": "c002",
-   "size": 32,
-   "members": [
-    27,
-    43,
-    100,
-    38,
-    35,
-    61,
-    40,
-    29,
-    32,
-    59,
-    111,
-    57,
-    34,
-    94,
-    24,
-    112,
-    37,
-    98,
-    101,
-    33,
-    30,
-    113,
-    109,
-    41,
-    114,
-    25,
-    36,
-    31,
-    155,
-    26,
-    22,
-    96
-   ],
-   "top_terms": [
-    {
-     "t": "aws",
-     "n": 74
-    },
-    {
-     "t": "services",
-     "n": 34
-    },
-    {
-     "t": "cloud",
-     "n": 29
-    },
-    {
-     "t": "use",
-     "n": 19
-    },
-    {
-     "t": "service",
-     "n": 17
-    },
-    {
-     "t": "companies",
-     "n": 15
-    },
-    {
-     "t": "many",
-     "n": 13
-    },
-    {
-     "t": "infrastructure",
-     "n": 13
-    },
-    {
-     "t": "google",
-     "n": 12
-    },
-    {
-     "t": "using",
-     "n": 11
-    },
-    {
-     "t": "console",
-     "n": 10
-    },
-    {
-     "t": "providers",
-     "n": 9
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "When to Use AWS",
-     "n": 16
-    },
-    {
-     "ch": "Getting Help and Support",
-     "n": 4
-    },
-    {
-     "ch": "Managing Infrastructure State and Change",
-     "n": 2
-    },
-    {
-     "ch": "AWS Console",
-     "n": 2
-    },
-    {
-     "ch": "Which Services to Use",
-     "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 27,
-     "text": "and you can afford, manage, or negotiate its somewhat higher costs\n... then AWS is likely a good option for your company.\nEach of those reasons above might point to situations where other services are"
-    },
-    {
-     "chunk": 43,
-     "text": "AWS offers a *lot* of different services — about a hundred at last count.\nMost customers use a few services heavily, a few services lightly, and the rest not at all. What services you’ll use depends o"
-    }
-   ]
-  },
-  {
-   "id": "c003",
    "size": 25,
    "members": [
-    288,
-    292,
-    293,
+    274,
+    278,
+    279,
+    276,
     290,
-    304,
-    306,
-    312,
-    289,
-    291,
-    311,
-    296,
-    307,
-    310,
-    299,
-    300,
-    305,
-    308,
-    468,
-    321,
-    297,
-    287,
+    292,
     298,
-    385,
-    268,
-    302
+    277,
+    275,
+    297,
+    282,
+    293,
+    296,
+    285,
+    286,
+    291,
+    294,
+    454,
+    307,
+    283,
+    273,
+    284,
+    371,
+    254,
+    288
    ],
    "top_terms": [
     {
@@ -369,12 +246,124 @@
    ],
    "samples": [
     {
-     "chunk": 288,
+     "chunk": 274,
      "text": "CLBs support TCP and HTTP load balancing. ALBs support HTTP load balancing only. NLBs support TCP layer 4 load balancing.\nCLBs and ALBs can optionally handle termination for a single SSL certificate.\n"
     },
     {
-     "chunk": 292,
+     "chunk": 278,
      "text": "**CLBs and ALBs have many IPs:** Internally, an AWS load balancer is simply a collection of individual software load balancers hosted within EC2, with DNS load balancing traffic among them. The pool c"
+    }
+   ]
+  },
+  {
+   "id": "c003",
+   "size": 24,
+   "members": [
+    39,
+    31,
+    13,
+    97,
+    34,
+    23,
+    86,
+    14,
+    55,
+    98,
+    53,
+    114,
+    95,
+    99,
+    65,
+    33,
+    16,
+    32,
+    100,
+    15,
+    28,
+    2,
+    12,
+    372
+   ],
+   "top_terms": [
+    {
+     "t": "aws",
+     "n": 54
+    },
+    {
+     "t": "services",
+     "n": 25
+    },
+    {
+     "t": "use",
+     "n": 13
+    },
+    {
+     "t": "guide",
+     "n": 12
+    },
+    {
+     "t": "using",
+     "n": 12
+    },
+    {
+     "t": "console",
+     "n": 10
+    },
+    {
+     "t": "infrastructure",
+     "n": 8
+    },
+    {
+     "t": "service",
+     "n": 7
+    },
+    {
+     "t": "automation",
+     "n": 7
+    },
+    {
+     "t": "general",
+     "n": 7
+    },
+    {
+     "t": "companies",
+     "n": 6
+    },
+    {
+     "t": "many",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "When to Use AWS",
+     "n": 6
+    },
+    {
+     "ch": "Why an Open Guide?",
+     "n": 2
+    },
+    {
+     "ch": "Managing Infrastructure State and Change",
+     "n": 2
+    },
+    {
+     "ch": "AWS Console",
+     "n": 2
+    },
+    {
+     "ch": "Which Services to Use",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 39,
+     "text": "AWS offers a *lot* of different services — about a hundred at last count.\nMost customers use a few services heavily, a few services lightly, and the rest not at all. What services you’ll use depends o"
+    },
+    {
+     "chunk": 31,
+     "text": "**Complexity:** AWS will let you build and scale systems to the size of the largest companies, but the complexity of the services when used at scale requires significant depth of knowledge and experie"
     }
    ]
   },
@@ -382,28 +371,28 @@
    "id": "c004",
    "size": 22,
    "members": [
-    557,
-    547,
-    560,
-    548,
-    544,
-    561,
-    558,
-    545,
-    563,
-    578,
-    554,
+    543,
+    533,
+    534,
     546,
-    564,
-    553,
+    530,
+    547,
+    544,
     549,
-    562,
-    556,
-    105,
-    108,
-    107,
-    559,
-    93
+    531,
+    564,
+    540,
+    532,
+    550,
+    539,
+    535,
+    548,
+    542,
+    91,
+    94,
+    93,
+    545,
+    79
    ],
    "top_terms": [
     {
@@ -479,11 +468,11 @@
    ],
    "samples": [
     {
-     "chunk": 557,
+     "chunk": 543,
      "text": "**Connections and protocols:** It is important to understand the details of about the devices you wish to connect to the AWS IoT service, including how you will secure the device connections, the devi"
     },
     {
-     "chunk": 547,
+     "chunk": 533,
      "text": "AWS **IoT Certificates** (device authentication) are the logical association of a unique certificate to the logical representation of a device. This association can be done in the Console. In addition"
     }
    ]
@@ -492,28 +481,28 @@
    "id": "c005",
    "size": 22,
    "members": [
+    390,
+    536,
+    395,
+    391,
+    393,
+    396,
+    392,
+    537,
+    399,
     404,
-    550,
-    409,
+    529,
+    538,
+    528,
+    397,
+    421,
+    401,
     405,
-    407,
-    410,
+    394,
+    398,
     406,
-    551,
-    413,
     418,
-    543,
-    552,
-    542,
-    411,
-    435,
-    415,
-    419,
-    408,
-    412,
-    420,
-    432,
-    540
+    526
    ],
    "top_terms": [
     {
@@ -589,11 +578,11 @@
    ],
    "samples": [
     {
-     "chunk": 404,
+     "chunk": 390,
      "text": "📒 Homepage ∙ Developer guide ∙ FAQ ∙ Pricing\n**Lambda** is AWS' serverless compute offering, allowing users to define Lambda functions in a selection of runtimes that can be invoked via a variety of "
     },
     {
-     "chunk": 550,
+     "chunk": 536,
      "text": "🐥**Greengrass** is a software platform that extends AWS IoT capabilities allowing Lambda functions to be run directly on local devices. It also enables IoT devices to be able to securely communicate "
     }
    ]
@@ -602,26 +591,26 @@
    "id": "c006",
    "size": 20,
    "members": [
-    135,
-    390,
-    383,
-    394,
-    391,
-    48,
-    398,
+    121,
+    376,
+    369,
+    380,
+    377,
+    44,
     384,
-    134,
-    47,
+    370,
+    43,
+    120,
+    375,
+    378,
+    46,
+    381,
+    386,
     389,
-    392,
-    50,
-    395,
-    400,
-    403,
-    397,
-    393,
-    314,
-    388
+    383,
+    379,
+    300,
+    374
    ],
    "top_terms": [
     {
@@ -697,229 +686,36 @@
    ],
    "samples": [
     {
-     "chunk": 135,
+     "chunk": 121,
      "text": "AWS launched EKS as a service to manage Kubernetes Clusters mid 2018, though many people still deploy ECS or use Docker directly themselves. See the EKS section for more details.\nBack to top :arrow\\_u"
     },
     {
-     "chunk": 390,
+     "chunk": 376,
      "text": "📒 Homepage ∙ User guide ∙ FAQ ∙ Pricing\nEKS (Elastic Kubernetes Service) is a new service (launched June 2018) that provides managed Kubernetes Masters in a Highly Available pair to deploy K8s Servic"
     }
    ]
   },
   {
    "id": "c007",
-   "size": 19,
-   "members": [
-    6,
-    10,
-    4,
-    12,
-    14,
-    13,
-    5,
-    7,
-    3,
-    64,
-    15,
-    65,
-    68,
-    71,
-    62,
-    67,
-    63,
-    23,
-    21
-   ],
-   "top_terms": [
-    {
-     "t": "basics",
-     "n": 40
-    },
-    {
-     "t": "tips",
-     "n": 39
-    },
-    {
-     "t": "gotchas",
-     "n": 37
-    },
-    {
-     "t": "limitations",
-     "n": 35
-    },
-    {
-     "t": "rds",
-     "n": 21
-    },
-    {
-     "t": "security",
-     "n": 12
-    },
-    {
-     "t": "elastic",
-     "n": 12
-    },
-    {
-     "t": "cloud",
-     "n": 11
-    },
-    {
-     "t": "sql",
-     "n": 9
-    },
-    {
-     "t": "mobile",
-     "n": 8
-    },
-    {
-     "t": "server",
-     "n": 8
-    },
-    {
-     "t": "dynamodb",
-     "n": 7
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "Managing AWS",
-     "n": 10
-    },
-    {
-     "ch": "Service Matrix",
-     "n": 7
-    },
-    {
-     "ch": "Legend",
-     "n": 2
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 6,
-     "text": "[DynamoDB](#dynamodb) | [📗](#dynamodb-basics) | [📘](#dynamodb-tips) | [📙](#dynamodb-gotchas-and-limitations)\n[EBS](#ebs) | [📗](#ebs-basics) | [📘](#ebs-tips) | [📙](#ebs-gotchas-and-limitations)\n["
-    },
-    {
-     "chunk": 10,
-     "text": "[Mobile Hub](#mobile-hub) | [📗](#mobile-hub-basics) | [📘](#mobile-hub-tips) | [📙](#mobile-hub-gotchas-and-limitations)\n[OpsWorks](#opsworks) | [📗](#opsworks-basics) | [📘](#opsworks-tips) | [📙](#"
-    }
-   ]
-  },
-  {
-   "id": "c008",
-   "size": 18,
-   "members": [
-    76,
-    86,
-    79,
-    81,
-    78,
-    80,
-    77,
-    83,
-    87,
-    88,
-    89,
-    85,
-    84,
-    82,
-    74,
-    75,
-    73,
-    9
-   ],
-   "top_terms": [
-    {
-     "t": "aws",
-     "n": 91
-    },
-    {
-     "t": "amazon",
-     "n": 91
-    },
-    {
-     "t": "com",
-     "n": 64
-    },
-    {
-     "t": "https",
-     "n": 62
-    },
-    {
-     "t": "general",
-     "n": 57
-    },
-    {
-     "t": "releasenotes",
-     "n": 54
-    },
-    {
-     "t": "browse",
-     "n": 53
-    },
-    {
-     "t": "sup",
-     "n": 30
-    },
-    {
-     "t": "user",
-     "n": 19
-    },
-    {
-     "t": "content",
-     "n": 19
-    },
-    {
-     "t": "hipaa",
-     "n": 12
-    },
-    {
-     "t": "service",
-     "n": 9
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "AWS Product Maturity and Releases",
-     "n": 17
-    },
-    {
-     "ch": "Managing AWS",
-     "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 76,
-     "text": "🐥[IoT](https://aws.amazon.com/blogs/aws/aws-iot-now-generally-available/) | 2015-08 | General | ✓ | ✓ | ✓<sup>[13](#user-content-pci-iot)</sup>\n🐥[WAF](https://aws.amazon.com/releasenotes/AWS-WAF?bro"
-    },
-    {
-     "chunk": 86,
-     "text": "[EMR](https://aws.amazon.com/releasenotes/Elastic-MapReduce?browse=1) | 2010-04 | General | ✓ | ✓ | ✓\n[RDS](https://aws.amazon.com/releasenotes/Amazon-RDS?browse=1) | 2009-12 | General | ✓ | ✓<sup>[2]"
-    }
-   ]
-  },
-  {
-   "id": "c009",
    "size": 17,
    "members": [
-    450,
+    436,
+    432,
+    438,
+    443,
+    442,
+    437,
+    441,
     446,
-    452,
-    457,
-    456,
-    451,
-    455,
-    460,
-    461,
-    374,
-    459,
-    462,
-    453,
-    454,
-    458,
-    463,
-    448
+    447,
+    360,
+    445,
+    448,
+    439,
+    440,
+    444,
+    449,
+    434
    ],
    "top_terms": [
     {
@@ -995,36 +791,36 @@
    ],
    "samples": [
     {
-     "chunk": 450,
+     "chunk": 436,
      "text": "Validate your stack in a different AWS account! CloudFormation truly shines when making multiple deployments of the same stack to different accounts and regions. A common practice is to deploy stacks "
     },
     {
-     "chunk": 446,
+     "chunk": 432,
      "text": "📒 Homepage ∙ Developer guide ∙ FAQ ∙ Pricing at no additional charge\n**CloudFormation** allows you to manage sets of resources from other AWS services grouped into **stacks**. CloudFormation allows y"
     }
    ]
   },
   {
-   "id": "c010",
+   "id": "c008",
    "size": 17,
    "members": [
-    150,
-    143,
-    152,
-    146,
-    489,
-    161,
+    136,
+    138,
+    129,
+    132,
+    475,
     147,
-    154,
-    148,
-    153,
-    144,
-    160,
-    294,
-    151,
-    159,
-    332,
-    295
+    133,
+    140,
+    134,
+    139,
+    130,
+    146,
+    280,
+    137,
+    145,
+    318,
+    281
    ],
    "top_terms": [
     {
@@ -1056,11 +852,11 @@
      "n": 9
     },
     {
-     "t": "permissions",
+     "t": "roles",
      "n": 8
     },
     {
-     "t": "roles",
+     "t": "permissions",
      "n": 8
     },
     {
@@ -1068,11 +864,11 @@
      "n": 8
     },
     {
-     "t": "service",
+     "t": "account",
      "n": 7
     },
     {
-     "t": "account",
+     "t": "service",
      "n": 7
     }
    ],
@@ -1100,12 +896,221 @@
    ],
    "samples": [
     {
-     "chunk": 150,
+     "chunk": 136,
      "text": "🔹Use IAM to create individual user accounts and **use IAM accounts for all users from the beginning**. This is slightly more work, but not that much.\nThat way, you define different users, and groups "
     },
     {
-     "chunk": 143,
-     "text": "📒 IAM Homepage ∙ User guide ∙ FAQ\nThe AWS Security Blog is one of the best sources of news and information on AWS security.\n**IAM** is the service you use to manage accounts and permissioning for AWS"
+     "chunk": 138,
+     "text": "❗Restrict use of significant IAM credentials as much as possible. Remember that in the cloud, loss of a highly capable IAM credential could essentially mean “game over,” for your deployment, your user"
+    }
+   ]
+  },
+  {
+   "id": "c009",
+   "size": 17,
+   "members": [
+    181,
+    187,
+    178,
+    177,
+    180,
+    162,
+    188,
+    315,
+    166,
+    183,
+    163,
+    189,
+    150,
+    182,
+    312,
+    191,
+    179
+   ],
+   "top_terms": [
+    {
+     "t": "data",
+     "n": 16
+    },
+    {
+     "t": "object",
+     "n": 14
+    },
+    {
+     "t": "objects",
+     "n": 12
+    },
+    {
+     "t": "storage",
+     "n": 11
+    },
+    {
+     "t": "region",
+     "n": 10
+    },
+    {
+     "t": "glacier",
+     "n": 9
+    },
+    {
+     "t": "consistency",
+     "n": 8
+    },
+    {
+     "t": "durability",
+     "n": 8
+    },
+    {
+     "t": "use",
+     "n": 7
+    },
+    {
+     "t": "files",
+     "n": 7
+    },
+    {
+     "t": "many",
+     "n": 6
+    },
+    {
+     "t": "costs",
+     "n": 6
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "S3 Tips",
+     "n": 10
+    },
+    {
+     "ch": "S3 Gotchas and Limitations",
+     "n": 4
+    },
+    {
+     "ch": "Glacier Gotchas and Limitations",
+     "n": 1
+    },
+    {
+     "ch": "S3 Basics",
+     "n": 1
+    },
+    {
+     "ch": "Glacier Basics",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 181,
+     "text": "**Slow updates:** In practice, “eventual consistency” usually means within seconds, but expect rare cases of minutes or hours.\n**S3 as a filesystem:**\nIn general S3’s APIs have inherent limitations th"
+    },
+    {
+     "chunk": 187,
+     "text": "🔸Be careful not to make implicit assumptions about transactionality or sequencing of updates to objects. Never assume that if you modify a sequence of objects, the clients will see the same modificat"
+    }
+   ]
+  },
+  {
+   "id": "c010",
+   "size": 16,
+   "members": [
+    38,
+    52,
+    54,
+    108,
+    113,
+    116,
+    118,
+    152,
+    519,
+    351,
+    317,
+    1,
+    230,
+    289,
+    64,
+    7
+   ],
+   "top_terms": [
+    {
+     "t": "back",
+     "n": 14
+    },
+    {
+     "t": "top",
+     "n": 14
+    },
+    {
+     "t": "arrow",
+     "n": 14
+    },
+    {
+     "t": "kinesis",
+     "n": 9
+    },
+    {
+     "t": "gotchas",
+     "n": 8
+    },
+    {
+     "t": "basics",
+     "n": 7
+    },
+    {
+     "t": "tips",
+     "n": 7
+    },
+    {
+     "t": "limitations",
+     "n": 7
+    },
+    {
+     "t": "fargate",
+     "n": 5
+    },
+    {
+     "t": "glacier",
+     "n": 5
+    },
+    {
+     "t": "iot",
+     "n": 5
+    },
+    {
+     "t": "streams",
+     "n": 5
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "When to Use AWS",
+     "n": 1
+    },
+    {
+     "ch": "Which Services to Use",
+     "n": 1
+    },
+    {
+     "ch": "Tools and Services Market Landscape",
+     "n": 1
+    },
+    {
+     "ch": "Boto",
+     "n": 1
+    },
+    {
+     "ch": "Managing Servers and Applications",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 38,
+     "text": "Back to top :arrow\\_up:"
+    },
+    {
+     "chunk": 52,
+     "text": "Back to top :arrow\\_up:"
     }
    ]
   },
@@ -1113,27 +1118,27 @@
    "id": "c011",
    "size": 16,
    "members": [
-    237,
-    241,
-    243,
-    240,
-    246,
-    239,
-    238,
-    245,
-    242,
-    424,
-    137,
-    387,
-    396,
-    247,
-    136,
-    138
+    223,
+    229,
+    227,
+    226,
+    224,
+    231,
+    232,
+    225,
+    228,
+    123,
+    373,
+    382,
+    233,
+    122,
+    222,
+    124
    ],
    "top_terms": [
     {
      "t": "cloudwatch",
-     "n": 29
+     "n": 27
     },
     {
      "t": "metrics",
@@ -1144,19 +1149,19 @@
      "n": 12
     },
     {
-     "t": "log",
-     "n": 11
+     "t": "aws",
+     "n": 10
     },
     {
      "t": "alarms",
      "n": 10
     },
     {
-     "t": "aws",
+     "t": "use",
      "n": 9
     },
     {
-     "t": "use",
+     "t": "log",
      "n": 9
     },
     {
@@ -1204,12 +1209,12 @@
    ],
    "samples": [
     {
-     "chunk": 237,
+     "chunk": 223,
      "text": "📒 Homepage ∙ Documentation ∙ FAQ ∙ Pricing\n**CloudWatch** monitors resources and applications, captures logs, and sends events.\nCloudWatch monitoring is the standard mechanism for keeping tabs on AWS"
     },
     {
-     "chunk": 241,
-     "text": "CloudWatch offers fairly basic functionality that doesn't create significant (additional) AWS lock-in. Most of the metrics provided by the service can be obtained through APIs that can be imported int"
+     "chunk": 229,
+     "text": "Some very common use cases for CloudWatch are **billing alarms**, **instance** **or load balancer up/down alarms**, and **disk usage alerts**.\nYou can use EC2Config to monitor watch memory and disk me"
     }
    ]
   },
@@ -1217,22 +1222,22 @@
    "id": "c012",
    "size": 16,
    "members": [
-    478,
-    475,
-    476,
-    477,
+    464,
+    461,
+    462,
+    463,
+    452,
+    465,
+    402,
+    460,
+    212,
+    287,
+    485,
+    459,
+    456,
+    458,
     466,
-    479,
-    416,
-    226,
-    474,
-    301,
-    499,
-    473,
-    470,
-    472,
-    480,
-    324
+    310
    ],
    "top_terms": [
     {
@@ -1308,11 +1313,11 @@
    ],
    "samples": [
     {
-     "chunk": 478,
+     "chunk": 464,
      "text": "❗Be careful when choosing your VPC IP CIDR block: If you are going to need to make use of ClassicLink, make sure that your private IP range doesn’t overlap with that of EC2 Classic.\n❗If you are going "
     },
     {
-     "chunk": 475,
+     "chunk": 461,
      "text": "Amazon provides an IPv6 CIDR block for your VPC at your request - at present you cannot implement your own IPv6 block if you happen to own one already.\nNew and existing VPCs can both use IPv6. Existin"
     }
    ]
@@ -1321,21 +1326,21 @@
    "id": "c013",
    "size": 15,
    "members": [
-    355,
+    341,
+    328,
     342,
-    356,
-    363,
-    366,
-    360,
-    367,
-    359,
-    357,
-    361,
-    334,
-    339,
-    91,
-    364,
-    46
+    349,
+    352,
+    346,
+    353,
+    345,
+    343,
+    347,
+    320,
+    325,
+    77,
+    350,
+    42
    ],
    "top_terms": [
     {
@@ -1411,114 +1416,111 @@
    ],
    "samples": [
     {
-     "chunk": 355,
+     "chunk": 341,
      "text": "Aurora is a cloud only database service designed to provide a distributed, fault-tolerant relational database with self-healing storage and auto-scaling up to 64TB per instance. It currently comes in "
     },
     {
-     "chunk": 342,
+     "chunk": 328,
      "text": "🔸**MySQL vs MariaDB vs Aurora:** If you prefer a MySQL-style database but are starting something new, you probably should consider Aurora and MariaDB as well. **Aurora** has increased availability an"
     }
    ]
   },
   {
    "id": "c014",
-   "size": 14,
+   "size": 15,
    "members": [
-    354,
-    286,
-    500,
-    330,
-    375,
-    264,
-    436,
-    481,
-    313,
-    325,
-    248,
-    569,
-    270,
-    11
+    154,
+    159,
+    155,
+    158,
+    153,
+    157,
+    156,
+    161,
+    186,
+    185,
+    160,
+    151,
+    149,
+    172,
+    135
    ],
    "top_terms": [
     {
-     "t": "rds",
-     "n": 16
+     "t": "bucket",
+     "n": 34
     },
     {
-     "t": "aurora",
-     "n": 16
+     "t": "permissions",
+     "n": 17
     },
     {
-     "t": "mysql",
-     "n": 5
+     "t": "access",
+     "n": 15
     },
     {
-     "t": "postgresql",
-     "n": 5
+     "t": "aws",
+     "n": 14
     },
     {
-     "t": "basics",
-     "n": 3
+     "t": "use",
+     "n": 11
     },
     {
-     "t": "tips",
-     "n": 3
+     "t": "buckets",
+     "n": 9
     },
     {
-     "t": "gotchas",
-     "n": 3
+     "t": "data",
+     "n": 9
     },
     {
-     "t": "limitations",
-     "n": 3
+     "t": "names",
+     "n": 8
     },
     {
-     "t": "load",
-     "n": 1
+     "t": "users",
+     "n": 8
     },
     {
-     "t": "balancers",
-     "n": 1
+     "t": "policies",
+     "n": 7
     },
     {
-     "t": "redshift",
-     "n": 1
+     "t": "object",
+     "n": 7
     },
     {
-     "t": "quicksight",
-     "n": 1
+     "t": "public",
+     "n": 7
     }
    ],
    "chapters": [
     {
-     "ch": "RDS SQL Server Gotchas and Limitations",
+     "ch": "S3 Tips",
+     "n": 11
+    },
+    {
+     "ch": "S3 Basics",
+     "n": 2
+    },
+    {
+     "ch": "S3 Gotchas and Limitations",
      "n": 1
     },
     {
-     "ch": "EFS Gotchas and Limitations",
-     "n": 1
-    },
-    {
-     "ch": "DirectConnect Tips",
-     "n": 1
-    },
-    {
-     "ch": "Glacier Gotchas and Limitations",
-     "n": 1
-    },
-    {
-     "ch": "scaling",
+     "ch": "Security and IAM Basics",
      "n": 1
     }
    ],
    "samples": [
     {
-     "chunk": 354,
-     "text": "RDS Aurora"
+     "chunk": 154,
+     "text": "🔸There are 3 different ways to grant permissions to access Amazon S3 content in your buckets.\n**IAM policies** use the familiar Identity and Access Management permission scheme to control access to s"
     },
     {
-     "chunk": 286,
-     "text": "Load Balancers"
+     "chunk": 159,
+     "text": "For more guidance, see:\nHow to Secure an Amazon S3 Bucket\nDeep dive into S3 access controls.\nHow do S3 permissions work?.\n**Bucket naming:** Buckets are chosen from a global namespace (across all regi"
     }
    ]
   },
@@ -1526,20 +1528,20 @@
    "id": "c015",
    "size": 14,
    "members": [
-    251,
-    253,
-    260,
-    262,
-    249,
-    255,
-    258,
-    252,
-    228,
-    263,
-    213,
+    237,
+    239,
+    246,
+    248,
+    235,
+    241,
+    244,
+    238,
     214,
-    220,
-    219
+    249,
+    199,
+    200,
+    206,
+    205
    ],
    "top_terms": [
     {
@@ -1615,11 +1617,11 @@
    ],
    "samples": [
     {
-     "chunk": 251,
+     "chunk": 237,
      "text": "AMIs are built independently based on how they will be deployed. You must select AMIs that match your deployment when using them or creating them:\nEBS or instance store\nPV or HVM virtualization types\n"
     },
     {
-     "chunk": 253,
+     "chunk": 239,
      "text": "If you create your own AMIs, there is always some tension in choosing how much installation and configuration you want to “bake” into them.\nBaking less into your AMIs (for example, just a configuratio"
     }
    ]
@@ -1628,20 +1630,20 @@
    "id": "c016",
    "size": 14,
    "members": [
-    277,
+    263,
+    257,
+    264,
+    262,
+    270,
     271,
-    278,
-    276,
-    284,
-    285,
-    281,
-    273,
-    282,
-    272,
-    274,
-    275,
-    279,
-    319
+    259,
+    267,
+    268,
+    258,
+    260,
+    261,
+    265,
+    305
    ],
    "top_terms": [
     {
@@ -1703,11 +1705,11 @@
      "n": 2
     },
     {
-     "ch": "EFS Tips",
+     "ch": "EBS Tips",
      "n": 2
     },
     {
-     "ch": "EBS Tips",
+     "ch": "EFS Tips",
      "n": 2
     },
     {
@@ -1717,11 +1719,11 @@
    ],
    "samples": [
     {
-     "chunk": 277,
+     "chunk": 263,
      "text": "EFS can offer higher throughput (multiple gigabytes per second) and better durability and availability than EBS (see the comparison table), but with higher latency.\nEFS is priced based on the volume o"
     },
     {
-     "chunk": 271,
+     "chunk": 257,
      "text": "📒 Homepage ∙ User guide ∙ FAQ ∙ Pricing\n**EBS** (Elastic Block Store) provides block level storage. That is, it offers storage volumes that can be attached as filesystems, like traditional network dr"
     }
    ]
@@ -1730,20 +1732,20 @@
    "id": "c017",
    "size": 14,
    "members": [
-    188,
-    492,
-    187,
-    497,
-    494,
-    493,
-    189,
-    496,
-    490,
-    491,
-    495,
-    577,
-    45,
-    198
+    174,
+    478,
+    173,
+    480,
+    483,
+    479,
+    175,
+    482,
+    476,
+    477,
+    481,
+    563,
+    41,
+    184
    ],
    "top_terms": [
     {
@@ -1819,134 +1821,32 @@
    ],
    "samples": [
     {
-     "chunk": 188,
+     "chunk": 174,
      "text": "Consider using CloudFront in front of most or all assets:\nLike any CDN, CloudFront improves performance significantly.\n🔸SSL is only supported on the built-in amazonaws.com domain for S3. S3 supports "
     },
     {
-     "chunk": 492,
+     "chunk": 478,
      "text": "🐥**IPv6** is supported. This is a configurable setting, and is enabled by default on new CloudFront distributions. IPv6 support extends to the use of WAF with CloudFront.\n🐥**HTTP/2** is now supporte"
     }
    ]
   },
   {
    "id": "c018",
-   "size": 14,
-   "members": [
-    206,
-    326,
-    191,
-    329,
-    177,
-    165,
-    208,
-    176,
-    163,
-    207,
-    178,
-    180,
-    179,
-    328
-   ],
-   "top_terms": [
-    {
-     "t": "storage",
-     "n": 17
-    },
-    {
-     "t": "glacier",
-     "n": 15
-    },
-    {
-     "t": "data",
-     "n": 11
-    },
-    {
-     "t": "durability",
-     "n": 9
-    },
-    {
-     "t": "access",
-     "n": 9
-    },
-    {
-     "t": "standard",
-     "n": 8
-    },
-    {
-     "t": "pricing",
-     "n": 8
-    },
-    {
-     "t": "cost",
-     "n": 8
-    },
-    {
-     "t": "ebs",
-     "n": 7
-    },
-    {
-     "t": "aws",
-     "n": 7
-    },
-    {
-     "t": "efs",
-     "n": 5
-    },
-    {
-     "t": "get",
-     "n": 5
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "S3 Tips",
-     "n": 6
-    },
-    {
-     "ch": "Storage Durability, Availability, and Price",
-     "n": 3
-    },
-    {
-     "ch": "S3 Basics",
-     "n": 2
-    },
-    {
-     "ch": "Glacier Basics",
-     "n": 1
-    },
-    {
-     "ch": "Glacier Gotchas and Limitations",
-     "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 206,
-     "text": "As an illustration of comparative features and price, the table below gives S3 Standard, RRS, IA, in comparison with Glacier, EBS, EFS, and EC2 d2.xlarge instance store using **Virginia region** as of"
-    },
-    {
-     "chunk": 326,
-     "text": "📒 Homepage ∙ Developer guide ∙ FAQ ∙ Pricing\n**Glacier** is a lower-cost alternative to S3 when data is infrequently accessed, such as for archival purposes.\nIt’s only useful for data that is rarely "
-    }
-   ]
-  },
-  {
-   "id": "c019",
    "size": 13,
    "members": [
-    507,
-    516,
-    503,
-    515,
-    508,
-    506,
-    510,
-    514,
-    512,
-    511,
-    513,
+    493,
+    502,
+    489,
     501,
-    504
+    494,
+    492,
+    496,
+    500,
+    498,
+    497,
+    499,
+    487,
+    490
    ],
    "top_terms": [
     {
@@ -2014,123 +1914,118 @@
    ],
    "samples": [
     {
-     "chunk": 507,
+     "chunk": 493,
      "text": "Redshift uses columnar storage, hence it does not have indexing capabilities. You can, however, use distribution key and sortkey to improve performance. Redshift has two types of sort keys: compoundin"
     },
     {
-     "chunk": 516,
+     "chunk": 502,
      "text": "❗🚪 When moving data with a query that looks like “insert into x select from y”, you need to have twice as much disk space available as table “y” takes up on the cluster’s disks. Redshift first copies"
     }
    ]
   },
   {
-   "id": "c020",
-   "size": 13,
+   "id": "c019",
+   "size": 12,
    "members": [
-    168,
-    173,
-    169,
-    172,
-    167,
-    171,
-    170,
-    175,
-    200,
-    199,
-    174,
-    186,
-    149
+    69,
+    72,
+    73,
+    66,
+    71,
+    68,
+    70,
+    74,
+    67,
+    75,
+    76,
+    6
    ],
    "top_terms": [
     {
-     "t": "bucket",
-     "n": 32
-    },
-    {
-     "t": "permissions",
-     "n": 17
-    },
-    {
-     "t": "access",
-     "n": 14
-    },
-    {
      "t": "aws",
-     "n": 12
+     "n": 91
     },
     {
-     "t": "use",
-     "n": 11
+     "t": "amazon",
+     "n": 91
     },
     {
-     "t": "data",
-     "n": 9
+     "t": "com",
+     "n": 64
     },
     {
-     "t": "buckets",
-     "n": 8
+     "t": "https",
+     "n": 62
     },
     {
-     "t": "users",
-     "n": 8
+     "t": "general",
+     "n": 57
     },
     {
-     "t": "policies",
-     "n": 7
+     "t": "releasenotes",
+     "n": 54
     },
     {
-     "t": "object",
-     "n": 7
+     "t": "browse",
+     "n": 53
     },
     {
-     "t": "public",
-     "n": 7
+     "t": "sup",
+     "n": 30
     },
     {
-     "t": "names",
-     "n": 6
+     "t": "hipaa",
+     "n": 22
+    },
+    {
+     "t": "compliant",
+     "n": 22
+    },
+    {
+     "t": "service",
+     "n": 19
+    },
+    {
+     "t": "user",
+     "n": 19
     }
    ],
    "chapters": [
     {
-     "ch": "S3 Tips",
+     "ch": "AWS Product Maturity and Releases",
      "n": 11
     },
     {
-     "ch": "S3 Gotchas and Limitations",
-     "n": 1
-    },
-    {
-     "ch": "Security and IAM Basics",
+     "ch": "Managing AWS",
      "n": 1
     }
    ],
    "samples": [
     {
-     "chunk": 168,
-     "text": "🔸There are 3 different ways to grant permissions to access Amazon S3 content in your buckets.\n**IAM policies** use the familiar Identity and Access Management permission scheme to control access to s"
+     "chunk": 69,
+     "text": "Service | Original release | Availability | CLI Support | HIPAA Compliant | PCI-DSS Compliant\n🐥[Config](https://aws.amazon.com/releasenotes/AWS-Config?browse=1) | 2015-06 | General | ✓ | ✓ | ✓\n🐥[EFS"
     },
     {
-     "chunk": 173,
-     "text": "For more guidance, see:\nHow to Secure an Amazon S3 Bucket\nDeep dive into S3 access controls.\nHow do S3 permissions work?.\n**Bucket naming:** Buckets are chosen from a global namespace (across all regi"
+     "chunk": 72,
+     "text": "Service | Original release | Availability | CLI Support | HIPAA Compliant | PCI-DSS Compliant\n[DirectConnect](https://aws.amazon.com/releasenotes/AWS-Direct-Connect?browse=1) | 2011-08 | General | ✓ |"
     }
    ]
   },
   {
-   "id": "c021",
+   "id": "c020",
    "size": 11,
    "members": [
-    340,
-    348,
-    344,
-    341,
+    326,
+    334,
+    330,
+    327,
+    323,
+    332,
     337,
-    346,
-    351,
-    338,
-    345,
-    335,
-    347
+    324,
+    331,
+    321,
+    333
    ],
    "top_terms": [
     {
@@ -2206,121 +2101,30 @@
    ],
    "samples": [
     {
-     "chunk": 340,
+     "chunk": 326,
      "text": "RDS offers MySQL versions 5.5, 5.6, 5.7 and 5.8.\nRDS offers MariaDB versions 10.0, 10.1, 10.2 and 10.3.\nBack to top :arrow_up:"
     },
     {
-     "chunk": 348,
+     "chunk": 334,
      "text": "No superuser privileges. RDS provides a role `rds_superuser` that can do most of the needed operations but there are some limitations.\nSome major features are delayed compared to open source PostgreSQ"
     }
    ]
   },
   {
-   "id": "c022",
+   "id": "c021",
    "size": 11,
    "members": [
-    192,
-    195,
-    201,
-    194,
     202,
-    197,
-    164,
-    193,
-    205,
     196,
-    203
-   ],
-   "top_terms": [
-    {
-     "t": "object",
-     "n": 13
-    },
-    {
-     "t": "data",
-     "n": 10
-    },
-    {
-     "t": "objects",
-     "n": 9
-    },
-    {
-     "t": "region",
-     "n": 9
-    },
-    {
-     "t": "consistency",
-     "n": 8
-    },
-    {
-     "t": "use",
-     "n": 6
-    },
-    {
-     "t": "updates",
-     "n": 5
-    },
-    {
-     "t": "part",
-     "n": 5
-    },
-    {
-     "t": "clients",
-     "n": 5
-    },
-    {
-     "t": "read",
-     "n": 5
-    },
-    {
-     "t": "eventual",
-     "n": 5
-    },
-    {
-     "t": "upload",
-     "n": 4
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "S3 Tips",
-     "n": 6
-    },
-    {
-     "ch": "S3 Gotchas and Limitations",
-     "n": 4
-    },
-    {
-     "ch": "S3 Basics",
-     "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 192,
-     "text": "**Data consistency:** Understanding data consistency is critical for any use of S3 where there are multiple producers and consumers of data.\nCreation and updates to individual objects in S3 are **atom"
-    },
-    {
-     "chunk": 195,
-     "text": "**Slow updates:** In practice, “eventual consistency” usually means within seconds, but expect rare cases of minutes or hours.\n**S3 as a filesystem:**\nIn general S3’s APIs have inherent limitations th"
-    }
-   ]
-  },
-  {
-   "id": "c023",
-   "size": 11,
-   "members": [
-    216,
-    210,
+    203,
     217,
-    231,
-    209,
-    28,
-    212,
-    230,
-    521,
-    44,
-    232
+    195,
+    24,
+    198,
+    216,
+    507,
+    40,
+    218
    ],
    "top_terms": [
     {
@@ -2396,29 +2200,29 @@
    ],
    "samples": [
     {
-     "chunk": 216,
+     "chunk": 202,
      "text": "**Instance types:** EC2 instances come in many types, corresponding to the capabilities of the virtual machine in CPU architecture and speed, RAM, disk sizes and types (SSD or magnetic), and network b"
     },
     {
-     "chunk": 210,
+     "chunk": 196,
      "text": "The term “EC2” is sometimes used to refer to the servers themselves, but technically refers more broadly to a whole collection of supporting services, too, like load balancing (CLBs/ALBs/NLBs), IP add"
     }
    ]
   },
   {
-   "id": "c024",
+   "id": "c022",
    "size": 10,
    "members": [
-    438,
-    441,
-    437,
-    439,
-    443,
-    445,
-    440,
-    322,
-    442,
-    498
+    424,
+    427,
+    423,
+    425,
+    429,
+    431,
+    426,
+    308,
+    428,
+    484
    ],
    "top_terms": [
     {
@@ -2494,12 +2298,190 @@
    ],
    "samples": [
     {
-     "chunk": 438,
+     "chunk": 424,
      "text": "Historically, AWS was slow to penetrate the DNS market (as it is often driven by perceived reliability and long-term vendor relationships) but Route 53 has matured and is becoming the standard option "
     },
     {
-     "chunk": 441,
+     "chunk": 427,
      "text": "🔹Know about Route 53’s “alias” records:\nRoute 53 supports all the standard DNS record types, but note that **alias resource record sets** are not standard part of DNS, but a specific Route 53 feature"
+    }
+   ]
+  },
+  {
+   "id": "c023",
+   "size": 9,
+   "members": [
+    8,
+    9,
+    10,
+    4,
+    5,
+    11,
+    17,
+    59,
+    19
+   ],
+   "top_terms": [
+    {
+     "t": "basics",
+     "n": 42
+    },
+    {
+     "t": "tips",
+     "n": 41
+    },
+    {
+     "t": "gotchas",
+     "n": 40
+    },
+    {
+     "t": "rds",
+     "n": 36
+    },
+    {
+     "t": "limitations",
+     "n": 33
+    },
+    {
+     "t": "aurora",
+     "n": 15
+    },
+    {
+     "t": "postgresql",
+     "n": 12
+    },
+    {
+     "t": "security",
+     "n": 12
+    },
+    {
+     "t": "mysql",
+     "n": 11
+    },
+    {
+     "t": "sql",
+     "n": 9
+    },
+    {
+     "t": "aws",
+     "n": 8
+    },
+    {
+     "t": "services",
+     "n": 7
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "Managing AWS",
+     "n": 6
+    },
+    {
+     "ch": "Legend",
+     "n": 2
+    },
+    {
+     "ch": "Service Matrix",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 8,
+     "text": "Specific AWS Services | Basics | Tips | Gotchas\n[Load Balancers](#load-balancers) | [📗](#load-balancer-basics) | [📘](#load-balancer-tips) | [📙](#load-balancer-gotchas-and-limitations)\n[Mobile Hub]("
+    },
+    {
+     "chunk": 9,
+     "text": "Specific AWS Services | Basics | Tips | Gotchas\n[RDS Aurora PostgreSQL](#rds-aurora-postgresql) | [📗](#rds-aurora-postgresql-basics) | [📘](#rds-aurora-postgresql-tips) | [📙](#rds-aurora-postgresql-"
+    }
+   ]
+  },
+  {
+   "id": "c024",
+   "size": 9,
+   "members": [
+    417,
+    410,
+    416,
+    413,
+    409,
+    415,
+    414,
+    411,
+    450
+   ],
+   "top_terms": [
+    {
+     "t": "api",
+     "n": 32
+    },
+    {
+     "t": "gateway",
+     "n": 20
+    },
+    {
+     "t": "request",
+     "n": 6
+    },
+    {
+     "t": "deployment",
+     "n": 6
+    },
+    {
+     "t": "aws",
+     "n": 6
+    },
+    {
+     "t": "support",
+     "n": 5
+    },
+    {
+     "t": "using",
+     "n": 5
+    },
+    {
+     "t": "resource",
+     "n": 5
+    },
+    {
+     "t": "use",
+     "n": 5
+    },
+    {
+     "t": "cloudwatch",
+     "n": 4
+    },
+    {
+     "t": "cloudformation",
+     "n": 4
+    },
+    {
+     "t": "changes",
+     "n": 4
+    }
+   ],
+   "chapters": [
+    {
+     "ch": "API Gateway Gotchas and Limitations",
+     "n": 5
+    },
+    {
+     "ch": "API Gateway Tips",
+     "n": 3
+    },
+    {
+     "ch": "CloudFormation Gotchas and Limitations",
+     "n": 1
+    }
+   ],
+   "samples": [
+    {
+     "chunk": 417,
+     "text": "🔸API Gateway does not support nested query parameters on method requests.\n🔸API Gateway limits number of resources to 300, as described here. This is something to be considered when you start using A"
+    },
+    {
+     "chunk": 410,
+     "text": "API Gateway integrates with CloudWatch out-of-the-box, allowing for easy logging of requests and responses.\nNote that if your request or response are too large, CloudWatch will truncate the log. For f"
     }
    ]
   },
@@ -2507,15 +2489,15 @@
    "id": "c025",
    "size": 9,
    "members": [
-    381,
-    379,
-    378,
-    376,
-    380,
-    382,
-    377,
-    529,
-    353
+    367,
+    365,
+    364,
+    362,
+    366,
+    368,
+    363,
+    515,
+    339
    ],
    "top_terms": [
     {
@@ -2591,11 +2573,11 @@
    ],
    "samples": [
     {
-     "chunk": 381,
+     "chunk": 367,
      "text": "🔸 It is important to make sure that DynamoDB resource limits are compatible with your dataset and workload. For example, the maximum size value that can be added to a DynamoDB table is 400 KB (larger"
     },
     {
-     "chunk": 379,
+     "chunk": 365,
      "text": "**Data Types:** DynamoDB supports three data types – **number**, **string**, and **binary** – in both scalar and multi-valued sets. DynamoDB can also support **JSON**.\nAs of late 2017, DynamoDB suppor"
     }
    ]
@@ -2604,15 +2586,15 @@
    "id": "c026",
    "size": 9,
    "members": [
-    483,
-    488,
-    485,
-    482,
-    487,
-    157,
-    222,
-    227,
-    145
+    469,
+    474,
+    471,
+    468,
+    473,
+    143,
+    208,
+    213,
+    131
    ],
    "top_terms": [
     {
@@ -2688,120 +2670,31 @@
    ],
    "samples": [
     {
-     "chunk": 483,
+     "chunk": 469,
      "text": "**Data keys:** The GenerateDataKey API generates a new key off of a master key. The data key contents are exposed to you so you can use it to encrypt and decrypt any size of data in your application l"
     },
     {
-     "chunk": 488,
+     "chunk": 474,
      "text": "🔸KMS keys are region specific — they are stored and can only be used in the region in which they are created. They can't be transferred to other regions.\n🔸KMS keys have a key policy that must grant "
     }
    ]
   },
   {
    "id": "c027",
-   "size": 8,
+   "size": 7,
    "members": [
-    431,
-    427,
-    430,
-    429,
-    423,
-    428,
-    425,
-    464
-   ],
-   "top_terms": [
-    {
-     "t": "api",
-     "n": 30
-    },
-    {
-     "t": "gateway",
-     "n": 18
-    },
-    {
-     "t": "aws",
-     "n": 6
-    },
-    {
-     "t": "deployment",
-     "n": 6
-    },
-    {
-     "t": "support",
-     "n": 5
-    },
-    {
-     "t": "using",
-     "n": 5
-    },
-    {
-     "t": "use",
-     "n": 5
-    },
-    {
-     "t": "resource",
-     "n": 5
-    },
-    {
-     "t": "cloudformation",
-     "n": 4
-    },
-    {
-     "t": "changes",
-     "n": 4
-    },
-    {
-     "t": "well",
-     "n": 4
-    },
-    {
-     "t": "limit",
-     "n": 4
-    }
-   ],
-   "chapters": [
-    {
-     "ch": "API Gateway Gotchas and Limitations",
-     "n": 5
-    },
-    {
-     "ch": "API Gateway Tips",
-     "n": 2
-    },
-    {
-     "ch": "CloudFormation Gotchas and Limitations",
-     "n": 1
-    }
-   ],
-   "samples": [
-    {
-     "chunk": 431,
-     "text": "🔸API Gateway does not support nested query parameters on method requests.\n🔸API Gateway limits number of resources to 300, as described here. This is something to be considered when you start using A"
-    },
-    {
-     "chunk": 427,
-     "text": "🔸API Gateway only supports encrypted (https) endpoints, and does not support unencrypted HTTP. (This is probably a good thing.)\n🔸API Gateway doesn’t support multi-region deployments for high availab"
-    }
-   ]
-  },
-  {
-   "id": "c028",
-   "size": 8,
-   "members": [
-    527,
-    531,
-    524,
-    532,
-    525,
-    528,
-    526,
-    66
+    513,
+    517,
+    510,
+    518,
+    511,
+    514,
+    512
    ],
    "top_terms": [
     {
      "t": "kinesis",
-     "n": 17
+     "n": 16
     },
     {
      "t": "stream",
@@ -2809,7 +2702,7 @@
     },
     {
      "t": "streams",
-     "n": 8
+     "n": 7
     },
     {
      "t": "shards",
@@ -2828,12 +2721,12 @@
      "n": 5
     },
     {
-     "t": "kafka",
+     "t": "shard",
      "n": 5
     },
     {
-     "t": "shard",
-     "n": 5
+     "t": "kafka",
+     "n": 4
     },
     {
      "t": "reads",
@@ -2864,127 +2757,110 @@
     {
      "ch": "Kinesis Streams Tips",
      "n": 1
-    },
-    {
-     "ch": "Service Matrix",
-     "n": 1
     }
    ],
    "samples": [
     {
-     "chunk": 527,
+     "chunk": 513,
      "text": "⛓ Kinesis uses very AWS-specific APIs, so you should be aware of the potential future costs of migrating away from it, should you choose to use it.\nAn application that efficiently uses Kinesis Streams"
     },
     {
-     "chunk": 531,
+     "chunk": 517,
      "text": "🔸⏱ Kinesis Streams’ shards each only permit 5 reads per second. If you are evenly distributing data across many shards, your read limit for the Stream will remain at 5 reads per second on aggregate, "
     }
    ]
   },
   {
-   "id": "c029",
-   "size": 7,
+   "id": "c028",
+   "size": 6,
    "members": [
-    18,
-    17,
-    20,
-    128,
-    386,
-    2,
-    19
+    61,
+    60,
+    62,
+    58,
+    63,
+    193
    ],
    "top_terms": [
     {
-     "t": "aws",
-     "n": 16
+     "t": "cloud",
+     "n": 14
     },
     {
-     "t": "guide",
+     "t": "google",
      "n": 11
     },
     {
-     "t": "information",
+     "t": "api",
+     "n": 9
+    },
+    {
+     "t": "service",
+     "n": 7
+    },
+    {
+     "t": "azure",
+     "n": 7
+    },
+    {
+     "t": "storage",
+     "n": 7
+    },
+    {
+     "t": "aws",
      "n": 6
     },
     {
-     "t": "engineers",
-     "n": 4
+     "t": "source",
+     "n": 6
     },
     {
-     "t": "general",
-     "n": 4
+     "t": "openstack",
+     "n": 6
     },
     {
-     "t": "who",
-     "n": 3
+     "t": "engine",
+     "n": 6
     },
     {
-     "t": "read",
-     "n": 3
+     "t": "internal",
+     "n": 5
     },
     {
-     "t": "back",
-     "n": 3
-    },
-    {
-     "t": "top",
-     "n": 3
-    },
-    {
-     "t": "arrow",
-     "n": 3
-    },
-    {
-     "t": "configuration",
-     "n": 3
-    },
-    {
-     "t": "management",
-     "n": 3
+     "t": "microsoft",
+     "n": 5
     }
    ],
    "chapters": [
     {
-     "ch": "Why an Open Guide?",
-     "n": 2
+     "ch": "Service Matrix",
+     "n": 5
     },
     {
-     "ch": "Scope",
-     "n": 1
-    },
-    {
-     "ch": "AWS vs Server Configuration",
-     "n": 1
-    },
-    {
-     "ch": "ECS Basics",
-     "n": 1
-    },
-    {
-     "ch": "Table of Contents",
+     "ch": "Storage Durability, Availability, and Price",
      "n": 1
     }
    ],
    "samples": [
     {
-     "chunk": 18,
-     "text": "This guide is by and for engineers who use AWS. It aims to be a useful, living reference that consolidates links, tips, gotchas, and best practices. It arose from discussion and editing over beers by "
+     "chunk": 61,
+     "text": "Service | AWS | Google Cloud | Google Internal | Microsoft Azure | Other providers | Open source “build your own” | Openstack\nTracing | X-Ray | Stackdriver Trace |  | Monitor (Application Insights) | "
     },
     {
-     "chunk": 17,
-     "text": "A lot of information on AWS is already written. Most people learn AWS by reading a blog or a “getting started guide” and referring to the standard AWS references. Nonetheless, trustworthy and practica"
+     "chunk": 60,
+     "text": "Service | AWS | Google Cloud | Google Internal | Microsoft Azure | Other providers | Open source “build your own” | Openstack\nBusiness intelligence | QuickSight | Data Studio 360 |  | Power BI | Table"
     }
    ]
   },
   {
-   "id": "c030",
+   "id": "c029",
    "size": 5,
    "members": [
-    254,
-    257,
-    261,
-    225,
-    256
+    240,
+    243,
+    247,
+    211,
+    242
    ],
    "top_terms": [
     {
@@ -3052,11 +2928,11 @@
    ],
    "samples": [
     {
-     "chunk": 254,
+     "chunk": 240,
      "text": "Baking more into your AMIs (for example, pre-installing but not fully configuring common software along with a configuration management client that loads configuration settings at launch time) results"
     },
     {
-     "chunk": 257,
+     "chunk": 243,
      "text": "As systems become larger, it common to have more complex AMI management, such as a multi-stage AMI creation process in which few (ideally one) common base AMIs are infrequently regenerated when compon"
     }
    ]

@@ -1,189 +1,50 @@
 {
   "task_ref": "og-aws-en.md.db",
   "themes": [
-    {
-      "id": "t1",
-      "name": "AWS Overview and Guides",
-      "note": "AWS 总览、服务全景与使用指南"
-    },
-    {
-      "id": "t2",
-      "name": "Networking and Traffic: VPC, DNS, Load Balancing, CDN, API Gateway",
-      "note": "网络与流量：VPC、DNS、负载均衡、CDN 与 API 网关"
-    },
-    {
-      "id": "t3",
-      "name": "IoT",
-      "note": "AWS IoT 物联网平台"
-    },
-    {
-      "id": "t4",
-      "name": "Lambda and Serverless",
-      "note": "Lambda 无服务器计算"
-    },
-    {
-      "id": "t5",
-      "name": "Containers: ECS, EKS and Fargate",
-      "note": "容器服务：ECS、EKS 与 Fargate"
-    },
-    {
-      "id": "t6",
-      "name": "Databases, Analytics and Streaming",
-      "note": "数据库、数据分析与流处理：RDS、Aurora、Redshift、DynamoDB、Kinesis"
-    },
-    {
-      "id": "t7",
-      "name": "CloudFormation and Infrastructure as Code",
-      "note": "CloudFormation 基础设施即代码"
-    },
-    {
-      "id": "t8",
-      "name": "Security: IAM, KMS and Keys",
-      "note": "安全：身份访问管理、密钥与加密"
-    },
-    {
-      "id": "t9",
-      "name": "Monitoring and Logging",
-      "note": "CloudWatch 监控与日志"
-    },
-    {
-      "id": "t10",
-      "name": "Storage: S3, Glacier, EBS, EFS",
-      "note": "存储：对象、归档、块与文件存储"
-    },
-    {
-      "id": "t11",
-      "name": "EC2 Instances and AMIs",
-      "note": "EC2 计算实例与镜像"
-    },
-    {
-      "id": "t12",
-      "name": "Guide Structure, Tips and Links",
-      "note": "指南结构件：导航、技巧与坑、参考链接"
-    }
+    {"id":"t1","name":"AWS Overview and Guides","note":"AWS 服务总览、使用指南与选型对比"},
+    {"id":"t2","name":"Networking and Traffic: VPC, DNS, Load Balancing, CDN, API Gateway","note":"网络与流量：VPC、DNS、负载均衡、CDN、API 网关"},
+    {"id":"t3","name":"IoT","note":"AWS IoT 设备连接与 MQTT 协议"},
+    {"id":"t4","name":"Lambda and Serverless","note":"Lambda 无服务器计算与 Greengrass"},
+    {"id":"t5","name":"Containers: ECS, EKS and Fargate","note":"容器服务：ECS、EKS、Fargate"},
+    {"id":"t6","name":"Databases, Analytics and Streaming","note":"数据库、分析与流处理：RDS/Aurora/DynamoDB/Redshift/Kinesis"},
+    {"id":"t7","name":"CloudFormation and Infrastructure as Code","note":"CloudFormation 基础设施即代码"},
+    {"id":"t8","name":"Security: IAM, KMS and Keys","note":"安全：IAM、KMS 与密钥管理"},
+    {"id":"t9","name":"Monitoring and Logging","note":"监控与日志：CloudWatch"},
+    {"id":"t10","name":"Storage: S3, Glacier, EBS, EFS","note":"存储：S3、Glacier、EBS、EFS"},
+    {"id":"t11","name":"EC2 Instances and AMIs","note":"EC2 实例与 AMI 镜像"},
+    {"id":"t12","name":"Guide Structure, Tips and Links","note":"指南结构、导航与使用提示"}
   ],
   "persons": [],
   "relations": [],
   "assignments": [
-    {
-      "cluster": "c002",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c029",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c003",
-      "theme": "t2"
-    },
-    {
-      "cluster": "c012",
-      "theme": "t2"
-    },
-    {
-      "cluster": "c017",
-      "theme": "t2"
-    },
-    {
-      "cluster": "c024",
-      "theme": "t2"
-    },
-    {
-      "cluster": "c027",
-      "theme": "t2"
-    },
-    {
-      "cluster": "c004",
-      "theme": "t3"
-    },
-    {
-      "cluster": "c005",
-      "theme": "t4"
-    },
-    {
-      "cluster": "c006",
-      "theme": "t5"
-    },
-    {
-      "cluster": "c013",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c014",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c019",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c021",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c025",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c028",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c009",
-      "theme": "t7"
-    },
-    {
-      "cluster": "c010",
-      "theme": "t8"
-    },
-    {
-      "cluster": "c026",
-      "theme": "t8"
-    },
-    {
-      "cluster": "c011",
-      "theme": "t9"
-    },
-    {
-      "cluster": "c016",
-      "theme": "t10"
-    },
-    {
-      "cluster": "c018",
-      "theme": "t10"
-    },
-    {
-      "cluster": "c020",
-      "theme": "t10"
-    },
-    {
-      "cluster": "c022",
-      "theme": "t10"
-    },
-    {
-      "cluster": "c015",
-      "theme": "t11"
-    },
-    {
-      "cluster": "c023",
-      "theme": "t11"
-    },
-    {
-      "cluster": "c030",
-      "theme": "t11"
-    },
-    {
-      "cluster": "c001",
-      "theme": "t12"
-    },
-    {
-      "cluster": "c007",
-      "theme": "t12"
-    },
-    {
-      "cluster": "c008",
-      "theme": "t12"
-    }
+    {"cluster":"c001","theme":"t12"},
+    {"cluster":"c002","theme":"t2"},
+    {"cluster":"c003","theme":"t1"},
+    {"cluster":"c004","theme":"t3"},
+    {"cluster":"c005","theme":"t4"},
+    {"cluster":"c006","theme":"t5"},
+    {"cluster":"c007","theme":"t7"},
+    {"cluster":"c008","theme":"t8"},
+    {"cluster":"c009","theme":"t10"},
+    {"cluster":"c010","theme":"t12"},
+    {"cluster":"c011","theme":"t9"},
+    {"cluster":"c012","theme":"t2"},
+    {"cluster":"c013","theme":"t6"},
+    {"cluster":"c014","theme":"t10"},
+    {"cluster":"c015","theme":"t11"},
+    {"cluster":"c016","theme":"t10"},
+    {"cluster":"c017","theme":"t2"},
+    {"cluster":"c018","theme":"t6"},
+    {"cluster":"c019","theme":"t1"},
+    {"cluster":"c020","theme":"t6"},
+    {"cluster":"c021","theme":"t11"},
+    {"cluster":"c022","theme":"t2"},
+    {"cluster":"c023","theme":"t12"},
+    {"cluster":"c024","theme":"t2"},
+    {"cluster":"c025","theme":"t6"},
+    {"cluster":"c026","theme":"t8"},
+    {"cluster":"c027","theme":"t6"},
+    {"cluster":"c028","theme":"t1"},
+    {"cluster":"c029","theme":"t11"}
   ]
 }

@@ -1,9 +1,9 @@
 {
  "task_version": "1",
- "generated_at": "2026-10-16T14:13:14.589Z",
+ "generated_at": "2026-10-19T15:05:51.158Z",
  "book": {
   "db": "sherlock-holmes-adventures-en.epub.db",
-  "title": "sherlock-holmes-adventures-en",
+  "title": "福尔摩斯冒险史（The Adventures of Sherlock Holmes）",
   "lang": "en",
   "chunks": 1031,
   "chapters": 14,
@@ -12,7 +12,7 @@
  "provenance": {
   "cluster_model": "e5",
   "cluster_method": "centered-greedy-th0.34-min5",
-  "clustered_at": "2026-10-16T14:13:14.593Z",
+  "clustered_at": "2026-10-19T15:05:51.161Z",
   "clusters": 32,
   "covered_chunks": 596
  },

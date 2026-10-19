@@ -391,23 +391,35 @@
   ],
   "assignments": [
     {
+      "cluster": "c001",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c002",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c003",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c004",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c005",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c006",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c007",
+      "theme": "t6"
+    },
+    {
       "cluster": "c008",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c019",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c020",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c029",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c030",
       "theme": "t1"
     },
     {
@@ -415,36 +427,12 @@
       "theme": "t2"
     },
     {
-      "cluster": "c024",
-      "theme": "t2"
+      "cluster": "c010",
+      "theme": "t5"
     },
     {
       "cluster": "c011",
       "theme": "t3"
-    },
-    {
-      "cluster": "c015",
-      "theme": "t3"
-    },
-    {
-      "cluster": "c021",
-      "theme": "t3"
-    },
-    {
-      "cluster": "c023",
-      "theme": "t3"
-    },
-    {
-      "cluster": "c003",
-      "theme": "t4"
-    },
-    {
-      "cluster": "c004",
-      "theme": "t4"
-    },
-    {
-      "cluster": "c005",
-      "theme": "t4"
     },
     {
       "cluster": "c012",
@@ -455,8 +443,12 @@
       "theme": "t4"
     },
     {
-      "cluster": "c010",
-      "theme": "t5"
+      "cluster": "c014",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c015",
+      "theme": "t3"
     },
     {
       "cluster": "c016",
@@ -467,48 +459,56 @@
       "theme": "t6"
     },
     {
-      "cluster": "c026",
-      "theme": "t6"
+      "cluster": "c018",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c019",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c020",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c021",
+      "theme": "t3"
     },
     {
       "cluster": "c022",
       "theme": "t7"
     },
     {
-      "cluster": "c028",
-      "theme": "t7"
+      "cluster": "c023",
+      "theme": "t3"
     },
     {
-      "cluster": "c006",
-      "theme": "t8"
-    },
-    {
-      "cluster": "c027",
-      "theme": "t9"
-    },
-    {
-      "cluster": "c001",
-      "theme": "t9"
-    },
-    {
-      "cluster": "c018",
-      "theme": "t10"
+      "cluster": "c024",
+      "theme": "t2"
     },
     {
       "cluster": "c025",
       "theme": "t10"
     },
     {
-      "cluster": "c002",
-      "theme": "t10"
+      "cluster": "c026",
+      "theme": "t6"
     },
     {
-      "cluster": "c014",
-      "theme": "t10"
+      "cluster": "c027",
+      "theme": "t9"
     },
     {
-      "cluster": "c007",
+      "cluster": "c028",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c029",
       "theme": "t11"
+    },
+    {
+      "cluster": "c030",
+      "theme": "t2"
     },
     {
       "cluster": "c031",

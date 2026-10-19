@@ -1,0 +1,28 @@
+[
+  {
+    "q": "who is the woman who outwits sherlock holmes in a scandal in bohemia",
+    "expect": [
+      "Irene Adler",
+      "Bohemia"
+    ]
+  },
+  {
+    "q": "where is the blue carbuncle finally found hidden",
+    "expect": [
+      "Carbuncle"
+    ]
+  },
+  {
+    "q": "what kind of snake is the deadly serpent in the speckled band",
+    "expect": [
+      "Speckled",
+      "swamp adder"
+    ]
+  },
+  {
+    "q": "红发会案背后是个什么骗局",
+    "expect": [
+      "Wilson"
+    ]
+  }
+]

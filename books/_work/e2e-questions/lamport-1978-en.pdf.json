@@ -1,0 +1,21 @@
+[
+  {
+    "q": "happened before 关系怎么定义",
+    "expect": [
+      "happened before"
+    ]
+  },
+  {
+    "q": "为什么需要逻辑时钟而不是物理时钟",
+    "expect": [
+      "logical clock"
+    ]
+  },
+  {
+    "q": "偏序和全序在分布式系统里差在哪",
+    "expect": [
+      "partial order",
+      "total order"
+    ]
+  }
+]

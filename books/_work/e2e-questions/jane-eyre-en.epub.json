@@ -1,0 +1,21 @@
+[
+  {
+    "q": "Jane 在 Thornfield 庄园遇到的主人是谁",
+    "expect": [
+      "Rochester",
+      "Thornfield"
+    ]
+  },
+  {
+    "q": "who is the nursemaid at gateshead who is kind to jane",
+    "expect": [
+      "Bessie"
+    ]
+  },
+  {
+    "q": "St. John 向 Jane 提出了什么请求",
+    "expect": [
+      "St. John"
+    ]
+  }
+]

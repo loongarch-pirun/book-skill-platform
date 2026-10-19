@@ -1,0 +1,38 @@
+[
+  {
+    "q": "CAP 定理讲的是什么，怎么权衡",
+    "expect": [
+      "CAP"
+    ]
+  },
+  {
+    "q": "consistent hashing 解决什么问题",
+    "expect": [
+      "consistent hashing"
+    ]
+  },
+  {
+    "q": "database sharding 有哪几种方式",
+    "expect": [
+      "sharding"
+    ]
+  },
+  {
+    "q": "CDN 是怎么加速内容分发的",
+    "expect": [
+      "CDN"
+    ]
+  },
+  {
+    "q": "REST 和 RPC 该怎么选",
+    "expect": [
+      "REST"
+    ]
+  },
+  {
+    "q": "load balancer 有哪几层，各自解决什么",
+    "expect": [
+      "load balancer"
+    ]
+  }
+]

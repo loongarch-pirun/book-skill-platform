@@ -1,0 +1,27 @@
+[
+  {
+    "q": "MapReduce 的 map 和 reduce 各做什么",
+    "expect": [
+      "map",
+      "reduce"
+    ]
+  },
+  {
+    "q": "combiner 有什么用",
+    "expect": [
+      "combiner"
+    ]
+  },
+  {
+    "q": "straggler 掉队节点怎么处理",
+    "expect": [
+      "straggler"
+    ]
+  },
+  {
+    "q": "中间结果怎么分区送到 reduce",
+    "expect": [
+      "partition"
+    ]
+  }
+]

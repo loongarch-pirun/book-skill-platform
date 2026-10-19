@@ -1,0 +1,38 @@
+[
+  {
+    "q": "VPC 的网络规划要注意什么",
+    "expect": [
+      "VPC"
+    ]
+  },
+  {
+    "q": "Lambda 适合什么场景",
+    "expect": [
+      "Lambda"
+    ]
+  },
+  {
+    "q": "S3 的访问权限怎么配",
+    "expect": [
+      "S3"
+    ]
+  },
+  {
+    "q": "CloudFront 能带来什么提升",
+    "expect": [
+      "CloudFront"
+    ]
+  },
+  {
+    "q": "EC2 实例类型怎么选",
+    "expect": [
+      "EC2"
+    ]
+  },
+  {
+    "q": "CloudFormation 是干什么的",
+    "expect": [
+      "CloudFormation"
+    ]
+  }
+]

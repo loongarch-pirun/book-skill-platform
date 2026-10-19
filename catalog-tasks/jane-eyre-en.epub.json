@@ -1,9 +1,9 @@
 {
  "task_version": "1",
- "generated_at": "2026-10-16T14:13:12.047Z",
+ "generated_at": "2026-10-19T15:05:49.407Z",
  "book": {
   "db": "jane-eyre-en.epub.db",
-  "title": "jane-eyre-en",
+  "title": "简·爱（Jane Eyre）",
   "lang": "en",
   "chunks": 1863,
   "chapters": 41,
@@ -12,7 +12,7 @@
  "provenance": {
   "cluster_model": "e5",
   "cluster_method": "centered-greedy-th0.38-min5",
-  "clustered_at": "2026-10-16T14:13:12.051Z",
+  "clustered_at": "2026-10-19T15:05:49.410Z",
   "clusters": 31,
   "covered_chunks": 1065
  },

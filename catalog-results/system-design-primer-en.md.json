@@ -52,24 +52,9 @@
       "note": "可用性、扩展性与性能"
     },
     {
-      "id": "t11",
-      "name": "Service Discovery and Distributed Coordination",
-      "note": "服务发现与分布式协调"
-    },
-    {
       "id": "t12",
       "name": "Reference Links, Translation and Repo Notes",
       "note": "参考链接、翻译与仓库说明"
-    },
-    {
-      "id": "t13",
-      "name": "SQL Tips and Data Types",
-      "note": "SQL 技巧与数据类型"
-    },
-    {
-      "id": "t14",
-      "name": "Object Storage Design",
-      "note": "对象存储设计"
     }
   ],
   "persons": [
@@ -85,7 +70,11 @@
   "assignments": [
     {
       "cluster": "c001",
-      "theme": "t1"
+      "theme": "t10"
+    },
+    {
+      "cluster": "c002",
+      "theme": "t4"
     },
     {
       "cluster": "c003",
@@ -93,203 +82,63 @@
     },
     {
       "cluster": "c004",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c012",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c023",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c032",
-      "theme": "t1"
+      "theme": "t12"
     },
     {
       "cluster": "c005",
-      "theme": "t2"
-    },
-    {
-      "cluster": "c041",
-      "theme": "t2"
-    },
-    {
-      "cluster": "c050",
-      "theme": "t2"
-    },
-    {
-      "cluster": "c002",
-      "theme": "t3"
-    },
-    {
-      "cluster": "c007",
-      "theme": "t3"
-    },
-    {
-      "cluster": "c024",
-      "theme": "t3"
-    },
-    {
-      "cluster": "c029",
-      "theme": "t3"
-    },
-    {
-      "cluster": "c033",
-      "theme": "t3"
-    },
-    {
-      "cluster": "c009",
-      "theme": "t4"
-    },
-    {
-      "cluster": "c014",
-      "theme": "t4"
-    },
-    {
-      "cluster": "c015",
-      "theme": "t4"
-    },
-    {
-      "cluster": "c028",
-      "theme": "t4"
-    },
-    {
-      "cluster": "c052",
-      "theme": "t5"
-    },
-    {
-      "cluster": "c059",
-      "theme": "t5"
-    },
-    {
-      "cluster": "c062",
-      "theme": "t5"
-    },
-    {
-      "cluster": "c013",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c031",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c039",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c043",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c057",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c011",
-      "theme": "t7"
-    },
-    {
-      "cluster": "c022",
-      "theme": "t7"
-    },
-    {
-      "cluster": "c034",
-      "theme": "t7"
-    },
-    {
-      "cluster": "c035",
-      "theme": "t7"
-    },
-    {
-      "cluster": "c046",
-      "theme": "t7"
-    },
-    {
-      "cluster": "c055",
-      "theme": "t7"
-    },
-    {
-      "cluster": "c063",
-      "theme": "t7"
-    },
-    {
-      "cluster": "c016",
-      "theme": "t8"
-    },
-    {
-      "cluster": "c018",
-      "theme": "t8"
-    },
-    {
-      "cluster": "c036",
-      "theme": "t8"
-    },
-    {
-      "cluster": "c053",
-      "theme": "t8"
+      "theme": "t9"
     },
     {
       "cluster": "c006",
-      "theme": "t9"
+      "theme": "t5"
     },
     {
-      "cluster": "c021",
-      "theme": "t9"
-    },
-    {
-      "cluster": "c026",
-      "theme": "t9"
-    },
-    {
-      "cluster": "c038",
-      "theme": "t9"
-    },
-    {
-      "cluster": "c058",
-      "theme": "t9"
-    },
-    {
-      "cluster": "c060",
-      "theme": "t9"
-    },
-    {
-      "cluster": "c066",
-      "theme": "t9"
-    },
-    {
-      "cluster": "c027",
-      "theme": "t10"
-    },
-    {
-      "cluster": "c040",
-      "theme": "t10"
-    },
-    {
-      "cluster": "c047",
-      "theme": "t10"
-    },
-    {
-      "cluster": "c049",
-      "theme": "t10"
-    },
-    {
-      "cluster": "c064",
-      "theme": "t11"
+      "cluster": "c007",
+      "theme": "t7"
     },
     {
       "cluster": "c008",
-      "theme": "t12"
+      "theme": "t7"
+    },
+    {
+      "cluster": "c009",
+      "theme": "t1"
     },
     {
       "cluster": "c010",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c011",
       "theme": "t12"
     },
     {
+      "cluster": "c012",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c013",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c014",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c015",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c016",
+      "theme": "t3"
+    },
+    {
       "cluster": "c017",
-      "theme": "t12"
+      "theme": "t1"
+    },
+    {
+      "cluster": "c018",
+      "theme": "t4"
     },
     {
       "cluster": "c019",
@@ -300,56 +149,176 @@
       "theme": "t12"
     },
     {
-      "cluster": "c030",
+      "cluster": "c021",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c022",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c023",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c024",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c025",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c026",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c027",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c028",
       "theme": "t12"
+    },
+    {
+      "cluster": "c029",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c030",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c031",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c032",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c033",
+      "theme": "t1"
+    },
+    {
+      "cluster": "c034",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c035",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c036",
+      "theme": "t1"
     },
     {
       "cluster": "c037",
       "theme": "t12"
     },
     {
-      "cluster": "c042",
+      "cluster": "c038",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c039",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c040",
       "theme": "t12"
     },
     {
+      "cluster": "c041",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c042",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c043",
+      "theme": "t6"
+    },
+    {
       "cluster": "c044",
-      "theme": "t12"
+      "theme": "t4"
     },
     {
       "cluster": "c045",
       "theme": "t12"
     },
     {
+      "cluster": "c046",
+      "theme": "t10"
+    },
+    {
+      "cluster": "c047",
+      "theme": "t10"
+    },
+    {
       "cluster": "c048",
-      "theme": "t12"
+      "theme": "t5"
+    },
+    {
+      "cluster": "c049",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c050",
+      "theme": "t9"
     },
     {
       "cluster": "c051",
-      "theme": "t12"
+      "theme": "t7"
+    },
+    {
+      "cluster": "c052",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c053",
+      "theme": "t5"
     },
     {
       "cluster": "c054",
-      "theme": "t12"
+      "theme": "t7"
+    },
+    {
+      "cluster": "c055",
+      "theme": "t1"
     },
     {
       "cluster": "c056",
-      "theme": "t12"
+      "theme": "t5"
+    },
+    {
+      "cluster": "c057",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c058",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c059",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c060",
+      "theme": "t1"
     },
     {
       "cluster": "c061",
-      "theme": "t12"
+      "theme": "t6"
     },
     {
-      "cluster": "c065",
-      "theme": "t13"
+      "cluster": "c062",
+      "theme": "t10"
     },
     {
-      "cluster": "c067",
-      "theme": "t13"
-    },
-    {
-      "cluster": "c025",
-      "theme": "t14"
+      "cluster": "c063",
+      "theme": "t2"
     }
   ]
 }

@@ -1,0 +1,26 @@
+[
+  {
+    "q": "Dynamo 怎么做到高可用的数据分区",
+    "expect": [
+      "consistent hashing"
+    ]
+  },
+  {
+    "q": "vector clock 在 Dynamo 里干什么用",
+    "expect": [
+      "vector clock"
+    ]
+  },
+  {
+    "q": "Dynamo 的读写仲裁 quorum 是什么意思",
+    "expect": [
+      "quorum"
+    ]
+  },
+  {
+    "q": "节点之间怎么交换成员信息",
+    "expect": [
+      "gossip"
+    ]
+  }
+]

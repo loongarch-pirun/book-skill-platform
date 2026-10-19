@@ -1,9 +1,9 @@
 {
  "task_version": "1",
- "generated_at": "2026-10-16T15:19:07.855Z",
+ "generated_at": "2026-10-19T15:05:45.748Z",
  "book": {
   "db": "mapreduce-2004-en.pdf.db",
-  "title": "mapreduce-2004-en",
+  "title": "MapReduce：谷歌大规模分布式数据处理",
   "lang": "en",
   "chunks": 70,
   "chapters": 0,
@@ -12,7 +12,7 @@
  "provenance": {
   "cluster_model": "e5",
   "cluster_method": "single(retry-exhausted)",
-  "clustered_at": "2026-10-16T15:19:07.858Z",
+  "clustered_at": "2026-10-19T15:05:45.752Z",
   "clusters": 1,
   "covered_chunks": 70
  },

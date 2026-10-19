@@ -420,128 +420,128 @@
       "theme": "t1"
     },
     {
-      "cluster": "c005",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c007",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c010",
-      "theme": "t1"
-    },
-    {
-      "cluster": "c020",
-      "theme": "t1"
-    },
-    {
       "cluster": "c002",
       "theme": "t2"
-    },
-    {
-      "cluster": "c008",
-      "theme": "t2"
-    },
-    {
-      "cluster": "c017",
-      "theme": "t3"
-    },
-    {
-      "cluster": "c016",
-      "theme": "t4"
-    },
-    {
-      "cluster": "c023",
-      "theme": "t4"
     },
     {
       "cluster": "c003",
       "theme": "t5"
     },
     {
-      "cluster": "c006",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c027",
-      "theme": "t6"
-    },
-    {
-      "cluster": "c015",
-      "theme": "t7"
-    },
-    {
-      "cluster": "c019",
-      "theme": "t8"
-    },
-    {
-      "cluster": "c029",
-      "theme": "t8"
-    },
-    {
       "cluster": "c004",
       "theme": "t9"
     },
     {
-      "cluster": "c024",
-      "theme": "t9"
+      "cluster": "c005",
+      "theme": "t8"
     },
     {
-      "cluster": "c032",
-      "theme": "t9"
+      "cluster": "c006",
+      "theme": "t6"
     },
     {
-      "cluster": "c011",
-      "theme": "t10"
+      "cluster": "c007",
+      "theme": "t6"
     },
     {
-      "cluster": "c022",
-      "theme": "t11"
-    },
-    {
-      "cluster": "c028",
-      "theme": "t11"
+      "cluster": "c008",
+      "theme": "t2"
     },
     {
       "cluster": "c009",
       "theme": "t12"
     },
     {
-      "cluster": "c013",
-      "theme": "t12"
+      "cluster": "c010",
+      "theme": "t8"
     },
     {
-      "cluster": "c030",
-      "theme": "t12"
-    },
-    {
-      "cluster": "c018",
-      "theme": "t13"
-    },
-    {
-      "cluster": "c026",
-      "theme": "t13"
-    },
-    {
-      "cluster": "c014",
-      "theme": "t14"
-    },
-    {
-      "cluster": "c025",
-      "theme": "t14"
-    },
-    {
-      "cluster": "c031",
-      "theme": "t14"
+      "cluster": "c011",
+      "theme": "t10"
     },
     {
       "cluster": "c012",
       "theme": "t15"
     },
     {
+      "cluster": "c013",
+      "theme": "t2"
+    },
+    {
+      "cluster": "c014",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c015",
+      "theme": "t7"
+    },
+    {
+      "cluster": "c016",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c017",
+      "theme": "t3"
+    },
+    {
+      "cluster": "c018",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c019",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c020",
+      "theme": "t2"
+    },
+    {
       "cluster": "c021",
       "theme": "t16"
+    },
+    {
+      "cluster": "c022",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c023",
+      "theme": "t4"
+    },
+    {
+      "cluster": "c024",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c025",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c026",
+      "theme": "t9"
+    },
+    {
+      "cluster": "c027",
+      "theme": "t6"
+    },
+    {
+      "cluster": "c028",
+      "theme": "t11"
+    },
+    {
+      "cluster": "c029",
+      "theme": "t8"
+    },
+    {
+      "cluster": "c030",
+      "theme": "t13"
+    },
+    {
+      "cluster": "c031",
+      "theme": "t14"
+    },
+    {
+      "cluster": "c032",
+      "theme": "t9"
     }
   ]
 }

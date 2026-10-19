@@ -69,7 +69,9 @@ if (isLayer("search")) {
     const r = await call("query_book", { book: book.id, question: item.q, topN: 5 });
     const hits = r.results || [];
     const text = hits.map(h => h.text).join("\n");
-    const miss = (item.expect || []).filter(k => !text.includes(k));
+    // 大小写不敏感：英文书关键词在标题里大写、正文里小写（carbuncle/Carbuncle）——
+    // 大小写敏感的 includes 会把路由正确的题误判为缺词（2026-10-19 福尔摩斯实测）
+    const miss = (item.expect || []).filter(k => !text.toLowerCase().includes(k.toLowerCase()));
     log(`Q: ${item.q}`);
     log(`   路由: ${r.book} | 命中 ${hits.length} 块 | 缺关键词: ${miss.length ? miss.join(",") : "无"}`);
     log(`   首块定位: ${hits[0]?.loc} | 首块开头: ${JSON.stringify((hits[0]?.text || "").slice(0, 60))}`);

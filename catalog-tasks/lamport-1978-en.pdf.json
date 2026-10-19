@@ -1,9 +1,9 @@
 {
  "task_version": "1",
- "generated_at": "2026-10-16T15:18:12.464Z",
+ "generated_at": "2026-10-19T15:05:45.261Z",
  "book": {
   "db": "lamport-1978-en.pdf.db",
-  "title": "lamport-1978-en",
+  "title": "时间、时钟与分布式系统的事件排序",
   "lang": "en",
   "chunks": 53,
   "chapters": 0,
@@ -12,7 +12,7 @@
  "provenance": {
   "cluster_model": "e5",
   "cluster_method": "single",
-  "clustered_at": "2026-10-16T15:18:12.466Z",
+  "clustered_at": "2026-10-19T15:05:45.264Z",
   "clusters": 1,
   "covered_chunks": 53
  },

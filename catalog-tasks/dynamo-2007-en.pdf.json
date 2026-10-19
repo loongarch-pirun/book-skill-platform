@@ -1,9 +1,9 @@
 {
  "task_version": "1",
- "generated_at": "2026-10-16T15:18:12.064Z",
+ "generated_at": "2026-10-19T15:05:46.299Z",
  "book": {
   "db": "dynamo-2007-en.pdf.db",
-  "title": "dynamo-2007-en",
+  "title": "Dynamo：亚马逊高可用键值存储",
   "lang": "en",
   "chunks": 119,
   "chapters": 0,
@@ -12,7 +12,7 @@
  "provenance": {
   "cluster_model": "e5",
   "cluster_method": "centered-greedy-th0.38-min5",
-  "clustered_at": "2026-10-16T15:18:12.066Z",
+  "clustered_at": "2026-10-19T15:05:46.301Z",
   "clusters": 6,
   "covered_chunks": 63
  },
