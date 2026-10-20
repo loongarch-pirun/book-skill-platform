@@ -116,6 +116,64 @@ assert(fs.existsSync(cleanVer), "材料: kk-clean-louzhu.pdf 在位（净版标�
   assert(back === before, `恢复后 chunks 回涨（${back} === ${before}）`);
   assert(String(back) === meta2.chunk_count && String(backChars) === meta2.total_chars, `恢复后账目回涨（chunk_count=${meta2.chunk_count} total_chars=${meta2.total_chars}）`);
 
+  // ---------- ③ 行级清洗全链路（inline-clean：真建库料上跑 L1+L2） ----------
+  // clean 落库后的库继续跑：buildInlinePlan → importInline → 三对账+账实 → restoreInline 回滚
+  {
+    const { buildInlinePlan, INLINE_VERSION } = await import("../src/lib/inline-clean.mjs");
+    const { importInline, restoreInline, auditInline } = await import("../src/lib/inline-import.mjs");
+    const planDb = new Database(dbPath, { readonly: true });
+    const plan = buildInlinePlan(planDb);
+    planDb.close();
+    assert(plan.ok, "buildInlinePlan 成功（真建库脏料）");
+    assert(plan.stats.total > 0 && (plan.stats.strip + plan.stats.split) > 0, `计划有净化动作（strip ${plan.stats.strip} / split ${plan.stats.split} / keep ${plan.stats.keep}）`);
+
+    const noiseCount = (p) => {
+      const d = new Database(p, { readonly: true });
+      const rows = d.prepare("SELECT text FROM chunks").all();
+      d.close();
+      let n = 0;
+      for (const r of rows) {
+        for (const line of r.text.split("\n")) {
+          const t = line.trim();
+          if (/^\d{1,4}楼$/.test(t) || /^作者[:：].*回复日期.*$/.test(t) || /^[•·]\S{1,24}\d{4}-\d{2}-\d{2}[\d: ]*$/.test(t) || /^[—=~\-_]{6,}$/.test(t)) n++;
+        }
+      }
+      return n;
+    };
+    const noiseBefore = noiseCount(dbPath);
+
+    const ir2 = importInline(dbPath, plan, {});
+    assert(ir2.ok, `importInline 落库成功（${ir2.message?.slice(0, 80)}）`);
+    assert(ir2.stats.newChunks > 0 || ir2.stats.strip > 0, "有净化产物");
+
+    const dbi = new Database(dbPath, { readonly: true });
+    const afterI = dbi.prepare("SELECT COUNT(*) n FROM chunks").get().n;
+    const qInline = dbi.prepare("SELECT COUNT(*) n FROM quarantine WHERE cat='inline'").get().n;
+    const ftsI = dbi.prepare("SELECT COUNT(*) n FROM chunks_fts").get().n;
+    const metaI = Object.fromEntries(dbi.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
+    dbi.close();
+    assert(afterI === before + ir2.stats.newChunks, `块数 ${before} → ${afterI}（切出 ${ir2.stats.newChunks} 跟帖新块）`);
+    assert(qInline === ir2.stats.strip + ir2.stats.split, `隔离账 inline ${qInline} 行（=净化块数）`);
+    assert(ftsI === afterI, `FTS 对齐（${ftsI} === ${afterI}）`);
+    assert(String(afterI) === metaI.chunk_count, `账实相符（meta.chunk_count=${metaI.chunk_count} === 实际 ${afterI}）`);
+    assert(metaI.inline_version === String(INLINE_VERSION), `inline_version 落账（${metaI.inline_version}）`);
+    const noiseAfter = noiseCount(dbPath);
+    assert(noiseAfter === 0, `行级噪音归零（${noiseBefore} → ${noiseAfter}）`);
+
+    const auI = auditInline(dbPath);
+    assert(auI.ready && auI.metaAligned, "auditInline 账实相符");
+
+    const rrI = restoreInline(dbPath, { all: true });
+    assert(rrI.ok && rrI.restored === qInline, `restoreInline 恢复 ${rrI.restored} 块（=隔离账）`);
+    assert(rrI.deletedNew === ir2.stats.newChunks, `删除切出的新块 ${rrI.deletedNew}（=${ir2.stats.newChunks}）`);
+    const dbb = new Database(dbPath, { readonly: true });
+    const backI = dbb.prepare("SELECT COUNT(*) n FROM chunks").get().n;
+    const metaB = Object.fromEntries(dbb.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
+    dbb.close();
+    assert(backI === before, `恢复后块数回到 ${before}（${backI}）`);
+    assert(String(backI) === metaB.chunk_count, `恢复后账目回涨（chunk_count=${metaB.chunk_count}）`);
+  }
+
   fs.rmSync(tmp, { recursive: true, force: true });
 }
 

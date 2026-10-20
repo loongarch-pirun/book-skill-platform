@@ -710,9 +710,70 @@ const copyDb = (src) => {
   ok(jobsSrc.includes("跳过云端清洗") && jobsSrc.includes("--force --force-gate"),
     "静态: jobs 无配置跳过文案 + GATE 放行指引（--force --force-gate）在位");
 
+  // ⑥b 行级净化接线：spawn 带 nodeEnv()（G-01）+ 位次在 clean 后 embed 前 + 幂等跳过
+  ok(jobsSrc.includes("INLINE_SCRIPT") && /spawn\(process\.execPath, \[INLINE_SCRIPT[^\n]*nodeEnv\(\)/.test(jobsSrc),
+    "静态: jobs inline 段 spawn 带 nodeEnv()（G-01 ELECTRON_RUN_AS_NODE 锁）");
+  {
+    const cleanIdx = jobsSrc.indexOf("runCleanBook(id, outDb");
+    const inlineIdx = jobsSrc.indexOf("runInlineClean(id, outDb");
+    const embedIdx = jobsSrc.indexOf("runEmbed(id, outDb");
+    ok(cleanIdx > 0 && inlineIdx > cleanIdx && embedIdx > inlineIdx,
+      "静态: 管线位次 clean → inline-clean → embed（块内净化必须在向量化前）");
+  }
+  ok(jobsSrc.includes("readInlineReport") && jobsSrc.includes("inline_report"),
+    "静态: jobs 读 inline_report 拼横幅（净化明细可见）");
+
   // ⑦ 套件挂载
   ok((pkgSrc.scripts["test:fast"] || "").includes("clean-test"),
     "静态: package.json test:fast 含 clean-test（挂载对账）");
+}
+
+// ========== 19.5) 行级清洗接线契约（inline-clean，2026-10-20） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripAll = (s) => s
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split("\n")
+    .map((l) => l.replace(/(^|\s)\/\/.*$/, "$1"))
+    .join("\n");
+  const libSrc = stripAll(readSrc("src", "lib", "inline-clean.mjs"));
+  const impSrc2 = stripAll(readSrc("src", "lib", "inline-import.mjs"));
+  const cliSrc2 = stripAll(readSrc("src", "inline-clean.mjs"));
+  const pkgSrc3 = JSON.parse(readSrc("package.json"));
+
+  // ① 导出在位（动态 import 实证）：计划+护栏 / 落库+恢复 两条链路
+  const lib = await import("../src/lib/inline-clean.mjs");
+  const imp2 = await import("../src/lib/inline-import.mjs");
+  ok(typeof lib.buildInlinePlan === "function" && typeof lib.planBlock === "function"
+    && typeof lib.stripNoiseLines === "function" && typeof lib.splitByReplyBoundary === "function"
+    && typeof lib.checkInlineGate === "function" && lib.INLINE_VERSION === 1,
+    "静态: inline-clean.mjs 导出 buildInlinePlan/planBlock/strip*/split*/checkInlineGate + INLINE_VERSION=1");
+  ok(typeof imp2.importInline === "function" && typeof imp2.restoreInline === "function"
+    && typeof imp2.auditInline === "function",
+    "静态: inline-import.mjs 导出 importInline/restoreInline/auditInline（落库+恢复链路）");
+
+  // ② 行级铁律：规则全部行级 trim 整行匹配（「楼主」开头行是正文不许子串删）
+  ok(libSrc.includes('"floor", re: /^\\d{1,4}楼$/') && !/replace\(.*楼.*,""\)/.test(libSrc),
+    "静态: 楼层号行级整行匹配（禁子串删）");
+  ok(libSrc.includes("minRemainChars") && libSrc.includes("minReplyChars") && libSrc.includes("minMainChars"),
+    "静态: 护栏阈值常量在位（I1 剩余字数/I2 跟帖与主帖下限）");
+
+  // ③ lib 无裸 throw + FTS rebuild + 作废下游（块集合变了 emb 与编目必须重做）
+  ok(!/throw new/.test(libSrc) && !/throw new/.test(impSrc2),
+    "静态: inline lib 零 throw new（错误码返回制）");
+  ok(impSrc2.includes("rebuildFts(db)") && impSrc2.includes("invalidateDownstream"),
+    "静态: inline-import FTS rebuild + 作废下游（emb 置 NULL + 删 catalog meta）");
+  ok(impSrc2.includes("split_json") && impSrc2.includes("DELETE FROM chunks WHERE id = ?"),
+    "静态: 隔离账记 split_json + 恢复删切出的新块（2a 切不删可逆）");
+
+  // ④ CLI 逃生与恢复
+  ok(cliSrc2.includes("--dry-run") && cliSrc2.includes("--force-gate") && cliSrc2.includes("--restore"),
+    "静态: inline-clean CLI 含 --dry-run/--force-gate/--restore");
+
+  // ⑤ 套件挂载
+  ok((pkgSrc3.scripts["test:fast"] || "").includes("inline-clean-test"),
+    "静态: package.json test:fast 含 inline-clean-test（挂载对账）");
 }
 
 // ========== 20) V3R7-① 数据层 + get_outline（第1批门禁） ==========

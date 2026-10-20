@@ -23,6 +23,7 @@ const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 const EMBED_SCRIPT = path.join(import.meta.dirname, "..", "embed-book.js");
 const CLEAN_SCRIPT = path.join(import.meta.dirname, "..", "clean-book.mjs");
+const INLINE_SCRIPT = path.join(import.meta.dirname, "..", "inline-clean.mjs");
 const TXT2DOCX_SCRIPT = path.join(import.meta.dirname, "..", "txt2docx.js");
 const EXT_FMT = { pdf: "pdf", epub: "epub", docx: "docx", txt: "docx" }; // txt 先转 docx 再建库
 
@@ -258,6 +259,25 @@ export async function startProcessing(bookId) {
     emitG({ stage: "clean", detail: "未配置或读不到云端 AI，跳过云端清洗（检索不受影响）" });
   }
 
+  // 1.5) 行级净化：inline-clean（纯规则零 key，clean 之后 embed 之前——块内净化作废向量）
+  //   L1 删页码/楼层号/署名/分隔线，L2 跟帖切分；护栏拦回/净化率超线都会拒收（exit 2）
+  emitG({ stage: "clean", label: "行级净化中", detail: "块内噪音清除与跟帖切分（页码/署名/楼层号，问帖答帖分离）" });
+  const inlineCode = await runInlineClean(id, outDb, g);
+  if (cancelled.has(id)) return cancelResult(id, g);
+  if (inlineCode !== 0) {
+    const why = inlineCode === 2
+      ? "行级净化被拒：要删的内容占比异常，疑似规则误判，已整单拒收（书库未动）。人工核查后可在终端跑 node src/inline-clean.mjs <库路径> --force-gate 放行"
+      : "行级净化失败（书库异常或规则执行出错）——书库未动，重跑「开始加工」续跑";
+    emitG({ stage: "failed", label: "加工失败", error: why });
+    throw new UserError(why);
+  }
+  {
+    const rep = readInlineReport(outDb);
+    emitG(rep
+      ? { stage: "clean", detail: `行级净化：净化 ${rep.strip + rep.split} 块 · 删行 ${rep.removedLines}（${Math.round((rep.cleanRatio || 0) * 100)}%）· 护栏拦回 ${rep.guardedI1 ?? 0} · 切出跟帖 ${rep.newChunks} 块` }
+      : { stage: "clean", detail: "行级净化：跳过（已净化过或无需净化）" });
+  }
+
   // 2) 向量化：spawn embed-book.js <db>（显式传参；环境变量由 engine.init 回写的是
   //    BSP_LIB_DIR/BSP_SKILLS_DIR/BSP_MODELS_DIR 三个目录，nodeEnv() 另行补 ELECTRON_RUN_AS_NODE）
   emitG({ stage: "vector", label: "向量化中", detail: r.skipped ? "库已存在，补向量/概念图谱" : "首次要下嵌入模型（约 112MB）" });
@@ -423,6 +443,32 @@ function runCleanBook(bookId, dbPath, resultsDir, g, llmEnv) {
     child.on("close", (code) => resolve(code ?? 1));
     child.on("error", () => resolve(1));
   });
+}
+
+// ---------- 内部：行级清洗子进程（inline-clean CLI；纯规则零云端零 key） ----------
+// 位次：clean-book（整块删）之后、embed（向量化）之前——块内净化改 text/切块会作废向量，
+// 必须在 embed 前跑完。幂等：已按当前版本净化过且书未变 → CLI 自己跳过（exit 0）。
+function runInlineClean(bookId, dbPath, g) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [INLINE_SCRIPT, dbPath], { env: nodeEnv() });
+    const j = jobs.get(bookId);
+    if (j) j.child = child;
+    let buf = "";
+    child.stdout.on("data", (d) => { buf += d.toString(); if (buf.length > 4000) buf = buf.slice(-1000); });
+    child.stderr.on("data", (d) => { buf += d.toString(); });
+    child.on("close", (code) => resolve(code ?? 1));
+    child.on("error", () => resolve(1));
+  });
+}
+
+// 行级清洗落账（meta.inline_report JSON）只读取——拼横幅用，读不到返回 null（不拖垮管线）
+function readInlineReport(dbPath) {
+  try {
+    const db = new Database(dbPath, { readonly: true });
+    const row = db.prepare("SELECT value FROM meta WHERE key='inline_report'").get();
+    db.close();
+    return row ? JSON.parse(row.value) : null;
+  } catch { return null; }
 }
 
 // 清洗落账（meta.clean_report JSON）只读取——拼横幅用，读不到返回 null（不拖垮管线）
