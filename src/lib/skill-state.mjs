@@ -16,11 +16,6 @@ export function loadSkillState(libDir) {
   } catch { return {}; }
 }
 
-// 单本书是否开启（无状态文件/无记录都算开）
-export function isSkillEnabled(libDir, bookId) {
-  return loadSkillState(libDir)[bookId] !== false;
-}
-
 // 设开关：enabled=true 删记录（保持文件精简），false 记 false；返回整份状态
 export function setSkillEnabled(libDir, bookId, enabled) {
   const st = loadSkillState(libDir);
