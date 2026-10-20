@@ -688,6 +688,12 @@ async function main(argv = process.argv.slice(2), opts = {}) {
   const title = titleArg || (isDir ? path.basename(path.dirname(path.resolve(file)))
     : path.basename(file).replace(/\.[^.]+$/, ""));
   parsed.title = title;
+  // 书名规范（2026-10-20）：书架标题中文优先——有原文名放括号里（「傲慢与偏见（Pride and Prejudice）」）。
+  // 没传 --title 且文件名里没有中文 → 提示补名（不阻断：建库能用，但书架会是一串拼音/英文）。
+  // 硬门在 guard：title === id 视为「未起名」，正式收录前必撞红。
+  if (!titleArg && !/[\u4e00-\u9fff]/.test(title)) {
+    console.error(`⚠ 书名「${title}」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Prejudice）"）`);
+  }
 
   // V3R7-①：token 账 + 章节质量 meta——必须在语义分块之后算（块边界变了字符总数才锁定），
   // 建库时一次算好落 meta，读时（get_outline/read_full_book/list_books）零成本。

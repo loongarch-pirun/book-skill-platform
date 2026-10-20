@@ -942,6 +942,20 @@ const copyDb = (src) => {
   const navWithIcon = (htmlSrc.match(/class="navbtn[^"]*"[^>]*>\s*<svg/g) || []).length;
   ok(navWithIcon === 5, `静态: 侧栏 5 项均为图标+文字常驻（实测 ${navWithIcon} 项带图标）`);
 
+  // ⑤ 书名规范（2026-10-20 老板要求）：书架标题必须是「起过的名字」，不得是文件名直译。
+  // 判定：title === id（去扩展名）视为没起名；有原文名放括号里（「傲慢与偏见（Pride and Prejudice）」）
+  // 靠文档约定，机器只卡「没起名」这条硬线——新书走 build-book 没传 --title 就会撞这里。
+  const shelfBad = [];
+  for (const f of fs.readdirSync(LIB).filter((x) => x.endsWith(".db"))) {
+    const id = f.replace(/\.db$/, "");
+    const db = new Database(path.join(LIB, f), { readonly: true });
+    try {
+      const t = db.prepare("SELECT value FROM meta WHERE key='title'").get()?.value;
+      if (!t || t === id) shelfBad.push(id);
+    } finally { db.close(); }
+  }
+  ok(shelfBad.length === 0, `静态: 书名规范——无「未起名」库（title===id：${shelfBad.join(",") || "无"}）`);
+
   // ⑤ 主题系统（2026-10-20）：五套预设 + 强调色自选 + 存档 + 启动应用 + 面板入口
   const themeSrc = readSrc("src", "renderer", "theme.js");
   const presetCount = (themeSrc.match(/^\s{2}"[a-z-]+": \{$/gm) || []).length;
