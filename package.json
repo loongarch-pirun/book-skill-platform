@@ -35,8 +35,7 @@
     "@eslint/js": "^10.0.1",
     "electron": "^44.7.0",
     "electron-builder": "^26.15.3",
-    "eslint": "^10.12.0",
-    "node-abi": "^4.37.0"
+    "eslint": "^10.12.0"
   },
   "build": {
     "appId": "com.boss.book-skill-platform",
