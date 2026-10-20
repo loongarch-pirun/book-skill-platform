@@ -467,11 +467,19 @@ const copyDb = (src) => {
   ok(preloadSrc.includes("purgeBook"), "静态: preload 暴露 purgeBook（#168）");
 
   // ③ 渲染层按钮分流：raw 卡只有彻底删除；processed 卡移出书架 + 彻底删除两档
+  // V4（2026-10-20）：两档收进「⋯」菜单（menuDanger），断言按分支实质校验——raw 段只许 purge、
+  // processed 段 del+purge 必须都在（变量名可变，分流语义不可变）
   const viewsSrc = readSrc("src", "renderer", "views.js");
   const cardAt = viewsSrc.indexOf("function bookCard(");
   const cardBody = viewsSrc.slice(cardAt, viewsSrc.indexOf("\nfunction ", cardAt + 10));
-  ok(/const delBtns = raw\s*\n\s*\?\s*`[^`]*data-action="purge"[^`]*`\s*\n\s*:\s*`[^`]*data-action="del"[^`]*data-action="purge"/.test(cardBody),
-    "静态: raw 卡仅彻底删除 / processed 卡移出+彻底两档（#168 按钮分流）");
+  const menuAt = cardBody.indexOf("const menuDanger");
+  const rawAt = cardBody.indexOf("? ", menuAt);
+  const colonAt = cardBody.indexOf(": ", rawAt);
+  const rawSeg = cardBody.slice(rawAt, colonAt);
+  const procSeg = cardBody.slice(colonAt, cardBody.indexOf(";\n", colonAt));
+  ok(menuAt > 0 && rawSeg.includes('data-action="purge"') && !rawSeg.includes('data-action="del"')
+    && procSeg.includes('data-action="del"') && procSeg.includes('data-action="purge"'),
+    "静态: raw 卡仅彻底删除 / processed 卡移出+彻底两档（#168 按钮分流，V4 收进 ⋯ 菜单）");
   // ④ 两个动作都拨通 IPC + 彻底删除带确认清单（asset/chunks 数从书架数据来）
   // 窗口 900 而非 600：P5 在确认清单里加了一行派生说明，把 purgeBook 调用点推远了——
   // 这条断言的语义是「该分支拨通的确实是 purgeBook」，不是精确距离（距离型断言本就脆）
@@ -897,6 +905,42 @@ const copyDb = (src) => {
     "静态: 接入文档含启动入口与库目录环境变量（30 秒接入的两要素）");
   ok(doc.includes("cite_check") && doc.includes("没有就明说") && doc.includes("繁体照抄"),
     "静态: 接入文档含防幻觉铁律三件套（回验/明说/照抄）");
+}
+
+// ========== 22.7) UI V4：按钮三级制 + 深蓝灰主题（2026-10-20） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  // ① 书架主操作按状态切换（未加工→process / 未编目→catprompt / 未洗→enrich）——
+  //    治「加工/洗数据分不清」：不让人记顺序，卡片自己说下一步做什么
+  const vSrc = stripComments(readSrc("src", "renderer", "views.js"));
+  const mainBtnAt = vSrc.indexOf("let mainBtn");
+  const mainBtnSeg = vSrc.slice(mainBtnAt, mainBtnAt + 700);
+  ok(mainBtnAt > 0 && /raw[\s\S]{0,80}data-action="process"/.test(mainBtnSeg)
+    && /!cataloged[\s\S]{0,80}data-action="catprompt"/.test(mainBtnSeg)
+    && /!enriched[\s\S]{0,80}data-action="enrich"/.test(mainBtnSeg),
+    "静态: 书架主操作三态机（未加工 process / 未编目 catprompt / 未洗 enrich）");
+  // ② 危险操作收进「⋯」菜单（危险区用 sep 分隔，点两次才删）
+  ok(vSrc.includes('class="kebab"') && vSrc.includes('class="menu hidden"') && vSrc.includes('class="sep"'),
+    "静态: 卡片操作收进 ⋯ 菜单（普通项/危险项用 sep 分隔）");
+  ok(vSrc.includes('act === "menu"') && vSrc.includes("classList.remove(\"hidden\")"),
+    "静态: ⋯ 菜单事件在位（点击切换 + 点外收起）");
+
+  // ③ 主题 tokens 与三级按钮样式
+  const cssSrc = readSrc("src", "renderer", "app.css");
+  ok(cssSrc.includes("--bg:") && cssSrc.includes("--accent:") && cssSrc.includes("--bg-card:"),
+    "静态: 深蓝灰主题 tokens 在位（--bg/--bg-card/--accent）");
+  ok(cssSrc.includes(".kebab") && cssSrc.includes(".menu {") && cssSrc.includes(".menu .danger"),
+    "静态: ⋯ 菜单样式（kebab/menu/danger 三件）在位");
+  ok(!/box-shadow/.test(cssSrc),
+    "静态: 深色主题零 box-shadow（层次靠 1px 边线与底色差，不靠阴影）");
+
+  // ④ 侧栏图标 + 文字常驻（治「找不到功能」——不折叠成纯图标）
+  const htmlSrc = readSrc("src", "index.html");
+  const navWithIcon = (htmlSrc.match(/class="navbtn[^"]*"[^>]*>\s*<svg/g) || []).length;
+  ok(navWithIcon === 5, `静态: 侧栏 5 项均为图标+文字常驻（实测 ${navWithIcon} 项带图标）`);
 }
 {
   const handlers = new Map();

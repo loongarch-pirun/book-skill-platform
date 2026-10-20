@@ -165,6 +165,22 @@ async function boot() {
     show("ask");
     window.dispatchEvent(new CustomEvent("ask:submit"));
   });
+  // V4 快捷键（治「点击太繁」）：Ctrl+K 聚焦搜索 / Esc 逐级返回（先收菜单，再翻书→书架）
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      const s = $("#globalSearch");
+      if (s) { s.focus(); s.select(); }
+      return;
+    }
+    if (e.key === "Escape") {
+      const openMenu = document.querySelector(".menu:not(.hidden)");
+      if (openMenu) { openMenu.classList.add("hidden"); return; }
+      if (state.view === "reader") { show("shelf"); return; }
+      const t = e.target;
+      if (t && (t.tagName === "TEXTAREA" || t.tagName === "INPUT")) t.blur();
+    }
+  });
   bindModelChip();
   bindCloudChip();
   bindJobsProgress();

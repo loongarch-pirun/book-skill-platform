@@ -8,19 +8,19 @@
 <body>
 <header class="topbar">
   <div class="brand">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5e3c" stroke-width="2"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h13"/></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h13"/></svg>
     我的书房
   </div>
-  <input id="globalSearch" class="gsearch" placeholder="一次搜遍所有书，回车本地检索（全库模式）…">
-  <div id="modelChip" class="chip">模型加载中…</div>
+  <input id="globalSearch" class="gsearch" placeholder="搜遍所有书（Ctrl+K · 回车全库检索）">
+  <div id="modelChip" class="chip" title="本地检索模型状态">模型加载中…</div>
   <div id="cloudChip" class="chip" title="云端 AI 状态 · 点击去配置">云端 AI …</div>
 </header>
 <nav class="sidebar">
-  <button class="navbtn active" data-view="shelf">书架</button>
-  <button class="navbtn" data-view="reader">翻书</button>
-  <button class="navbtn" data-view="ask">问一问</button>
-  <button class="navbtn" data-view="chat">对话</button>
-  <button class="navbtn" data-view="skills">技能开关</button>
+  <button class="navbtn active" data-view="shelf" title="书架"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="4" height="16" rx="1"/><rect x="9" y="4" width="4" height="16" rx="1"/><path d="M16.5 5.2l4 1-3 14.5-4-1z"/></svg>书架</button>
+  <button class="navbtn" data-view="reader" title="翻书"><svg viewBox="0 0 24 24"><path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z"/><path d="M12 6v14"/></svg>翻书</button>
+  <button class="navbtn" data-view="ask" title="问一问"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.2-4.2"/></svg>问一问</button>
+  <button class="navbtn" data-view="chat" title="对话"><svg viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg>对话</button>
+  <button class="navbtn" data-view="skills" title="技能开关"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="5"/><circle cx="8" cy="12" r="2"/></svg>技能开关</button>
   <div class="side-foot" id="sideFoot"></div>
 </nav>
 <main class="main" id="main"></main>

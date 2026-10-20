@@ -73,12 +73,26 @@ function bookCard(b) {
     : `${esc(b.format || "?")} · ${b.chapters ? b.chapters + " 章" : "未分章"} · ${b.chunks || 0} 块`;
   const tags = raw
     ? '<span class="tag nocat">未加工</span>'
-    : `${b.catalog?.themes?.length ? b.catalog.themes.slice(0, 4).map((t) => `<span class="tag">${esc(t)}</span>`).join("") : '<span class="tag nocat">未编目</span>'}${enrichTag(b)}`;
-  // 删书两档按钮（V3 第四波 #168）：raw 书没有库可「移出」，只剩彻底删除；
-  //   processed 书两档都在——移出书架=删库留原件（可重新加工），彻底删除=一体全删
-  const delBtns = raw
-    ? `<button class="delbtn" data-action="purge" data-bid="${esc(b.id)}">彻底删除</button>`
-    : `<button class="ghost sm" data-action="del" data-bid="${esc(b.id)}">移出书架</button><button class="delbtn" data-action="purge" data-bid="${esc(b.id)}">彻底删除</button>`;
+    : `${b.catalog?.themes?.length ? b.catalog.themes.slice(0, 2).map((t) => `<span class="tag">${esc(t)}</span>`).join("") + (b.catalog.themes.length > 2 ? `<span class="tag nocat" title="${esc(b.catalog.themes.slice(2).join("、"))}">+${b.catalog.themes.length - 2}</span>` : "") : '<span class="tag nocat">未编目</span>'}${enrichTag(b)}`;
+  // V4 按钮三级制：状态驱动唯一主操作 + 其余收进「⋯」（危险项在菜单里用分隔线隔开，点两次才删）。
+  //   未加工 → 开始加工（主，常显，唯一该做的事）；已加工未编目 → 编目；已编目未洗 → 洗数据；
+  //   洗完 → 无主操作（重新洗在菜单里）。
+  const cataloged = !!(b.catalog && b.catalog.themes && b.catalog.themes.length);
+  const enriched = !!(b.enrich && b.enrich.ready);
+  let mainBtn = "";
+  if (raw) mainBtn = `<button class="primary" data-action="process" data-bid="${esc(b.id)}">开始加工</button>`;
+  else if (!cataloged) mainBtn = `<button class="ghost sm" data-action="catprompt" data-bid="${esc(b.id)}">编目</button>`;
+  else if (!enriched) mainBtn = `<button class="ghost sm" data-action="enrich" data-bid="${esc(b.id)}">洗数据</button>`;
+  // 菜单：普通项在上，分隔线，危险项在下（raw 无库可移出，只有彻底删除）
+  const menuNormal = [
+    cataloged ? `<button data-action="catprompt" data-bid="${esc(b.id)}">编目提示词</button>` : "",
+    cataloged ? `<button data-action="catimport" data-bid="${esc(b.id)}">导入编目结果</button>` : "",
+    enriched ? `<button data-action="enrich" data-bid="${esc(b.id)}">重新洗数据</button>` : "",
+  ].filter(Boolean).join("");
+  const menuDanger = raw
+    ? `<button class="danger" data-action="purge" data-bid="${esc(b.id)}">彻底删除</button>`
+    : `<button data-action="del" data-bid="${esc(b.id)}">移出书架</button><div class="sep"></div><button class="danger" data-action="purge" data-bid="${esc(b.id)}">彻底删除</button>`;
+  const menu = `<div class="menu hidden">${menuNormal}${menuNormal ? '<div class="sep"></div>' : ""}${menuDanger}</div>`;
   return `
     <div class="bookcard" data-action="open" data-bid="${esc(b.id)}">
       <h3>${esc(b.title)}</h3>
@@ -87,9 +101,7 @@ function bookCard(b) {
       ${badge}
       <div class="cardfoot">
         <span class="skill-dot ${b.skillEnabled ? "" : "off"}">${b.skillEnabled ? "AI 可查" : "skill 已关"}</span>
-        <span class="cardbtns">${running ? "" : raw
-          ? `<button class="ghost sm procbtn" data-action="process" data-bid="${esc(b.id)}">开始加工</button>`
-          : `<button class="ghost sm" data-action="enrich" data-bid="${esc(b.id)}">洗数据</button>`}${delBtns}</span>
+        <span class="cardbtns">${running ? "" : `${mainBtn}<button class="kebab" data-action="menu" data-bid="${esc(b.id)}" title="更多操作">⋯</button>${menu}`}</span>
       </div>
     </div>`;
 }
@@ -170,10 +182,27 @@ export function bindShelfEvents() {
     importFile(fp, f.name);
   });
   const main = $("#main");
+  // 「⋯」菜单：点空白处收起（菜单/按钮自身在 main 的 click 里处理）
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".menu") && !e.target.closest('[data-action="menu"]'))
+      document.querySelectorAll(".menu").forEach((m) => m.classList.add("hidden"));
+  });
   main.addEventListener("click", async (e) => {
     const el = e.target.closest("[data-action]");
     if (!el) return;
     const act = el.dataset.action;
+    // 点菜单项 = 既收起（动作执行完 refresh 也会重绘，双保险）
+    if (act !== "menu") document.querySelectorAll(".menu").forEach((m) => m.classList.add("hidden"));
+    if (act === "menu") {
+      // V4 按钮收纳：⋯ 切换菜单显隐；点开一个就收起其它
+      e.stopPropagation();
+      const menu = el.parentElement.querySelector(".menu");
+      if (!menu) return;
+      const open = !menu.classList.contains("hidden");
+      document.querySelectorAll(".menu").forEach((m) => m.classList.add("hidden"));
+      if (!open) menu.classList.remove("hidden");
+      return;
+    }
     if (act === "open") {
       state.reader = { bookId: el.dataset.bid, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false, original: null };
       show("reader");
