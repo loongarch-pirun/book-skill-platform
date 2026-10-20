@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 import {
   stripNoiseLines, splitByReplyBoundary, planBlock, buildInlinePlan,
-  checkInlineGate, estimateInline, INLINE_VERSION, textHash16,
+  estimateInline, INLINE_VERSION, textHash16,
 } from "../src/lib/inline-clean.mjs";
 import { importInline, restoreInline, auditInline } from "../src/lib/inline-import.mjs";
 

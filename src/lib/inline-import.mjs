@@ -155,6 +155,7 @@ export function importInline(dbPath, plan, opts = {}) {
         removedLines: plan.stats.removedLines, removedChars: plan.stats.removedChars,
         newChunks: plan.stats.newChunks, cleanRatio: plan.stats.cleanRatio,
         beforeChars: plan.stats.beforeChars, afterChars: plan.stats.afterChars,
+        purgedEdges,
         gate: { verdict: gate.verdict, ratio: gate.ratio }, restored: false, at: now,
       }));
       setMeta.run("inline_chunk_fp", task.book.chunk_fp);
@@ -169,8 +170,9 @@ export function importInline(dbPath, plan, opts = {}) {
     return {
       ok: true, code: "OK", gate,
       message: `净化 ${touched.length} 块（strip ${plan.stats.strip} / split ${plan.stats.split}）| 切出新块 ${plan.stats.newChunks} | 删行 ${plan.stats.removedLines} 行 ${plan.stats.removedChars} 字（${(plan.stats.cleanRatio * 100).toFixed(1)}%）`
+        + (purgedEdges ? ` | 清悬挂规则边 ${purgedEdges} 条` : "")
         + (embCleared || catalogCleared ? ` | 已作废向量 ${embCleared} 条与编目 ${catalogCleared} 键（块集合变了，重跑 embed-book + catalog-import 补齐）` : ""),
-      stats: { ...plan.stats, embCleared, catalogCleared },
+      stats: { ...plan.stats, embCleared, catalogCleared, purgedEdges },
     };
   } finally {
     db.close();
