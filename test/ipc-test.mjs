@@ -58,6 +58,8 @@ ok(cat.ok && !!cat.data.book, "books:catalog 单本编目");
 
 const ch = await invoke("reader:chapters", id);
 ok(ch.ok && ch.data.chapters.length >= 1, "reader:chapters 有目录");
+ok(ch.ok && typeof ch.data.quality?.verdict === "string" && typeof ch.data.totalTokens === "number",
+  "reader:chapters 带 get_outline 对称字段（quality.verdict 三态 + totalTokens 账）");
 
 const blk = await invoke("reader:block", id, ch.data.chapters[0].name);
 ok(blk.ok && blk.data.blocks.length >= 1, "reader:block 有原文块");

@@ -853,6 +853,31 @@ const copyDb = (src) => {
   ok((pkgSrc3.scripts["test:fast"] || "").includes("cite-check-test"),
     "静态: package.json test:fast 含 cite-check-test（挂载对账）");
 }
+
+// ========== 22.5) 桌面 get_outline 对称（readerChapters 委托 lib 单一数据源，2026-10-20） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  // ① engine 委托 lib getOutline（MCP 与桌面同一地图，不再自建聚合两套账）
+  const engSrc = stripComments(readSrc("src", "desktop", "engine.mjs"));
+  ok(engSrc.includes('from "../lib/outline.mjs"') && engSrc.includes("getOutline(b.db)"),
+    "静态: engine.readerChapters 委托 lib getOutline（桌面/MCP 单一数据源）");
+  ok(engSrc.includes("no-chapters") && engSrc.includes("未分章"),
+    "静态: readerChapters no-chapters 保底一桶「未分章」（PDF 类不丢「能翻」能力）");
+  ok(engSrc.includes("quality") && engSrc.includes("totalTokens"),
+    "静态: readerChapters 带 quality 三态 + totalTokens 账（对称字段）");
+
+  // ② 渲染层：章条 token 账 + 质量徽标 + hint/notes 透传
+  const rdSrc = stripComments(readSrc("src", "renderer", "views-reader.js"));
+  ok(rdSrc.includes("fmtK") && rdSrc.includes("· ≈"),
+    "静态: views-reader 目录章条渲染 token 账（fmtK K 记法）");
+  ok(rdSrc.includes("章节名可疑") && rdSrc.includes("无章节"),
+    "静态: views-reader 章节质量徽标（messy/none 两态人话）");
+  ok(rdSrc.includes("c.hint") && rdSrc.includes("c.notes"),
+    "静态: views-reader 透传 outline hint 与 notes（no-chapters 指路 + 覆盖率提示）");
+}
 {
   const handlers = new Map();
   const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };

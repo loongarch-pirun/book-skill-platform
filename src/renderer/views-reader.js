@@ -4,6 +4,12 @@
 import { $, state, call, toast, show } from "./app.js";
 import { esc } from "./views.js";
 
+// token 账展示：1 位小数 K 记法（1234 → "1.2K"，999 → "999"）——与 list_books 的 total_tokens 同一语义
+function fmtK(n) {
+  if (n == null || !isFinite(n)) return "?";
+  return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "K" : String(Math.round(n));
+}
+
 // ---------- ② 翻书 ----------
 // 三种浏览模式：chapter 按章翻 / theme 按主题逛（编目主题分区）/ person 看人物出场块
 // 原书视图（V3 #166）：original 模式直接看 books/ 原件（txt 直显 / docx mammoth 转 HTML /
@@ -124,8 +130,16 @@ export async function loadReader() {
       r.chapters = c.chapters;
       r.title = c.book;
       if (!r.chapter && c.chapters.length) r.chapter = c.chapters[0].name;
-      $("#chapList").innerHTML = r.chapters.map((ch) =>
-        `<div class="chapitem ${ch.name === r.chapter && r.mode === "chapter" ? "active" : ""}" data-action="chap" data-ch="${esc(ch.name)}"><span>${esc(ch.name)}</span><span class="n">${ch.blocks} 块</span></div>`).join("")
+      // 章节质量徽标（V3R7 对称 get_outline）：reliable=可信 / messy=章名可疑 / none=无章节
+      const q = c.quality;
+      const qBadge = q && q.verdict !== "reliable"
+        ? `<span class="catnone"> ${q.verdict === "messy" ? "章节名可疑" : "无章节（PDF 类）"}</span>`
+        : "";
+      const hintBits = [c.hint, ...(c.notes || [])].filter(Boolean)
+        .map((s) => `<div class="catempty">${esc(s)}</div>`).join("");
+      const badgeRow = qBadge ? `<div class="catrow"><span class="catlabel">目录</span>${qBadge}</div>` : "";
+      $("#chapList").innerHTML = badgeRow + hintBits + r.chapters.map((ch) =>
+        `<div class="chapitem ${ch.name === r.chapter && r.mode === "chapter" ? "active" : ""}" data-action="chap" data-ch="${esc(ch.name)}"><span>${esc(ch.name)}</span><span class="n">${ch.blocks} 块${ch.tokens != null ? " · ≈" + fmtK(ch.tokens) : ""}</span></div>`).join("")
         || '<div class="empty" style="padding:12px">（空书）</div>';
     }
     if (r.mode === "theme") await loadThemeBlocks(r.filter);

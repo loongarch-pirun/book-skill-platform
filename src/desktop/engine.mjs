@@ -7,6 +7,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import { resolveDirs, writeConfig, hasConfig } from "./paths.mjs";
 import { listBooks, findBook, hybridSearch, routeAndSearch, configureSearch, currentLibDir } from "../lib/search.mjs";
+import { getOutline } from "../lib/outline.mjs";
 import { listShelf, resolveAsset, safeBookId } from "../lib/assets.mjs";
 import { purgeDerived } from "../lib/derived.mjs";
 import { describeAsset } from "./book-view.mjs";
@@ -339,20 +340,38 @@ export function bookAssetPath(bookId) {
   return asset.path;
 }
 
+// 章节目录（V3R7 对称：吃 lib getOutline 同一数据源——token 账 + 质量三态 + no-chapters 指路，
+// 不再自建聚合。无章节书（PDF）保底一桶「未分章」保住「能翻」的能力，hint 引导去检索。
+// 兼容面：chapters[i] 至少有 {name, blocks, firstId}（views-reader 与 ipc-test/soak-test 依赖）
 export function readerChapters(bookId) {
   const b = exactBook(bookId);
   if (!b) throw new UserError(`书库里找不到「${bookId}」`);
-  const db = new Database(b.db, { readonly: true });
-  try {
-    const rows = db.prepare("SELECT id, chapter FROM chunks ORDER BY id").all();
-    const chapters = [], idx = new Map();
-    for (const r of rows) {
-      const name = r.chapter || "未分章";
-      if (!idx.has(name)) { idx.set(name, chapters.length); chapters.push({ name, blocks: 0, firstId: r.id }); }
-      chapters[idx.get(name)].blocks++;
-    }
-    return { book: b.title, bookId: b.id, chapters };
-  } finally { db.close(); }
+  const o = getOutline(b.db);
+  if (o.error === "db-broken") throw new UserError(o.hint || "书库打不开");
+  const base = {
+    book: b.title,
+    bookId: b.id,
+    totalTokens: o.total_tokens ?? null,
+    quality: o.chapter_quality || null, // {verdict: none|messy|reliable, coverage}
+  };
+  if (o.error === "no-chapters") {
+    const db = new Database(b.db, { readonly: true });
+    try {
+      const agg = db.prepare("SELECT COUNT(*) n, MIN(id) m FROM chunks").get();
+      return {
+        ...base,
+        chapters: agg.n ? [{ name: "未分章", blocks: agg.n, firstId: agg.m, tokens: o.total_tokens }] : [],
+        hint: "本书没有章节标题（PDF 类）——目录只有整本一桶；找具体内容建议用「问一问」检索",
+      };
+    } finally { db.close(); }
+  }
+  return {
+    ...base,
+    chapters: (o.chapters || []).map((c) => ({ name: c.name, blocks: c.blocks, firstId: c.first_id, tokens: c.tokens })),
+    chaptersTotal: o.chapters_total ?? null,
+    shown: o.shown ?? null,
+    notes: o.notes || [],
+  };
 }
 
 export function readerBlock(bookId, chapter) {

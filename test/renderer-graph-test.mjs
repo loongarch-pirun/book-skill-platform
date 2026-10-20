@@ -91,7 +91,7 @@ const studyStub = {
     : reply({ answer: "测试总结", citations: [], dropped: 0, segments: 6, book: "测试书", mode: "book" }); },
   chatArchiveList: (payload) => { archiveCalls.push(payload); return reply([{ ts: "2026-10-14T08:00:00.000Z", question: "存档里的旧问题", answer: "存档里的旧回答", mode: "book", book: "测试书", model: "deepseek-chat", dropped: 0, citations: [{ n: 1, book: "测试书", bookId: "t.docx", id: 1, loc: "第一章", quote: "學而時習之", text: "學而時習之" }] }]); },
   chatArchiveClear: () => { archiveCleared = true; return reply({ cleared: true }); },
-  chapters: () => { ipcCalls.push("chapters"); return reply({ book: "测试书", chapters: [{ name: "第一章", blocks: 3 }] }); },
+  chapters: () => { ipcCalls.push("chapters"); return reply({ book: "测试书", chapters: [{ name: "第一章", blocks: 3, tokens: 3000 }], quality: { verdict: "messy", coverage: 0.85 }, totalTokens: 9000, notes: ["仅 85% 的块带章节标记——未覆盖的块用检索读"] }); },
   block: () => { ipcCalls.push("block"); return reply({ book: "测试书", chapter: "第一章", blocks: [{ n: 1, id: 1, page: null, text: "學而時習之" }] }); },
   locate: () => reply({ chapter: "第一章" }),
   readerThemes: () => { ipcCalls.push("readerThemes"); return reply({ book: "测试书", themes: [{ name: "主题一", note: "", representatives: [] }] }); },
@@ -194,6 +194,9 @@ click("open", { bid: "t.docx" }); // 模拟点书架卡片
 await sleep(30);
 assert(ipcCalls.includes("chapters"), "点卡片进翻书自动拨 chapters（loadReader 接线回归——批 1 实测没接上）");
 assert(getEl("#chapList").innerHTML.includes("第一章"), "翻书目录渲染出章节（#chapList）");
+assert(getEl("#chapList").innerHTML.includes("≈3K"), "目录章条带 token 账（get_outline 对称，fmtK K 记法）");
+assert(getEl("#chapList").innerHTML.includes("章节名可疑"), "章节质量徽标渲染（messy → 「章节名可疑」）");
+assert(getEl("#chapList").innerHTML.includes("仅 85% 的块带章节标记"), "outline notes（覆盖率提示）透传渲染");
 click("chap", { ch: "第一章" }); // 点目录章节
 await sleep(20);
 assert(getEl("#blockList").innerHTML.includes("學而時習之"), "原文块渲染（繁体原文透传，#blockList）");
