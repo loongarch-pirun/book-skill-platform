@@ -385,7 +385,15 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
     return best;
   };
   const scored = books.map(b => {
-    const db = new Database(b.db, { readonly: true });
+    // D3 修复（标准轮段 2 R5 组）：open 与查询全程逐本隔离——better-sqlite3 的 new Database
+    // 是惰性的（只开句柄），坏文件头/坏页在首条查询才炸（SQLITE_NOTADB/CORRUPT），所以
+    // open 和 fullScan 都要拦。一本坏库跳过并记账，不挂掉全库问答（对齐 listBooks 过滤语义）。
+    let db;
+    try { db = new Database(b.db, { readonly: true }); }
+    catch (e) {
+      skipped.push({ title: b.title, reason: `书库打不开（${e.message}）` });
+      return { ...b, best: -Infinity };
+    }
     try {
       try {
         const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
@@ -393,7 +401,13 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
       }
       catch (e) { skipped.push({ title: b.title, reason: e.message }); return { ...b, best: -Infinity }; }
       return { ...b, best: fullScan(db, b) };
-    } finally {
+    }
+    catch (e) {
+      // 查询期损坏：NOTADB（垃圾文件）/ CORRUPT（页坏）——惰性 open 后首查才炸的就是这里
+      skipped.push({ title: b.title, reason: `书库读不了（${e.message}）` });
+      return { ...b, best: -Infinity };
+    }
+    finally {
       db.close();
     }
   });
@@ -402,8 +416,12 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
     const K = Math.max(maxBooks * 3, 8);
     const cand = scored.filter(b => b.best > -Infinity).sort((a, b) => b.best - a.best).slice(0, K);
     for (const b of cand) {
-      const db = new Database(b.db, { readonly: true });
-      try { b.best = fullScan(db, b); } finally { db.close(); }
+      let db;
+      try { db = new Database(b.db, { readonly: true }); }
+      catch (e) { skipped.push({ title: b.title, reason: `书库打不开（${e.message}）` }); b.best = -Infinity; continue; }
+      try { b.best = fullScan(db, b); }
+      catch (e) { skipped.push({ title: b.title, reason: `书库读不了（${e.message}）` }); b.best = -Infinity; }
+      finally { db.close(); }
     }
   }
   scored.sort((a, b) => b.best - a.best);
@@ -413,10 +431,17 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
   const top = scored[0];
   const picked = top.best === -Infinity ? [] : scored.filter(b => b.best >= Math.max(embed.routeFloor, top.best * 0.85)).slice(0, maxBooks);
   const results = [];
-  for (const b of picked)
-    for (const r of await hybridSearch(b.db, question, topN, { qv }))
-      // bookId/id 是桌面端引用跳转要的直通字段（纯加法，不碰排序与打分）
-      results.push({ book: b.title, bookId: b.id, id: r.id, loc: r.loc, chapterPath: r.chapterPath ?? null, score: r.rerank ?? r.score, fts: r.fts, sem: r.sem, rerank: r.rerank, text: r.text });
+  for (const b of picked) {
+    // D3 修复（标准轮段 2）：picked 后的 hybridSearch 同样逐本隔离——路由时库还好好的、
+    // 检索时被删/被改坏（TOCTOU），一本书的错不该挂掉全库问答
+    try {
+      for (const r of await hybridSearch(b.db, question, topN, { qv }))
+        // bookId/id 是桌面端引用跳转要的直通字段（纯加法，不碰排序与打分）
+        results.push({ book: b.title, bookId: b.id, id: r.id, loc: r.loc, chapterPath: r.chapterPath ?? null, score: r.rerank ?? r.score, fts: r.fts, sem: r.sem, rerank: r.rerank, text: r.text });
+    } catch (e) {
+      skipped.push({ title: b.title, reason: `检索失败（${e.message}）` });
+    }
+  }
   results.sort((a, b) => b.score - a.score);
   const out = {
     routed_books: picked.map(b => ({ title: b.title, best_sim: +b.best.toFixed(3) })),

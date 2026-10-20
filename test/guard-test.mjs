@@ -149,6 +149,30 @@ const copyDb = (src) => {
   ok(out.results.length > 0 && /不亦說乎|不亦说乎/.test(out.results[0].text), "路由: 好书结果正常返回");
 }
 
+// ========== 9b) D3 修复回归：坏库逐本隔离，不挂掉全库问答 ==========
+// 修复前：routeAndSearch 的 new Database/fullScan 在 try 外（主扫 + 粗筛重扫 + picked 后检索），
+// 一本坏库炸掉全库问答。用「向量损坏库」精确命中主扫循环（垃圾字节文件会被 scanBooks 前置
+// 过滤——那是另一道既有防线；fp 缓存命中+文件原位变坏的竞态窗口 mtime 纳秒精度无法在测试还原）。
+{
+  const libDir = path.join(tmp, "lib-d3");
+  fs.mkdirSync(libDir);
+  const broken = copyDb(path.join(LIB, "lunyu-xueer-zh.pdf.db"));
+  const dbB = new Database(broken);
+  dbB.prepare("UPDATE chunks SET emb=X'00' WHERE emb IS NOT NULL").run();  // 1 字节假向量
+  dbB.close();
+  fs.copyFileSync(broken, path.join(libDir, "broken-book.db"));
+  fs.copyFileSync(GOOD, path.join(libDir, "good-book.db"));
+  let out = null, threw = null;
+  try { out = await routeAndSearch("学习之后经常温习会怎么样", { libDir, topN: 3 }); }
+  catch (e) { threw = e; }
+  ok(!threw, `路由: 坏库不穿层（D3；${threw ? `仍抛: ${String(threw.message).slice(0, 60)}` : "正常返回"}）`);
+  ok(Array.isArray(out?.skipped_books) && out.skipped_books.length === 1,
+    "路由: 坏库进 skipped_books 记账", JSON.stringify(out?.skipped_books || []));
+  ok(out?.results.length > 0 && /不亦說乎|不亦说乎/.test(out.results[0].text),
+    "路由: 坏库旁边的照常好书结果正常返回");
+  ok(out?.routed_books.length === 1, "路由: 只路由到好书（坏库 0 分被挡不冒充）", JSON.stringify(out?.routed_books || []));
+}
+
 // ========== 10) 静态防回归：真机拖拽/导入链路的三处已修缺陷不许复活 ==========
 {
   const projRoot = path.join(import.meta.dirname, "..");
