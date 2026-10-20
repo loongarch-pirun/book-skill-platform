@@ -218,7 +218,7 @@ export function matchVerdicts(rawList, batch) {
 export function isSubstantiveShort(text, { minLen = CLEAN_DEFAULTS.guardMinLen, minHan = CLEAN_DEFAULTS.guardHan } = {}) {
   const s = String(text || "");
   if (s.length >= minLen) return false;                       // 长块不享受 G1
-  const meaningful = (s.match(/[\u4e00-\u9fff a-zA-Z]/g) || []).filter(ch => ch !== " ").length;
+  const meaningful = (s.match(/[\u4e00-\u9fffA-Za-z]/g) || []).length;
   return meaningful >= minHan;
 }
 
@@ -457,12 +457,7 @@ export async function runClean(dbPath, opts = {}) {
       onProgress({ phase: "batch", ok: false, code: r.code, done: cache.verdicts.size, total: task.chunks.length });
       continue;
     }
-    for (const v of r.verdicts) {
-      cache.verdicts.set(v.idx, v);
-      if (v.verdict === "drop") stats.dropped++;
-      else if (v.guarded) stats.guardedG1 += v.by === "G1" ? 1 : 0, stats.guardedG2 += v.by === "G2" ? 1 : 0, stats.guardedG3 += v.by === "G3" ? 1 : 0;
-      else stats.kept++;
-    }
+    for (const v of r.verdicts) cache.verdicts.set(v.idx, v);
     // 补上重跑时缓存里已有判定、本轮没重算的块的统计
     appendCache(jsonlPath, { t: "ok", idxs: b.items.map(c => c.idx), verdicts: r.verdicts, at: new Date().toISOString() });
     onProgress({ phase: "batch", ok: true, done: cache.verdicts.size, total: task.chunks.length });

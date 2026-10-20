@@ -62,12 +62,10 @@ export function textHash16(text) {
   return crypto.createHash("sha256").update(String(text), "utf8").digest("hex").slice(0, 16);
 }
 
-// 单段 L1：删行级噪音。返回 { text, removed: [{cat, chars}], removedLines, totalLines, boundaryChars }
-// boundaryChars：段首是跟帖边界行时，该行被切掉不算噪音删除，单列。
+// 单段 L1：删行级噪音。返回 { text, removed: [{cat, chars}], removedLines, totalLines }
 function stripSegment(rawLines) {
   const removed = [];
   const kept = [];
-  let boundaryChars = 0;
   for (let i = 0; i < rawLines.length; i++) {
     const t = rawLines[i].trim();
     const isEdge = i === 0 || i === rawLines.length - 1;
@@ -75,7 +73,7 @@ function stripSegment(rawLines) {
     if (hit) removed.push({ cat: hit.cat, chars: rawLines[i].length });
     else kept.push(rawLines[i]);
   }
-  return { text: kept.join("\n"), removed, removedLines: removed.length, totalLines: rawLines.length, boundaryChars };
+  return { text: kept.join("\n"), removed, removedLines: removed.length, totalLines: rawLines.length };
 }
 
 // 公开包装：单块 L1（无切段场景）。返回 { text, removed, removedLines, totalLines }。
