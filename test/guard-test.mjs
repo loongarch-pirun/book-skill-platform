@@ -878,6 +878,26 @@ const copyDb = (src) => {
   ok(rdSrc.includes("c.hint") && rdSrc.includes("c.notes"),
     "静态: views-reader 透传 outline hint 与 notes（no-chapters 指路 + 覆盖率提示）");
 }
+
+// ========== 22.6) 外部智能体接入文档同步（新增 MCP 工具必须同步文档，2026-10-20） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const docPath = path.join(projRoot, "docs", "外部智能体接入文档.md");
+  ok(fs.existsSync(docPath), "静态: docs/外部智能体接入文档.md 存在（联动最后一公里）");
+  const doc = fs.readFileSync(docPath, "utf8");
+
+  // 工具名动态提取自 register-tools.mjs（与 stage3-mcp-test 的 17 工具硬断言同一套事实源）——
+  // 注册了新工具但文档没写 → 这里红，防文档漂移
+  const rtSrc = fs.readFileSync(path.join(projRoot, "src", "lib", "register-tools.mjs"), "utf8");
+  const toolNames = [...rtSrc.matchAll(/server\.registerTool\("([a-z_]+)"/g)].map((m) => m[1]);
+  ok(toolNames.length >= 17, `静态: register-tools 注册 ${toolNames.length} 个工具（≥17）`);
+  const missing = toolNames.filter((n) => !doc.includes("`" + n + "`"));
+  ok(missing.length === 0, `静态: 接入文档覆盖全部 ${toolNames.length} 个工具${missing.length ? "，缺: " + missing.join(",") : ""}`);
+  ok(doc.includes("mcp-server.mjs") && doc.includes("BSP_LIB_DIR"),
+    "静态: 接入文档含启动入口与库目录环境变量（30 秒接入的两要素）");
+  ok(doc.includes("cite_check") && doc.includes("没有就明说") && doc.includes("繁体照抄"),
+    "静态: 接入文档含防幻觉铁律三件套（回验/明说/照抄）");
+}
 {
   const handlers = new Map();
   const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };
