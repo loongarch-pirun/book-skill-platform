@@ -13,10 +13,11 @@ const baselinePath = path.join(import.meta.dirname, "eval-baseline.json");
 const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
 
 // 复试官开（默认配置）跑一轮；rerank off 的分数也顺手记录但不设门（关复试官是诊断模式）
+// 超时随考卷规模走：124 题 × ~5.9s ≈ 12.2 分钟，给 20 分钟余量（102 题时代 10 分钟线曾贴脸）
 const proc = spawnSync(process.execPath, ["test/v2-eval.mjs", "--rerank", "on"], {
   cwd: ROOT,
   encoding: "utf8",
-  timeout: 10 * 60 * 1000,
+  timeout: 20 * 60 * 1000,
 });
 const out = (proc.stdout || "") + (proc.stderr || "");
 

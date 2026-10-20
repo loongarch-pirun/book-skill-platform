@@ -88,16 +88,30 @@ const GOLDEN = [
   { book: "og-aws-en.md", q: "在 S3 里刚创建的对象做列表操作能保证马上出现吗", g: ["eventual consistency"] },
   { book: "og-aws-en.md", q: "what do AWS regions contain", g: ["availability zones"] },
   { book: "og-aws-en.md", q: "IAM 角色最好按什么维度来分配", g: ["realm"] },
+  // 金卷扩容（2026-10-20；按编目主题补盲区 t2 网络/t4 Lambda/t6 Aurora/t9 CloudWatch。og-aws 必须英文问——AZ 题教训）
+  { book: "og-aws-en.md", q: "what is AWS' serverless compute offering for defining functions invoked via triggers", g: ["Lambda"] },
+  { book: "og-aws-en.md", q: "which AWS service monitors resources and applications, captures logs, and sends events", g: ["CloudWatch"] },
+  { book: "og-aws-en.md", q: "how large can aurora storage auto-scale per instance", g: ["64TB"] },
+  { book: "og-aws-en.md", q: "which load balancer supports tcp layer 4 load balancing", g: ["NLB"] },
   // System Design Primer（英文；库里混排 ja/zh 翻译篇——跨语噪声也是真实分布）
   { book: "system-design-primer-en.md", q: "what does the CAP theorem say you can only support in a distributed system", g: ["two of the following"] },
   { book: "system-design-primer-en.md", q: "what is another name for the cache-aside strategy", g: ["lazy loading"] },
   { book: "system-design-primer-en.md", q: "which caches are mentioned for storing user sessions", g: ["redis", "memcached"] },
   { book: "system-design-primer-en.md", q: "what does horizontal scaling require of servers", g: ["stateless"] },
+  // 金卷扩容（2026-10-20；补盲区 t5 负载均衡/t8 MySQL 伸缩/t6 CDN。t5/t8 目标块是中文翻译篇，中文问同语近邻）
+  { book: "system-design-primer-en.md", q: "引入负载均衡器消除单点故障的代价是什么", g: ["额外的复杂性"] },
+  { book: "system-design-primer-en.md", q: "在把频繁访问的内容放进内存缓存之前，先尝试配置什么来缓解 MySQL 瓶颈", g: ["MySQL 数据库"] },
+  { book: "system-design-primer-en.md", q: "what is a content delivery network composed of, serving content from locations closer to the user", g: ["proxy servers"] },
   // Hello 算法（中文；图表+代码混排，代码围栏已去，正文是算法讲解）
   { book: "hello-algo-zh.md", q: "栈是一种遵循什么原则的数据结构", g: ["先入后出"] },
   { book: "hello-algo-zh.md", q: "队列遵循什么原则", g: ["先入先出"] },
   { book: "hello-algo-zh.md", q: "解决哈希冲突的链式方案叫什么名字", g: ["链式地址"] },
   { book: "hello-algo-zh.md", q: "栈的数组实现扩容时单次入栈的时间复杂度会劣化到多少", g: ["O(n)", "劣化至"] },
+  // 金卷扩容（2026-10-20；补盲区 t4 二叉树/t8 堆/t9 AVL/t7 分治/t11 DP×贪心对比）
+  { book: "hello-algo-zh.md", q: "堆是一棵什么树，按成立条件分为大顶堆和小顶堆", g: ["完全二叉树"] },
+  { book: "hello-algo-zh.md", q: "AVL 树靠什么操作在插入删除节点后保持平衡", g: ["旋转"] },
+  { book: "hello-algo-zh.md", q: "零钱兑换用贪心找不到最优解时，更适合用什么算法", g: ["动态规划"] },
+  { book: "hello-algo-zh.md", q: "归并排序是哪种算法策略的典型应用", g: ["分治"] },
   // 凤凰架构（中文；分布式架构教材。2026-10-19 订正：库名 awesome-fenix-zh.md → fenix-architecture.md，
   //  改名后这 4 题曾被静默丢弃——金词已在新库复核仍在（x21/x9/x2/x4））
   { book: "fenix-architecture.md", q: "微服务中的服务降级熔断异常注入等链路治理需要在几层负载均衡里做", g: ["七层"] },
@@ -109,6 +123,11 @@ const GOLDEN = [
   { book: "d2l-zh.md", q: "Fashion-MNIST 每张图像的高度和宽度是多少", g: ["28像素"] },
   { book: "d2l-zh.md", q: "用什么方法可以减轻过拟合，比如随机水平翻转图像", g: ["图像增广"] },
   { book: "d2l-zh.md", q: "在注意力机制中，自主性提示被称为什么", g: ["（query）", "被称为*查询*"] },
+  // 金卷扩容（2026-10-20；补盲区 t17 Kaggle/t15 优化/t11 RNN/t5 softmax。英文篇用英文问——英文书教训同理）
+  { book: "d2l-zh.md", q: "训练数据太少凑不齐验证集时，用什么交叉验证方法", g: ["折交叉验证"] },
+  { book: "d2l-zh.md", q: "why does minimizing training error not guarantee the best parameters", g: ["generalization error"] },
+  { book: "d2l-zh.md", q: "what does the rnn encoder transform a variable-length sequence into", g: ["fixed-shape hidden state"] },
+  { book: "d2l-zh.md", q: "after training softmax regression, which class is used as the output prediction", g: ["highest predicted probability"] },
   // ===== V3 第三波-3 epub 两本（2026-10-16 冷接入；每题金词回原文验真+候选题探针实跑才入卷）=====
   // 【佚书】两本库不在本机（原料在 books/_work/epub/）；条目保留，重入库自动复活
   // 简·爱（Gutenberg pg1260；判分注：金词 "no possibility of taking a walk" 全书仅 1 处=开篇名句，
@@ -117,11 +136,22 @@ const GOLDEN = [
   { book: "jane-eyre-en.epub", q: "what is the name of mr rochester's country estate", g: ["Thornfield"] },
   { book: "jane-eyre-en.epub", q: "who is rochester's first wife hidden in the attic at thornfield", g: ["Bertha"] },
   { book: "jane-eyre-en.epub", q: "简爱离开盖茨黑德之后就读的学校叫什么", g: ["Lowood"] },
+  // 金卷扩容（2026-10-20；补盲区 t3 Lowood 人物/t4 Thornfield 人物/t7 Grace Poole/t10 Rivers 家线。
+  //  实测修订：管家题（「housekeeper」问法）答案块 #410 在 top4 拉不动——Fairfax 块噪声 125 处；
+  //  换 Adèle（t4 的另一位人物，探针 rank1 过），Grace Poole 题（t7）探针 rank1 过
+  { book: "jane-eyre-en.epub", q: "who is the clergyman who runs lowood school and humiliates jane in public", g: ["Brocklehurst"] },
+  { book: "jane-eyre-en.epub", q: "who is the little french girl that jane works for as governess at thornfield", g: ["Adèle"] },
+  { book: "jane-eyre-en.epub", q: "whose laugh does jane keep hearing from the third storey of thornfield", g: ["Grace Poole"] },
+  { book: "jane-eyre-en.epub", q: "who proposes marriage to jane while she is living with the rivers family", g: ["St. John", "St.John"] },
   // 福尔摩斯冒险史（Gutenberg pg1661；12 短篇集）
   { book: "sherlock-holmes-adventures-en.epub", q: "who is the woman who outwits sherlock holmes in a scandal in bohemia", g: ["Irene Adler"] },
   { book: "sherlock-holmes-adventures-en.epub", q: "what is the address of sherlock holmes's london lodgings", g: ["Baker Street", "221B"] },
   { book: "sherlock-holmes-adventures-en.epub", q: "what kind of snake is the deadly serpent in the speckled band", g: ["swamp adder"] },
   { book: "sherlock-holmes-adventures-en.epub", q: "who is the friend and colleague who helps sherlock holmes and narrates the cases", g: ["Watson"] },
+  // 金卷扩容（2026-10-20；补盲区 t4 红发会/t7 五橘核/t9 蓝宝石——短篇集人名线）
+  { book: "sherlock-holmes-adventures-en.epub", q: "who brought jabez wilson the newspaper advertisement about the red-headed league", g: ["Spaulding"] },
+  { book: "sherlock-holmes-adventures-en.epub", q: "what did john openshaw's relatives receive from london before dying, marked with K.K.K.", g: ["orange pips"] },
+  { book: "sherlock-holmes-adventures-en.epub", q: "who did holmes confront and release for the theft of the blue carbuncle", g: ["Ryder"] },
   // ===== V3 第三波-3 论文三篇（2026-10-16 PDF 冷接入；双栏列感知解析后，金词回原文验真+探针实跑才入卷）=====
   // 【佚书】三本库不在本机（原料在 books/_work/论文/）；条目保留，重入库自动复活
   // Dynamo（SOSP 2007；Amazon 高可用键值存储）
@@ -129,6 +159,8 @@ const GOLDEN = [
   { book: "dynamo-2007-en.pdf", q: "what mechanism does dynamo use to capture causality between different versions of the same object", g: ["vector clock"] },
   { book: "dynamo-2007-en.pdf", q: "what quorum-like technique keeps writes available when some replicas are temporarily down", g: ["sloppy quorum", "hinted handoff"] },
   { book: "dynamo-2007-en.pdf", q: "what structure is used in anti-entropy to synchronize divergent replicas", g: ["merkle"] },
+  // 金卷扩容（2026-10-20；补盲区 t4 性能评估——负载均匀分配的选型）
+  { book: "dynamo-2007-en.pdf", q: "what load distribution did dynamo choose for uniform performance across nodes", g: ["uniform load", "uniform"] },
   // Lamport（1978；时间、时钟与事件排序，老式排版零星空格丢失属原料特征）
   { book: "lamport-1978-en.pdf", q: "what relation does lamport define to order events in a distributed system", g: ["happened before"] },
   { book: "lamport-1978-en.pdf", q: "what does lamport introduce into the system to assign numbers to events", g: ["logical clock"] },

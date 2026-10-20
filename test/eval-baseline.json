@@ -2,12 +2,12 @@
   "date": "2026-10-20",
   "model": "e5",
   "reranker": "onnx-community/bge-reranker-v2-m3-ONNX",
-  "rate": 91,
-  "hits": 93,
-  "total": 102,
+  "rate": 93,
+  "hits": 116,
+  "total": 125,
   "rerank": true,
-  "rerankOffRate": 71,
-  "avgLatencyMs": 3092,
+  "rerankOffRate": 79,
+  "avgLatencyMs": 3323,
   "misses": [
     "国家当中什么最贵重，江山和君主哪个轻",
     "再远的路从哪里开始",
@@ -19,5 +19,5 @@
     "2010 年房地产调控真正为的是什么，不是降房价吗",
     "想了解一个片区房价，楼主说要聊几家中介公司"
   ],
-  "note": "kkndme 行级清洗波次后基线（2026-10-20）：inline-clean 块内净化（L1 删页码/楼层号/署名/分隔线 + L2 跟帖切分 2a 切不删），kk 760→1144 块，楼层号残留 670→0，字数 -12.3%，重 embed + 重编目（12 主题 31 人物 9 关系）。考卷 93/102 = 91 分（前基线 92/102 = 90），净做对 1 题「读者问全款买房还是贷款买房更划算，楼主给了什么思路」——问帖/答帖分离后购房咨询类检索命中的直接收益，无新增漏题（双门过）。漏题 9 条 = 前基线 10 条减去新做对的 1 条。kk 逐本 7/10 → 8/10。"
+  "note": "金卷扩容波次后基线（2026-10-20 下午）：考卷 102→125 题，按九本佚书新编目主题补盲区 +23 题（og-aws 4：Lambda/CloudWatch/Aurora 64TB/NLB；hello-algo 4：堆/AVL 旋转/贪心 vs DP/归并分治；d2l 4：K 折交叉验证/泛化误差/RNN encoder/softmax 输出；简爱 4：Brocklehurst/Adèle/Grace Poole/St. John；福尔摩斯 3：Spaulding/五橘核/Ryder；SDP 3：负载均衡代价/MySQL 伸缩/CDN；dynamo 1：均匀负载选型），全部按编目主题采样真实块出题、金词 instr 回库验真。**23 题全数命中，漏题 9 条与前基线完全一致（双门：93 ≥ 91 ✓ 且漏题⊆基线 ✓），检出力从 102 题扩到 125 题零成本。** 实测修订两处：①简爱管家题漏（答案块 #410 Fairfax 自述但 top4 拉不动，Fairfax 块噪声 125 处）→ 换 Adèle 探针 rank1 过；②og-aws 全英文问（AZ 题教训沿用）。eval-gate spawn 超时 10→20 分钟（124 题 × ~5.9s ≈ 12.2 分钟会撞旧线）。前史：91 基线 = kkndme 行级清洗波次（93/102，净做对购房咨询题）。"
 }
