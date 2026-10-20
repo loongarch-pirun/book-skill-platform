@@ -941,6 +941,26 @@ const copyDb = (src) => {
   const htmlSrc = readSrc("src", "index.html");
   const navWithIcon = (htmlSrc.match(/class="navbtn[^"]*"[^>]*>\s*<svg/g) || []).length;
   ok(navWithIcon === 5, `静态: 侧栏 5 项均为图标+文字常驻（实测 ${navWithIcon} 项带图标）`);
+
+  // ⑤ 主题系统（2026-10-20）：五套预设 + 强调色自选 + 存档 + 启动应用 + 面板入口
+  const themeSrc = readSrc("src", "renderer", "theme.js");
+  const presetCount = (themeSrc.match(/^\s{2}"[a-z-]+": \{$/gm) || []).length;
+  ok(presetCount >= 5, `静态: theme.js 预设主题 ${presetCount} 套（≥5）`);
+  ok(themeSrc.includes('STORE_KEY = "bsp.theme.v1"') && themeSrc.includes("localStorage"),
+    "静态: 主题存档 key 与 localStorage 持久化在位");
+  ok(themeSrc.includes("prefers-color-scheme") && themeSrc.includes("addEventListener"),
+    "静态: 自动模式跟随系统深浅（matchMedia + 变化监听）");
+  ok(themeSrc.includes("accentInk") && themeSrc.includes("lum > 0.55"),
+    "静态: 强调色按亮度自适应字色（浅底配深字/深底配白字）");
+  const appSrc = stripComments(readSrc("src", "renderer", "app.js"));
+  ok(appSrc.includes("initTheme()") && appSrc.includes("bindThemePanel()") && appSrc.includes("registerPanelPainter"),
+    "静态: boot 应用主题 + 主题面板接线（initTheme/bindThemePanel/painter）");
+  ok(htmlSrc.includes('id="themeBtn"') && htmlSrc.includes('id="themePanel"'),
+    "静态: 顶栏调色入口与面板容器在位");
+  ok(cssSrc.includes(".themepanel") && cssSrc.includes(".themecard") && cssSrc.includes(".swatch"),
+    "静态: 主题面板样式三件套在位");
+  ok(cssSrc.includes("--accent-ink") && !cssSrc.includes("#182029"),
+    "静态: 强调色字色变量化（主题可换，无残留硬编码）");
 }
 {
   const handlers = new Map();

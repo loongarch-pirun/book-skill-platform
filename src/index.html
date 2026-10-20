@@ -14,6 +14,9 @@
   <input id="globalSearch" class="gsearch" placeholder="搜遍所有书（Ctrl+K · 回车全库检索）">
   <div id="modelChip" class="chip" title="本地检索模型状态">模型加载中…</div>
   <div id="cloudChip" class="chip" title="云端 AI 状态 · 点击去配置">云端 AI …</div>
+  <button id="themeBtn" class="iconbtn" title="调色：预设配色 / 强调色 / 跟随系统">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="9.2" cy="9.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.8" cy="9.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="14.6" r="1.3" fill="currentColor" stroke="none"/></svg>
+  </button>
 </header>
 <nav class="sidebar">
   <button class="navbtn active" data-view="shelf" title="书架"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="4" height="16" rx="1"/><rect x="9" y="4" width="4" height="16" rx="1"/><path d="M16.5 5.2l4 1-3 14.5-4-1z"/></svg>书架</button>
@@ -24,6 +27,7 @@
   <div class="side-foot" id="sideFoot"></div>
 </nav>
 <main class="main" id="main"></main>
+<div id="themePanel" class="themepanel hidden"></div>
 <div id="toast" class="toast hidden"></div>
 <div id="wizard" class="wizard hidden"></div>
 <script type="module" src="renderer/app.js"></script>

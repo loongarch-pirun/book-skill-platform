@@ -6,6 +6,7 @@ import { renderShelf, bindShelfEvents } from "./views.js";
 import { renderReader, loadReader, bindReaderEvents } from "./views-reader.js";
 import { renderAsk, renderSkills, loadSkillsView, bindAskEvents } from "./views-ask.js";
 import { renderChat, scrollChatBottom, bindChatEvents } from "./views-chat.js";
+import { initTheme, themeList, accentList, currentTheme, setTheme, setAccent, setAuto, resetTheme, registerPanelPainter } from "./theme.js";
 
 export const $ = (s, r = document) => r.querySelector(s);
 export const state = {
@@ -125,6 +126,55 @@ function bindCloudChip() {
   });
 }
 
+// ---------- 主题面板（V4 调色）：预设 / 强调色 / 跟随系统 ----------
+// 全部颜色走 CSS 变量（theme.js 只改 documentElement 上的变量值），换肤零重排、不影响任何视图逻辑
+function renderThemePanel() {
+  const el = $("#themePanel");
+  if (!el) return;
+  const cur = currentTheme();
+  const themes = themeList().map((t) => `
+    <button class="themecard ${t.id === cur.theme ? "on" : ""}" data-theme="${t.id}" title="${t.desc}">
+      <div class="preview" style="background:${t.bg}"><i style="background:${t.card}"></i><i style="background:${t.accent}"></i></div>
+      <div class="tname">${t.name}</div>
+    </button>`).join("");
+  const accents = accentList().map((a) => (a.id === "auto"
+    ? `<button class="swatch auto ${cur.accent === "auto" ? "on" : ""}" data-accent="auto" title="跟随主题">跟随</button>`
+    : `<button class="swatch ${cur.accent === a.id ? "on" : ""}" data-accent="${a.id}" title="${a.name}" style="background:${a.color}"></button>`)).join("");
+  el.innerHTML = `
+    <h4>配色方案</h4>
+    <div class="themegrid">${themes}</div>
+    <h4>强调色</h4>
+    <div class="swatchrow">${accents}</div>
+    <label class="themeauto"><input type="checkbox" id="autoTheme" ${cur.auto ? "checked" : ""}> 跟随系统（白天浅色 / 夜里深色）</label>
+    <div class="panelrow" style="margin-top:10px"><button class="ghost sm" data-themereset>恢复默认</button><span class="tip">选完自动保存</span></div>`;
+}
+registerPanelPainter(renderThemePanel);
+
+function bindThemePanel() {
+  $("#themeBtn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const p = $("#themePanel");
+    p.classList.toggle("hidden");
+    if (!p.classList.contains("hidden")) renderThemePanel();
+  });
+  // 点面板外关掉（与书架 ⋯ 菜单同一套习惯；两处监听各判各的最近祖先，互不干扰）
+  document.addEventListener("click", (e) => {
+    const p = $("#themePanel");
+    if (p && !p.classList.contains("hidden") && !e.target.closest("#themePanel") && !e.target.closest("#themeBtn"))
+      p.classList.add("hidden");
+  });
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-theme]");
+    if (t) { setTheme(t.dataset.theme); return; }
+    const a = e.target.closest("[data-accent]");
+    if (a) { setAccent(a.dataset.accent); return; }
+    if (e.target.closest("[data-themereset]")) { resetTheme(); toast("已恢复默认配色"); }
+  });
+  document.addEventListener("change", (e) => {
+    if (e.target.id === "autoTheme") setAuto(e.target.checked);
+  });
+}
+
 // ---------- 后台任务进度：导入 jobs + 洗数据 enrich 共用一条汇流（#140） ----------
 // 两个频道推的都是 {bookId, stage, ...}，汇进同一个 state.jobs——书架卡片横幅零改动生效
 function bindJobsProgress() {
@@ -156,6 +206,7 @@ function bindJobsProgress() {
 
 // ---------- 启动 ----------
 async function boot() {
+  initTheme(); // V4：先套用上次的配色（CSS 变量即时生效，避免默认色闪一下）
   document.querySelectorAll(".navbtn").forEach(b => (b.onclick = () => show(b.dataset.view)));
   $("#globalSearch").addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
@@ -183,6 +234,7 @@ async function boot() {
   });
   bindModelChip();
   bindCloudChip();
+  bindThemePanel();
   bindJobsProgress();
   bindShelfEvents();
   bindReaderEvents();
