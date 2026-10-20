@@ -361,10 +361,6 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
   const embed = await getEmbedder();
   const [qv] = await embed.embedQueries([question]);
   const skipped = [];  // 引擎不匹配的书：路由阶段跳过（混着旧引擎的书库不该整体罢工，但要说一声）
-  // 质心预筛门槛：书少（≤ BSP_ROUTE_PRESCREEN，默认 6）直接全部精扫——行为与旧版逐位一致；
-  // 书多时先按质心分粗排，只对 top-K（K = maxBooks×3，至少 8）做全库精扫，长尾保留质心分。
-  // （质心分 ≤ 精扫最优分的数学下界：归一化向量的均值点积 = 行点积均值 ≤ 最大行点积）
-  const PRESCREEN = Math.max(1, +(process.env.BSP_ROUTE_PRESCREEN ?? 6));
   const fullScan = (db, b) => {
     let best = 0;
     // 未灌向量的库没有可算的分（0 分自然被 routeFloor 挡在门外）；也避开 getMatrix 的 emb 查询
@@ -411,19 +407,6 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
       db.close();
     }
   });
-  if (books.length > PRESCREEN) {
-    // 第二遍粗筛：质心分 top-K 才配全扫（大书库的省时闸门，当前 6 本书不触发）
-    const K = Math.max(maxBooks * 3, 8);
-    const cand = scored.filter(b => b.best > -Infinity).sort((a, b) => b.best - a.best).slice(0, K);
-    for (const b of cand) {
-      let db;
-      try { db = new Database(b.db, { readonly: true }); }
-      catch (e) { skipped.push({ title: b.title, reason: `书库打不开（${e.message}）` }); b.best = -Infinity; continue; }
-      try { b.best = fullScan(db, b); }
-      catch (e) { skipped.push({ title: b.title, reason: `书库读不了（${e.message}）` }); b.best = -Infinity; }
-      finally { db.close(); }
-    }
-  }
   scored.sort((a, b) => b.best - a.best);
 
   // 规则：语义分 ≥ 首名×0.85 的书入选（最多 maxBooks 本，至少 1 本）
