@@ -39,7 +39,7 @@ assert(books.length === libDbCount && books.length >= 5 && books.every(b => b.ti
 // 3. query_book 单书（书名精确匹配到 PDF 版，带页码定位）
 const qb = await client.callTool({ name: "query_book", arguments: { book: "lunyu-xueer-zh.pdf", question: "不患人之不己知", topN: 3 } });
 const qbR = JSON.parse(qb.content[0].text);
-assert(qbR.results?.length >= 1 && /lunyu/i.test(qbR.book) && qbR.results.some(r => r.loc === "第4页"),
+assert(qbR.results?.length >= 1 && /lunyu|论语/.test(qbR.book) && qbR.results.some(r => r.loc === "第4页"),
   `query_book 精确书名命中且带页码定位（${qbR.results?.[0]?.loc}）`);
 
 // 3b. query_book 模糊书名（"lunyu" 同时匹配 PDF+DOCX 两本 → 明确告知选了哪本）
@@ -51,7 +51,7 @@ assert(qb2R.results?.length >= 1 && qb2R.note && /匹配到 2 本/.test(qb2R.not
 // 3c. query_book 中文书名（匹配不到拼音名 → 自动路由到最相关的书）
 const qb3 = await client.callTool({ name: "query_book", arguments: { book: "论语", question: "不患人之不己知", topN: 3 } });
 const qb3R = JSON.parse(qb3.content[0].text);
-assert(qb3R.results?.length >= 1 && /lunyu/i.test(qb3R.book) && qb3R.note,
+assert(qb3R.results?.length >= 1 && /lunyu|论语/.test(qb3R.book) && qb3R.note,
   `query_book 书名未命中时自动路由: ${qb3R.book}`);
 
 // 4. query_library 动态挑书（中文问题应在中文书里挑，不碰英文书）
@@ -66,7 +66,7 @@ assert(qb3R.results?.length >= 1 && /lunyu/i.test(qb3R.book) && qb3R.note,
 const ql = await client.callTool({ name: "query_library", arguments: { question: "和朋友相处要讲信用", topN: 3 } });
 const qlR = JSON.parse(ql.content[0].text);
 const routedTitles = qlR.routed_books.map(b => b.title);
-assert(qlR.routed_books.length >= 1 && /lunyu/i.test(routedTitles.join(","))
+assert(qlR.routed_books.length >= 1 && /lunyu|论语/.test(routedTitles.join(","))
   && routedTitles.every(t => !/frankenstein|attention|prejudice/i.test(t))
   && qlR.routed_books.length === 4,
   `query_library 自动挑书: ${qlR.routed_books.map(b => b.title + "(" + b.best_sim + ")").join(", ")}`);

@@ -141,6 +141,15 @@ function mkDb(name, blocks, { withFts = true, embCol = false, catalog = false } 
   eq(p.after, text, "I1 拒收后原文原样");
 }
 {
+  // I1 反向（段 3 M7 变异抓出的守护缺口）：删行占比 >30% 但剩余正文充足 → 必须放行。
+  // kk 实测语义（2026-10-20）：I1 按「剩余字数」判，不按删行占比——论坛体署名/分隔行
+  // 占比天然高，按行数拦会把「删 35% 行剩百字正文」的好块误拦。此用例在行占比语义下必红。
+  const text = "论房产要先看租售比，不能只盯着单价涨跌看。\n------\n还要看地段与流动性，租金能覆盖月供才安全。\n------";
+  const p = planBlock(text);
+  eq(p.action, "strip", "I1 反向：删行 50% 但剩余正文 44 字 → 放行（行占比语义不得回归）");
+  assert(p.guarded == null, "I1 反向：无护栏标记");
+}
+{
   // I2：主帖段太短 → 退化为 strip 不切
   const text = "主帖短。\n•user2018-02-23 20:37\n跟帖内容长度足够二十字符以上所以不会被丢弃掉。";
   const p = planBlock(text);
