@@ -1,7 +1,7 @@
 // 行级清洗 CLI（inline-clean）：clean-book「整块删」之后的块内净化关。纯规则零云端调用。
 //   L1 删行级噪音（页码/楼层号/跟帖署名/结构分隔线）；L2 按跟帖边界切分（主帖留原块、跟帖切新块）。
 // 用法:
-//   node src/inline-clean.mjs <book.db> [--dry-run] [--no-import] [--force-gate] [--sample N] [--restore --all|--ids 1,2]
+//   node src/inline-clean.mjs <book.db> [--dry-run] [--no-import] [--force-gate] [--force] [--sample N] [--restore --all|--ids 1,2]
 // 位次：build → clean → inline-clean → embed → enrich。改 text/切块都会作废向量与编目（落库时自动作废并提示重跑）。
 // 退出码：0 成功/无改动；1 配置或库错误；2 GATE 闸门拒收（净化率异常）。
 import fs from "node:fs";
@@ -36,6 +36,7 @@ const positional = (() => {
 const dryRun = args.includes("--dry-run");
 const noImport = args.includes("--no-import");
 const forceGate = args.includes("--force-gate");
+const forceRun = args.includes("--force");   // D2 修复：绕过幂等跳过强制重跑（恢复原文后用）
 const restoreMode = args.includes("--restore");
 
 const target = positional[0];
@@ -69,8 +70,9 @@ if (restoreMode) {
 let db;
 try { db = new Database(target, { readonly: true }); }
 catch (e) { console.error(`✗ 书库打不开: ${e.message}`); process.exit(1); }
-// 幂等跳过：已按当前版本净化过且书未变（inline_content_hash 对上）→ 跳过（管线重跑/补向量不重复净化）
-{
+// 幂等跳过：已按当前版本净化过且书未变（inline_content_hash 对上）→ 跳过（管线重跑/补向量不重复净化）。
+// --force 绕过（D2 修复配套：恢复原文后强制重跑；恢复本身已清 meta 标记，此口子是双保险）
+if (!forceRun) {
   const meta = Object.fromEntries(db.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
   if (meta.inline_version && String(meta.inline_version) === String(INLINE_VERSION) && meta.inline_content_hash) {
     const { buildCleanTasks } = await import("./lib/clean.mjs");
@@ -78,7 +80,7 @@ catch (e) { console.error(`✗ 书库打不开: ${e.message}`); process.exit(1);
     try { curHash = buildCleanTasks(db).book.content_hash; } catch { /* 坏库交给后续报人话 */ }
     if (curHash && curHash === meta.inline_content_hash) {
       db.close();
-      console.log(`ⓘ ${path.basename(target)}: 已行级净化过（v${meta.inline_version}，${meta.inline_at || ""}），书未变——跳过`);
+      console.log(`ⓘ ${path.basename(target)}: 已行级净化过（v${meta.inline_version}，${meta.inline_at || ""}），书未变——跳过（--force 强制重跑）`);
       process.exit(0);
     }
   }

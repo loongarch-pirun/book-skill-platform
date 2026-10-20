@@ -237,7 +237,15 @@ const FORUM_BLOCKS = [
   }
   eq(db2.prepare("SELECT COUNT(*) c FROM chunks_fts").get().c, 3, "恢复后 FTS 对齐 3");
   eq(db2.prepare("SELECT value FROM meta WHERE key='chunk_count'").get().value, "3", "恢复后 chunk_count 回涨 3");
-  assert(!db2.prepare("SELECT 1 FROM meta WHERE key='inline_version'").get() === false, "inline_version 仍在（恢复不清版本标记）");
+  // D2 修复（标准轮）：恢复=回退——5 个 inline meta 键必须清除，否则 auditInline 假 ready、
+  // CLI 幂等跳过把恢复出的脏文本当「已净化」放行（旧断言「inline_version 仍在」锁死的是缺陷行为）
+  for (const k of ["inline_at", "inline_version", "inline_content_hash", "inline_chunk_fp", "inline_report"]) {
+    assert(!db2.prepare("SELECT 1 FROM meta WHERE key=?").get(k), `恢复后 ${k} 已清除（D2）`);
+  }
+  assert(!!db2.prepare("SELECT 1 FROM meta WHERE key='inline_restore_log'").get(), "恢复历史 inline_restore_log 保留（审计不丢）");
+  const au2 = auditInline(dbPath);
+  assert(!au2.ready && au2.code === "NOSCHEMA", `恢复后 auditInline 变 NOSCHEMA（不再假 ready，实报 code=${au2.code}）`);
+  assert(rr.metaCleared === 5, `返回 metaCleared=5（实报 ${rr.metaCleared}）`);
   const embLeft = db2.prepare("SELECT COUNT(*) c FROM chunks WHERE emb IS NOT NULL").get().c;
   assert(embLeft === 0, "恢复后 emb 仍是 NULL（提示重跑加工）");
   db2.close();

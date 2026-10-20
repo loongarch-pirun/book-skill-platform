@@ -225,7 +225,7 @@ export function restoreInline(dbPath, opts = {}) {
     }
     if (!rows.length) return { ok: true, restored: 0, deletedNew: 0, conflicts: [], message: "没有匹配的行级净化记录" };
     const now = new Date().toISOString();
-    let restored = 0, deletedNew = 0;
+    let restored = 0, deletedNew = 0, metaCleared = 0;
     const conflicts = [];
     const tx = db.transaction(() => {
       const upd = db.prepare("UPDATE chunks SET text = ? WHERE id = ?");
@@ -245,13 +245,21 @@ export function restoreInline(dbPath, opts = {}) {
       const prev = (() => { try { return JSON.parse(db.prepare("SELECT value FROM meta WHERE key='inline_restore_log'").get()?.value || "[]"); } catch { return []; } })();
       prev.push({ at: now, restored, deletedNew, conflicts: [...conflicts], ids: rows.map(r => r.chunk_id) });
       db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('inline_restore_log',?)").run(JSON.stringify(prev.slice(-20)));
+      // D2 修复（标准轮）：恢复=回退——清掉 inline meta 5 键让账实相符。
+      // 不清的话 auditInline 假 ready=true、CLI 幂等跳过把恢复出的脏文本当「已净化」放行。
+      // inline_restore_log 保留（恢复历史审计不丢）；部分恢复（--ids）同样清——净化账描述的
+      // 是全量净化后的状态，部分回退后已不成立，下次重跑会对未恢复块重新净化（幂等无害）。
+      const delMeta = db.prepare("DELETE FROM meta WHERE key = ?");
+      for (const k of ["inline_at", "inline_version", "inline_content_hash", "inline_chunk_fp", "inline_report"]) {
+        metaCleared += delMeta.run(k).changes;
+      }
       syncBookMeta(db);
     });
     try { tx(); }
     catch (e) { return { ok: false, code: "DBBROKEN", message: `恢复写库失败（已整单回滚）：${e?.message || e}` }; }
     return {
-      ok: true, restored, deletedNew, conflicts,
-      message: `恢复 ${restored} 块原文、删除 ${deletedNew} 个切出的跟帖新块${conflicts.length ? `（${conflicts.length} 个原块已不在，跳过）` : ""}；这些块还没有向量，重跑「开始加工」即可补齐`,
+      ok: true, restored, deletedNew, conflicts, metaCleared,
+      message: `恢复 ${restored} 块原文、删除 ${deletedNew} 个切出的跟帖新块${conflicts.length ? `（${conflicts.length} 个原块已不在，跳过）` : ""}；行级净化标记已清除（重跑行级清洗会对未恢复块重新净化），这些块还没有向量，重跑「开始加工」即可补齐`,
     };
   } finally {
     db.close();
