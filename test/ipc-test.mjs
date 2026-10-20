@@ -68,10 +68,10 @@ const loc = await invoke("reader:locate", id, blk.data.blocks[0].id);
 ok(loc.ok && loc.data.chapter === ch.data.chapters[0].name, "reader:locate 反查章节");
 
 const skills = await invoke("skills:list");
-ok(skills.ok && skills.data.some((s) => s.slug === "daodejing"), "skills:list 含道德经包");
+ok(skills.ok && skills.data.some((s) => s.slug === "kb-research"), "skills:list 含 kb-research 包");
 
-const skillMd = await invoke("skills:read", "daodejing");
-ok(skillMd.ok && /道德经/.test(skillMd.data.skill_md || ""), "skills:read 读到 SKILL.md");
+const skillMd = await invoke("skills:read", "kb-research");
+ok(skillMd.ok && /知识库/.test(skillMd.data.skill_md || ""), "skills:read 读到 SKILL.md");
 
 const st = await invoke("engine:status");
 ok(st.ok && !!st.data.dirs && typeof st.data.rerank === "boolean", "engine:status");
