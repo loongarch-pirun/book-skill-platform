@@ -990,6 +990,39 @@ const copyDb = (src) => {
     "静态: 接入文档说明用量治理（usage-policy/对外服务开关）");
 }
 
+// ========== 22.9) W2 skill 结构校验器接线（2026-10-21） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  const svSrc = stripComments(readSrc("src", "lib", "skill-validate.mjs"));
+  ok(svSrc.includes("export function validateSkillDir") && svSrc.includes("export function validateSkillsRoot"),
+    "静态: skill-validate.mjs 导出 validateSkillDir/validateSkillsRoot（校验器契约）");
+  ok(svSrc.includes("NEGATIVE_HINT_RE") && svSrc.includes("BODY_MAX_LINES") && svSrc.includes("broken-link"),
+    "静态: 校验覆盖负面触发/正文行数/链接完整性（开放标准硬规则）");
+  const cliSrc = stripComments(readSrc("src", "skill-validate.mjs"));
+  ok(cliSrc.includes("process.exit(errCount > 0 ? 1 : 0)"), "静态: CLI 有 error 时退出码 1（可进 CI）");
+
+  const pkgSrc5 = JSON.parse(readSrc("package.json"));
+  ok((pkgSrc5.scripts["skill:validate"] || "").includes("src/skill-validate.mjs"),
+    "静态: package.json 有 skill:validate 脚本（一键校验入口）");
+  ok((pkgSrc5.scripts["test:fast"] || "").includes("skill-validate-test"),
+    "静态: package.json test:fast 含 skill-validate-test（挂载对账）");
+
+  // 白名单对齐开放标准目录：references/（一层深参考文档）+ scripts/（确定性操作脚本化）
+  const storeSrc = stripComments(readSrc("src", "lib", "skill-store.mjs"));
+  // 源码里 FILE_RE 的斜杠是转义写法（references\/），断言照源码原样匹配
+  ok(storeSrc.includes("references\\/[a-z0-9-]+\\.md") && storeSrc.includes("scripts\\/[a-z0-9-]+\\."),
+    "静态: saveSkill 白名单含 references/ 与 scripts/（开放标准目录，W2b 起可用）");
+
+  // 真技能目录过一遍校验器（0 error 才允许接线通过——防止真技能烂掉没人知道）
+  const { validateSkillsRoot } = await import("../src/lib/skill-validate.mjs");
+  const rootResult = validateSkillsRoot(path.join(projRoot, "skills"));
+  ok(rootResult.ok, `静态: skills/ 真目录校验 0 error（${rootResult.skills.map(s => s.slug).join(",")}）`,
+    JSON.stringify(rootResult.skills.flatMap(s => s.errors)));
+}
+
 // ========== 22.7) UI V4：按钮三级制 + 深蓝灰主题（2026-10-20） ==========
 {
   const projRoot = path.join(import.meta.dirname, "..");

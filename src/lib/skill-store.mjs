@@ -21,9 +21,11 @@ export function currentSkillsDir() {
 }
 
 // slug：纯小写字母/数字/连字符（Agent Skills 开放标准惯例）；中文书名写 frontmatter title
-const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
+export const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 // 允许写入的文件路径白名单（防任意文件写入）；catalog.json = 技能×编目融合 P-A（机器可读索引）
-const FILE_RE = /^(?:SKILL\.md|chapters\/ch\d{2}-[a-z0-9-]+\.md|glossary\.md|patterns\.md|cheatsheet\.md|catalog\.json)$/;
+// W2（2026-10-21）：对齐 Agent Skills 开放标准目录——补 references/（只深一层的参考文档）
+// 与 scripts/（确定性操作脚本化：执行而非读入上下文）。chapters/ 保留兼容 kb-research 旧结构。
+export const FILE_RE = /^(?:SKILL\.md|chapters\/ch\d{2}-[a-z0-9-]+\.md|references\/[a-z0-9-]+\.md|scripts\/[a-z0-9-]+\.(?:mjs|js|py|sh)|glossary\.md|patterns\.md|cheatsheet\.md|catalog\.json)$/;
 const CHAPTER_FILE_RE = /^ch\d{2}-[a-z0-9-]+\.md$/;
 // 引用标记：〔别名·章节〕，只认 blockquote 行
 const CITATION_RE = /〔(.+?)·(.+?)〕/;
