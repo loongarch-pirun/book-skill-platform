@@ -24,7 +24,8 @@ export function currentSkillsDir() {
 export const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 // 允许写入的文件路径白名单（防任意文件写入）；catalog.json = 技能×编目融合 P-A（机器可读索引）
 // W2（2026-10-21）：对齐 Agent Skills 开放标准目录——补 references/（只深一层的参考文档）
-// 与 scripts/（确定性操作脚本化：执行而非读入上下文）。chapters/ 保留兼容 kb-research 旧结构。
+// 与 scripts/（确定性操作脚本化：执行而非读入上下文）。chapters/ 与 references/ 两代并存：
+// catalog 骨架出厂 chapters/chNN-*.md；kb-research 规范样板已迁 references/（文件名保留 chNN-）。
 export const FILE_RE = /^(?:SKILL\.md|chapters\/ch\d{2}-[a-z0-9-]+\.md|references\/[a-z0-9-]+\.md|scripts\/[a-z0-9-]+\.(?:mjs|js|py|sh)|glossary\.md|patterns\.md|cheatsheet\.md|catalog\.json)$/;
 const CHAPTER_FILE_RE = /^ch\d{2}-[a-z0-9-]+\.md$/;
 // 引用标记：〔别名·章节〕，只认 blockquote 行
@@ -216,7 +217,7 @@ export function verifyCitations(citations, sourcesMap) {
 // 原则：凡是智能体会拿来当导航依据的声称（覆盖范围/章节数/索引指向），必须机器可验。
 const CLAIM_ABILITY_RE = /([0-9０-９一二三四五六七八九十百千两零〇]+)\s*章(?:原典)?\s*(?:速查|指南|手册|全覆盖)/g; // 能力声称："81章速查"/「八十一章速查」
 const CLAIM_BOOK_TOTAL_RE = /全书\s*([0-9０-９一二三四五六七八九十百千两零〇]+)\s*章/g; // 书属性声称："全书81章"/「全书八十一章」
-const REF_PATH_RE = /(?:chapters\/)?(?:ch\d{2}-[a-z0-9-]+|glossary|patterns|cheatsheet)\.md/g; // 索引表指向的文件
+const REF_PATH_RE = /(?:chapters\/|references\/)?(?:ch\d{2}-[a-z0-9-]+|glossary|patterns|cheatsheet)\.md/g; // SKILL.md 索引表指向的文件（chapters/ 与 references/ 两代前缀都认）
 
 function coverageCheck(fmData, skillMdContent, files, stats) {
   const errors = [];
@@ -304,7 +305,7 @@ export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) 
   let totalBytes = 0;
   for (const f of files || []) {
     if (!f || typeof f.path !== "string" || !FILE_RE.test(f.path)) {
-      push("bad-path", { file: f && f.path, hint: "允许的路径：SKILL.md、chapters/chNN-小写连字符.md、glossary.md、patterns.md、cheatsheet.md、catalog.json" });
+      push("bad-path", { file: f && f.path, hint: "允许的路径：SKILL.md、chapters/chNN-小写连字符.md、references/小写连字符.md、glossary.md、patterns.md、cheatsheet.md、catalog.json" });
       continue;
     }
     if (seen.has(f.path)) push("bad-path", { file: f.path, hint: "路径重复" });
@@ -375,14 +376,20 @@ export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) 
   };
 }
 
+// 章节索引：chapters/（catalog 骨架出厂格式，chNN- 文件名）与 references/（开放标准 L3，
+// 文件名同走 chNN- 或自由 kebab）两代并存，合并返回——kb-research 2026-10-21 起用 references/
 function chapterIndex(dir) {
-  const chDir = path.join(dir, "chapters");
-  if (!fs.existsSync(chDir)) return [];
-  return fs.readdirSync(chDir).filter(f => CHAPTER_FILE_RE.test(f)).sort().map(f => {
-    const content = fs.readFileSync(path.join(chDir, f), "utf8");
-    const t = (/^#\s+(.+)$/m.exec(content) || [])[1];
-    return { file: "chapters/" + f, title: (t || f).trim(), tokens_est: Math.ceil(content.length / 1.6) };
-  });
+  const out = [];
+  for (const sub of ["chapters", "references"]) {
+    const d = path.join(dir, sub);
+    if (!fs.existsSync(d)) continue;
+    for (const f of fs.readdirSync(d).filter(f => CHAPTER_FILE_RE.test(f)).sort()) {
+      const content = fs.readFileSync(path.join(d, f), "utf8");
+      const t = (/^#\s+(.+)$/m.exec(content) || [])[1];
+      out.push({ file: sub + "/" + f, title: (t || f).trim(), tokens_est: Math.ceil(content.length / 1.6) });
+    }
+  }
+  return out;
 }
 
 export function readSkill(slug, chapter, { skillsDir = currentSkillsDir() } = {}) {
@@ -394,9 +401,12 @@ export function readSkill(slug, chapter, { skillsDir = currentSkillsDir() } = {}
   }
   if (chapter) {
     if (!CHAPTER_FILE_RE.test(chapter)) return { error: "bad-chapter", hint: "章节文件名形如 ch01-wu-wei" };
-    const p = path.join(dir, "chapters", chapter);
-    if (!fs.existsSync(p)) return { error: "chapter-not-found", available: chapterIndex(dir).map(x => x.file) };
-    return { slug, file: "chapters/" + chapter, content: fs.readFileSync(p, "utf8") };
+    // 两代目录兼容：先 chapters/ 后 references/（kb-research 迁 references/ 后 engine 视图传的仍是裸文件名）
+    for (const sub of ["chapters", "references"]) {
+      const p = path.join(dir, sub, chapter);
+      if (fs.existsSync(p)) return { slug, file: sub + "/" + chapter, content: fs.readFileSync(p, "utf8") };
+    }
+    return { error: "chapter-not-found", available: chapterIndex(dir).map(x => x.file) };
   }
   const skillMd = fs.readFileSync(skillPath, "utf8");
   // catalog（P-A）：包内带 catalog.json 就解析返回（机器可读索引）；坏 JSON / 没有都返回 null——旧包零影响

@@ -1,7 +1,12 @@
 ---
 name: kb-research
 title: 知识库论证动线
-description: 智能体 × 知识库联动操作规程：五步动线（看书架→按体量分流→翻章读原文→引文回验→无依据明说），让模型定方案/答问题时总能找到库里对应板块并引用原文论证
+description: 智能体 × 知识库联动操作规程：五步动线（看书架→按体量分流→翻章读原文→引文回验→无依据明说），定方案/答问题时找到库内依据并引用原文论证。不用于：纯编码执行、实时信息查询、书库未收录主题的立论——库里没有就明说，不借本库装点门面
+metadata:
+  version: 2.0.0
+  category: universal
+  updated: 2026-10-21
+allowed-tools: [list_books, list_catalog, list_skills, read_skill, get_person, get_theme, lookup, read_full_book, get_outline, get_chapter, read_range, query_book, query_library, similar_chunks, cite_check]
 sources:
   论语: lunyu-xueer-zh
   凤凰架构: fenix-architecture
@@ -19,13 +24,29 @@ sources:
 4. **cite_check 自检** —— 引文贴回去验：命中才采用，未命中不要采用。
 5. **没有就明说** —— 库里没有依据的，明确报告「书中没有」，不许编造。
 
-## 章节索引（按问取用，不读不占上下文）
+## 触发边界（先对表再动手）
+
+**应触发**：
+- 「根据库里内容设计一个 XX 方案 / 架构」
+- 「这本书讲了什么」「帮我读一下 XX」
+- 「X 在书里哪里提到过」「找一下讲 Y 的段落」
+- 「引用一句原文佐证这个观点」
+- 「书里 XX 和 YY 是什么关系」（人物/概念）
+
+**不触发（明说边界，别硬翻）**：
+- 「帮我写一段代码 / 实现 XX」——纯编码执行，库只当参考书不当生成器
+- 「今天 XX 的价格/新闻」——实时信息，库里全是静态文本
+- 库里没有的书/主题（先 list_books 核对，没有就直说无依据）
+- 「把这本书导入书架」——入库是建库管线的活，不是本技能
+- kk 帖的观点考据——那是 opinion-archaeology 的地盘（独立技能）
+
+## 参考文件索引（按问取用，不读不占上下文）
 
 | 文件 | 内容 |
 |---|---|
-| chapters/ch01-dongxian.md | 五步动线详解：每步调什么、返回字段怎么读 |
-| chapters/ch02-fenliu.md | 分流体例：体量账 + 章节质量三态应对 |
-| chapters/ch03-fangzhi-huanjue.md | 防幻觉铁律与真实案例 |
+| references/ch01-dongxian.md | 五步动线详解：每步调什么、返回字段怎么读、2 个完整实测案例 |
+| references/ch02-fenliu.md | 分流体例：体量账 + 章节质量三态应对 + 实测分流案例 |
+| references/ch03-fangzhi-huanjue.md | 防幻觉铁律 + 3 个真实翻车/避险案例 |
 | glossary.md | 工具速查：全部工具一句话 |
 | cheatsheet.md | 场景 → 动线速查表 |
 

@@ -310,11 +310,11 @@ export function registerServerTools(server) {
 
   reg("save_skill", {
     title: "技能落盘",
-    description: "把蒸馏好的技能文件集写入 skills/ 目录（SKILL.md + chapters/ + 可选 glossary/patterns/cheatsheet）。整包提交（幂等覆盖）。落盘前做两道校验：结构校验（slug/路径白名单/frontmatter）+ 引用回源验证——blockquote 里的「〔书名·章节〕」引文会到 library 原文比对，造假整包拒收并指出造假位置。更新已有技能：先 read_skill 取全文，修改后整包重交。引用规则：原文照抄检索结果（繁体照抄），行尾加〔别名·章节〕，别名必须是 SKILL.md frontmatter sources 里声明的映射。",
+    description: "把蒸馏好的技能文件集写入 skills/ 目录（SKILL.md + references/ 或 chapters/ + 可选 glossary/patterns/cheatsheet）。整包提交（幂等覆盖）。落盘前做两道校验：结构校验（slug/路径白名单/frontmatter）+ 引用回源验证——blockquote 里的「〔书名·章节〕」引文会到 library 原文比对，造假整包拒收并指出造假位置。更新已有技能：先 read_skill 取全文，修改后整包重交。引用规则：原文照抄检索结果（繁体照抄），行尾加〔别名·章节〕，别名必须是 SKILL.md frontmatter sources 里声明的映射。",
     inputSchema: {
       slug: z.string().describe("技能标识，小写字母/数字/连字符，如 daodejing；中文写进 frontmatter title"),
       files: z.array(z.object({
-        path: z.string().describe("相对路径：SKILL.md | chapters/chNN-小写连字符.md | glossary.md | patterns.md | cheatsheet.md | catalog.json"),
+        path: z.string().describe("相对路径：SKILL.md | references/chNN-小写连字符.md（或 chapters/ 同格式） | glossary.md | patterns.md | cheatsheet.md | catalog.json"),
         content: z.string().describe("完整文件内容（markdown）"),
       })).min(1).max(120).describe("整包文件集，必须包含 SKILL.md"),
     },

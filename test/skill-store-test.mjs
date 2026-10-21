@@ -333,6 +333,49 @@ const ch08 = goodChapter("上善若水，水善利萬物而不爭。〔道德经
     "P-A: 旧包零影响——catalog=null / has_catalog=false");
 }
 
+// ========== 18) references/ 通道（W2b：开放标准目录，kb-research 迁此） ==========
+{
+  const base = { slug: "test-skill", skillsDir: tmp };
+  // a) references/ 路径整包落盘 + 索引表指向 references/ 不触发 broken-reference
+  const refFm = makeFm({ coverage: "1/81" }) + "\n## 参考文件索引\n| references/ch01-dongxian.md | 动线详解 | 9 |\n";
+  let r = saveSkill("test-skill",
+    [
+      { path: "SKILL.md", content: refFm },
+      { path: "references/ch01-dongxian.md", content: ch48 },
+    ],
+    base);
+  ok(r.ok === true, "references: 整包落盘通过（索引指向 references/ 不报 broken-reference）", JSON.stringify(r.errors));
+
+  // b) 读回：index 带真实前缀；裸文件名按需取章（engine 视图传法）
+  const back = readSkill("test-skill", undefined, base);
+  ok(back.index.length === 1 && back.index[0].file === "references/ch01-dongxian.md",
+    "references: 章节索引带 references/ 前缀", JSON.stringify(back.index));
+  const chap = readSkill("test-skill", "ch01-dongxian.md", base);
+  ok(chap.content && chap.content.includes("為學日益") && chap.file === "references/ch01-dongxian.md",
+    "references: 裸文件名读回（file 字段带实际前缀）");
+
+  // c) 两代并存：同 slug 再补一个 chapters/ 文件，索引合并两目录
+  r = saveSkill("test-skill",
+    [
+      { path: "SKILL.md", content: makeFm({ coverage: "2/81" }) },
+      { path: "references/ch01-dongxian.md", content: ch48 },
+      { path: "chapters/ch02-legacy.md", content: ch08 },
+    ],
+    base);
+  ok(r.ok === true, "references: 两代目录并存落盘通过", JSON.stringify(r.errors));
+  const mixed = readSkill("test-skill", undefined, base);
+  ok(mixed.index.length === 2 &&
+     mixed.index[0].file === "chapters/ch02-legacy.md" && // chapters 排序在前（子目录序：chapters < references）
+     mixed.index[1].file === "references/ch01-dongxian.md",
+    "references: 两代目录索引合并（chapters 与 references 同列）", JSON.stringify(mixed.index));
+
+  // d) references 路径穿越拒收（白名单只放行 kebab 单层）
+  r = saveSkill("test-skill",
+    [{ path: "SKILL.md", content: goodFm }, { path: "references/../evil.md", content: "x" }],
+    base);
+  ok(r.errors.some(e => e.reason === "bad-path"), "references: 路径穿越拒收");
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== skill-store-test: ${pass} PASS / ${fail} FAIL =====`);
 if (fail) { console.error(`测试失败 ${fail} 项`); process.exit(1); }
