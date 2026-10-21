@@ -99,14 +99,15 @@ src/            应用与引擎源码（Electron 主/渲染进程、检索、编
 test/           测试（test:fast 轻量 / test:slow 重型含模型；npm test 全跑）
 docs/           设计文档与验收报告
 books/          内置书目源文件（公版内容）
-skills/         已落盘的技能包（如《道德经》）
+skills/         已落盘的技能包（7 个：kb-research / book-intake / citation-check / engineering-research / humanities-reading / opinion-archaeology / skill-authoring）
 catalog-tasks/  编目任务书（中间产物）
 catalog-results/ 编目结果（中间产物）
 enrich-tasks/   洗数据任务书（中间产物）
 enrich-results/ 洗数据结果（中间产物，入库后可由库侧复查再生）
 ```
 
-> 以下目录**默认不入库**（见 `.gitignore`）：`.models/`（模型缓存）、`library/`（书库数据库）、
+> 以下目录**默认不入库**（见 `.gitignore`）：`.models/`（模型缓存）、`library/`（书库数据库；
+> 其中 `usage-policy.json` 与 `skill-state.json` 两个手工配置不可从书源重建，随仓库走）、
 > `node_modules/`、`release/`、`release-new/`（打包产物）、`backup/`、
 > `books/_work/`（语料暂存区）、`enrich-tasks/`、`enrich-results/`（洗数据中间产物，含书库内容派生数据）。
 
