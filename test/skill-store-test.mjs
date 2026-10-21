@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { saveSkill, readSkill, listSkills, extractCitations, parseFrontmatter, deleteSkill } from "../src/lib/skill-store.mjs";
+import { saveSkill, readSkill, listSkills, extractCitations, parseFrontmatter, deleteSkill, currentSkillsDir, DEFAULT_SKILLS_DIR, configureSkillStore } from "../src/lib/skill-store.mjs";
 
 let pass = 0, fail = 0;
 const ok = (cond, name, extra = "") => {
@@ -418,6 +418,17 @@ sources:
     "删除后可整包重建（readSkill 正常）");
   deleteSkill("del-me", { skillsDir: tmp }); // 收尾还原
 }
+
+// ---------- 19) currentSkillsDir 三层解析（MCP 形态 B 生命线，2026-10-21） ----------
+// 安装态 MCP 从 app.asar 里跑，相对默认路径（app.asar/skills）不存在——
+// 不认 BSP_SKILLS_DIR 的话 list_skills/read_skill/check_skills 全空（win-unpacked 实测抓到的洞）
+ok(currentSkillsDir() === DEFAULT_SKILLS_DIR, "无注入无 env → 默认目录（仓库 skills/）");
+process.env.BSP_SKILLS_DIR = tmp;
+ok(currentSkillsDir() === tmp, "env 层：BSP_SKILLS_DIR 生效（调用时读）");
+configureSkillStore({ skillsDir: path.join(tmp, "nested") });
+ok(currentSkillsDir() === path.join(tmp, "nested"), "注入优先于 env（桌面 engine 注入路径）");
+delete process.env.BSP_SKILLS_DIR;
+ok(currentSkillsDir() === path.join(tmp, "nested"), "env 删除后仍走注入（调用时读的另一面）");
 
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== skill-store-test: ${pass} PASS / ${fail} FAIL =====`);

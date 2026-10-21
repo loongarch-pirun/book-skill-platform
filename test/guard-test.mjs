@@ -1109,7 +1109,77 @@ const copyDb = (src) => {
   const bad = JSON.parse((await handlers.get("cite_check")({ book: "lunyu", quote: "这本书里绝对没有的捏造句子 xyz" })).content[0].text);
   ok(!bad.hit && /不要采用/.test(bad.hint || ""), "cite_check 捏造引文拒收并指路");
 }
+
+// ========== 22.10) 收官打包：extraResources 四件 + 种子化链路 + 向导三选项（2026-10-21） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  // ① extraResources 四件白名单（防漂移：谁改坏了 filter，隐私数据/大模型漏进包或漏出包，这里红）
+  const pkg = JSON.parse(readSrc("package.json"));
+  const er = pkg.build.extraResources;
+  ok(Array.isArray(er) && er.length === 4, `静态: extraResources 四件在位（实际 ${er?.length}）`);
+  const byTo = Object.fromEntries(er.map((e) => [e.to, e]));
+  ok(byTo.library && byTo.library.from === "library" && byTo.skills && byTo.books
+    && byTo.models && byTo.models.from === ".models",
+    "静态: 四件 from/to 映射正确（.models→models，其余同名）");
+  ok(byTo.models.filter.includes("Xenova/multilingual-e5-small/**")
+    && byTo.models.filter.includes("Xenova/bge-small-zh-v1.5/**")
+    && byTo.models.filter.some((f) => f.startsWith("onnx-community/bge-reranker-v2-m3-ONNX"))
+    && byTo.models.filter.includes("!onnx-community/bge-reranker-v2-m3-ONNX/onnx/model_q4.onnx"),
+    "静态: models 三件套（e5/bge-small/reranker-int8）且排除 model_q4（实测否决件不进包）");
+  ok(byTo.library.filter.includes("!chat-archive/**") && byTo.library.filter.includes("!feedback/**")
+    && byTo.library.filter.includes("!usage-log.jsonl") && byTo.library.filter.includes("!**/*.db-wal"),
+    "静态: library 排除隐私数据与 SQLite 运行时碎文件（老板个人数据不出厂）");
+  ok(byTo.books.filter.includes("!_work/**"), "静态: books 排除 _work 临时目录");
+
+  // ② paths.mjs 内置资源优先（modelsDir 打包态）
+  const pathsSrc = stripComments(readSrc("src", "desktop", "paths.mjs"));
+  ok(pathsSrc.includes("hasBundledModels")
+    && /modelsDir:[\s\S]*hasBundledModels/.test(pathsSrc),
+    "静态: paths.mjs modelsDir 内置资源优先（resources/models 先于 userData 默认层）");
+  ok(pathsSrc.includes("resourcesDir"), "静态: resolveDirs 收 resourcesDir 入口（dev/test 不传不受影响）");
+
+  // ③ engine 种子化 + ipc + preload + main 四件套
+  const engSrc = stripComments(readSrc("src", "desktop", "engine.mjs"));
+  ok(engSrc.includes("export async function seedBundledData") && engSrc.includes("export function hasBundledData"),
+    "静态: engine 暴露 seedBundledData/hasBundledData（种子化 + 向导按钮判据）");
+  ok(/fs\.existsSync\(dst\)/.test(engSrc),
+    "静态: 种子化幂等（目标存在即跳过，用户数据不被覆盖）");
+  const ipcSrc = stripComments(readSrc("src", "desktop", "ipc.mjs"));
+  ok(ipcSrc.includes('"seed:start"') && ipcSrc.includes("hasBundledData()"),
+    "静态: ipc 注册 seed:start + config:get 带 bundled 判据");
+  const preSrc = stripComments(readSrc("src", "preload.js"));
+  ok(preSrc.includes("seedStart:") && preSrc.includes("onSeedProgress:"),
+    "静态: preload 暴露 seedStart/onSeedProgress 给渲染层");
+  const mainSrc = stripComments(readSrc("src", "main.js"));
+  ok(mainSrc.includes('resourcesDir: app.getPath("resources")'),
+    "静态: main.js init 传 resources 路径（打包态内置资源入口）");
+
+  // ④ 向导三选项 + 模型文案（对齐审查偏差 3/5）
+  const appSrc = stripComments(readSrc("src", "renderer", "app.js"));
+  ok(appSrc.includes('id="wzSeed"') && appSrc.includes('id="wzPick"') && appSrc.includes('id="wzBlank"'),
+    "静态: 首启向导三选项（内置书库/选现有/空白）");
+  ok(/cfg\.bundled[\s\S]*wzSeed/.test(appSrc),
+    "静态: 「使用内置书库」按钮受 cfg.bundled 门控（无内置资源的包不给必失败按钮）");
+  ok(appSrc.includes("已随安装包内置，不用下载") && appSrc.includes("模型加载中…（已内置）"),
+    "静态: 模型文案两处改「已内置」（不再宣称首次 700MB 下载）");
+  const cssSrc = readSrc("src", "renderer", "app.css");
+  ok(/flex-wrap/.test((cssSrc.match(/\.wizard-btns[^}]+/) || [""])[0]),
+    "静态: 向导按钮组 flex-wrap（三按钮不溢出 460px 卡片）");
+
+  // ⑤ MCP 形态 B 契约：skill-store 认 BSP_SKILLS_DIR（app.asar 里默认 skills/ 路径不存在，
+  //    不认 env 则 list_skills/read_skill/check_skills 全空——win-unpacked 实测抓到的洞）
+  const ssSrc = stripComments(readSrc("src", "lib", "skill-store.mjs"));
+  ok(/export function currentSkillsDir\(\)\s*\{\s*return _skillsDir \|\| process\.env\.BSP_SKILLS_DIR \|\| DEFAULT_SKILLS_DIR;/.test(ssSrc),
+    "静态: skill-store currentSkillsDir 认 BSP_SKILLS_DIR（安装态 MCP 技能目录生命线）");
+  const svSrc = stripComments(readSrc("src", "skill-validate.mjs"));
+  ok(/BSP_SKILLS_DIR/.test(svSrc),
+    "静态: skill-validate CLI 同款 env 兜底（安装态也能跑校验）");
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);
 if (fail) { console.error(`${fail} 项 FAIL`); process.exit(1); }
-console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造/云端清洗/get_outline数据层/read_full_book全文闸/cite_check回验 ${pass} 项全过`);
+console.log(`全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造/云端清洗/get_outline数据层/read_full_book全文闸/cite_check回验/收官打包种子化 ${pass} 项全过`);

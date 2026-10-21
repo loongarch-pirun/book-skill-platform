@@ -13,7 +13,9 @@ export async function registerIpc({ ipcMain, app, dialog, shell, getWin }) {
   });
 
   // 配置 / 首启向导
-  handle("config:get", (eng) => ({ dirs: eng.dirs(), firstRun: eng.isFirstRun(), packaged: app.isPackaged }));
+  // bundled：安装包是否内置可种子化数据（向导「使用内置书库」按钮显隐——没有内置资源的包
+  // 不给必失败的按钮；dev 态恒 false）
+  handle("config:get", (eng) => ({ dirs: eng.dirs(), firstRun: eng.isFirstRun(), packaged: app.isPackaged, bundled: eng.hasBundledData() }));
   handle("config:set", (eng, patch) => eng.applyConfig(patch));
   handle("config:pickLibDir", async () => {
     const r = await dialog.showOpenDialog(getWin(), {
@@ -21,6 +23,15 @@ export async function registerIpc({ ipcMain, app, dialog, shell, getWin }) {
       title: "选择书库文件夹（里面有 .db 文件的那个）",
     });
     return r.canceled ? null : r.filePaths[0];
+  });
+  // 首启种子化（打包态）：内置 resources/{library,skills,books} → userData（models 只读不拷）。
+  // 96MB 级拷贝，片间让出主进程；进度 {file,doneBytes,totalBytes} 经 seed:progress 转发——
+  // 向导按钮要显示百分比，不能点了没反应（对齐审查偏差 5）
+  handle("seed:start", async (eng) => {
+    const win = getWin();
+    return eng.seedBundledData((p) => {
+      if (win && !win.isDestroyed()) win.webContents.send("seed:progress", p);
+    });
   });
 
   // 书架

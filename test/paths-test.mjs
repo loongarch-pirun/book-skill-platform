@@ -1,4 +1,4 @@
-// paths/skill-state 单元测试：三层目录解析（打包态=userData）+ skill 开关过滤（H3）
+// paths/skill-state 单元测试：三层目录解析（打包态=userData + modelsDir 内置资源优先）+ skill 开关过滤（H3）
 // 为什么单测：paths.mjs 与 skill-state 是桌面端地基，listBooks 过滤是回归高发区
 import fs from "node:fs";
 import os from "node:os";
@@ -26,6 +26,37 @@ const pkg = resolveDirs({ packaged: true, userData: tmp });
 ok(pkg.libDir === path.join(tmp, "library"), "打包态: libDir=userData/library");
 ok(pkg.skillsDir === path.join(tmp, "skills"), "打包态: skillsDir=userData/skills");
 ok(pkg.modelsDir === path.join(tmp, ".models"), "打包态: modelsDir=userData/.models");
+
+// 2b) 内置资源优先（modelsDir 打包态，2026-10-21 收官打包）：resources/models 存在 →
+//     先于 userData 默认层（713MB 只读直接用，不拷贝）；配置层/env 仍压过它；
+//     resources 里没有 models → 回退 userData/.models（老安装包/缺件不炸）。
+//     配置层/env 优先级用独立 tmp2 验，不污染下面第 3 组的配置层断言。
+{
+  const res = path.join(tmp, "res-with-models");
+  fs.mkdirSync(path.join(res, "models"), { recursive: true });
+  ok(resolveDirs({ packaged: true, userData: tmp, resourcesDir: res }).modelsDir === path.join(res, "models"),
+    "内置资源优先: resources/models 存在 → modelsDir 指它");
+  ok(resolveDirs({ packaged: true, userData: tmp, resourcesDir: res }).libDir === path.join(tmp, "library"),
+    "内置资源优先只动 modelsDir: libDir 仍走 userData 默认层（要可写，走种子化）");
+  ok(resolveDirs({ packaged: true, userData: tmp, resourcesDir: res }).resourcesDir === res,
+    "resourcesDir 透传进 dirs（engine 种子化指着它）");
+  const res0 = path.join(tmp, "res-no-models");
+  fs.mkdirSync(res0, { recursive: true });
+  ok(resolveDirs({ packaged: true, userData: tmp, resourcesDir: res0 }).modelsDir === path.join(tmp, ".models"),
+    "resources 无 models → 回退 userData/.models（缺件不炸）");
+  ok(resolveDirs({ packaged: false, resourcesDir: res }).modelsDir === path.join(PROJECT_ROOT, ".models"),
+    "dev 态忽略 resourcesDir（modelsDir 仍项目根/.models——npm test 逐字节不变）");
+  const tmp2 = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-paths2-"));
+  writeConfig(tmp2, { modelsDir: path.join(tmp2, "mymodels") });
+  ok(resolveDirs({ packaged: true, userData: tmp2, resourcesDir: res }).modelsDir === path.join(tmp2, "mymodels"),
+    "配置层 modelsDir 压过内置资源（用户显式指定优先）");
+  const OLD_M = process.env.BSP_MODELS_DIR;
+  process.env.BSP_MODELS_DIR = path.join(tmp2, "envmodels");
+  ok(resolveDirs({ packaged: true, userData: tmp2, resourcesDir: res }).modelsDir === path.join(tmp2, "envmodels"),
+    "环境变量 BSP_MODELS_DIR 压过内置资源（CLI 覆盖最高）");
+  if (OLD_M === undefined) delete process.env.BSP_MODELS_DIR; else process.env.BSP_MODELS_DIR = OLD_M;
+  fs.rmSync(tmp2, { recursive: true, force: true });
+}
 
 // 3) 配置层覆盖默认（writeConfig 往返）
 writeConfig(tmp, { libraryDir: path.join(tmp, "mylib"), skillsDir: path.join(tmp, "myskills") });

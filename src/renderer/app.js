@@ -67,18 +67,52 @@ async function maybeWizard(cfg) {
   const el = $("#wizard");
   if (!cfg.firstRun) { el.classList.add("hidden"); return; }
   el.classList.remove("hidden");
+  // 「使用内置书库」只在安装包真内置了资源时出现（cfg.bundled）——没有内置资源的包
+  // 不给必失败的按钮；dev 态恒 false，向导本就只对打包态显示
+  const seedBtn = cfg.bundled
+    ? `<button class="primary" id="wzSeed">使用内置书库（推荐）</button>`
+    : "";
   el.innerHTML = `
     <div class="wizard-card">
       <h2>欢迎使用我的书房</h2>
-      <p>第一次打开。请选择书库位置：</p>
-      <p>· <b>使用现有书库</b>：选一个有 .db 文件的文件夹（比如旧版项目里的 library）</p>
+      <p>第一次打开。请选择怎么开始：</p>
+      <p>· <b>使用内置书库</b>：安装包自带一批书、技能和模型，马上能问</p>
+      <p>· <b>选择现有书库</b>：选一个有 .db 文件的文件夹（比如旧版项目里的 library）</p>
       <p>· <b>从空白开始</b>：以后往书架里拖书就行</p>
-      <p style="font-size:12px">模型（约 700MB）会在第一次提问时自动下载。</p>
+      <p style="font-size:12px">模型（约 700MB）已随安装包内置，不用下载。</p>
       <div class="wizard-btns">
-        <button class="primary" id="wzPick">选择现有书库文件夹</button>
+        ${seedBtn}
+        <button class="ghost" id="wzPick">选择现有书库文件夹</button>
         <button class="ghost" id="wzBlank">从空白开始</button>
       </div>
     </div>`;
+  if (cfg.bundled) {
+    $("#wzSeed").onclick = async () => {
+      // 种子化期间禁用全部按钮 + 显示字节进度（96MB 级拷贝要几秒，不能点了没反应）；
+      // 失败恢复态并摘监听——话术指路「再点一次接着拷」（幂等，已拷不覆盖）
+      const btns = [...document.querySelectorAll(".wizard-btns button")];
+      btns.forEach((b) => { b.disabled = true; });
+      const btn = $("#wzSeed");
+      btn.textContent = "正在初始化内置书库…";
+      const off = window.study.onSeedProgress((p) => {
+        if (p && p.totalBytes) {
+          const pct = Math.round((p.doneBytes / p.totalBytes) * 100);
+          btn.textContent = `正在初始化内置书库… ${pct}%`;
+        }
+      });
+      try {
+        await call(window.study.seedStart());
+        // 种子化成功才写配置（标记初始化过）——写坏了也还是 firstRun，向导还在，能重选
+        await call(window.study.configSet({}));
+        location.reload();
+      } catch (e) {
+        off();
+        btns.forEach((b) => { b.disabled = false; });
+        btn.textContent = "使用内置书库";
+        toast(`初始化失败：${e.message}`);
+      }
+    };
+  }
   $("#wzPick").onclick = async () => {
     const dir = await call(window.study.pickLibDir());
     if (!dir) return;
@@ -102,7 +136,7 @@ function bindModelChip() {
   });
   window.study.onEngineReady(() => { state.model.ready = true; paint("模型已就绪", "ok"); $("#sideFoot").textContent = "模型已就绪 · 引擎直连"; });
   window.study.onEngineError((e) => paint("模型加载失败", "bad"));
-  $("#sideFoot").textContent = "模型加载中…（首次约 700MB）";
+  $("#sideFoot").textContent = "模型加载中…（已内置）";
 }
 
 // ---------- 云端 AI 状态 chip（C4）：与 modelChip 并列，书架/翻书时也看得见 ----------

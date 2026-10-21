@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "schedule": {
+    "workdays": [
+      "00:00-24:00"
+    ],
+    "weekend": true,
+    "timezone": "Asia/Shanghai"
+  },
+  "budget": {
+    "perSessionChars": 200000,
+    "perSessionQueries": 30,
+    "deepReadChars": 80000
+  }
+}

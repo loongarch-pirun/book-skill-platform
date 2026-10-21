@@ -5,7 +5,8 @@ import path from "node:path";
 import { validateSkillsRoot, validateSkillDir } from "./lib/skill-validate.mjs";
 import { DEFAULT_SKILLS_DIR } from "./lib/skill-store.mjs";
 
-const target = process.argv[2] ? path.resolve(process.argv[2]) : DEFAULT_SKILLS_DIR;
+// 与 currentSkillsDir 同一解析序（env > 默认）——安装态从 app.asar 跑时相对默认路径不存在
+const target = process.argv[2] ? path.resolve(process.argv[2]) : (process.env.BSP_SKILLS_DIR || DEFAULT_SKILLS_DIR);
 
 let out;
 try {

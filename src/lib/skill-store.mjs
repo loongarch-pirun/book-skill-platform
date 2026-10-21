@@ -16,8 +16,12 @@ let _skillsDir = null;
 export function configureSkillStore({ skillsDir } = {}) {
   if (skillsDir) _skillsDir = skillsDir;
 }
+// 解析序与 search.mjs 的 currentLibDir 对齐：注入 > BSP_SKILLS_DIR > 默认（相对本文件的仓库 skills/）。
+// env 这层是 MCP stdio（src/mcp-server.mjs）的生命线——安装态形态 B 从 app.asar 里跑，
+// 相对默认路径（app.asar/skills）不存在，不认 env 的话 list_skills/read_skill/check_skills 全空。
+// 调用时读而非加载时捕：桌面 engine.init 会回写 process.env（给 spawn 子进程），两者始终一致。
 export function currentSkillsDir() {
-  return _skillsDir || DEFAULT_SKILLS_DIR;
+  return _skillsDir || process.env.BSP_SKILLS_DIR || DEFAULT_SKILLS_DIR;
 }
 
 // slug：纯小写字母/数字/连字符（Agent Skills 开放标准惯例）；中文书名写 frontmatter title

@@ -22,13 +22,16 @@ import { configureModels, setModelProgress, getEmbedder } from "../lib/models.mj
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 
-let _dirs = null, _userData = null, _packaged = false;
+let _dirs = null, _userData = null, _packaged = false, _resourcesDir = null;
 
 // ---------- 初始化：三层解析 → 注入三个 lib + 回写环境变量（M2：spawn 的 CLI 子进程继承） ----------
-export function init({ packaged = false, userData = null } = {}) {
+// resourcesDir 仅打包态传（main.js 给 app.getPath("resources")）：modelsDir 内置资源优先
+// 与首启种子化都指着它。dev/test 态不传，行为与以前逐字节一致。
+export function init({ packaged = false, userData = null, resourcesDir = null } = {}) {
   _packaged = packaged;
   _userData = userData;
-  _dirs = resolveDirs({ packaged, userData });
+  _resourcesDir = resourcesDir;
+  _dirs = resolveDirs({ packaged, userData, resourcesDir });
   configureSearch({ libDir: _dirs.libDir });
   configureSkillStore({ skillsDir: _dirs.skillsDir });
   configureModels({ modelsDir: _dirs.modelsDir });
@@ -45,7 +48,78 @@ export function isFirstRun() { return _packaged && !hasConfig(_userData); }
 export function applyConfig(patch) {
   if (!_userData) throw new Error("未打包态没有配置层，用环境变量 BSP_LIB_DIR 改目录");
   writeConfig(_userData, patch);
-  return init({ packaged: _packaged, userData: _userData });
+  return init({ packaged: _packaged, userData: _userData, resourcesDir: _resourcesDir });
+}
+
+// ---------- 首启种子化（打包态）：安装包内置 resources/{library,skills,books} → userData ----------
+// 安装包自带一份书库/技能/原件（extraResources）；首启向导选「使用内置书库」时拷进 userData。
+// 铁律：
+// · 幂等——目标文件已存在即跳过，用户数据永远不被覆盖（中断重试/重复点击安全）；
+// · models 不拷——713MB 且只读够用，paths.mjs 内置资源优先直接指 resources/models；
+// · 片间让出（setTimeout 0）——96MB 拷贝同步跑会堵死主进程，进度事件发不出去；
+// · 失败可续——单文件失败记入 report.failed 不中断，末尾统一抛人话（再点一次接着拷）。
+export async function seedBundledData(onProgress = () => {}) {
+  if (!_packaged || !_resourcesDir || !_userData)
+    throw new UserError("只有安装版能初始化内置书库（开发态数据就在项目里，不用初始化）");
+  const report = { copied: [], skipped: [], failed: [], bytes: 0 };
+  // 预扫成拷贝计划（已存在的在预扫阶段就跳过，不计入总量）；目录建目录、文件拷文件
+  const plan = [];
+  for (const name of ["library", "skills", "books"]) {
+    const from = path.join(_resourcesDir, name);
+    if (!fs.existsSync(from)) { report.skipped.push(`${name}（安装包未内置）`); continue; }
+    scanTree(from, path.join(_userData, name), name, plan, report);
+  }
+  const totalBytes = plan.reduce((s, f) => s + (f.isDir ? 0 : f.size), 0);
+  let doneBytes = 0;
+  for (const f of plan) {
+    if (f.isDir) {
+      try { fs.mkdirSync(f.dst, { recursive: true }); }
+      catch (e) { report.failed.push(`${f.label}（建目录失败：${e.code || e.message}）`); }
+    } else {
+      try {
+        fs.copyFileSync(f.src, f.dst);
+        report.copied.push(f.label);
+        report.bytes += f.size;
+        doneBytes += f.size;
+      } catch (e) { report.failed.push(`${f.label}（${e.code || e.message}）`); }
+    }
+    onProgress({ file: f.label, doneBytes, totalBytes });
+    await new Promise((r) => setTimeout(r, 0)); // 让主进程呼吸：进度事件才到得了渲染进程
+  }
+  // 重新 init：search/skillStore 按新落盘的文件重注入（libDir 默认值本就指向 userData/library，
+  // 但进程内的书清单等缓存是懒加载的——稳妥重注入一次，幂等无副作用）
+  init({ packaged: _packaged, userData: _userData, resourcesDir: _resourcesDir });
+  if (report.failed.length > 0) {
+    throw new UserError(`初始化未完成：${report.failed.length} 个项目没拷过去（${report.failed[0]}）——再点一次「使用内置书库」会接着拷，已拷好的不会覆盖`);
+  }
+  return report;
+}
+
+// 预扫：填拷贝计划 + 累计 skipped。目录进计划（mkdir 用）；已存在的文件跳过（幂等铁律）；
+// 符号链接等非普通文件不碰（安装包里也不该有，真有就是打包事故，不猜）
+function scanTree(from, to, label, plan, report) {
+  let entries;
+  try { entries = fs.readdirSync(from, { withFileTypes: true }); }
+  catch (e) { report.failed.push(`${label}（读不了：${e.code || e.message}）`); return; }
+  plan.push({ src: from, dst: to, label, isDir: true, size: 0 });
+  for (const ent of entries) {
+    const src = path.join(from, ent.name);
+    const dst = path.join(to, ent.name);
+    const sub = `${label}/${ent.name}`;
+    if (ent.isDirectory()) { scanTree(src, dst, sub, plan, report); continue; }
+    if (!ent.isFile()) { report.skipped.push(`${sub}（非普通文件）`); continue; }
+    if (fs.existsSync(dst)) { report.skipped.push(sub); continue; }
+    let size = 0;
+    try { size = fs.statSync(src).size; } catch { /* 拷时再报，尺寸记 0 不致命 */ }
+    plan.push({ src, dst, label: sub, isDir: false, size });
+  }
+}
+
+// 安装包是否内置了可种子化的数据（首启向导「使用内置书库」按钮的显隐判据——
+// 没有内置资源的包（比如有人改了 extraResources 重打）不该给一个必失败的按钮）
+export function hasBundledData() {
+  if (!_packaged || !_resourcesDir) return false;
+  return ["library", "skills", "books"].some((n) => fs.existsSync(path.join(_resourcesDir, n)));
 }
 
 // ---------- 书架：全量书（含关掉的）+ 编目摘要 + 开关态 ----------

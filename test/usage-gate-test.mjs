@@ -42,6 +42,12 @@ ok(currentLibDir() === tmp, "夹具: configureSearch 指向 tmp 空库目录");
   ok(up.inScheduleWindow(p, sat(10, 0)) === false, "周六默认关（weekend=false）");
   const p2 = { ...p, schedule: { ...p.schedule, weekend: true } };
   ok(up.inScheduleWindow(p2, sat(10, 0)) === true, "weekend=true 时周六也开");
+  // 「24:00」日末哨兵：右开区间下真全天写 00:00-24:00（23:59 也在内）；24:30 非法整条不命中
+  const p3 = { ...p, schedule: { ...p.schedule, workdays: ["00:00-24:00"] } };
+  ok(up.inScheduleWindow(p3, wed(0, 0)) === true && up.inScheduleWindow(p3, wed(23, 59)) === true,
+    "00:00-24:00 真全天：0 点整与 23:59 都在窗口内（不漏最后一分钟）");
+  const p4 = { ...p, schedule: { ...p.schedule, workdays: ["00:00-24:30"] } };
+  ok(up.inScheduleWindow(p4, wed(10, 0)) === false, "24:30 非法区间：整条不命中（哨兵纪律）");
   const st = up.serviceStatus({ ...p, enabled: false }, wed(10, 0));
   ok(st.open === false && st.reason === "manual-off" && /手动关闭/.test(st.hint), "手动关：reason=manual-off 且 hint 说人话");
   const st2 = up.serviceStatus(p, sat(10, 0));

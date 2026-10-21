@@ -21,7 +21,10 @@ const shell = { openPath: async () => "" }; // 假系统打开：不真启 WPS�
 const engine = await registerIpc({ ipcMain, app, dialog, shell, getWin: () => null });
 engine.init({ packaged: false });
 
-const EXPECTED = ["config:get", "config:set", "config:pickLibDir", "books:list", "books:catalog", "books:delete",
+const EXPECTED = ["config:get", "config:set", "config:pickLibDir",
+  // 首启种子化（2026-10-21 收官打包）：内置 resources/{library,skills,books} → userData
+  "seed:start",
+  "books:list", "books:catalog", "books:delete",
   "books:purge",
   "ask:query", "reader:chapters", "reader:block", "reader:locate", "skills:list", "skills:read", "skills:toggle",
   "skills:delete", "skills:health",
@@ -40,6 +43,12 @@ const invoke = async (ch, ...args) => handlers.get(ch)({}, ...args);
 // ---------- 轻量通道 ----------
 const cfg = await invoke("config:get");
 ok(cfg.ok && cfg.data.dirs.libDir.endsWith("library") && cfg.data.firstRun === false, "config:get 返回目录与 firstRun");
+ok(cfg.ok && cfg.data.bundled === false, "config:get 带 bundled 判据（dev 态未打包 → false，向导不给内置书库按钮）");
+
+// ---------- 首启种子化（收官打包）：dev 态调 seed:start → 错误包装不抛 ----------
+// （真拷贝由 probe-seed/引擎单测场景覆盖；这里只锁 IPC 契约：安装版专用，dev 态拒收）
+const seedDev = await invoke("seed:start");
+ok(seedDev.ok === false && seedDev.error.code === "user", "seed:start dev 态拒收（只有安装版能种子化，{ok:false,user} 不抛）");
 
 const books = await invoke("books:list");
 // V3 第四波 #165：书架 = library 库（processed）∪ books/ 未加工原件（raw，数量随用户文件变，不断言）。

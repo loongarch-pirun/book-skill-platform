@@ -35,7 +35,9 @@ const getEl = (s) => { if (!elCache.has(s)) elCache.set(s, makeEl(s)); return el
 const mainEl = getEl("#main");
 global.document = {
   querySelector: (s) => getEl(s),
-  querySelectorAll: () => [],
+  // 向导按钮组：种子化期间要真禁用三个按钮（app.js 走 querySelectorAll(".wizard-btns button")）——
+  // 返回缓存元素贴近真 DOM；其余选择器维持空数组（navbtn 等本来就不该有处理器）
+  querySelectorAll: (s) => (s === ".wizard-btns button" ? [getEl("#wzSeed"), getEl("#wzPick"), getEl("#wzBlank")] : []),
   createElement: () => makeEl(),
   addEventListener: () => {}, // views.js 拖拽监听挂在 document 级（G-03 防浏览器导航），stub 放行
 };
@@ -52,9 +54,14 @@ const archiveCalls = [];
 let archiveCleared = false;
 const reply = (data) => Promise.resolve({ ok: true, data });
 const studyStub = {
-  configGet: () => { ipcCalls.push("configGet"); return reply({ dirs: {}, firstRun: false, packaged: false }); },
-  configSet: () => reply({}),
+  // firstRun:true + bundled:true：模拟「打包态首次启动、安装包内置了书库」——首启向导是
+  // 覆盖层（#wizard），不挡 boot 其余链路；dev 态真值恒 false/false，无向导无种子按钮
+  configGet: () => { ipcCalls.push("configGet"); return reply({ dirs: {}, firstRun: true, packaged: false, bundled: true }); },
+  configSet: () => { ipcCalls.push("configSet"); return reply({}); },
   pickLibDir: () => reply(null),
+  // 首启种子化（2026-10-21 收官打包）：向导「使用内置书库」→ 主进程拷贝 resources→userData
+  seedStart: () => { ipcCalls.push("seedStart"); return reply({ copied: ["library/a.db", "skills/x/SKILL.md"], skipped: [], failed: [], bytes: 4096 }); },
+  onSeedProgress: (cb) => { studyStub.__seedCb = cb; return () => { studyStub.__seedCb = null; }; },
   // V3 #167：书架空两本——一本已加工（processed）、一本仅入库未加工（raw，等「开始加工」）
   booksList: () => { ipcCalls.push("booksList"); return reply([
     { id: "t.docx", title: "测试书", chunks: 3, skillEnabled: true, status: "processed", catalog: { cataloged: true, themes: ["主题一"] }, enrich: { ready: false } },
@@ -170,6 +177,43 @@ assert(mainEl.innerHTML.includes("未加工书") && mainEl.innerHTML.includes("�
     "processed 卡片「移出书架」+「彻底删除」两档都在（#168）");
   app.state.books = realBooks;
   app.refresh();
+}
+
+// ---------- 2c) 首启向导（2026-10-21 收官打包）：三选项 + 种子化进度 + 成功/失败两条路 ----------
+// （configGet 桩返回 firstRun:true + bundled:true——wizard 是覆盖层，不挡 boot 其余链路，
+//  上面书架断言全绿即为证；dev 态 firstRun 恒 false 无向导，见 paths/ipc 单测）
+assert(getEl("#wizard").innerHTML.includes('id="wzSeed"') && getEl("#wizard").innerHTML.includes('id="wzPick"') && getEl("#wizard").innerHTML.includes('id="wzBlank"'),
+  "首启向导三选项：内置书库（推荐）/ 选现有 / 空白");
+assert(getEl("#wizard").innerHTML.includes("已随安装包内置，不用下载"),
+  "向导模型文案：内置不下载（对齐审查偏差 3——不再宣称首次 700MB 下载）");
+assert(getEl("#sideFoot").textContent.includes("已内置"),
+  "sideFoot 常驻文案改为「已内置」（偏差 3 第二处）");
+{
+  // 成功路：点 wzSeed → 按钮禁用 + 进度透传文案 → seedStart 拨通 → configSet({})（空 patch
+  // = 不挑目录，用 userData 默认层 = 种子化落点；configSet 拨在 seed 成功后，写坏了也还是
+  // firstRun，向导还在能重选）
+  const seedBtn = getEl("#wzSeed");
+  seedBtn.onclick();
+  await sleep(5);
+  assert(seedBtn.disabled === true, "种子化期间按钮禁用（防重复点）");
+  studyStub.__seedCb?.({ file: "library/a.db", doneBytes: 2048, totalBytes: 4096 });
+  await sleep(5);
+  assert(seedBtn.textContent.includes("50%"), `种子化进度透传按钮文案（实际：「${seedBtn.textContent}」）`);
+  await sleep(30);
+  assert(ipcCalls.includes("seedStart"), "点「使用内置书库」→ seedStart 拨通");
+  assert(ipcCalls.includes("configSet"), "种子化成功后写配置（configSet({}) 空 patch=用种子化落点）");
+}
+{
+  // 失败路：seedStart 拒 → 按钮恢复 + toast 指路（幂等续拷：再点一次接着拷，已拷不覆盖）
+  const realSeed = studyStub.seedStart;
+  studyStub.seedStart = () => Promise.resolve({ ok: false, error: { code: "user", message: "初始化未完成：1 个项目没拷过去（library/b.db）" } });
+  const seedBtn = getEl("#wzSeed");
+  seedBtn.onclick();
+  await sleep(30);
+  assert(seedBtn.disabled === false && seedBtn.textContent === "使用内置书库",
+    "种子化失败 → 按钮恢复可再点（幂等续拷，不锁死用户）");
+  assert(getEl("#toast").textContent.includes("初始化失败"), "失败 toast 指路（人话，不裸英文堆栈）");
+  studyStub.seedStart = realSeed;
 }
 
 // ---------- 3) 翻书视图：点卡片进翻书（open 委托）+ loadReader 接线 ----------

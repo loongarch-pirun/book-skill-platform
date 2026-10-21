@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld("study", {
   configGet: () => ipcRenderer.invoke("config:get"),
   configSet: (patch) => ipcRenderer.invoke("config:set", patch),
   pickLibDir: () => ipcRenderer.invoke("config:pickLibDir"),
+  // 首启种子化（打包态）：内置书库拷进 userData；进度经 onSeedProgress
+  seedStart: () => ipcRenderer.invoke("seed:start"),
   // 书架
   booksList: () => ipcRenderer.invoke("books:list"),
   bookCatalog: (bookId) => ipcRenderer.invoke("books:catalog", bookId),
@@ -72,4 +74,10 @@ contextBridge.exposeInMainWorld("study", {
   onEngineError: (cb) => ipcRenderer.on("engine:error", (_e, d) => cb(d)),
   onJobsProgress: (cb) => ipcRenderer.on("jobs:progress", (_e, d) => cb(d)),
   onEnrichProgress: (cb) => ipcRenderer.on("enrich:progress", (_e, d) => cb(d)),
+  // 种子化进度：返回退订函数（向导失败恢复态要摘监听，不裸留）
+  onSeedProgress: (cb) => {
+    const h = (_e, d) => cb(d);
+    ipcRenderer.on("seed:progress", h);
+    return () => ipcRenderer.off("seed:progress", h);
+  },
 });

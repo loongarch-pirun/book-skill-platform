@@ -365,7 +365,7 @@ button { font-family: inherit; }
 .wizard-card { background: var(--bg-card); border: 1px solid var(--line-hi); border-radius: 14px; padding: 28px 32px; width: 460px; }
 .wizard-card h2 { color: var(--ink); font-size: 18px; font-weight: 500; margin-bottom: 10px; }
 .wizard-card p { font-size: 13px; color: var(--ink-2); margin-bottom: 8px; }
-.wizard-btns { display: flex; gap: 10px; margin-top: 18px; }
+.wizard-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 
 /* toast */
 .toast {

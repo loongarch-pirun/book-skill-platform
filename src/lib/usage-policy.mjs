@@ -42,12 +42,16 @@ export function saveUsagePolicy(libDir, patch = {}) {
   return next;
 }
 
-// 「HH:MM」→ 分钟数；非法返回 null
+// 「HH:MM」→ 分钟数；非法返回 null。
+// 「24:00」是日末哨兵（=1440）：右开区间下，真全天必须写 00:00-24:00，
+// 写 00:00-23:59 会漏掉每天最后一分钟（23:59:00-23:59:59）
 function toMinutes(hhmm) {
   const m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || ""));
   if (!m) return null;
   const h = +m[1], min = +m[2];
-  if (h > 23 || min > 59) return null;
+  if (min > 59) return null;
+  if (h === 24 && min === 0) return 1440;
+  if (h > 23) return null;
   return h * 60 + min;
 }
 

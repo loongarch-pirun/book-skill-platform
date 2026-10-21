@@ -2,6 +2,9 @@
 //   1. 环境变量层：BSP_LIB_DIR / BSP_SKILLS_DIR / BSP_MODELS_DIR（CLI 与桌面共享，M2）
 //   2. 配置层：userData/config.json（仅打包态；首次启动向导写入，之后 config:set 可改）
 //   3. 默认层：未打包 = 项目根（npm test 逐字节不变）；打包 = userData
+// 附则（modelsDir 打包态）：内置资源优先——resources/models 存在时先于 userData 默认层
+//   （713MB 模型只读直接用，不拷贝；env/配置层仍压过它）。library/skillsDir 无此附则：
+//   那两样要可写，走首启向导「使用内置书库」拷进 userData。
 // 本模块被主进程（CJS 动态 import）调用；解析结果由 engine.mjs 注入三个 lib，
 // 并写回 process.env 让 spawn 的子进程（embed-book.js 等）继承同一份解析（M2）。
 import fs from "node:fs";
@@ -32,16 +35,24 @@ export function hasConfig(userData) {
   return !!userData && fs.existsSync(path.join(userData, "config.json"));
 }
 
-// 解析三个数据目录。packaged=false 时 userData 可省略（走项目根默认层，dev/test 用）
-export function resolveDirs({ packaged = false, userData = null } = {}) {
+// 解析三个数据目录。packaged=false 时 userData 可省略（走项目根默认层，dev/test 用）。
+// resourcesDir 仅打包态有意义：安装包内置资源目录（extraResources 落地处，main.js 传
+// app.getPath("resources")）。modelsDir 在打包态走「内置资源优先」——resources/models
+// 存在就直接用（713MB 不拷贝、只读；env/用户配置仍最高优先）；library/skillsDir 不优先，
+// 那两样要可写（SQLite/技能增删），由首启向导 seedBundledData 拷进 userData 后用默认层。
+export function resolveDirs({ packaged = false, userData = null, resourcesDir = null } = {}) {
   const base = packaged && userData ? userData : PROJECT_ROOT;
   const cfg = packaged ? loadConfig(userData) : {};
+  const bundledModels = packaged && resourcesDir ? path.join(resourcesDir, "models") : null;
+  const hasBundledModels = !!bundledModels && fs.existsSync(bundledModels);
   return {
     projectRoot: PROJECT_ROOT,
     packaged,
     userData: userData || null,
+    resourcesDir: resourcesDir || null,
     libDir: process.env.BSP_LIB_DIR || cfg.libraryDir || path.join(base, "library"),
     skillsDir: process.env.BSP_SKILLS_DIR || cfg.skillsDir || path.join(base, "skills"),
-    modelsDir: process.env.BSP_MODELS_DIR || cfg.modelsDir || path.join(base, ".models"),
+    modelsDir: process.env.BSP_MODELS_DIR || cfg.modelsDir
+      || (hasBundledModels ? bundledModels : path.join(base, ".models")),
   };
 }

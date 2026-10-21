@@ -29,8 +29,9 @@ function createWindow() {
 async function boot() {
   const { registerIpc } = await import(pathToFileURL(path.join(__dirname, "desktop", "ipc.mjs")).href);
   const engine = await registerIpc({ ipcMain, app, dialog, shell, getWin: () => win });
-  // 引擎初始化（三层目录解析 → 注入 lib）；模型下载进度 → 渲染进程
-  engine.init({ packaged: app.isPackaged, userData: app.getPath("userData") });
+  // 引擎初始化（三层目录解析 → 注入 lib）；模型下载进度 → 渲染进程。
+  // resourcesDir（打包态）：extraResources 落地处——modelsDir 内置资源优先与首启种子化都指着它
+  engine.init({ packaged: app.isPackaged, userData: app.getPath("userData"), resourcesDir: app.getPath("resources") });
   engine.onModelProgress((e) => {
     if (win && !win.isDestroyed()) win.webContents.send("model:progress", e);
   });

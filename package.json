@@ -58,6 +58,45 @@
       "!node_modules/@napi-rs/**",
       "!node_modules/@img/sharp-wasm32/**"
     ],
+    "extraResources": [
+      {
+        "from": "library",
+        "to": "library",
+        "filter": [
+          "**/*",
+          "!**/*.db-wal",
+          "!**/*.db-shm",
+          "!usage-log.jsonl",
+          "!chat-archive/**",
+          "!feedback/**"
+        ]
+      },
+      {
+        "from": "skills",
+        "to": "skills",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "books",
+        "to": "books",
+        "filter": [
+          "**/*",
+          "!_work/**"
+        ]
+      },
+      {
+        "from": ".models",
+        "to": "models",
+        "filter": [
+          "Xenova/multilingual-e5-small/**",
+          "Xenova/bge-small-zh-v1.5/**",
+          "onnx-community/bge-reranker-v2-m3-ONNX/**",
+          "!onnx-community/bge-reranker-v2-m3-ONNX/onnx/model_q4.onnx"
+        ]
+      }
+    ],
     "win": {
       "icon": "build/icon.ico",
       "target": [
