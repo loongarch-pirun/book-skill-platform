@@ -822,7 +822,7 @@ const copyDb = (src) => {
   ok(bbSrc.includes("_private"),
     "静态: build-book walkMd 拦 _private 路径段（作者简历类污染入口拦截）");
   const rtSrc = stripAll(readSrc("src", "lib", "register-tools.mjs"));
-  ok(rtSrc.includes('server.registerTool("get_outline"'),
+  ok(/(?:server\.registerTool|reg)\("get_outline"/.test(rtSrc),
     "静态: register-tools.mjs 注册 get_outline（MCP 契约在位）");
   const pkgSrc2 = JSON.parse(readSrc("package.json"));
   ok((pkgSrc2.scripts["test:fast"] || "").includes("outline-test"),
@@ -879,7 +879,7 @@ const copyDb = (src) => {
   const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
   const stripAll = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((l) => l.replace(/(^|\s)\/\/.*$/, "$1")).join("\n");
   const rtSrc = stripAll(readSrc("src", "lib", "register-tools.mjs"));
-  ok(rtSrc.includes('server.registerTool("cite_check"'),
+  ok(/(?:server\.registerTool|reg)\("cite_check"/.test(rtSrc),
     "静态: register-tools.mjs 注册 cite_check（MCP 契约在位）");
   const pkgSrc3 = JSON.parse(readSrc("package.json"));
   ok((pkgSrc3.scripts["test:fast"] || "").includes("cite-check-test"),
@@ -919,9 +919,10 @@ const copyDb = (src) => {
   const doc = fs.readFileSync(docPath, "utf8");
 
   // 工具名动态提取自 register-tools.mjs（与 stage3-mcp-test 的 17 工具硬断言同一套事实源）——
-  // 注册了新工具但文档没写 → 这里红，防文档漂移
+  // 注册了新工具但文档没写 → 这里红，防文档漂移。提取兼容两种注册写法：
+  // server.registerTool("x") 直写 与 reg("x") 闸机包装（W1 用量治理起统一走 reg）
   const rtSrc = fs.readFileSync(path.join(projRoot, "src", "lib", "register-tools.mjs"), "utf8");
-  const toolNames = [...rtSrc.matchAll(/server\.registerTool\("([a-z_]+)"/g)].map((m) => m[1]);
+  const toolNames = [...rtSrc.matchAll(/(?:server\.registerTool|reg)\("([a-z_]+)"/g)].map((m) => m[1]);
   ok(toolNames.length >= 17, `静态: register-tools 注册 ${toolNames.length} 个工具（≥17）`);
   const missing = toolNames.filter((n) => !doc.includes("`" + n + "`"));
   ok(missing.length === 0, `静态: 接入文档覆盖全部 ${toolNames.length} 个工具${missing.length ? "，缺: " + missing.join(",") : ""}`);
@@ -929,6 +930,64 @@ const copyDb = (src) => {
     "静态: 接入文档含启动入口与库目录环境变量（30 秒接入的两要素）");
   ok(doc.includes("cite_check") && doc.includes("没有就明说") && doc.includes("繁体照抄"),
     "静态: 接入文档含防幻觉铁律三件套（回验/明说/照抄）");
+}
+
+// ========== 22.8) W1 用量治理：三级暴露闸机接线在位（2026-10-21） ==========
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  // ① lib 层：usage-policy.mjs 存在且导出契约函数
+  const upSrc = stripComments(readSrc("src", "lib", "usage-policy.mjs"));
+  ok(upSrc.includes("export function loadUsagePolicy") && upSrc.includes("export function saveUsagePolicy")
+    && upSrc.includes("export function serviceStatus") && upSrc.includes("export function checkBudget")
+    && upSrc.includes("export function recordUsage"),
+    "静态: usage-policy.mjs 导出 load/save/serviceStatus/checkBudget/recordUsage（配置层契约）");
+  ok(/usage-policy\.json/.test(upSrc) && /usage-log\.jsonl/.test(upSrc),
+    "静态: 配置落 usage-policy.json + 审计落 usage-log.jsonl（与 skill-state 同目录同模式）");
+
+  // ② MCP 闸机：register-tools 带 TOOL_TIERS 分级 + gateCall 拒收返回 {error,hint}
+  const rtSrc = stripComments(readSrc("src", "lib", "register-tools.mjs"));
+  ok(rtSrc.includes("TOOL_TIERS") && rtSrc.includes("gateCall"),
+    "静态: register-tools 带 TOOL_TIERS 分级 + gateCall 闸机");
+  ok(/list_books: "metadata"/.test(rtSrc) && /query_library: "search"/.test(rtSrc)
+    && /read_full_book: "deepRead"/.test(rtSrc) && /cite_check: "metadata"/.test(rtSrc),
+    "静态: 三级映射正确（元数据常开/检索受控/深读预算；cite_check 恒开不被拦）");
+  ok(rtSrc.includes("recordUsage(") && rtSrc.includes("chargeUsage("),
+    "static: 闸机内嵌记账与审计（放行扣预算、拒收也落日志）");
+
+  // ③ 桌面接线：engine 函数 + IPC 通道 + preload 暴露
+  const engSrc = stripComments(readSrc("src", "desktop", "engine.mjs"));
+  ok(engSrc.includes("export function usagePolicyGet") && engSrc.includes("export function usagePolicySet"),
+    "静态: engine 暴露 usagePolicyGet/Set（桌面与 MCP 共享同一份配置）");
+  const ipcSrc = stripComments(readSrc("src", "desktop", "ipc.mjs"));
+  ok(ipcSrc.includes('"usage:get"') && ipcSrc.includes('"usage:set"'),
+    "静态: ipc.mjs 注册 usage:get/usage:set 通道");
+  const preSrc = stripComments(readSrc("src", "preload.js"));
+  ok(preSrc.includes("usageGet:") && preSrc.includes("usageSet:"),
+    "静态: preload 暴露 usageGet/usageSet 给渲染层");
+
+  // ④ 渲染层：书架页面板 + 开关动作
+  const vSrc = stripComments(readSrc("src", "renderer", "views.js"));
+  ok(vSrc.includes("usagePanelHTML()") && vSrc.includes('data-action="usagetoggle"'),
+    "静态: 书架页渲染用量面板 + usagetoggle 开关动作");
+  const aSrc = stripComments(readSrc("src", "renderer", "app.js"));
+  ok(aSrc.includes("usage: null") && aSrc.includes("window.study.usageGet()"),
+    "静态: 渲染态持 usage + boot 加载");
+  const cssSrc = readSrc("src", "renderer", "app.css");
+  ok(cssSrc.includes(".usagebox") && cssSrc.includes(".usagemeta"),
+    "静态: app.css 含用量面板样式");
+
+  // ⑤ 挂载对账：test:fast 含 usage-gate-test
+  const pkgSrc4 = JSON.parse(readSrc("package.json"));
+  ok((pkgSrc4.scripts["test:fast"] || "").includes("usage-gate-test"),
+    "静态: package.json test:fast 含 usage-gate-test（挂载对账）");
+
+  // ⑥ 接入文档同步：外部智能体要知道开关语义（拒收时收到 hint）
+  const doc = readSrc("docs", "外部智能体接入文档.md");
+  ok(doc.includes("usage-policy") && /知识库对外服务/.test(doc),
+    "静态: 接入文档说明用量治理（usage-policy/对外服务开关）");
 }
 
 // ========== 22.7) UI V4：按钮三级制 + 深蓝灰主题（2026-10-20） ==========

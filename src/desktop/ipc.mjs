@@ -107,6 +107,10 @@ export async function registerIpc({ ipcMain, app, dialog, shell, getWin }) {
   handle("skills:read", (eng, slug, chapter) => eng.skillRead(slug, chapter));
   handle("skills:toggle", (eng, bookId, enabled) => eng.skillToggle(bookId, enabled));
 
+  // 对外服务用量治理（W1）：读开关/定时/预算+当日用量；写开关与规则
+  handle("usage:get", (eng) => eng.usagePolicyGet());
+  handle("usage:set", (eng, patch) => eng.usagePolicySet(patch));
+
   // 引擎
   handle("engine:status", (eng) => eng.engineStatus());
   handle("engine:warmup", (eng) => eng.warmup());

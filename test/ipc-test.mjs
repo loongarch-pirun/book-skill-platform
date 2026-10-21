@@ -142,6 +142,16 @@ try {
 const back = await invoke("books:list");
 ok(back.data.filter(b => b.status === "processed").length === libDbCount, `状态复位后已加工书回来（${libDbCount} 本，finally 保护生效）`);
 
+// ---------- W1 用量治理：usage:get（只读断言） ----------
+// 写路径（usage:set → usage-policy.json）不在这里真写库目录：由 usage-gate-test
+// 在 tmp 目录上验（saveUsagePolicy 深合并 + MCP 闸机读同一份），这里只锁 IPC 契约
+{
+  const usage = await invoke("usage:get");
+  ok(usage.ok && usage.data.policy && typeof usage.data.policy.enabled === "boolean"
+    && usage.data.usage && typeof usage.data.usage.calls === "number" && usage.data.session,
+    "usage:get 返回策略 + 当日用量 + 会话记账（IPC 契约）");
+}
+
 // ---------- P5 派生六落点：真库只读定位（一格都不删） ----------
 // 真删行为由 archive-config-fuzz P1-E1/E3 在 tmp 自建库上验（走同一份真 IPC handler）。
 // 这里只锁两件事：① 定位不越界（每条都落在书库上级的四个派生目录内）；

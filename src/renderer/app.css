@@ -456,3 +456,9 @@ button { font-family: inherit; }
 .themeauto input { accent-color: var(--accent); }
 .themepanel .tip { font-size: 12px; color: var(--ink-3); margin-top: 8px; line-height: 1.6; }
 .themepanel .panelrow { display: flex; align-items: center; justify-content: space-between; }
+
+/* 对外服务用量治理面板（W1）：书架页「知识库对外服务」开关 + 当日用量 */
+.usagebox { background: var(--bg-card); border: 1px solid var(--line-hi); border-radius: var(--r-card); padding: 14px 16px; margin-top: 12px; }
+.usagerow { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+.usagemeta { font-size: 12px; color: var(--ink-3); line-height: 1.7; }
+.usagehint { font-size: 12px; color: var(--ink-3); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); }

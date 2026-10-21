@@ -14,6 +14,7 @@ export const state = {
   books: [],                  // booksList 全量（含关掉 skill 的）
   jobs: {},                   // 导入管线任务状态（bookId → {stage,label,detail,error}）
   prompt: null,               // 待编目一键提示词面板（书架）：{bookId, text, chars, path} | null
+  usage: null,                // 对外服务用量治理（W1）：{policy, usage, session, open}
   reader: { bookId: null, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false, original: null },
   ask: { mode: "book", bookId: null, question: "", loading: false, result: null, skillSlug: null },
   llm: { config: null, answer: null, error: null, loading: false, editing: false }, // 云端问答（V2 P2）：配置/回答/错误/状态
@@ -251,6 +252,7 @@ async function boot() {
     // 洗数据任务恢复（#140）：刷新页面/重启后，进行中与终态任务都从主进程 Map 捞回横幅
     state.jobs = { ...state.jobs, ...(await call(window.study.enrichStatus())) };
     state.skills.packages = await call(window.study.skillsList()); // 问一问的技能包选择器要用
+    state.usage = await call(window.study.usageGet()); // W1：对外服务开关/定时/预算 + 当日用量
     state.llm.config = await call(window.study.llmConfigGet()); // 云端问答（P2）：配置状态（不含明文 key）
     paintCloudChip(); // C4：顶栏云端 chip 就位（未配置态也要显示，点击可去配）
   } catch (e) { toast("启动失败：" + e.message); }

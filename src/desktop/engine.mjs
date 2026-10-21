@@ -15,6 +15,7 @@ import { getCatalogSummary } from "../lib/catalog.mjs";
 import { questionKeywords } from "../lib/keywords.mjs";
 import { listSkills, readSkill, configureSkillStore } from "../lib/skill-store.mjs";
 import { loadSkillState, setSkillEnabled } from "../lib/skill-state.mjs";
+import { loadUsagePolicy, saveUsagePolicy, serviceStatus, sessionUsage, todayUsage } from "../lib/usage-policy.mjs";
 import { configureModels, setModelProgress, getEmbedder } from "../lib/models.mjs";
 
 const require = createRequire(import.meta.url);
@@ -485,6 +486,18 @@ export function skillsList() { return listSkills(); }
 export function skillRead(slug, chapter) { return readSkill(slug, chapter); }
 export function skillToggle(bookId, enabled) {
   return setSkillEnabled(currentLibDir(), bookId, !!enabled);
+}
+
+// ---------- 对外服务用量治理（W1，2026-10-21） ----------
+// 与 skill-state 同款：桌面写 usage-policy.json，MCP 闸机读同一份
+export function usagePolicyGet() {
+  const libDir = currentLibDir();
+  const policy = loadUsagePolicy(libDir);
+  const usage = todayUsage(libDir);
+  return { policy, usage, session: sessionUsage(), open: serviceStatus(policy).open };
+}
+export function usagePolicySet(patch) {
+  return saveUsagePolicy(currentLibDir(), patch || {});
 }
 
 // ---------- 引擎状态 + 模型进度（M4） ----------

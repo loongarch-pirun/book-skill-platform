@@ -58,6 +58,9 @@ contextBridge.exposeInMainWorld("study", {
   skillsList: () => ipcRenderer.invoke("skills:list"),
   skillRead: (slug, chapter) => ipcRenderer.invoke("skills:read", slug, chapter),
   skillToggle: (bookId, enabled) => ipcRenderer.invoke("skills:toggle", bookId, enabled),
+  // 对外服务用量治理（W1）：开关/定时/预算 + 当日用量
+  usageGet: () => ipcRenderer.invoke("usage:get"),
+  usageSet: (patch) => ipcRenderer.invoke("usage:set", patch),
   // 引擎
   engineStatus: () => ipcRenderer.invoke("engine:status"),
   warmup: () => ipcRenderer.invoke("engine:warmup"),

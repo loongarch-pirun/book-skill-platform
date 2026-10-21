@@ -104,6 +104,9 @@ const studyStub = {
   skillsList: () => { ipcCalls.push("skillsList"); return reply([{ slug: "t", title: "测试技能", description: "d", coverage: "3/9", chapters: 2, sources: ["测试书"] }]); },
   skillRead: () => reply({ slug: "t", skill_md: "# t", index: [{ file: "chapters/ch01-a.md", title: "第一章", tokens_est: 100 }] }),
   skillToggle: () => reply({}),
+  // W1 用量治理：stub 覆盖 preload 全部 API（boot 会拨 usageGet，漏它 boot 链断）
+  usageGet: () => { ipcCalls.push("usageGet"); return reply({ policy: { enabled: true, schedule: { workdays: ["09:00-18:30"], weekend: false, timezone: "Asia/Shanghai" }, budget: { perSessionQueries: 30, perSessionChars: 200000, deepReadChars: 80000 } }, usage: { date: "2026-10-21", calls: 2, chars: 31000, rejected: 0, byTool: { query_book: 2 } }, session: { calls: 2, chars: 31000 }, open: true }); },
+  usageSet: () => { ipcCalls.push("usageSet"); return reply({ enabled: true, schedule: { workdays: ["09:00-18:30"], weekend: false, timezone: "Asia/Shanghai" }, budget: { perSessionQueries: 30, perSessionChars: 200000, deepReadChars: 80000 } }); },
   engineStatus: () => reply({}),
   warmup: () => reply({}),
   onModelProgress: () => {}, onEngineReady: () => {}, onEngineError: () => {}, onJobsProgress: (cb) => { studyStub.__jobsCb = cb; }, onEnrichProgress: () => {},
@@ -129,6 +132,10 @@ assert(ipcCalls.includes("booksList") && ipcCalls.includes("jobsScanPending") &&
   `boot 拨通 booksList/jobsScanPending/jobsStatus/skillsList/llmConfigGet（实际：${[...new Set(ipcCalls)].join(",")}）`);
 assert(mainEl.innerHTML.includes("测试书"), "书架显示书卡（booksList 数据落地）");
 assert(getEl("#cloudChip").textContent.includes("云端 AI 未配置"), "C4：boot 后顶栏云端 chip 显示未配置态（与 modelChip 并列）");
+
+// ---------- 2a) W1 用量治理：书架页渲染「知识库对外服务」面板（boot 拨 usageGet 才渲染得出） ----------
+assert(mainEl.innerHTML.includes("知识库对外服务") && mainEl.innerHTML.includes('data-action="usagetoggle"'),
+  "W1：书架页渲染对外服务面板 + 开关（boot 拨了 usageGet 才渲染得出来）");
 
 // ---------- 2b) V3 #167 两段式：raw 卡片带「开始加工」（无洗数据按钮）→ 点击拨通 jobsStart ----------
 assert(mainEl.innerHTML.includes("未加工书") && mainEl.innerHTML.includes("开始加工"),
@@ -167,6 +174,11 @@ assert(ipcCalls.includes("jobsStart"), "点「开始加工」→ jobsStart 拨�
 click("purge", { bid: "rawbook.docx" });
 await sleep(30);
 assert(ipcCalls.includes("purgeBook"), "点「彻底删除」→ purgeBook 拨通（#168 第二档入口）");
+
+// W1 用量治理：点开关 → usageSet 拨通（写 usage-policy.json，与 skill-toggle 同模式）
+click("usagetoggle");
+await sleep(30);
+assert(ipcCalls.includes("usageSet"), "点「关闭」→ usageSet 拨通（W1 开关写 usage-policy.json）");
 click("del", { bid: "t.docx" });
 await sleep(30);
 assert(ipcCalls.includes("deleteBook"), "点「移出书架」→ deleteBook 拨通（#168 第一档入口）");

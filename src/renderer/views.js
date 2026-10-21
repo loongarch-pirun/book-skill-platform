@@ -27,7 +27,33 @@ export function renderShelf() {
     <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据 · 「洗数据」给每块产前置/标签/摘要（走云端，检索永远在本机）</div>
     <div class="dropzone" id="dropzone"><b>把书拖到这里</b>（.epub / .docx / .pdf / .txt）<span class="soon">先放进书架看原件 → 点「开始加工」才切片/向量化/编目（编目结果可稍后导入）</span></div>
     ${promptBoxHTML()}
+    ${usagePanelHTML()}
     <div class="shelf">${books.map((b) => bookCard(b)).join("") || '<div class="empty">书架空空如也——去拖本书进来</div>'}
+    </div>`;
+}
+
+// 对外服务用量面板（W1 治理，2026-10-21）：开关/定时/预算写 usage-policy.json
+// （与 skill-state.json 同目录同模式），MCP 闸机读同一份——桌面写、外部智能体守
+function usagePanelHTML() {
+  const u = state.usage;
+  if (!u) return "";
+  const { policy, usage, session, open } = u;
+  const on = policy.enabled !== false;
+  const sch = policy.schedule || {};
+  const win = (sch.workdays || []).join(" / ") || "未设置";
+  const budget = policy.budget || {};
+  const fmtK = (n) => (n || 0) >= 10000 ? (n / 1000).toFixed(1) + "K" : String(n || 0);
+  return `
+    <div class="usagebox">
+      <div class="prompthead"><b>知识库对外服务</b>
+        <span class="promptmeta">管外部智能体（MCP）能调动多少——你自己用不受影响</span></div>
+      <div class="usagerow">
+        <span class="skill-dot ${on && open ? "" : "off"}">${on && open ? "开放中" : on ? "定时关闭中" : "已手动关闭"}</span>
+        <button class="ghost sm" data-action="usagetoggle">${on ? "关闭" : "打开"}</button>
+      </div>
+      <div class="usagemeta">定时：工作日 ${esc(win)}${sch.weekend ? " · 周末也开" : " · 周末关"} · 预算：每会话 ${esc(String(budget.perSessionQueries ?? 30))} 次 / ${fmtK(budget.perSessionChars ?? 200000)} 字符</div>
+      <div class="usagemeta">今日：调用 ${usage.calls} 次 · 返回 ${fmtK(usage.chars)} 字符 · 拒收 ${usage.rejected} 次 ｜ 本会话：${session.calls} 次 · ${fmtK(session.chars)} 字符</div>
+      <div class="usagehint">关闭后外部智能体的检索/翻书会被拒并收到提示；书架清单、编目浏览和引文回验永远可用（不吃预算）。</div>
     </div>`;
 }
 
@@ -254,5 +280,16 @@ export function bindShelfEvents() {
       toast(ok ? "已复制——粘给任意 AI 对话框即可（输出 JSON 存到 catalog-results/）" : "复制失败——请手动全选文本框里的内容");
     }
     else if (act === "promptclose") { state.prompt = null; refresh(); }
+    else if (act === "usagetoggle") {
+      // W1 用量治理：桌面写 usage-policy.json，MCP 闸机读同一份（与 skill-toggle 同模式）
+      e.stopPropagation();
+      const cur = state.usage?.policy?.enabled !== false;
+      try {
+        await call(window.study.usageSet({ enabled: !cur }));
+        state.usage = await call(window.study.usageGet());
+        refresh();
+        toast(!cur ? "已开放：外部智能体在允许的时间窗口内可检索/翻书" : "已关闭：外部智能体只能看书架清单、编目和验引文");
+      } catch (err) { toast("切换失败：" + err.message); }
+    }
   });
 }

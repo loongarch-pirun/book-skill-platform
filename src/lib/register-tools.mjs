@@ -1,6 +1,6 @@
 // MCP 工具注册（stdio server 与测试客户端共用同一份注册逻辑）
 import { z } from "zod";
-import { listBooks, hybridSearch, routeAndSearch } from "./search.mjs";
+import { listBooks, hybridSearch, routeAndSearch, currentLibDir } from "./search.mjs";
 import { getCatalogSummary, getPersonDetail, getThemeDetail, expandNeighborhood } from "./catalog.mjs";
 import { similarChunks } from "./similar.mjs";
 import { lookupEntry } from "./lookup.mjs";
@@ -8,6 +8,7 @@ import { readChapter, readRange, readFullBook } from "./browse.mjs";
 import { getOutline } from "./outline.mjs";
 import { checkCitation } from "./cite-check.mjs";
 import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
+import { loadUsagePolicy, serviceStatus, checkBudget, chargeUsage, recordUsage } from "./usage-policy.mjs";
 
 // 按 book 片段找书（与 query_book 同一套匹配；找不到返回 null 和可选书目）
 function matchBook(book) {
@@ -25,8 +26,59 @@ export const clampTopN = (n) => Math.min(Math.max(1, Math.floor(Number(n) || 4))
 export const MAXBOOKS_SCHEMA = z.number().int().min(1).max(8).optional().describe("全库检索最多挑几本书，默认 4，最多 8；资料库多时可调大");
 export const clampMaxBooks = (n) => Math.min(Math.max(1, Math.floor(Number(n) || 4)), 8);
 
+// ---------- 三级暴露闸机（W1 用量治理，2026-10-21） ----------
+// metadata 常开（导航/发现类，成本≈0）；search 受开关+定时门控并计次；
+// deepRead 门控+按返回字符扣预算。桌面端自己用不走这里（用户自己的会话自己看得见成本），
+// 闸机只治「外部智能体挂上来无节制调用」这一种漏水。
+// 铁律对齐 lib 层：拒绝返回 {error, hint}，不许 throw 穿层。
+const TOOL_TIERS = {
+  list_books: "metadata", list_catalog: "metadata", get_person: "metadata",
+  get_theme: "metadata", expand: "metadata", get_outline: "metadata",
+  list_skills: "metadata", read_skill: "metadata", cite_check: "metadata",
+  query_book: "search", query_library: "search", similar_chunks: "search", lookup: "search",
+  read_full_book: "deepRead", get_chapter: "deepRead", read_range: "deepRead",
+};
+
+function measureChars(result) {
+  try {
+    return (result?.content || []).reduce((n, c) => n + (typeof c?.text === "string" ? c.text.length : 0), 0);
+  } catch { return 0; }
+}
+
+function errResult(error, hint, reason) {
+  return { content: [{ type: "text", text: JSON.stringify({ error, hint, reason }) }] };
+}
+
+async function gateCall(tier, tool, handler, args) {
+  if (tier === "metadata") return handler(args);
+  const libDir = currentLibDir();
+  const policy = loadUsagePolicy(libDir);
+  const st = serviceStatus(policy);
+  if (!st.open) {
+    recordUsage(libDir, { tool, tier, chars: 0, ok: false, reason: st.reason });
+    return errResult("知识库对外服务未开放", st.hint, st.reason);
+  }
+  const gate = checkBudget(policy, tier);
+  if (!gate.ok) {
+    recordUsage(libDir, { tool, tier, chars: 0, ok: false, reason: gate.reason });
+    return errResult(gate.error, gate.hint, gate.reason);
+  }
+  const out = await handler(args);
+  const chars = measureChars(out);
+  chargeUsage(tier, chars);
+  recordUsage(libDir, { tool, tier, chars, ok: true });
+  return out;
+}
+
+// 导出为测试钩子（usage-gate-test 直接断言分级与拒收语义）
+export { TOOL_TIERS, gateCall };
+
 export function registerServerTools(server) {
-  server.registerTool("list_books", {
+  const reg = (name, def, handler) => {
+    const tier = TOOL_TIERS[name] || "metadata";
+    server.registerTool(name, def, async (args) => gateCall(tier, name, handler, args));
+  };
+  reg("list_books", {
     title: "书架清单",
     description: "列出知识库里所有的书（标题/格式/切片数/≈token 总量/章节质量）。回答前先调用它了解有哪些书可查，并按 total_tokens 决定读法：≤10K 用 read_full_book 全文直读，更大用 get_outline 看地图再翻章。",
     inputSchema: {},
@@ -35,7 +87,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(books, null, 2) }] };
   });
 
-  server.registerTool("list_catalog", {
+  reg("list_catalog", {
     title: "编目浏览",
     description: "浏览某本书的编目结构：主题分区（每区含说明/覆盖块数/章节分布）+ 人物表（身份/书中写法/出场块数）+ 人物关系网。回答人物关系类问题（谁拆散了谁、谁是谁的谁）前先浏览这里，再按图索骥去 query_book 查原文。",
     inputSchema: {
@@ -53,7 +105,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("get_person", {
+  reg("get_person", {
     title: "人物深查",
     description: "按人物名深查某本书的编目：身份说明、书中写法（match_names）、出场块数、关系边（和谁什么关系），以及提到他/她的代表原文块（带章节/页码 + 80 字预览）。推荐动线：list_catalog 看全图 → get_person 摸到原文块 → query_book 取完整原文。",
     inputSchema: {
@@ -69,7 +121,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("get_theme", {
+  reg("get_theme", {
     title: "主题深查",
     description: "按主题名深查某本书的编目：主题说明、覆盖块数、章节分布（这块主题集中在哪几章）、代表原文块（带章节/页码 + 80 字预览）。推荐动线：list_catalog 看全图 → get_theme 摸到原文块 → query_book 取完整原文。",
     inputSchema: {
@@ -85,7 +137,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("expand", {
+  reg("expand", {
     title: "人物关系网（图邻域）",
     description: "给一个人物名，沿人物关系边拉出邻居网：每个邻居带关系描述、出场块数、代表原文块（章节/页码 + 80 字预览）。回答「还有谁牵涉其中」「这件事还牵连哪些人」类问题时用它顺藤摸瓜，再对邻居继续 get_person 深查或 query_book 查原文。推荐动线：list_catalog 看全图 → get_person 摸全档案 → expand 拉邻居网 → 邻居继续深挖。",
     inputSchema: {
@@ -102,7 +154,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("lookup", {
+  reg("lookup", {
     title: "章节直达（工作资料寻址）",
     description: "按章节标题/编号精确直达某章节的全部原文块（精确→前缀→包含三级匹配，如查错误码 E1001、条款号 3.2、流程步骤标题）。分工：查错误码/条款号/流程步骤标题用它精确直达；查概念/情节/术语解释用 query_book。文档需按 # 标题 约定导入才有章节可查（PDF 无章节；EPUB 章节名可能是正文片段——get_outline 会标 messy，按名落空就用 read_range 按块号读）。",
     inputSchema: {
@@ -119,7 +171,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("cite_check", {
+  reg("cite_check", {
     title: "引文回验（防幻觉自检）",
     description: "检查一段引文是否真在某本书里逐字存在：命中返回所在块号/章节/页码（可跳原文），未命中明确告知不要采用。写完带引用的答案后用它自检——宁可报告「书中没有依据」，也不许编造引文。",
     inputSchema: {
@@ -135,7 +187,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("read_full_book", {
+  reg("read_full_book", {
     title: "全文直读（小书）",
     description: "≤10K token 的小书全文一口气端出（论语/道德经/attention 这个量级）——小书走检索是纯损耗还可能漏，全文进上下文零检索误差。超过 10K token 返回 too-big 并给体量与指路（get_outline 看地图 → get_chapter/read_range 翻章）。先用 list_books 看每本书的 total_tokens 再决定用不用它。",
     inputSchema: {
@@ -150,7 +202,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("get_outline", {
+  reg("get_outline", {
     title: "全书地图",
     description: "列出某本书的章节清单：每章章名 + 块数 + ≈token + 起始块号，附全书 token 总量与章节质量标记。这是翻书动线的第一跳：先看地图决定读哪章，再用 get_chapter/read_range 翻目标章。PDF 无章节时报 no-chapters（改用 read_range/query_book）；EPUB 章节名不可靠时标 messy（按名翻章可能落空，优先 read_range）。",
     inputSchema: {
@@ -166,7 +218,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("get_chapter", {
+  reg("get_chapter", {
     title: "整章通读",
     description: "按章节名取某本书一章的完整原文（比 lookup 上限更高，为「通读/摘录全文」设计；三级匹配精确→前缀→包含，命中多章取文档序第一个）。截断按 token 闸（8K）为主、块数上限 60 为辅，note 里带真实 token 账与续读块号。PDF 无章节时报 no-chapters——改用 query_book 或 read_range；EPUB 章节名可能是正文片段（get_outline 会标 messy）——按名落空时用 read_range。",
     inputSchema: {
@@ -183,7 +235,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("read_range", {
+  reg("read_range", {
     title: "原文区间读",
     description: "按块号区间连续读某本书的原文（from/to 都是 query_book/lookup/get_chapter/read_full_book 结果里的 id）。适合「把这一段完整读给我」「从第 X 块接着往下读」。截断按 token 闸（8K）为主、块数上限 80 为辅，区间过宽会截断并给续读游标（带 token 账）；区间为空会报本书块号范围。无章节的书（PDF/ messy EPUB）优先用它。",
     inputSchema: {
@@ -201,7 +253,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("query_book", {
+  reg("query_book", {
     title: "单书检索",
     description: "在指定的某一本书里检索。回答带页码（PDF）或章节（epub/docx）定位，原文一字不改。book 参数可用书名片段匹配。人物关系类问题建议先用 list_catalog 看人物表和关系网。",
     inputSchema: {
@@ -225,7 +277,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify({ book: b.title, question, note, results }, null, 2) }] };
   });
 
-  server.registerTool("query_library", {
+  reg("query_library", {
     title: "全库检索（自动挑书）",
     description: "不知道该查哪本书时用这个：系统自动判断问题牵涉哪些书（可多本），现场组装答案，每条结果都带书的归属和定位。maxBooks 控制最多挑几本（默认 4），资料库多时可调大。",
     inputSchema: {
@@ -238,7 +290,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("similar_chunks", {
+  reg("similar_chunks", {
     title: "相似块查询（以块找块）",
     description: "给一个块号或一句话，用向量找全书最相似的 N 块——回答「这段话还有哪里讲过类似的事」。chunk_id 入口纯库内余弦（零模型、最快）；text 入口需现场编码查询，引擎与书库不一致时直接报错而不是给垃圾分。结果带章节/页码，可直接引用。",
     inputSchema: {
@@ -256,7 +308,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("save_skill", {
+  reg("save_skill", {
     title: "技能落盘",
     description: "把蒸馏好的技能文件集写入 skills/ 目录（SKILL.md + chapters/ + 可选 glossary/patterns/cheatsheet）。整包提交（幂等覆盖）。落盘前做两道校验：结构校验（slug/路径白名单/frontmatter）+ 引用回源验证——blockquote 里的「〔书名·章节〕」引文会到 library 原文比对，造假整包拒收并指出造假位置。更新已有技能：先 read_skill 取全文，修改后整包重交。引用规则：原文照抄检索结果（繁体照抄），行尾加〔别名·章节〕，别名必须是 SKILL.md frontmatter sources 里声明的映射。",
     inputSchema: {
@@ -271,7 +323,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("read_skill", {
+  reg("read_skill", {
     title: "技能阅读（按需加载）",
     description: "读已落盘的技能。不带 chapter：返回 SKILL.md 全文 + 章节索引（含每章预估 token），先看索引再决定读哪章——章节文件按需加载，不读不占上下文。带 chapter：返回该章全文。",
     inputSchema: {
@@ -283,7 +335,7 @@ export function registerServerTools(server) {
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
-  server.registerTool("list_skills", {
+  reg("list_skills", {
     title: "技能清单",
     description: "列出 skills/ 目录里所有已落盘的技能（标题/描述/章节数/来源书）。回答任务前先看有没有现成技能可复用——有现成手册就不必重新检索全书。",
     inputSchema: {},
