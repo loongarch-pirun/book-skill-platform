@@ -376,6 +376,31 @@ export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) 
   };
 }
 
+// ---------- 删除 ----------
+// 技能包整目录删除（桌面「技能开关」页的删除按钮；MCP 不开放删除——外部智能体
+// 只能读，删不删是主人的决定）。对齐 saveSkill 铁律：失败 return {ok:false,error,hint}
+// 不 throw 穿层。顺手清 slug.tmp-* 僵尸：saveSkill 原子写进程被砍会留下临时目录，
+// 而 listSkills 不筛 SLUG_RE，僵尸会以「slug.tmp-1699…」卡片形式出现在 UI 里。
+export function deleteSkill(slug, { skillsDir = currentSkillsDir() } = {}) {
+  if (!SLUG_RE.test(slug))
+    return { ok: false, error: "bad-slug", hint: "slug 只能是小写字母/数字/连字符（1~64位）" };
+  const dir = path.join(skillsDir, slug);
+  if (!fs.existsSync(path.join(dir, "SKILL.md")))
+    return { ok: false, error: "skill-not-found", hint: `skills/ 下没有「${slug}」`, available: listSkills({ skillsDir }).map(s => s.slug) };
+  try {
+    fs.rmSync(dir, { recursive: true, force: true });
+    // 同 slug 的原子写残留（test-skill.tmp-1699…）：删包就连锅端，别留半截卡片
+    if (fs.existsSync(skillsDir)) {
+      for (const f of fs.readdirSync(skillsDir)) {
+        if (f.startsWith(slug + ".tmp-")) fs.rmSync(path.join(skillsDir, f), { recursive: true, force: true });
+      }
+    }
+  } catch (e) {
+    return { ok: false, error: "delete-failed", hint: `删除失败（${e.code || e.message}）——文件可能正被占用，请关掉占用程序后重试` };
+  }
+  return { ok: true, slug, deleted: "skills/" + slug };
+}
+
 // 章节索引：chapters/（catalog 骨架出厂格式，chNN- 文件名）与 references/（开放标准 L3，
 // 文件名同走 chNN- 或自由 kebab）两代并存，合并返回——kb-research 2026-10-21 起用 references/
 function chapterIndex(dir) {

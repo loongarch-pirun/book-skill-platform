@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { saveSkill, readSkill, listSkills, extractCitations, parseFrontmatter } from "../src/lib/skill-store.mjs";
+import { saveSkill, readSkill, listSkills, extractCitations, parseFrontmatter, deleteSkill } from "../src/lib/skill-store.mjs";
 
 let pass = 0, fail = 0;
 const ok = (cond, name, extra = "") => {
@@ -374,6 +374,49 @@ const ch08 = goodChapter("上善若水，水善利萬物而不爭。〔道德经
     [{ path: "SKILL.md", content: goodFm }, { path: "references/../evil.md", content: "x" }],
     base);
   ok(r.errors.some(e => e.reason === "bad-path"), "references: 路径穿越拒收");
+}
+
+// ========== 19) 删除（桌面「技能开关」页删除按钮：确认框直接删、不做回收站） ==========
+{
+  const delFm = `---
+name: del-me
+title: 待删除技能
+description: 删除链路单测
+sources:
+  道德经: daodejing-zh
+---
+# 待删除技能
+`;
+  const base = { slug: "del-me", skillsDir: tmp };
+  // a) 落一个带章节的包 → 删 → 整目录没了、列表不再有、回执带 skills/ 路径
+  saveSkill("del-me", [{ path: "SKILL.md", content: delFm }, { path: "chapters/ch01-a.md", content: ch08 }], base);
+  ok(fs.existsSync(path.join(tmp, "del-me", "SKILL.md")), "删除前：包在磁盘上（前置）");
+  let r = deleteSkill("del-me", { skillsDir: tmp });
+  ok(r.ok === true && r.deleted === "skills/del-me", "删除成功：回执 ok + deleted 路径", JSON.stringify(r));
+  ok(!fs.existsSync(path.join(tmp, "del-me")), "删除后：整目录（含章节）没了");
+  ok(!listSkills({ skillsDir: tmp }).some(s => s.slug === "del-me"), "删除后：列表不再有它");
+
+  // b) 不存在 → skill-not-found（不炸、带可用清单）；坏 slug → bad-slug（SLUG_RE 闸门）
+  r = deleteSkill("del-me", { skillsDir: tmp });
+  ok(r.ok === false && r.error === "skill-not-found" && r.available.length > 0,
+    "删除不存在的包 → skill-not-found + available 清单", JSON.stringify(r));
+  r = deleteSkill("../evil", { skillsDir: tmp });
+  ok(r.ok === false && r.error === "bad-slug", "删除穿越 slug → bad-slug 拒收");
+
+  // c) 原子写僵尸连锅端：saveSkill 进程被砍会留 slug.tmp-*，listSkills 不筛 SLUG_RE
+  // 会以僵尸卡片形式出现在 UI——删包时一并清掉
+  saveSkill("del-me", [{ path: "SKILL.md", content: delFm }], base);
+  fs.mkdirSync(path.join(tmp, "del-me.tmp-1699999999", "chapters"), { recursive: true });
+  fs.writeFileSync(path.join(tmp, "del-me.tmp-1699999999", "SKILL.md"), delFm, "utf8");
+  r = deleteSkill("del-me", { skillsDir: tmp });
+  ok(r.ok === true && !fs.existsSync(path.join(tmp, "del-me.tmp-1699999999")),
+    "删除连锅端：同 slug 的原子写僵尸 tmp 目录一并清掉");
+
+  // d) 删后可整包重建（幂等，不留痕迹）
+  r = saveSkill("del-me", [{ path: "SKILL.md", content: delFm }, { path: "chapters/ch01-a.md", content: ch08 }], base);
+  ok(r.ok === true && readSkill("del-me", undefined, { skillsDir: tmp }).index.length === 1,
+    "删除后可整包重建（readSkill 正常）");
+  deleteSkill("del-me", { skillsDir: tmp }); // 收尾还原
 }
 
 fs.rmSync(tmp, { recursive: true, force: true });

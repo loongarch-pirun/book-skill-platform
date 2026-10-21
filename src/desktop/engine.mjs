@@ -13,7 +13,7 @@ import { purgeDerived } from "../lib/derived.mjs";
 import { describeAsset } from "./book-view.mjs";
 import { getCatalogSummary } from "../lib/catalog.mjs";
 import { questionKeywords } from "../lib/keywords.mjs";
-import { listSkills, readSkill, configureSkillStore } from "../lib/skill-store.mjs";
+import { listSkills, readSkill, configureSkillStore, deleteSkill } from "../lib/skill-store.mjs";
 import { loadSkillState, setSkillEnabled } from "../lib/skill-state.mjs";
 import { loadUsagePolicy, saveUsagePolicy, serviceStatus, sessionUsage, todayUsage } from "../lib/usage-policy.mjs";
 import { configureModels, setModelProgress, getEmbedder } from "../lib/models.mjs";
@@ -490,6 +490,17 @@ export function skillsList() {
 export function skillRead(slug, chapter) { return readSkill(slug, chapter); }
 export function skillToggle(bookId, enabled) {
   return setSkillEnabled(currentLibDir(), bookId, !!enabled);
+}
+// 删除技能包（桌面「技能开关」页删除按钮；老板拍板确认框直接删、不做回收站——
+// git 历史是唯一后悔药）。开关记录清理是副作用：写失败（状态文件被占用/磁盘满）
+// 不该把「删除已成功」变成用户看到报错——技能目录已删是既成事实，残留键最多让
+// 一个不存在的 slug 停在"关"态，无害（同 deleteBook 143 行的处理）。
+export function skillDelete(slug) {
+  const r = deleteSkill(slug);
+  if (!r.ok) throw new UserError(r.hint || `删除技能包失败：${r.error}`);
+  try { setSkillEnabled(currentLibDir(), slug, true); }
+  catch (e) { console.warn(`  开关记录清理失败（${e?.code || e?.message}）——技能已删，残留记录无害`); }
+  return { deleted: slug, note: `技能「${slug}」已删除——不进回收站；git 历史里还有，要找回得从版本库 checkout` };
 }
 
 // ---------- 对外服务用量治理（W1，2026-10-21） ----------

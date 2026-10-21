@@ -174,7 +174,7 @@ export function renderSkills() {
           <h4>${esc(p.title)}</h4>
           <div class="pkdesc">${esc(p.description || "")}</div>
           <div class="pkmeta">${p.coverage ? `覆盖 <b>${esc(p.coverage)}</b> 章` : "覆盖未声明"} · ${p.chapters} 个章节文件 · 来源：${esc((p.sources || []).join("、") || "?")}</div>
-          <div class="pkfoot"><button class="ghost sm" data-action="viewskill" data-slug="${esc(p.slug)}">查看</button><button class="switch ${p.enabled ? "on" : ""}" data-action="togglemethod" data-slug="${esc(p.slug)}">${p.enabled ? "对外开" : "对外关"}</button></div>
+          <div class="pkfoot"><button class="ghost sm" data-action="viewskill" data-slug="${esc(p.slug)}">查看</button><button class="switch ${p.enabled ? "on" : ""}" data-action="togglemethod" data-slug="${esc(p.slug)}">${p.enabled ? "对外开" : "对外关"}</button><button class="ghost sm danger" data-action="delskill" data-slug="${esc(p.slug)}">删除</button></div>
         </div>`).join("") || '<div class="empty">还没有技能包——对话里让智能体用 save_skill 落一个</div>'}
       </div>
     </div>`;
@@ -339,6 +339,19 @@ export function bindAskEvents() {
         refresh();
         toast(p.enabled ? `技能「${p.slug}」已对外开放（MCP 可用）` : `技能「${p.slug}」已对外关闭（MCP 不可见不可读）`);
       } catch (err) { toast("开关失败：" + err.message); }
+    }
+    else if (act === "delskill") {
+      // 删除技能包（老板拍板：确认框直接删、不做回收站——git 历史是唯一后悔药）
+      const p = state.skills.packages.find((x) => x.slug === el.dataset.slug);
+      if (!p) return;
+      if (!confirm(`删除技能包「${p.title || p.slug}」？\n整个 skills/${p.slug}/ 目录（SKILL.md + 全部章节）立即删除、不进回收站。`)) return;
+      try {
+        await call(window.study.skillDelete(p.slug));
+        if (state.skills.viewing === p.slug) { state.skills.viewing = null; state.skills.detail = null; state.skills.chapter = null; state.skills.chapterContent = null; }
+        state.skills.packages = await call(window.study.skillsList());
+        refresh();
+        toast(`技能「${p.slug}」已删除——不进回收站，git 历史里还有`);
+      } catch (err) { toast("删除失败：" + err.message); }
     }
     else if (act === "viewskill") {
       state.skills.viewing = el.dataset.slug;

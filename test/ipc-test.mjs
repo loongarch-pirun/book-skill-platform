@@ -24,6 +24,7 @@ engine.init({ packaged: false });
 const EXPECTED = ["config:get", "config:set", "config:pickLibDir", "books:list", "books:catalog", "books:delete",
   "books:purge",
   "ask:query", "reader:chapters", "reader:block", "reader:locate", "skills:list", "skills:read", "skills:toggle",
+  "skills:delete",
   "engine:status", "engine:warmup", "llm:configGet", "llm:configSet", "llm:test", "chat:summary",
   "chat:archiveList", "chat:archiveClear",
   // 洗数据一键入口（V3 第二波 #140）
@@ -119,6 +120,13 @@ const badPurge = await invoke("books:purge", "不存在的书xyz");
 ok(badPurge.ok === false && badPurge.error.code === "user", "books:purge 坏书名 → {ok:false,user}（不抛）");
 const evilPurge = await invoke("books:purge", "../evil.docx");
 ok(evilPurge.ok === false && evilPurge.error.code === "user", "books:purge 穿越书名 → {ok:false,user}（resolveAsset safeBookId 闸门）");
+
+// ---------- 技能删除（桌面「技能开关」页删除按钮）：通道契约——坏 slug/不存在 → 错误包装不崩 ----------
+// （真删真包由 skill-store-test 在 tmp 上验；这里只锁 IPC 契约，绝不碰生产技能包）
+const delEvil = await invoke("skills:delete", "../evil");
+ok(delEvil.ok === false && delEvil.error.code === "user", "skills:delete 穿越 slug → {ok:false,user}（SLUG_RE 闸门）");
+const delMissing = await invoke("skills:delete", "no-such-skill-xyz");
+ok(delMissing.ok === false && delMissing.error.code === "user", "skills:delete 不存在的包 → {ok:false,user}（不真删）");
 
 // ---------- 错误包装：坏书名 → {ok:false,error} 不抛 ----------
 const bad = await invoke("books:catalog", "不存在的书xyz");

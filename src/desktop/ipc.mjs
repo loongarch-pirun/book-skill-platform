@@ -106,6 +106,8 @@ export async function registerIpc({ ipcMain, app, dialog, shell, getWin }) {
   handle("skills:list", (eng) => eng.skillsList());
   handle("skills:read", (eng, slug, chapter) => eng.skillRead(slug, chapter));
   handle("skills:toggle", (eng, bookId, enabled) => eng.skillToggle(bookId, enabled));
+  // 删除技能包（桌面按钮触发；MCP 不开放删除——外部智能体只读）
+  handle("skills:delete", (eng, slug) => eng.skillDelete(slug));
 
   // 对外服务用量治理（W1）：读开关/定时/预算+当日用量；写开关与规则
   handle("usage:get", (eng) => eng.usagePolicyGet());

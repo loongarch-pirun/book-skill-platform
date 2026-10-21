@@ -132,6 +132,9 @@ button { font-family: inherit; }
 }
 .ghost:hover { background: var(--bg-hover); color: var(--ink); border-color: var(--accent); }
 .ghost.sm { padding: 3px 10px; font-size: 12px; border-radius: var(--r-pill); }
+/* 三级：危险（红字细边，常驻卡片脚——删除类操作要显眼但不能误触，配确认框用） */
+.ghost.danger { color: var(--bad); border-color: var(--bad-line); }
+.ghost.danger:hover { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
 /* 三级：危险（红字，只出现在「⋯」菜单里，不常驻） */
 .delbtn {
   font-size: 13px; color: var(--bad); background: none; border: none; cursor: pointer;

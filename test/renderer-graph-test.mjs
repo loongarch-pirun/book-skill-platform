@@ -104,6 +104,8 @@ const studyStub = {
   skillsList: () => { ipcCalls.push("skillsList"); return reply([{ slug: "t", title: "测试技能", description: "d", coverage: "3/9", chapters: 2, sources: ["测试书"], enabled: true }]); },
   skillRead: () => reply({ slug: "t", skill_md: "# t", index: [{ file: "chapters/ch01-a.md", title: "第一章", tokens_est: 100 }] }),
   skillToggle: () => reply({}),
+  // 删除技能包（桌面按钮；confirm 桩放行——真删由 skill-store-test 在 tmp 上验）
+  skillDelete: () => { ipcCalls.push("skillDelete"); return reply({ deleted: "t", note: "已删除" }); },
   // W1 用量治理：stub 覆盖 preload 全部 API（boot 会拨 usageGet，漏它 boot 链断）
   usageGet: () => { ipcCalls.push("usageGet"); return reply({ policy: { enabled: true, schedule: { workdays: ["09:00-18:30"], weekend: false, timezone: "Asia/Shanghai" }, budget: { perSessionQueries: 30, perSessionChars: 200000, deepReadChars: 80000 } }, usage: { date: "2026-10-21", calls: 2, chars: 31000, rejected: 0, byTool: { query_book: 2 } }, session: { calls: 2, chars: 31000 }, open: true }); },
   usageSet: () => { ipcCalls.push("usageSet"); return reply({ enabled: true, schedule: { workdays: ["09:00-18:30"], weekend: false, timezone: "Asia/Shanghai" }, budget: { perSessionQueries: 30, perSessionChars: 200000, deepReadChars: 80000 } }); },
@@ -235,6 +237,13 @@ assert(mainEl.innerHTML.includes("对外关"), "点对外开关 → 状态翻转
 click("togglemethod", { slug: "t" });
 await sleep(30);
 assert(mainEl.innerHTML.includes("对外开"), "再点一次恢复开启");
+
+// 删除技能包：卡片脚带危险样式按钮 → 点 → skillDelete 拨通（确认框直接删，老板拍板不做回收站）
+assert(mainEl.innerHTML.includes('data-action="delskill"') && mainEl.innerHTML.includes("删除"),
+  "技能包卡片带删除按钮（ghost danger）");
+click("delskill", { slug: "t" });
+await sleep(30);
+assert(ipcCalls.includes("skillDelete"), "点删除 → skillDelete 拨通（确认框由 global.confirm 桩放行）");
 
 // ---------- 5) 问一问视图：技能包选择器 ----------
 app.show("ask");
