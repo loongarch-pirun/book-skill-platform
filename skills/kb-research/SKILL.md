@@ -12,6 +12,7 @@ sources:
   凤凰架构: fenix-architecture
   孟子: mengzi-zh
   attention: attention-is-all-you-need-en
+  Dynamo: dynamo-2007-en
 ---
 
 # 知识库论证动线

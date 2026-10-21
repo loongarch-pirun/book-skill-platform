@@ -30,7 +30,7 @@ for (const id of Object.keys(beforeState).filter((id) => beforeState[id] === fal
 // 1. 工具清单
 const tools = await client.listTools();
 const names = tools.tools.map(t => t.name).sort();
-assert(JSON.stringify(names) === JSON.stringify(["cite_check", "expand", "get_chapter", "get_outline", "get_person", "get_theme", "list_books", "list_catalog", "list_skills", "lookup", "query_book", "query_library", "read_full_book", "read_range", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 17 个工具: ${names.join(", ")}`);
+assert(JSON.stringify(names) === JSON.stringify(["check_skills", "cite_check", "expand", "get_chapter", "get_outline", "get_person", "get_theme", "list_books", "list_catalog", "list_skills", "lookup", "query_book", "query_library", "read_full_book", "read_range", "read_skill", "save_skill", "similar_chunks"]), `智能体能看到 18 个工具: ${names.join(", ")}`);
 
 // 2. list_books（V3 第五波：书架随用户增删动态——数量对账 library/*.db 实数，≥5 防空转）
 const lb = await client.callTool({ name: "list_books", arguments: {} });
@@ -167,6 +167,16 @@ setSkillEnabled(LIB_DIR, "e2e-check", true);
 const lsBack = JSON.parse((await client.callTool({ name: "list_skills", arguments: {} })).content[0].text);
 assert(lsBack.some(s => s.slug === "e2e-check"), "重新打开后 list_skills 恢复可见");
 
+// 7e. check_skills 技能体检（红黄绿）：e2e-check 刚落盘应为绿；契约形状不随内容漂移
+// （真包健康度不在此断言——书库变动后红黄绿由 CLI/桌面看，这里只验收协议与数据链路）
+const cs = await client.callTool({ name: "check_skills", arguments: {} });
+const csR = JSON.parse(cs.content[0].text);
+const csPkg = (csR.packages || []).find(p => p.slug === "e2e-check");
+assert(csR.total >= 7 && csR.green + csR.yellow + csR.red === csR.total, `check_skills 汇总计数自洽（共 ${csR.total} 包：绿${csR.green}/黄${csR.yellow}/红${csR.red}）`);
+assert(!!csPkg && csPkg.status === "green" && csPkg.citations.checked === 1 && csPkg.citations.failed === 0, "check_skills：刚落盘的 e2e-check 体检为绿（引文 1/1）");
+assert((csR.packages || []).every(p => ["green", "yellow", "red"].includes(p.status) && Array.isArray(p.findings) && Array.isArray(p.sources)),
+  "check_skills：每个包都带 status/findings/sources 三件套（契约形状）");
+
 // 8. get_person 人物深查（P-D）：关系网从"看得到"变"摸得到原文块"
 const gp = await client.callTool({ name: "get_person", arguments: { book: "pride", name: "Caroline Bingley" } });
 const gpR = JSON.parse(gp.content[0].text);
@@ -242,5 +252,5 @@ for (const [id, v] of Object.entries(beforeState)) setSkillEnabled(LIB_DIR, id, 
 
 console.log("\n===== 阶段3 验收结果 =====");
 if (failed > 0) { console.log(`${failed} 项 FAIL`); process.exit(1); }
-console.log("全部 PASS：标准 MCP 协议接入成功，十四工具可用（编目浏览/人物主题深查/图邻域展开/章节直达/整章通读/区间读/相似检索/技能落盘），自动挑书路由正确，引用可回源");
+console.log("全部 PASS：标准 MCP 协议接入成功，十八工具可用（编目浏览/人物主题深查/图邻域展开/章节直达/整章通读/区间读/相似检索/技能落盘/技能体检），自动挑书路由正确，引用可回源");
 process.exit(0);

@@ -8,6 +8,7 @@ import { readChapter, readRange, readFullBook } from "./browse.mjs";
 import { getOutline } from "./outline.mjs";
 import { checkCitation } from "./cite-check.mjs";
 import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
+import { checkSkills } from "./skill-health.mjs";
 import { loadSkillState } from "./skill-state.mjs";
 import { loadUsagePolicy, serviceStatus, checkBudget, chargeUsage, recordUsage } from "./usage-policy.mjs";
 
@@ -35,7 +36,7 @@ export const clampMaxBooks = (n) => Math.min(Math.max(1, Math.floor(Number(n) ||
 const TOOL_TIERS = {
   list_books: "metadata", list_catalog: "metadata", get_person: "metadata",
   get_theme: "metadata", expand: "metadata", get_outline: "metadata",
-  list_skills: "metadata", read_skill: "metadata", cite_check: "metadata",
+  list_skills: "metadata", read_skill: "metadata", cite_check: "metadata", check_skills: "metadata",
   query_book: "search", query_library: "search", similar_chunks: "search", lookup: "search",
   read_full_book: "deepRead", get_chapter: "deepRead", read_range: "deepRead",
 };
@@ -351,6 +352,15 @@ export function registerServerTools(server, { gate = true } = {}) {
   }, async () => {
     const st = loadSkillState(currentLibDir());
     const out = listSkills().filter(s => st[s.slug] !== false);
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  });
+
+  reg("check_skills", {
+    title: "技能体检（红黄绿）",
+    description: "对 skills/ 全部技能包做红黄绿体检：红=源书被删/引文回源失败/索引断链/覆盖声称对不上（不可信不可用），黄=源书被关/无章节文件/catalog.json 异常（能用但提醒），绿=全部通过。书库增删后、或准备复用旧技能前先跑它——书多了以后旧技能会悄悄失效，别拿过期手册答题。只读体检、不写不改：修技能是智能体自己的事（read_skill 取全文 → 修改 → save_skill 整包重交，三道质检）。",
+    inputSchema: {},
+  }, async () => {
+    const out = checkSkills();
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 }

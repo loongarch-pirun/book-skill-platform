@@ -110,10 +110,11 @@ ok(currentLibDir() === tmp, "夹具: configureSearch 指向 tmp 空库目录");
   const handlers = new Map();
   const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };
   registerServerTools(mockServer);
-  ok(handlers.size === 17, `17 工具全注册（闸机包装后数量不变，实际 ${handlers.size}）`);
+  ok(handlers.size === 18, `18 工具全注册（闸机包装后数量不变，实际 ${handlers.size}）`);
   ok(TOOL_TIERS.list_books === "metadata" && TOOL_TIERS.query_book === "search"
-    && TOOL_TIERS.read_full_book === "deepRead" && TOOL_TIERS.cite_check === "metadata",
-    "TOOL_TIERS 分级：元数据/检索/深读三档映射正确（cite_check 恒开=安全工具不被预算拦）");
+    && TOOL_TIERS.read_full_book === "deepRead" && TOOL_TIERS.cite_check === "metadata"
+    && TOOL_TIERS.check_skills === "metadata",
+    "TOOL_TIERS 分级：元数据/检索/深读三档映射正确（cite_check/check_skills 恒开=安全工具不被预算拦）");
 
   up.resetSessionUsage();
   up.saveUsagePolicy(tmp, { enabled: false });

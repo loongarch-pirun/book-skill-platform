@@ -144,7 +144,8 @@ function verifyOneText(srcText, quote) {
 // sources 别名 → 库定位：精确 title 优先，其次 id，再退 id 前缀（id 含格式后缀如 daodejing-zh.docx）
 // includeDisabled:true 豁免（H3）——关掉 skill 的书也要能验证已落盘技能包的引用，
 // 否则"关一本书"会把过去落盘的包全部打成 unknown-source
-function resolveBookExact(bookId) {
+// 导出：skill-health 体检复用同一套匹配（书在否/开关态判断不许有两份实现）
+export function resolveBookExact(bookId) {
   const books = listBooks(undefined, { includeDisabled: true });
   return books.find(b => b.title === bookId)
     || books.find(b => b.id === bookId)
@@ -219,7 +220,9 @@ const CLAIM_ABILITY_RE = /([0-9０-９一二三四五六七八九十百千两零
 const CLAIM_BOOK_TOTAL_RE = /全书\s*([0-9０-９一二三四五六七八九十百千两零〇]+)\s*章/g; // 书属性声称："全书81章"/「全书八十一章」
 const REF_PATH_RE = /(?:chapters\/|references\/)?(?:ch\d{2}-[a-z0-9-]+|glossary|patterns|cheatsheet)\.md/g; // SKILL.md 索引表指向的文件（chapters/ 与 references/ 两代前缀都认）
 
-function coverageCheck(fmData, skillMdContent, files, stats) {
+// 导出：skill-health 体检复用同一套声称核对（save 时过关的包，书库变了也可能变成说谎——
+// 例：源书重建后章节数变了，「全书81章」的声称就过期。两份实现必漂移，只留这一份）
+export function coverageCheck(fmData, skillMdContent, files, stats) {
   const errors = [];
   const warnings = [];
   const push = (reason, extra = {}) => errors.push({ reason, ...extra });
@@ -273,7 +276,8 @@ function coverageCheck(fmData, skillMdContent, files, stats) {
 // ---------- catalog.json 校验（P-A，先 warning 后收紧） ----------
 // catalog.json 是机器可读的导航地图：解析不了/书源对不上，智能体按图索骥会撞墙。
 // 首版只 warning 不拒收（观察期后升 error——融合规划第五节风险表约定）。
-function catalogCheck(files, fmData) {
+// 导出：skill-health 体检复用（catalog.json 是机器可读地图，坏了要让体检报出来）
+export function catalogCheck(files, fmData) {
   const warnings = [];
   const f = (files || []).find(x => x && x.path === "catalog.json");
   if (!f) return warnings;

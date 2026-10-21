@@ -6,7 +6,7 @@ metadata:
   version: 1.0.0
   category: ops
   updated: 2026-10-21
-allowed-tools: [list_books, query_book, query_library, cite_check, list_skills, read_skill]
+allowed-tools: [list_books, query_book, query_library, cite_check, list_skills, read_skill, check_skills]
 sources: {}
 ---
 
@@ -40,3 +40,4 @@ sources: {}
 - 本技能教的是**操作规程**，无书中引文——所有数据声称（块数/分数）以 `list_books` 与 eval 实时返回为准，文档中的数字是历史实录快照
 - 临时脚本一律归 `books/_work/`，不入正式目录
 - 桌面管线（jobs）与 CLI 双通道：桌面自动跑（jobs.mjs 管线模式），CLI 手动跑（`node src/<step>.mjs`）
+- **书库增删后必跑技能体检**：`node src/check-skills.mjs`（MCP 侧 `check_skills`）——旧技能包的引文/覆盖声称会随书库变动悄悄失效，红包装修（read_skill → 改 → save_skill 整包重交）后再用（ch02 有实录）
