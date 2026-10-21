@@ -14,6 +14,7 @@ import { describeAsset } from "./book-view.mjs";
 import { getCatalogSummary } from "../lib/catalog.mjs";
 import { questionKeywords } from "../lib/keywords.mjs";
 import { listSkills, readSkill, configureSkillStore, deleteSkill } from "../lib/skill-store.mjs";
+import { checkSkills } from "../lib/skill-health.mjs";
 import { loadSkillState, setSkillEnabled } from "../lib/skill-state.mjs";
 import { loadUsagePolicy, saveUsagePolicy, serviceStatus, sessionUsage, todayUsage } from "../lib/usage-policy.mjs";
 import { configureModels, setModelProgress, getEmbedder } from "../lib/models.mjs";
@@ -501,6 +502,17 @@ export function skillDelete(slug) {
   try { setSkillEnabled(currentLibDir(), slug, true); }
   catch (e) { console.warn(`  开关记录清理失败（${e?.code || e?.message}）——技能已删，残留记录无害`); }
   return { deleted: slug, note: `技能「${slug}」已删除——不进回收站；git 历史里还有，要找回得从版本库 checkout` };
+}
+
+// 技能体检（W5 第二波，桌面只读面板数据源）：调 lib checkSkills——与 MCP check_skills、
+// CLI check-skills.mjs 同一实现（防漂移铁律：三处一份判定）。lib 内部已逐包降级
+// （单包坏→红发现，不 throw），这里只兜「整场体检都跑不起来」的意外，包成
+// UserError 走统一错误通道；面板本身只读——修技能是智能体在对话里干的事（skill-authoring）。
+export function skillHealthCheck() {
+  try { return checkSkills(); }
+  catch (e) {
+    throw new UserError(`技能体检失败：${e?.message || e}——可手动跑 node src/check-skills.mjs 看详情`);
+  }
 }
 
 // ---------- 对外服务用量治理（W1，2026-10-21） ----------

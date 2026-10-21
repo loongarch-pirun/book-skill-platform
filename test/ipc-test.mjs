@@ -24,7 +24,7 @@ engine.init({ packaged: false });
 const EXPECTED = ["config:get", "config:set", "config:pickLibDir", "books:list", "books:catalog", "books:delete",
   "books:purge",
   "ask:query", "reader:chapters", "reader:block", "reader:locate", "skills:list", "skills:read", "skills:toggle",
-  "skills:delete",
+  "skills:delete", "skills:health",
   "engine:status", "engine:warmup", "llm:configGet", "llm:configSet", "llm:test", "chat:summary",
   "chat:archiveList", "chat:archiveClear",
   // 洗数据一键入口（V3 第二波 #140）
@@ -127,6 +127,23 @@ const delEvil = await invoke("skills:delete", "../evil");
 ok(delEvil.ok === false && delEvil.error.code === "user", "skills:delete 穿越 slug → {ok:false,user}（SLUG_RE 闸门）");
 const delMissing = await invoke("skills:delete", "no-such-skill-xyz");
 ok(delMissing.ok === false && delMissing.error.code === "user", "skills:delete 不存在的包 → {ok:false,user}（不真删）");
+
+// ---------- 技能体检（W5 第二波，桌面只读面板数据源）：真跑一遍 checkSkills ----------
+// 断言的形状与自洽（灯数相加=总数、每包字段齐），**不断言具体红黄绿数**——那随书库变动
+// （删一本书就能让引用它的包变红），实时结果以 CLI/面板现场返回为准。
+{
+  const health = await invoke("skills:health");
+  const h = health.data;
+  ok(health.ok && h && typeof h.total === "number" && h.total >= 1, `skills:health 返回汇总（total=${h?.total}）`);
+  ok(h.green + h.yellow + h.red === h.total && h.packages.length === h.total,
+    `skills:health 自洽：绿${h.green}+黄${h.yellow}+红${h.red}=共${h.total}（三个数对不上就是判定漏了包）`);
+  ok(h.packages.every(p => ["green", "yellow", "red"].includes(p.status) && Array.isArray(p.findings)
+    && p.findings.every(f => ["red", "yellow", "green"].includes(f.level) && !!f.reason && !!f.hint)
+    && typeof p.citations?.checked === "number" && Array.isArray(p.sources)),
+    "skills:health 每包字段齐（status/findings/citations/sources——渲染层红黄绿卡片的数据契约）");
+  const bad = h.packages.find(p => p.status !== "green");
+  ok(!bad || bad.findings.some(f => f.level !== "green"), "skills:health 非绿包必带 findings（绿灯不许带症状）");
+}
 
 // ---------- 错误包装：坏书名 → {ok:false,error} 不抛 ----------
 const bad = await invoke("books:catalog", "不存在的书xyz");

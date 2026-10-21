@@ -108,6 +108,9 @@ export async function registerIpc({ ipcMain, app, dialog, shell, getWin }) {
   handle("skills:toggle", (eng, bookId, enabled) => eng.skillToggle(bookId, enabled));
   // 删除技能包（桌面按钮触发；MCP 不开放删除——外部智能体只读）
   handle("skills:delete", (eng, slug) => eng.skillDelete(slug));
+  // 技能体检（W5 第二波，桌面只读面板：红黄绿汇总+每包 findings；MCP 不开放——
+  // 外部智能体用 check_skills 工具，同一实现）
+  handle("skills:health", (eng) => eng.skillHealthCheck());
 
   // 对外服务用量治理（W1）：读开关/定时/预算+当日用量；写开关与规则
   handle("usage:get", (eng) => eng.usagePolicyGet());

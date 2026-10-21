@@ -169,6 +169,8 @@ export function renderSkills() {
     <div class="panel">
       <div class="panel-head">蒸馏技能包（skills/ 目录）</div>
       <div class="panel-note" style="margin-bottom:10px">每个包的开关管「外部智能体（MCP）能不能用它」——关掉后 list_skills 看不到、read_skill 拒收；桌面问一问不受此开关影响（在下方对话里显式挂包）。</div>
+      <div class="hlbar"><button class="ghost sm" data-action="skillhealth" ${s.healthBusy ? "disabled" : ""}>${s.healthBusy ? "体检中…" : "体检（红黄绿）"}</button>${s.health ? `<span class="hlnote">上次结果：绿 ${s.health.green} · 黄 ${s.health.yellow} · 红 ${s.health.red}（共 ${s.health.total} 包）</span>` : '<span class="hlnote">点「体检」逐包重跑引文回源 + 声称核对——书库增删后旧包会悄悄失效，红了就别再用</span>'}</div>
+      ${skillHealthHtml(s)}
       <div class="pkgrid">${s.packages.map((p) => `
         <div class="pkgcard">
           <h4>${esc(p.title)}</h4>
@@ -177,6 +179,32 @@ export function renderSkills() {
           <div class="pkfoot"><button class="ghost sm" data-action="viewskill" data-slug="${esc(p.slug)}">查看</button><button class="switch ${p.enabled ? "on" : ""}" data-action="togglemethod" data-slug="${esc(p.slug)}">${p.enabled ? "对外开" : "对外关"}</button><button class="ghost sm danger" data-action="delskill" data-slug="${esc(p.slug)}">删除</button></div>
         </div>`).join("") || '<div class="empty">还没有技能包——对话里让智能体用 save_skill 落一个</div>'}
       </div>
+    </div>`;
+}
+
+// 技能体检面板（W5 第二波，只读）：红黄绿汇总 + 非绿包 findings 逐条列出。
+// 只读、不给修的动作——修包是智能体在对话里的活（read_skill → 改 → save_skill 整包重交，
+// 规矩见 skill-authoring 元技能）。数据与 MCP check_skills / CLI check-skills.mjs 同一实现。
+function skillHealthHtml(s) {
+  const h = s.health;
+  if (!h) return "";
+  const mark = { green: "✓", yellow: "!", red: "✗" };
+  const cls = { green: "good", yellow: "warn", red: "bad" };
+  const bad = h.packages.filter((p) => p.status !== "green");
+  return `
+    <div class="healthbox">
+      <div class="hlsum">
+        <span class="hlchip ${cls.green}">${mark.green} 绿 ${h.green}</span>
+        <span class="hlchip ${cls.yellow}">${mark.yellow} 黄 ${h.yellow}</span>
+        <span class="hlchip ${cls.red}">${mark.red} 红 ${h.red}</span>
+        ${h.warnings.length ? `<span class="hlnote">${esc(h.warnings.join("；"))}</span>` : ""}
+      </div>
+      ${bad.length ? bad.map((p) => `
+        <div class="hlpkg">
+          <div class="hlhead ${cls[p.status]}">${mark[p.status]} ${esc(p.title)}（${esc(p.slug)}）</div>
+          ${p.findings.map((f) => `<div class="hlfind ${cls[f.level] || ""}"><b>${esc(f.reason)}</b>${f.file ? ` @${esc(f.file)}${f.line ? ":" + f.line : ""}` : ""} — ${esc(f.hint)}</div>`).join("")}
+        </div>`).join("") : '<div class="hlnote">全部通过——每个包的引文都能回源、声称都对得上。</div>'}
+      <div class="hlnote">只读体检、不带修改动作：修包走对话里的智能体（read_skill 取全文 → 改 → save_skill 整包重交）。</div>
     </div>`;
 }
 
@@ -352,6 +380,23 @@ export function bindAskEvents() {
         refresh();
         toast(`技能「${p.slug}」已删除——不进回收站，git 历史里还有`);
       } catch (err) { toast("删除失败：" + err.message); }
+    }
+    else if (act === "skillhealth") {
+      // W5 第二波：桌面只读体检（红黄绿）。busy 期间按钮禁用防重点；结果进 state.skills.health，
+      // 渲染层只列 findings 不给修的动作——修包是对话里智能体的活（skill-authoring 元技能）。
+      const s = state.skills;
+      if (s.healthBusy) return;
+      s.healthBusy = true;
+      refresh();
+      try {
+        s.health = await call(window.study.skillHealthCheck());
+        const h = s.health;
+        toast(h.red > 0 ? `体检完成：${h.red} 个包红（不可信不可用）——详情在面板里，别再用红包`
+          : h.yellow > 0 ? `体检完成：${h.yellow} 个包黄（能用但提醒）——详情在面板里`
+            : `体检完成：${h.green} 个包全绿`);
+      } catch (err) { toast("体检失败：" + err.message); }
+      s.healthBusy = false;
+      refresh();
     }
     else if (act === "viewskill") {
       state.skills.viewing = el.dataset.slug;

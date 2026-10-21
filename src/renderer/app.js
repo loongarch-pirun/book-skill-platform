@@ -19,7 +19,7 @@ export const state = {
   ask: { mode: "book", bookId: null, question: "", loading: false, result: null, skillSlug: null },
   llm: { config: null, answer: null, error: null, loading: false, editing: false }, // 云端问答（V2 P2）：配置/回答/错误/状态
   chat: { mode: "book", bookId: null, skillSlug: null, draft: "", messages: [], loading: false, memory: "", memoryBusy: false, archive: { open: false, items: [], loaded: false, busy: false } }, // 对话窗口（V2 P3）+ 输入草稿（C2）+ 存档面板（P4）+ 滚动对话记忆（V3-R6：memory=旧轮次要点，memoryBusy=压缩防重入）
-  skills: { packages: [], loaded: false, viewing: null, detail: null, chapter: null, chapterContent: null, busy: false },
+  skills: { packages: [], loaded: false, viewing: null, detail: null, chapter: null, chapterContent: null, busy: false, health: null, healthBusy: false },
   model: { ready: false, text: "模型加载中…" },
   config: null,
 };

@@ -332,6 +332,25 @@ button { font-family: inherit; }
 .pkdesc { font-size: 12px; color: var(--ink-2); margin-bottom: 8px; }
 .pkmeta { font-size: 12px; margin-bottom: 8px; color: var(--ink-2); }
 .pkmeta b { color: var(--ok); font-weight: 500; }
+/* 技能体检面板（W5 第二波，只读红黄绿）——配色走既有 ok/warn/bad 令牌 */
+.hlbar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.hlnote { font-size: 12px; color: var(--ink-3); }
+.healthbox { border: 1px solid var(--line); border-radius: var(--r-card); padding: 12px 14px; margin-bottom: 14px; background: var(--bg-card); }
+.hlsum { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.hlchip { font-size: 12px; font-weight: 500; padding: 2px 10px; border-radius: var(--r-pill); border: 1px solid var(--line); }
+.hlchip.good { color: var(--ok); border-color: rgba(63, 185, 80, .4); background: rgba(63, 185, 80, .1); }
+.hlchip.warn { color: var(--warn); border-color: rgba(210, 153, 34, .4); background: rgba(210, 153, 34, .1); }
+.hlchip.bad { color: var(--bad); border-color: var(--bad-line); background: var(--bad-bg); }
+.hlpkg { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; }
+.hlhead { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.hlhead.good { color: var(--ok); }
+.hlhead.warn { color: var(--warn); }
+.hlhead.bad { color: var(--bad); }
+.hlfind { font-size: 12px; line-height: 1.7; color: var(--ink-2); padding-left: 12px; border-left: 2px solid var(--line); margin-bottom: 4px; }
+.hlfind b { font-weight: 500; }
+.hlfind.good { border-left-color: rgba(63, 185, 80, .5); }
+.hlfind.warn { border-left-color: rgba(210, 153, 34, .5); }
+.hlfind.bad { border-left-color: var(--bad-line); }
 .skillmd { font-family: Georgia, "Songti SC", "SimSun", serif; font-size: 13px; line-height: 1.8; white-space: pre-wrap; word-break: break-word; background: var(--bg-input); border-radius: var(--r-btn); padding: 12px 14px; }
 .chapidx { padding: 8px 10px; border-radius: var(--r-btn); cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; gap: 8px; color: var(--ink-2); }
 .chapidx:hover { background: var(--bg-hover); color: var(--ink); }

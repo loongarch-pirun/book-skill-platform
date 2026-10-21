@@ -106,6 +106,16 @@ const studyStub = {
   skillToggle: () => reply({}),
   // 删除技能包（桌面按钮；confirm 桩放行——真删由 skill-store-test 在 tmp 上验）
   skillDelete: () => { ipcCalls.push("skillDelete"); return reply({ deleted: "t", note: "已删除" }); },
+  // W5 第二波技能体检（桌面只读面板：红黄绿汇总 + findings；与 MCP check_skills 同一实现，
+  // 真判定由 skill-health-test 在 tmp 夹具上验——这里只锁渲染层契约）
+  skillHealthCheck: () => { ipcCalls.push("skillHealthCheck"); return reply({
+    total: 2, green: 1, yellow: 1, red: 0,
+    packages: [
+      { slug: "t", title: "测试技能", status: "green", findings: [], citations: { checked: 2, failed: 0 }, sources: [], coverage: null, chapters: 2, updated_at: null },
+      { slug: "old", title: "过期技能", status: "yellow", findings: [{ level: "yellow", reason: "source-disabled", hint: "来源书被关掉——书还在、引文仍可回源，但对外检索不到" }], citations: { checked: 1, failed: 0 }, sources: [{ alias: "测试书", book: "t.docx", state: "disabled" }], coverage: null, chapters: 1, updated_at: null },
+    ],
+    warnings: [],
+  }); },
   // W1 用量治理：stub 覆盖 preload 全部 API（boot 会拨 usageGet，漏它 boot 链断）
   usageGet: () => { ipcCalls.push("usageGet"); return reply({ policy: { enabled: true, schedule: { workdays: ["09:00-18:30"], weekend: false, timezone: "Asia/Shanghai" }, budget: { perSessionQueries: 30, perSessionChars: 200000, deepReadChars: 80000 } }, usage: { date: "2026-10-21", calls: 2, chars: 31000, rejected: 0, byTool: { query_book: 2 } }, session: { calls: 2, chars: 31000 }, open: true }); },
   usageSet: () => { ipcCalls.push("usageSet"); return reply({ enabled: true, schedule: { workdays: ["09:00-18:30"], weekend: false, timezone: "Asia/Shanghai" }, budget: { perSessionQueries: 30, perSessionChars: 200000, deepReadChars: 80000 } }); },
@@ -244,6 +254,22 @@ assert(mainEl.innerHTML.includes('data-action="delskill"') && mainEl.innerHTML.i
 click("delskill", { slug: "t" });
 await sleep(30);
 assert(ipcCalls.includes("skillDelete"), "点删除 → skillDelete 拨通（确认框由 global.confirm 桩放行）");
+
+// W5 第二波：桌面只读体检面板——按钮渲染 → 点 → 拨通 → 红黄绿汇总 + findings 渲染（只读无修改动作）
+assert(mainEl.innerHTML.includes('data-action="skillhealth"') && mainEl.innerHTML.includes("体检"),
+  "技能面板带体检按钮（W5 第二波只读面板入口）");
+assert(!mainEl.innerHTML.includes("healthbox"), "未点体检前不渲染体检结果区（懒加载，不抢眼）");
+click("skillhealth", {});
+await sleep(30);
+assert(ipcCalls.includes("skillHealthCheck"), "点体检 → skillHealthCheck 拨通（engine→lib checkSkills，与 MCP check_skills / CLI 同一实现）");
+assert(mainEl.innerHTML.includes("healthbox") && mainEl.innerHTML.includes("绿 1") && mainEl.innerHTML.includes("黄 1"),
+  "体检汇总条渲染红黄绿计数（hlchip 三盏灯）");
+assert(mainEl.innerHTML.includes("过期技能") && mainEl.innerHTML.includes("source-disabled"),
+  "非绿包 findings 逐条渲染（reason + hint，红黄绿左边线）");
+assert(mainEl.innerHTML.includes("read_skill") && !mainEl.innerHTML.includes('data-action="fixskill"'),
+  "体检面板只读：引导走对话修包（read_skill→改→save_skill），不内嵌修改动作");
+assert(mainEl.innerHTML.includes("上次结果：绿 1 · 黄 1 · 红 0"),
+  "体检后按钮行显示上次结果摘要（再点可重跑——书库变动后重验）");
 
 // ---------- 5) 问一问视图：技能包选择器 ----------
 app.show("ask");
