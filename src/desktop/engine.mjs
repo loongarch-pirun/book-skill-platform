@@ -482,7 +482,11 @@ export function readerPersonBlocks(bookId, person) {
 }
 
 // ---------- 技能：list/read/toggle ----------
-export function skillsList() { return listSkills(); }
+export function skillsList() {
+  const st = loadSkillState(currentLibDir());
+  // W3.5：蒸馏技能包带 enabled（与书级开关同吃 skill-state.json，slug 键）——技能开关页的开关要显示状态
+  return listSkills().map(p => ({ ...p, enabled: st[p.slug] !== false }));
+}
 export function skillRead(slug, chapter) { return readSkill(slug, chapter); }
 export function skillToggle(bookId, enabled) {
   return setSkillEnabled(currentLibDir(), bookId, !!enabled);

@@ -11,6 +11,10 @@ import { hybridSearch, routeAndSearch, listBooks } from "../src/lib/search.mjs";
 import { assertEngine, DEFAULT_EMBED } from "../src/lib/models.mjs";
 import { importCatalog } from "../src/lib/catalog.mjs";
 import { registerServerTools, TOPN_SCHEMA, clampTopN } from "../src/lib/register-tools.mjs";
+// 自家验收豁免对外闸机（W3.5）：本文件起 mock server 只为测工具行为，定时窗/预算/开关
+// 不该左右断言（2026-10-21 18:51 主人在桌面端关闸后 CI 时段外会全红的教训；
+// 对外拒收语义由 usage-gate-test 带闸直测）
+const regTools = (s) => registerServerTools(s, { gate: false });
 
 const LIB = path.join(import.meta.dirname, "..", "library");
 const GOOD = path.join(LIB, "lunyu-xueer-zh.docx.db");      // 16 块，小而全（有向量/FTS/编目）
@@ -109,7 +113,7 @@ const copyDb = (src) => {
   try {
     const handlers = new Map();
     const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };
-    registerServerTools(mockServer);
+    regTools(mockServer);
     const resp = await handlers.get("query_book")({ book: "attention", question: "what BLEU score did the big model get on english to german", topN: 999 });
     const out = JSON.parse(resp.content[0].text);
     ok(out.results.length <= 20 && out.results.length > 0, `topN: 处理器端到端 999 被夹取（实际返回 ${out.results.length} 条）`);
@@ -831,7 +835,7 @@ const copyDb = (src) => {
 {
   const handlers = new Map();
   const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };
-  registerServerTools(mockServer);
+  regTools(mockServer);
   ok(handlers.has("get_outline"), "get_outline 工具已注册（处理器在位）");
   const resp = await handlers.get("get_outline")({ book: "lunyu" });
   const out = JSON.parse(resp.content[0].text);
@@ -863,7 +867,7 @@ const copyDb = (src) => {
 {
   const handlers = new Map();
   const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };
-  registerServerTools(mockServer);
+  regTools(mockServer);
   ok(handlers.has("read_full_book"), "read_full_book 工具已注册");
   const small = JSON.parse((await handlers.get("read_full_book")({ book: "lunyu" })).content[0].text);
   ok(!small.error && small.blocks.length === 16 && small.total_blocks === 16 && small.tokens > 0,
@@ -1095,7 +1099,7 @@ const copyDb = (src) => {
 {
   const handlers = new Map();
   const mockServer = { registerTool: (name, spec, fn) => handlers.set(name, fn) };
-  registerServerTools(mockServer);
+  regTools(mockServer);
   const db = new Database(GOOD, { readonly: true });
   const firstText = db.prepare("SELECT text FROM chunks ORDER BY id LIMIT 1").get().text;
   db.close();

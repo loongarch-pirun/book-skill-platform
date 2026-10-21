@@ -8,6 +8,7 @@ import { readChapter, readRange, readFullBook } from "./browse.mjs";
 import { getOutline } from "./outline.mjs";
 import { checkCitation } from "./cite-check.mjs";
 import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
+import { loadSkillState } from "./skill-state.mjs";
 import { loadUsagePolicy, serviceStatus, checkBudget, chargeUsage, recordUsage } from "./usage-policy.mjs";
 
 // 按 book 片段找书（与 query_book 同一套匹配；找不到返回 null 和可选书目）
@@ -73,10 +74,14 @@ async function gateCall(tier, tool, handler, args) {
 // 导出为测试钩子（usage-gate-test 直接断言分级与拒收语义）
 export { TOOL_TIERS, gateCall };
 
-export function registerServerTools(server) {
+// gate=false：自家验收测试豁免对外闸机——stage3/guard/similar-fuzz 起进程测的是工具协议
+// 与数据链路，不该被定时窗/预算/开关左右断言（2026-10-21 18:51 主人关闸后 stage3 全红的
+// 教训；闸机治外部智能体，不治自家测试。对外拒收语义由 usage-gate-test 带闸直测）
+export function registerServerTools(server, { gate = true } = {}) {
   const reg = (name, def, handler) => {
     const tier = TOOL_TIERS[name] || "metadata";
-    server.registerTool(name, def, async (args) => gateCall(tier, name, handler, args));
+    const wrapped = gate ? async (args) => gateCall(tier, name, handler, args) : handler;
+    server.registerTool(name, def, wrapped);
   };
   reg("list_books", {
     title: "书架清单",
@@ -331,16 +336,21 @@ export function registerServerTools(server) {
       chapter: z.string().optional().describe("章节文件名，如 ch01-wu-wei。省略时只返回 SKILL.md + 索引"),
     },
   }, async ({ slug, chapter }) => {
+    // 技能级开关（W3.5，2026-10-21）：skill-state.json 里记 false 的技能对 MCP 拒收——
+    // 键空间与书级开关共用一份扁平文件（bookId 与技能 slug 不重叠，各查各的键）
+    if (loadSkillState(currentLibDir())[slug] === false)
+      return { content: [{ type: "text", text: JSON.stringify({ error: "skill-disabled", hint: `技能「${slug}」已被主人在桌面客户端关闭（技能开关页）——不读它的内容，也不要尝试变体拼写绕过`, available: listSkills().filter(s => loadSkillState(currentLibDir())[s.slug] !== false).map(s => s.slug) }) }] };
     const out = readSkill(slug, chapter);
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
   reg("list_skills", {
     title: "技能清单",
-    description: "列出 skills/ 目录里所有已落盘的技能（标题/描述/章节数/来源书）。回答任务前先看有没有现成技能可复用——有现成手册就不必重新检索全书。",
+    description: "列出 skills/ 目录里已落盘且未被关闭的技能（标题/描述/章节数/来源书）。回答任务前先看有没有现成技能可复用——有现成手册就不必重新检索全书。主人关掉的技能不在此列（按需可请主人在桌面客户端打开）。",
     inputSchema: {},
   }, async () => {
-    const out = listSkills();
+    const st = loadSkillState(currentLibDir());
+    const out = listSkills().filter(s => st[s.slug] !== false);
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 }

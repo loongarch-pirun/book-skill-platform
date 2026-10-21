@@ -168,12 +168,13 @@ export function renderSkills() {
     </div>
     <div class="panel">
       <div class="panel-head">蒸馏技能包（skills/ 目录）</div>
+      <div class="panel-note" style="margin-bottom:10px">每个包的开关管「外部智能体（MCP）能不能用它」——关掉后 list_skills 看不到、read_skill 拒收；桌面问一问不受此开关影响（在下方对话里显式挂包）。</div>
       <div class="pkgrid">${s.packages.map((p) => `
         <div class="pkgcard">
           <h4>${esc(p.title)}</h4>
           <div class="pkdesc">${esc(p.description || "")}</div>
           <div class="pkmeta">${p.coverage ? `覆盖 <b>${esc(p.coverage)}</b> 章` : "覆盖未声明"} · ${p.chapters} 个章节文件 · 来源：${esc((p.sources || []).join("、") || "?")}</div>
-          <div class="pkfoot"><button class="ghost sm" data-action="viewskill" data-slug="${esc(p.slug)}">查看</button></div>
+          <div class="pkfoot"><button class="ghost sm" data-action="viewskill" data-slug="${esc(p.slug)}">查看</button><button class="switch ${p.enabled ? "on" : ""}" data-action="togglemethod" data-slug="${esc(p.slug)}">${p.enabled ? "对外开" : "对外关"}</button></div>
         </div>`).join("") || '<div class="empty">还没有技能包——对话里让智能体用 save_skill 落一个</div>'}
       </div>
     </div>`;
@@ -326,6 +327,17 @@ export function bindAskEvents() {
         b.skillEnabled = !b.skillEnabled;
         refresh();
         toast(b.skillEnabled ? `《${b.title}》的 skill 已打开` : `《${b.title}》的 skill 已关——桌面和 MCP 都查不到它了`);
+      } catch (err) { toast("开关失败：" + err.message); }
+    }
+    else if (act === "togglemethod") {
+      // W3.5 技能级开关：蒸馏技能包（slug 键）对 MCP 的常开/常关——与书级 toggleskill 同吃 skill-state.json
+      const p = state.skills.packages.find((x) => x.slug === el.dataset.slug);
+      if (!p) return;
+      try {
+        await call(window.study.skillToggle(p.slug, !p.enabled));
+        p.enabled = !p.enabled;
+        refresh();
+        toast(p.enabled ? `技能「${p.slug}」已对外开放（MCP 可用）` : `技能「${p.slug}」已对外关闭（MCP 不可见不可读）`);
       } catch (err) { toast("开关失败：" + err.message); }
     }
     else if (act === "viewskill") {

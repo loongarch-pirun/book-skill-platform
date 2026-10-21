@@ -101,7 +101,7 @@ const studyStub = {
   // 原书视图（V3 #166）
   bookOriginal: () => { ipcCalls.push("bookOriginal"); return reply({ bookId: "t.docx", ext: "docx", name: "t.docx", size: 1024, url: "book://asset/t.docx", render: "html" }); },
   bookOpenExternal: () => { ipcCalls.push("bookOpenExternal"); return reply({ opened: "books/t.docx" }); },
-  skillsList: () => { ipcCalls.push("skillsList"); return reply([{ slug: "t", title: "测试技能", description: "d", coverage: "3/9", chapters: 2, sources: ["测试书"] }]); },
+  skillsList: () => { ipcCalls.push("skillsList"); return reply([{ slug: "t", title: "测试技能", description: "d", coverage: "3/9", chapters: 2, sources: ["测试书"], enabled: true }]); },
   skillRead: () => reply({ slug: "t", skill_md: "# t", index: [{ file: "chapters/ch01-a.md", title: "第一章", tokens_est: 100 }] }),
   skillToggle: () => reply({}),
   // W1 用量治理：stub 覆盖 preload 全部 API（boot 会拨 usageGet，漏它 boot 链断）
@@ -228,6 +228,13 @@ app.show("skills");
 await sleep(30);
 assert(mainEl.innerHTML.includes("每本书的 skill 开关"), "技能面板渲染开关区");
 assert(mainEl.innerHTML.includes("测试技能") && mainEl.innerHTML.includes("3/9"), "技能包卡片带 coverage 徽标（frontmatter coverage 字段接线）");
+assert(mainEl.innerHTML.includes("对外开"), "技能包卡片带对外开关（W3.5：MCP 常开/常关）");
+click("togglemethod", { slug: "t" });
+await sleep(30);
+assert(mainEl.innerHTML.includes("对外关"), "点对外开关 → 状态翻转（togglemethod 接线 skillToggle）");
+click("togglemethod", { slug: "t" });
+await sleep(30);
+assert(mainEl.innerHTML.includes("对外开"), "再点一次恢复开启");
 
 // ---------- 5) 问一问视图：技能包选择器 ----------
 app.show("ask");

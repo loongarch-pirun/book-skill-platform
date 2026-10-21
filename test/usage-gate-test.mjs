@@ -128,7 +128,15 @@ ok(currentLibDir() === tmp, "夹具: configureSearch 指向 tmp 空库目录");
   const cc = JSON.parse((await handlers.get("cite_check")({ book: "x", quote: "q" })).content[0].text);
   ok(!cc.error || cc.error !== "知识库对外服务未开放", "关闭态：cite_check 恒开（防幻觉自检不被拦）");
 
-  up.saveUsagePolicy(tmp, { enabled: true });
+  // 定时态：开着但不在窗口 → schedule-off 拒收（窗口置为空数组+周末关=任何时刻都窗外，确定性；
+  // 2026-10-21 19:12 实测：只置 enabled:true 会被默认 9:00-18:30 窗口挡，断言假红）
+  up.saveUsagePolicy(tmp, { enabled: true, schedule: { workdays: [], weekend: false } });
+  const sched = JSON.parse((await handlers.get("query_book")({ book: "x", question: "q" })).content[0].text);
+  ok(sched.error === "知识库对外服务未开放" && sched.reason === "schedule-off" && /usage-policy\.json/.test(sched.hint || ""),
+    "定时态：窗口外拒收（reason=schedule-off，hint 指路改 schedule）");
+
+  // 开启态：窗口全放开（0-24 全天+周末也开）后 search 放行——空库下走到业务层错误，不是闸机错误
+  up.saveUsagePolicy(tmp, { enabled: true, schedule: { workdays: ["00:00-23:59"], weekend: true } });
   const opened = JSON.parse((await handlers.get("query_book")({ book: "x", question: "q" })).content[0].text);
   ok(opened.error !== "知识库对外服务未开放", "开启态：search 放行（空库下走到业务层错误，不是闸机错误）");
   const meta2 = await handlers.get("list_books")({});

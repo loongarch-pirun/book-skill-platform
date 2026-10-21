@@ -74,7 +74,7 @@ export function serviceStatus(policy, now = new Date()) {
   if (!policy.enabled)
     return { open: false, reason: "manual-off", hint: "知识库对外服务当前是手动关闭状态。需要时请在桌面端书架页打开「知识库对外服务」开关，或修改 usage-policy.json 的 enabled。" };
   if (!inScheduleWindow(policy, now))
-    return { open: false, reason: "schedule-off", hint: "知识库对外服务当前不在允许的时间窗口内（默认为工作日 9:00-18:30）。急用可临时打开桌面端开关覆盖定时规则。" };
+    return { open: false, reason: "schedule-off", hint: "知识库对外服务当前不在允许的时间窗口内（默认工作日 9:00-18:30，周末关闭）。急用可联系主人修改 library/usage-policy.json 的 schedule 字段放宽时间窗。" };
   return { open: true };
 }
 

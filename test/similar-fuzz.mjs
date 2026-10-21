@@ -232,7 +232,8 @@ console.log("\n--- P3-C MCP similar_chunks 工具契约 ---");
   md.close();
 
   const server = new McpServer({ name: "book-skill", version: "0.4.0" });
-  registerServerTools(server);
+  // gate:false——本套压 similar_chunks 的坏库/坏参路径，不该被对外闸机（定时窗/预算）挡
+  registerServerTools(server, { gate: false });
   const client = new Client({ name: "test-agent", version: "1.0.0" });
   const [cT, sT] = InMemoryTransport.createLinkedPair();
   await Promise.all([server.connect(sT), client.connect(cT)]);

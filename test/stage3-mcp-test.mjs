@@ -11,8 +11,10 @@ let failed = 0;
 const assert = (cond, msg) => { console.log((cond ? "PASS" : "FAIL") + " - " + msg); if (!cond) failed++; };
 
 // 起服务端（复用与 stdio server 完全相同的工具注册逻辑）
+// gate:false——本套验收的是工具协议与数据链路，不该被对外服务闸机（定时窗/预算/开关）挡
+// （2026-10-21 18:51 主人在桌面端关闸后 stage3 全红的教训；对外拒收语义由 usage-gate-test 直测）
 const server = new McpServer({ name: "book-skill", version: "0.3.0" });
-registerServerTools(server);
+registerServerTools(server, { gate: false });
 const client = new Client({ name: "test-agent", version: "1.0.0" });
 const [cT, sT] = InMemoryTransport.createLinkedPair();
 await Promise.all([server.connect(sT), client.connect(cT)]);
@@ -153,6 +155,17 @@ assert(rd2R.skill_md && rd2R.index?.length === 1, "read_skill 不带 chapter 返
 const rd = await client.callTool({ name: "read_skill", arguments: { slug: "e2e-check", chapter: "ch01-test.md" } });
 const rdR = JSON.parse(rd.content[0].text);
 assert(rdR.content && rdR.content.includes("上善若水"), "read_skill 按 chapter 按需取章");
+
+// 7d. 技能级开关（W3.5）：关掉的技能对 MCP 不可见不可读——桌面技能开关页写 skill-state.json（slug 键），
+// MCP 侧 list_skills 过滤 + read_skill 拒收；测完清键不留痕
+setSkillEnabled(LIB_DIR, "e2e-check", false);
+const lsOff = JSON.parse((await client.callTool({ name: "list_skills", arguments: {} })).content[0].text);
+assert(!lsOff.some(s => s.slug === "e2e-check"), "技能关闭后 list_skills 不可见（对外隐藏省 token）");
+const rdOff = JSON.parse((await client.callTool({ name: "read_skill", arguments: { slug: "e2e-check" } })).content[0].text);
+assert(rdOff.error === "skill-disabled" && /桌面客户端/.test(rdOff.hint || ""), "技能关闭后 read_skill 拒收并带指引（skill-disabled）");
+setSkillEnabled(LIB_DIR, "e2e-check", true);
+const lsBack = JSON.parse((await client.callTool({ name: "list_skills", arguments: {} })).content[0].text);
+assert(lsBack.some(s => s.slug === "e2e-check"), "重新打开后 list_skills 恢复可见");
 
 // 8. get_person 人物深查（P-D）：关系网从"看得到"变"摸得到原文块"
 const gp = await client.callTool({ name: "get_person", arguments: { book: "pride", name: "Caroline Bingley" } });
