@@ -2,7 +2,8 @@
 // 原理：全部颜色走 CSS 变量（app.css :root），运行时只覆盖 documentElement 的变量值——零重排。
 // 持久化：localStorage（渲染进程按 file:// origin 持久，重启仍在）；读写失败静默降级到默认。
 export const STORE_KEY = "bsp.theme.v1";
-export const DEFAULT_THEME = "deep-blue";
+// 默认浅色（方向 B · 老板已定）：V4 深蓝灰等 5 套预设仍全在，用户可随时从调色板切回。
+export const DEFAULT_THEME = "paper-light";
 export const DEFAULT_ACCENT = "auto";
 
 // 每套主题 13 个变量：4 底 + 3 线 + 3 字 + 强调 3（accent / accent-bg / accent-ink）
@@ -48,7 +49,8 @@ const THEMES = {
     vars: {
       "--bg": "#FAFAF9", "--bg-card": "#FFFFFF", "--bg-hover": "#F1EFEC", "--bg-input": "#F7F6F4",
       "--line": "#E7E5E4", "--line-soft": "#F0EEEC", "--line-hi": "#D6D3D1",
-      "--ink": "#1C1917", "--ink-2": "#78716C", "--ink-3": "#A8A29E",
+      // 方向 B：#A8A29E 落白卡仅 2.52:1（CP1 实测 FAIL），调深到 #6E6E66（白卡 5.14:1，过 WCAG AA）
+      "--ink": "#1C1917", "--ink-2": "#78716C", "--ink-3": "#6E6E66",
     },
     accent: ["#2563EB", "rgba(37,99,235,.1)", "#FFFFFF"],
   },

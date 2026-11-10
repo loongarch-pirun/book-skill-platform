@@ -1,30 +1,32 @@
-/* 我的书房 · V4 深蓝灰（极简质感：近黑蓝底 / 细边框层次 / 唯一冷蓝强调 / 无阴影无渐变） */
+/* 我的书房 · V4 精修 · 方向 B 浅色默认（暖白背景 / 浅灰分割线 / 蓝主强调 + 薄荷绿状态色 / 柔和圆角 / 细边层次）。
+   深蓝灰 V4 等 4 套深色预设仍由 theme.js 提供，调色板可随时切回——不推翻主题系统。
+   :root 是「JS 未就绪」时的静态回退；boot() 首行 initTheme() 会在渲染前把同一套浅色值写成内联变量，不闪色。 */
 :root {
-  /* 底 · 四层 */
-  --bg:        #0F1419;
-  --bg-card:   #161C24;
-  --bg-hover:  #1E2733;
-  --bg-input:  #131A21;
+  /* 底 · 四层（暖白） */
+  --bg:        #FAFAF9;
+  --bg-card:   #FFFFFF;
+  --bg-hover:  #F1EFEC;
+  --bg-input:  #F7F6F4;
 
-  /* 线 */
-  --line:      #243040;
-  --line-soft: #1A2330;
-  --line-hi:   #33445C;
+  /* 线（浅灰分割线） */
+  --line:      #E7E5E4;
+  --line-soft: #F0EEEC;
+  --line-hi:   #D6D3D1;
 
-  /* 字 · 三档 */
-  --ink:       #E6EDF3;
-  --ink-2:     #9BAAB8;
-  --ink-3:     #7D8B99;
+  /* 字 · 三档（--ink-3 由 #A8A29E 调深到 #6E6E66，白卡 5.14:1 过 WCAG AA） */
+  --ink:       #1C1917;
+  --ink-2:     #78716C;
+  --ink-3:     #6E6E66;
 
-  /* 唯一强调色 */
-  --accent:    #38BDF8;
-  --accent-bg: rgba(56, 189, 248, .12);
-  --accent-ink: #06121C;   /* 强调色底上的字色（主题系统按亮度自动算） */
+  /* 主强调色（蓝）+ 落底字色 */
+  --accent:    #2563EB;
+  --accent-bg: rgba(37, 99, 235, .10);
+  --accent-ink: #FFFFFF;   /* 方向 B 浅色默认：蓝底白字（V4 深蓝灰字色 #06121C 留作静态契约留档；运行时 theme.js 按亮度重算） */
 
-  /* 语义色（只在状态/徽标/错误出现，不铺面积） */
-  --ok:   #3FB950;
-  --warn: #D29922;
-  --bad:  #F85149;
+  /* 语义色（只在状态/徽标/错误出现，不铺面积；浅底一律用深一档，保证 >=4.5:1） */
+  --ok:   #1E7A3C;
+  --warn: #9A6B00;
+  --bad:  #C0271F;
 
   /* 旧变量别名（旧模板里的 var 全部指向新色，一个都不炸） */
   --paper: var(--bg);
@@ -34,25 +36,30 @@
   --wood-soft: var(--line-hi);
   --ai-bg: var(--bg-card);
   --ai-line: var(--line);
-  --bad-bg: rgba(248, 81, 73, .08);
-  --bad-line: rgba(248, 81, 73, .32);
+  --bad-bg: rgba(192, 39, 31, .07);
+  --bad-line: rgba(192, 39, 31, .28);
 
-  /* 尺寸 */
-  --r-card: 10px;
-  --r-btn: 8px;
+  /* 尺寸（方向 B：柔和圆角） */
+  --r-card: 12px;
+  --r-btn: 10px;
   --r-pill: 999px;
+  --r-lg: 14px;
   --sidebar-w: 76px;
   --topbar-h: 44px;
 
   /* 动效：全站只三种（悬停 150ms / 弹层 200ms / 进度条） */
   --t-fast: 150ms ease;
   --t-pop: 200ms ease;
+
+  /* 方向 B · 第二强调色（薄荷绿，仅用于状态语义：就绪 / 可查 / 有原件；主强调仍是 --accent 蓝） */
+  --mint: #1E7A3C;
+  --mint-bg: rgba(30, 122, 60, .10);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   display: grid; grid-template-columns: var(--sidebar-w) 1fr;
   grid-template-rows: var(--topbar-h) 1fr;
-  height: 100vh; font: 15px/1.7 "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  height: 100vh; font: 15px/1.7 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
   color: var(--ink); background: var(--bg);
   -webkit-font-smoothing: antialiased;
 }
