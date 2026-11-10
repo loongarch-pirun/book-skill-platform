@@ -220,8 +220,6 @@ button { font-family: inherit; }
 .askthis:hover { background: var(--accent-bg); border-color: var(--accent); }
 
 /* 原书视图 */
-.origentry { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.origentry .orighint { font-size: 12px; color: var(--ink-3); }
 .origbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .origbar .origmeta { font-size: 12px; color: var(--ink-3); margin-left: auto; }
 .origtag {
