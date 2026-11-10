@@ -111,9 +111,11 @@ export function serviceStatus(policy, now = new Date()) {
 }
 
 // ---------- 会话预算（进程内记账；MCP server 进程寿命 = 一个智能体会话） ----------
-// V03/A-05：桌面长进程里多个智能体会话共用一个进程，单例计数器会把所有会话的预算
-// 混成一锅——一个会话用完，其余会话全被连坐。改为按 sessionId 分账（Map）；
-// 不传 sessionId 的旧调用落 "default" 桶，行为与旧单例完全一致（零破坏兼容）。
+// V03/A-05/B3-CP3：本计数为进程级，一进程=一会话。MCP 走 stdio（src/mcp-server.mjs 是
+// registerServerTools 唯一生产调用点），一进程服务一个客户端会话，「同进程两会话共桶」
+// 的前提在架构上不存在（04 重新审视报告 :100 的「或如实文档化为进程级」退路，已拍板采此）。
+// gateCall 仍按 sessionId 分账（Map）：不传落 "default" 桶，多桶语义保留给测试注入与
+// 未来可能的进程内多会话形态，语义测试钉死「A/B 两桶互不连坐」。
 const sessions = new Map();
 const DEFAULT_SESSION = "default";
 

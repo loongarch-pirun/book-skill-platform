@@ -115,6 +115,8 @@ async function gateCall(tier, tool, handler, args, estChars = 0) {
 }
 
 // 导出为测试钩子（usage-gate-test 直接断言分级与拒收语义；estimateDeepReadChars 供 V01 断言）
+// B3/CP3：gateCall 第 5 参 sessionId 的分账是进程级语义——MCP stdio 一进程=一会话
+// （04 重新审视报告 :100「或如实文档化为进程级」退路），生产调用不传 sessionId 落 default 桶。
 export { TOOL_TIERS, gateCall, estimateDeepReadChars };
 
 // gate=false：自家验收测试豁免对外闸机——stage3/guard/similar-fuzz 起进程测的是工具协议

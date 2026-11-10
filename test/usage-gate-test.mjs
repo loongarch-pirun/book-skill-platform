@@ -101,6 +101,37 @@ ok(currentLibDir() === tmp, "夹具: configureSearch 指向 tmp 空库目录");
   fs.rmSync(path.join(tmp, "usage-policy.json"), { force: true });
 }
 
+// ---------- 3d B3/CP3：会话分桶语义——A/B 两桶互不连坐，一进程=一会话 ----------
+// （04 重新审视报告 :100「或如实文档化为进程级」退路已拍板：MCP stdio 一进程服务一个
+// 客户端会话，生产调用不传 sessionId 落 default 桶；分桶语义本身仍要钉死防回归）
+{
+  up.saveUsagePolicy(tmp, { budget: { perSessionQueries: 2 } });
+  const pd = up.loadUsagePolicy(tmp);
+  up.resetSessionUsage();
+  // 会话 A 连用 2 次 → A 桶打满
+  ok(up.checkBudget(pd, "search", 0, "A").ok === true, "B3: A 第 1 次放行");
+  up.chargeUsage("search", 0, "A");
+  ok(up.checkBudget(pd, "search", 0, "A").ok === true, "B3: A 第 2 次放行");
+  up.chargeUsage("search", 0, "A");
+  ok(up.checkBudget(pd, "search", 0, "A").ok === false
+    && up.checkBudget(pd, "search", 0, "A").reason === "queries-exhausted",
+    "B3: A 第 3 次拒（queries-exhausted，A 桶独立打满）");
+  // 会话 B 不受 A 连坐：同策略下 B 照常放行
+  ok(up.checkBudget(pd, "search", 0, "B").ok === true, "B3: B 不受 A 打满连坐（分桶隔离）");
+  // B 桶打满也不影响 A 已拒的事实（反向互不干扰）
+  up.chargeUsage("search", 0, "B");
+  up.chargeUsage("search", 0, "B");
+  ok(up.checkBudget(pd, "search", 0, "B").ok === false, "B3: B 打满后同样拒（A/B 各自记账）");
+  ok(up.sessionUsage("A").calls === 2 && up.sessionUsage("B").calls === 2
+    && up.sessionUsage().calls === 0,
+    "B3: sessionUsage 分桶读数准确（A=2 B=2 default=0 互不混账）");
+  up.resetSessionUsage("A");
+  ok(up.checkBudget(pd, "search", 0, "A").ok === true && up.checkBudget(pd, "search", 0, "B").ok === false,
+    "B3: 单桶重置只清 A，B 桶保持打满（resetSessionUsage(id) 定点清）");
+  up.resetSessionUsage();
+  fs.rmSync(path.join(tmp, "usage-policy.json"), { force: true });
+}
+
 // ---------- 4) 审计日志：recordUsage / todayUsage ----------
 {
   fs.rmSync(path.join(tmp, "usage-log.jsonl"), { force: true });
