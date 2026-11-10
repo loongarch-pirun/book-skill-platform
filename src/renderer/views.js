@@ -32,7 +32,10 @@ export function cloudBannerHtml() {
     : `<div class="cloudbanner off"><span class="cbtag">本地模式</span><span>书与检索<b>不出本机</b>；当前未接云端 AI，不会有任何内容外发。<b>配好 key 后，加工书（洗数据 / 编目）会把书内段落发出去</b>——再决定要不要配。</span></div>`;
 }
 
-// 4.2 英文书语言提示与示例问句：逐书语言取 b.lang（IF-1，A 线提供，可能尚未落地）。
+// 4.2 英文书语言提示与示例问句：逐书语言取 b.lang（IF-1）。
+// 实况（CP3 复核 B6）：lib/search.mjs listBooks 尚未回填 lang，生产里 b.lang 恒 undefined，
+// 因此下面 en/zh 两个精确分支当前不可达，用户实际看到的是第 39 行的中英双语兜底。
+// 等 A 线把 catalog.mjs 算出的 lang 写进 meta 并读回，这两支才生效——界面无需再改。
 // 字段缺失时给「中英双语」通用引导——绝不按书名猜语言、不新增 IPC。
 export function langHintHtml(bookId) {
   const b = bookId ? state.books?.find((x) => x.id === bookId) : null;
@@ -44,7 +47,9 @@ export function langHintHtml(bookId) {
 
 // 4.6 有无原件标记：只读 book asset.exists（现有 booksList 返回字段，IF-2 无需新 IPC）；
 // 无原件标「库内文本浏览」，不冒充「翻原书」。
+// b 为空 = 不知道（书列表没加载完 / 从 chat 直接跳进 reader），不能谎称「无原件」。
 export function origFlagHtml(b) {
+  if (!b) return "";
   return b?.asset?.exists
     ? `<span class="origflag has" title="books/ 目录里有原始文件，可看原件视图">有原件 · 可看原书</span>`
     : `<span class="origflag" title="没有原始文件，只能看库里切好的原文块">无原件 · 库内文本浏览</span>`;
