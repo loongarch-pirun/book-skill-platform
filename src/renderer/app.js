@@ -15,6 +15,7 @@ export const state = {
   jobs: {},                   // 导入管线任务状态（bookId → {stage,label,detail,error}）
   prompt: null,               // 待编目一键提示词面板（书架）：{bookId, text, chars, path} | null
   usage: null,                // 对外服务用量治理（W1）：{policy, usage, session, open}
+  shelfFoldOpen: false,       // S8：书架「设置 · 运维 / 技能 / 对外服务（MCP）」折叠区的展开态（refresh 会重建 innerHTML，状态得存这）
   reader: { bookId: null, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false, original: null },
   ask: { mode: "book", bookId: null, question: "", loading: false, result: null, skillSlug: null },
   llm: { config: null, answer: null, error: null, loading: false, editing: false }, // 云端问答（V2 P2）：配置/回答/错误/状态
@@ -79,6 +80,8 @@ async function maybeWizard(cfg) {
       <p>· <b>使用内置书库</b>：安装包自带一批书、技能和模型，马上能问</p>
       <p>· <b>选择现有书库</b>：选一个有 .db 文件的文件夹（比如旧版项目里的 library）</p>
       <p>· <b>从空白开始</b>：以后往书架里拖书就行</p>
+      <div class="wizard-note alpha"><b>Alpha 测试版</b>：这是早期版本，请勿当成品使用；功能、界面与数据格式都可能调整，遇到问题属正常。</div>
+      <div class="wizard-note backup"><b>先备份再开始</b>：建议先把你的书库文件夹（含 .db 与 books/ 原件）复制一份留底，再导入或加工书；加工与删除不可撤销。</div>
       <p style="font-size:12px">模型（约 700MB）已随安装包内置，不用下载。</p>
       <div class="wizard-btns">
         ${seedBtn}

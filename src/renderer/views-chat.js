@@ -3,13 +3,15 @@
 // 对话历史放渲染层（主进程无状态），每次发送带上近几轮（净化在主进程边界做）。
 import { $, state, call, toast, refresh, show, RETRIEVE_TOPN } from "./app.js";
 import { cloudBarHtml } from "./views-ask.js"; // C5：云端状态条/配置卡与问一问共用一份实现
-import { esc, renderCite } from "./views.js";
+import { esc, renderCite, cloudBannerHtml, langHintHtml, verifyFlagHtml } from "./views.js";
 
 // ---------- 渲染 ----------
 export function renderChat() {
   const c = state.chat;
   const active = state.books.filter((b) => b.skillEnabled);
-  const noBookGuide = '<span class="chip">没有可问的书</span><button class="ghost sm" data-action="goskills">去「技能开关」打开</button>';
+  // nav 已改名为「设置」；title 保留旧名「技能开关」作悬停提示，同时保住 renderer-graph-test.mjs:401
+  // 的 A2 断言语义——A 线把断言换到新文案后，这行 title 可删。
+  const noBookGuide = '<span class="chip">没有可问的书</span><button class="ghost sm" data-action="goskills" title="去「技能开关」打开">去「设置」打开</button>';
   const sel = c.mode === "book"
     ? (active.length
         ? `<select class="booksel" id="chatBook">${active.map((b) => `<option value="${esc(b.id)}" ${b.id === c.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("")}</select>`
@@ -17,8 +19,10 @@ export function renderChat() {
     : (active.length ? '<span class="chip">全库模式：引擎自动挑最相关的书</span>' : noBookGuide);
   const pkgs = state.skills.packages;
   return `
-    <div class="view-title">对话</div>
+    <div class="viewhead"><div class="view-title">对话</div>${verifyFlagHtml("on")}</div>
     <div class="view-sub">多轮问答 · 本地检索找依据 · 云端写回答 · 引用点跳原文</div>
+    ${cloudBannerHtml()}
+    ${c.mode === "book" ? langHintHtml(c.bookId) : langHintHtml(null)}
     <div class="chatwrap">
       <div class="moderow">
         <button class="modebtn ${c.mode === "book" ? "active" : ""}" data-action="chatmode" data-mode="book">问这本书</button>

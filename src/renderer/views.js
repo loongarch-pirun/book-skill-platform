@@ -19,21 +19,87 @@ export const renderCite = (x, withBook = true) => {
   return `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${esc(x.id ?? "")}">${label}</span>`;
 };
 
+// ===== 第 2 轮 · 四视图共用状态条（纯函数，顶层不碰 DOM：ESM 循环导入防 TDZ） =====
+// 4.1 云端模式醒目提示：只消费 state.llm.config.hasKey（llmConfigGet 现有返回字段），零新 IPC。
+// 措辞硬避「云端 AI 配置」六字——renderer-graph-test.mjs:331/:370 在配置卡收起态断言该串不出现。
+// 出网范围写全：提问/引用片段之外，加工书（洗数据 clean.mjs、编目 enrich.mjs）发的是整块原文
+// （src/lib/clean.mjs:165-174 拼【本批待判】、src/lib/enrich.mjs:184-188 拼 [idx]…\n${text}），
+// 量级比「引用片段」大一个数量级——用户有权在开之前就知道。
+export function cloudBannerHtml() {
+  const on = !!(state.llm?.config?.hasKey);
+  return on
+    ? `<div class="cloudbanner on"><span class="cbtag">云端模式已开启</span><span>检索<b>始终在本机</b>；会外发的是：提问、引用片段，以及<b>加工书（洗数据 / 编目）时的书内段落</b>——都发给第三方 AI。</span></div>`
+    : `<div class="cloudbanner off"><span class="cbtag">本地模式</span><span>书与检索<b>不出本机</b>；当前未接云端 AI，不会有任何内容外发。<b>配好 key 后，加工书（洗数据 / 编目）会把书内段落发出去</b>——再决定要不要配。</span></div>`;
+}
+
+// 4.2 英文书语言提示与示例问句：逐书语言取 b.lang（IF-1）。
+// 实况（CP3 复核 B6，已由 A 线闭环）：`feat/round2-logic` 的 `54eb504` 打通 lang——
+// 编目收尾 jobs.mjs 落 meta.lang，listBooks 读回（旧库无键时现场 detectLang 抽样估、不写库），
+// engine.mjs `{ ...b }` 自动带出。本分支 `feat/round2-ui` 尚未含该提交，**合流后**下面
+// en/zh 两个精确分支即达；界面无需再改。仅当书没有语言信息（旧库抽样失败 / 书列表未加载）
+// 才落到中英双语兜底——绝不按书名猜语言、不新增 IPC。
+export function langHintHtml(bookId) {
+  const b = bookId ? state.books?.find((x) => x.id === bookId) : null;
+  const zhQ = "什么是真正的强大？", enQ = "What is true strength?";
+  if (b?.lang === "en") return `<div class="langhint"><b>这本是英文原版</b>：请用英文提问，中文提问可能检不到原文。示例问句：<span class="qe">${enQ}</span></div>`;
+  if (b?.lang === "zh") return `<div class="langhint"><b>这本是中文书</b>：用中文提问即可。示例问句：<span class="qe">${zhQ}</span></div>`;
+  return `<div class="langhint">读英文书请用<b>英文</b>提问（中文提问可能检不到原文）；中文书用中文问。示例：<span class="qe">${zhQ}</span><span class="qe">${enQ}</span></div>`;
+}
+
+// 4.6 有无原件标记：只读 book asset.exists（现有 booksList 返回字段，IF-2 无需新 IPC）；
+// 无原件标「库内文本浏览」，不冒充「翻原书」。
+// b 为空 = 不知道（书列表没加载完 / 从 chat 直接跳进 reader），不能谎称「无原件」。
+export function origFlagHtml(b) {
+  if (!b) return "";
+  return b?.asset?.exists
+    ? `<span class="origflag has" title="books/ 目录里有原始文件，可看原件视图">有原件 · 可看原书</span>`
+    : `<span class="origflag" title="没有原始文件，只能看库里切好的原文块">无原件 · 库内文本浏览</span>`;
+}
+
+// 4.2 书卡语言标记（IF-1 提供 b.lang；缺字段时不标，绝不按书名猜）
+export function bookLangHtml(b) {
+  if (b?.lang === "en") return `<span class="booklang en" title="英文书请用英文提问">EN · 英文书</span>`;
+  if (b?.lang === "zh") return `<span class="booklang" title="中文书用中文提问即可">ZH · 中文书</span>`;
+  return "";
+}
+
+// 4.5 四视图「引文 / 回验」状态标签：统一口径，点引用徽标跳原文逐字核对。
+export function verifyFlagHtml(mode = "on") {
+  const map = {
+    on: ["引文可回验", "点引用徽标跳原文逐字核对"],
+    pending: ["回验待确认", "命中原文块后可逐字核对"],
+    off: ["纯浏览", "本视图不产生引文"],
+  };
+  const [label, tip] = map[mode] || map.on;
+  return `<span class="verifyflag ${mode}" title="${esc(tip)}"><span class="dot"></span>${label}</span>`;
+}
+
 // ---------- ① 书架 ----------
 export function renderShelf() {
   const books = state.books;
+  // 4.4 / 4.7：书架首屏只留「选书 + 导入」——用户眼睛看到的这一屏不带运维/MCP/闸机字样。
+  // 运维提示词与用量治理收进默认折叠的 details（内容仍渲染在 Dom 里，需要时点开就能用）；
+  // 展开态记在 state.shelfFoldOpen——refresh 会整块重建 innerHTML，不记在外面的话，
+  // 用户展开后点里面任意一个开关（它触发 refresh）就会立刻弹回收起，看着像「点了没反应」。
+  const ops = `${promptBoxHTML()}${usagePanelHTML()}`;
+  const settings = ops.trim()
+    ? `<details class="settings-fold"${state.shelfFoldOpen ? " open" : ""}><summary data-action="foldtoggle">设置 · 运维 / 技能 / 对外服务（MCP）</summary><div class="foldbody">${ops}</div></details>`
+    : "";
   return `
-    <div class="view-title">书架</div>
-    <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据 · 「洗数据」给每块产前置/标签/摘要（走云端，检索永远在本机）</div>
+    <div class="viewhead"><div class="view-title">书架</div>${verifyFlagHtml("off")}</div>
+    <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据 · 每本书可生成前置/标签/摘要（可选云端，检索始终在本机）</div>
+    ${cloudBannerHtml()}
     <div class="dropzone" id="dropzone"><b>把书拖到这里</b>（.epub / .docx / .pdf / .txt）<span class="soon">先放进书架看原件 → 点「开始加工」才切片/向量化/编目（编目结果可稍后导入）</span></div>
-    ${promptBoxHTML()}
-    ${usagePanelHTML()}
     <div class="shelf">${books.map((b) => bookCard(b)).join("") || '<div class="empty">书架空空如也——去拖本书进来</div>'}
-    </div>`;
+    </div>
+    ${settings}`;
 }
 
 // 对外服务用量面板（W1 治理，2026-10-21）：开关/定时/预算写 usage-policy.json
-// （与 skill-state.json 同目录同模式），MCP 闸机读同一份——桌面写、外部智能体守
+// （与 skill-state.json 同目录同模式），MCP 闸机读同一份——桌面写、外部智能体守。
+// 文案口径（CP3 复核后对齐 A 线 usage-policy.mjs:113）：计数器是**进程级**——
+// MCP stdio 一个进程 = 一个智能体会话，桌面长进程同一份计数器、重启清零。
+// 故写「本进程会话」，不写「本会话」（后者会被误读成聊天窗口开着的这段时间）。
 function usagePanelHTML() {
   const u = state.usage;
   if (!u) return "";
@@ -51,8 +117,8 @@ function usagePanelHTML() {
         <span class="skill-dot ${on && open ? "" : "off"}">${on && open ? "开放中" : on ? "定时关闭中" : "已手动关闭"}</span>
         <button class="ghost sm" data-action="usagetoggle">${on ? "关闭" : "打开"}</button>
       </div>
-      <div class="usagemeta">定时：工作日 ${esc(win)}${sch.weekend ? " · 周末也开" : " · 周末关"} · 预算：每会话 ${esc(String(budget.perSessionQueries ?? 30))} 次 / ${fmtK(budget.perSessionChars ?? 200000)} 字符</div>
-      <div class="usagemeta">今日：调用 ${usage.calls} 次 · 返回 ${fmtK(usage.chars)} 字符 · 拒收 ${usage.rejected} 次 ｜ 本会话：${session.calls} 次 · ${fmtK(session.chars)} 字符</div>
+      <div class="usagemeta">定时：工作日 ${esc(win)}${sch.weekend ? " · 周末也开" : " · 周末关"} · 预算：每进程会话 ${esc(String(budget.perSessionQueries ?? 30))} 次 / ${fmtK(budget.perSessionChars ?? 200000)} 字符</div>
+      <div class="usagemeta">今日：调用 ${usage.calls} 次 · 返回 ${fmtK(usage.chars)} 字符 · 拒收 ${usage.rejected} 次 ｜ 本进程会话：${session.calls} 次 · ${fmtK(session.chars)} 字符</div>
       <div class="usagehint">关闭后外部智能体的检索/翻书会被拒并收到提示；书架清单、编目浏览和引文回验永远可用（不吃预算）。</div>
     </div>`;
 }
@@ -124,6 +190,7 @@ function bookCard(b) {
       <h3>${esc(b.title)}</h3>
       <div class="bookmeta">${meta}</div>
       <div class="tags">${tags}</div>
+      <div class="tagrow">${origFlagHtml(b)}${bookLangHtml(b)}</div>
       ${badge}
       <div class="cardfoot">
         <span class="skill-dot ${b.skillEnabled ? "" : "off"}">${b.skillEnabled ? "AI 可查" : "skill 已关"}</span>
@@ -280,6 +347,12 @@ export function bindShelfEvents() {
       toast(ok ? "已复制——粘给任意 AI 对话框即可（输出 JSON 存到 catalog-results/）" : "复制失败——请手动全选文本框里的内容");
     }
     else if (act === "promptclose") { state.prompt = null; refresh(); }
+    else if (act === "foldtoggle") {
+      // S8：details 的展开态要记在 state 里，refresh 重建 innerHTML 时才不会弹回收起
+      e.preventDefault();
+      state.shelfFoldOpen = !state.shelfFoldOpen;
+      refresh();
+    }
     else if (act === "usagetoggle") {
       // W1 用量治理：桌面写 usage-policy.json，MCP 闸机读同一份（与 skill-toggle 同模式）
       e.stopPropagation();

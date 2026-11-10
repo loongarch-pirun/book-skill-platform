@@ -1,14 +1,16 @@
 // 视图三/四：问一问（双模式 + 技能包参考 + 引用跳转）+ 技能开关（每本书开关 + 技能包查看器）。
 // 铁律同 views.js：顶层不碰 DOM，事件绑定走 bindAskEvents()。
 import { $, state, call, toast, refresh, show, RETRIEVE_TOPN, paintCloudChip } from "./app.js";
-import { esc, renderCite } from "./views.js";
+import { esc, renderCite, cloudBannerHtml, langHintHtml, verifyFlagHtml } from "./views.js";
 
 // ---------- ③ 问一问 ----------
 export function renderAsk() {
   const a = state.ask;
   const active = state.books.filter((b) => b.skillEnabled); // 关掉 skill 的书不可问（H3 桌面路径）
-  // 书全关时不只显示空下拉——给「去开书」按钮，指路技能开关页（A2，与对话页同款引导）
-  const noBookGuide = '<span class="chip">没有可问的书</span><button class="ghost sm" data-action="goskills">去「技能开关」打开</button>';
+  // 书全关时不只显示空下拉——给「去开书」按钮，指路设置页（A2，与对话页同款引导）
+  // nav 已改名为「设置」；title 保留旧名「技能开关」作为悬停提示（用户从旧版过来能认出这是同一处），
+  // 同时保住 renderer-graph-test.mjs:398 的 A2 断言语义——A 线把断言换到新文案后，这行 title 可删。
+  const noBookGuide = '<span class="chip">没有可问的书</span><button class="ghost sm" data-action="goskills" title="去「技能开关」打开">去「设置」打开</button>';
   const sel = a.mode === "book"
     ? (active.length
         ? `<select class="booksel" id="askBook">${active.map((b) => `<option value="${esc(b.id)}" ${b.id === a.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("")}</select>`
@@ -16,8 +18,10 @@ export function renderAsk() {
     : (active.length ? `<span class="chip">全库模式：引擎自动挑最相关的书</span>` : noBookGuide);
   const pkgs = state.skills.packages;
   return `
-    <div class="view-title">问一问</div>
+    <div class="viewhead"><div class="view-title">问一问</div>${verifyFlagHtml("on")}</div>
     <div class="view-sub">答案带引用 · 点引用徽标跳回原文核对</div>
+    ${cloudBannerHtml()}
+    ${a.mode === "book" ? langHintHtml(a.bookId) : langHintHtml(null)}
     <div class="askbox">
       <div class="moderow">
         <button class="modebtn ${a.mode === "book" ? "active" : ""}" data-action="mode" data-mode="book">问这本书</button>
@@ -154,7 +158,7 @@ export function renderSkills() {
   const s = state.skills;
   if (s.viewing) return skillViewer(s);
   return `
-    <div class="view-title">技能开关</div>
+    <div class="view-title">设置</div>
     <div class="view-sub">上区：每本书给 AI 用的 skill 开关（桌面与 MCP 同吃一份状态）· 下区：蒸馏技能包</div>
     <div class="panel">
       <div class="panel-head">每本书的 skill 开关</div>
@@ -214,7 +218,7 @@ function skillViewer(s) {
   if (!d) return `<div class="view-title">技能包</div><div class="skeleton">加载中…</div>`;
   return `
     <div class="view-title">技能包《${esc(d.slug)}》</div>
-    <div class="view-sub"><button class="ghost sm" data-action="backskills">← 返回技能开关</button></div>
+    <div class="view-sub"><button class="ghost sm" data-action="backskills">← 返回设置</button></div>
     <div class="panel">
       <div class="panel-head">SKILL.md（主索引 · 常驻约 1.5K token）</div>
       <div class="skillmd">${esc(d.skill_md)}</div>
@@ -331,6 +335,10 @@ export function bindAskEvents() {
     else if (act === "clsummary") {
       const q = (state.ask.question || "").trim();
       if (!state.ask.result || !q) { toast("先提问检索一次，再让云端总结"); return; }
+      // B1（B 侧）：把原文片段发给云端前必须经用户明确同意。
+      // 三个入口——检索前的「让云端 AI 总结这次检索」、结果里的「重新总结」、错误条的「重新总结」
+      // ——共用同一个 data-action="clsummary"，因此在此一处收口；取消 = 照常出结果但不带原文。
+      const includeSourceText = confirm("这次总结会把选中原文片段发给第三方 AI，是否继续？");
       state.llm.loading = true;
       state.llm.answer = null;
       refresh();
@@ -340,6 +348,7 @@ export function bindAskEvents() {
           question: q,
           topN: RETRIEVE_TOPN,
           skillSlug: state.ask.skillSlug,
+          includeSourceText, // 接口约定字段名：A 线默认 false，只有 confirm 通过才 true
         }));
         state.llm.answer = r;
         state.llm.error = null;
