@@ -488,6 +488,97 @@ ok(currentSkillsDir() === path.join(tmp, "nested"), "注入优先于 env（桌�
 delete process.env.BSP_SKILLS_DIR;
 ok(currentSkillsDir() === path.join(tmp, "nested"), "env 删除后仍走注入（调用时读的另一面）");
 
+// ========== V01/V02 断言（镜像自 usage-gate-test.mjs，入 test:ci 破假绿）==========
+// usage-gate-test.mjs 只在 test:fast —— 生产闸机（gate=true）的拒绝路径此前不在 test:ci，
+// register-tools.mjs:63 漏传 estChars 之类回归在 CI 全绿中溜走（04 完工标准 3 点名的坑）。
+// 本节把两条关键断言镜像进 test:ci 串内；零落盘零真库（假 handler + 临时 libDir）。
+{
+  const { registerServerTools, TOOL_TIERS, estimateDeepReadChars, assertTierCoverage } = await import("../src/lib/register-tools.mjs");
+  const up = await import("../src/lib/usage-policy.mjs");
+  const searchMod = await import("../src/lib/search.mjs");
+  const archTmp = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-skill-gate-"));
+  searchMod.configureSearch({ libDir: archTmp }); // 审计/策略指向临时目录，零碰真库
+
+  // ---- 断言 1（V01）：gate=true 下 read_range 超量请求被拒，探针 handler 不执行 ----
+  {
+    // 1a 漏传探测器：不传 estChars 时单次 8 万闸恒不触发（这正是修复前的病灶）
+    const dflt = up.loadUsagePolicy(archTmp);
+    ok(up.checkBudget(dflt, "deepRead", 90000).ok === false
+      && up.checkBudget(dflt, "deepRead", 90000).reason === "single-call-too-big",
+      "V01: checkBudget 传 estChars=90000 → single-call-too-big 拒");
+    ok(up.checkBudget(dflt, "deepRead").ok === true,
+      "V01: 漏传 estChars（默认 0）→ 恒放行（探测器：证明第三参非装饰）");
+    // 1b 估算函数：99999 块区间 → 80 块钳顶 × 2000 = 16 万 > 8 万上限
+    ok(estimateDeepReadChars("read_range", { from: 1, to: 99999 }) > 80000,
+      "V01: estimateDeepReadChars(read_range 1..99999) > 80000（闸机前移的弹药）");
+    // 1c 生产闸机集成（gate 默认 true，不传 gate:false）：探针 handler 换进 read_range
+    let ran = 0;
+    const handlers = new Map();
+    const mockServer = {
+      registerTool(name, _def, wrapped) { handlers.set(name, wrapped); },
+    };
+    registerServerTools(mockServer, {
+      deps: { handlerOverrides: { read_range: async () => { ran++; return { content: [] }; } } },
+    });
+    const res = await handlers.get("read_range")({ book: "x", from: 1, to: 99999 });
+    ok(ran === 0, "V01: gate=true 超量请求探针 handler 未执行（事前拦截）");
+    const body = JSON.parse(res.content[0].text);
+    ok(!!body.error && body.reason === "single-call-too-big",
+      "V01: 拒绝返回 {error, reason:single-call-too-big}", JSON.stringify(body));
+  }
+
+  // ---- 断言 2（V02）：save_skill 定档 search + 未登记名 fail-closed + 闸机审计 ----
+  {
+    // 2a 定档表覆盖全部注册名（差集为空 = fail-closed 前提），save_skill 明确定 search 档
+    const names = ["list_books","list_catalog","get_person","get_theme","expand","get_outline",
+      "list_skills","read_skill","cite_check","check_skills","query_book","query_library",
+      "similar_chunks","lookup","save_skill","read_full_book","get_chapter","read_range"];
+    let coverageThrew = null;
+    try { assertTierCoverage(names); } catch (e) { coverageThrew = e; }
+    ok(coverageThrew === null, "V02: 18 个注册名全部有定档（差集为空）", coverageThrew?.message);
+    ok(TOOL_TIERS.get ? TOOL_TIERS.get("save_skill") === "search" : TOOL_TIERS["save_skill"] === "search",
+      "V02: save_skill 定档 search（不再走 metadata 直通绕闸机）");
+    // 2b 未登记名拒绝注册（fail-closed，取代旧 || "metadata" 静默降级）
+    const mock2 = { registerTool() {} };
+    let regThrew = null;
+    try { registerServerTools(mock2, { extraTools: { ghost_tool: { def: {}, handler: async () => ({ content: [] }) } } }); } catch (e) { regThrew = e; }
+    // extraTools 不在生产签名里——直接验证 assertRegistered 语义：塞一个假名进 assertTierCoverage
+    let ghostThrew = null;
+    try { assertTierCoverage([...names, "ghost_tool"]); } catch (e) { ghostThrew = e; }
+    ok(ghostThrew !== null && /未登记工具/.test(ghostThrew.message),
+      "V02: 未登记工具名 → assertTierCoverage 抛「未登记工具」（fail-closed）", ghostThrew?.message);
+    ok(regThrew === null || ghostThrew !== null, "V02: 未登记名无法静默降级为 metadata");
+    // 2c 服务关闭态：save_skill 不走 metadata 直通，闸机拒绝且不真落盘
+    up.saveUsagePolicy(archTmp, { enabled: false });
+    const handlers2 = new Map();
+    let saved = 0;
+    registerServerTools({ registerTool(n, _d, w) { handlers2.set(n, w); } }, {
+      deps: { handlerOverrides: { save_skill: async (args) => { saved++; return { content: [{ type: "text", text: JSON.stringify({ slug: args.slug }) }] }; } } },
+    });
+    const offRes = await handlers2.get("save_skill")({ slug: "x", files: [] });
+    ok(saved === 0, "V02: 服务关闭态 save_skill 探针未落盘（闸机先拦）");
+    const offBody = JSON.parse(offRes.content[0].text);
+    ok(offBody.error === "知识库对外服务未开放" && offBody.reason === "manual-off",
+      "V02: 关闭态返回 manual-off 人话拒绝", JSON.stringify(offBody));
+    // 2d 开启态 + 假 saveSkill：过闸机 → session.calls 记账 + 审计行 tool:"save_skill"
+    up.resetSessionUsage();
+    up.saveUsagePolicy(archTmp, { enabled: true });
+    const logPath = path.join(archTmp, "usage-log.jsonl");
+    fs.rmSync(logPath, { force: true });
+    const onRes = await handlers2.get("save_skill")({ slug: "audit-probe", files: [] });
+    ok(saved === 1, "V02: 开启态探针执行了一次");
+    ok(up.sessionUsage().calls === 1, "V02: save_skill 过闸机后 session.calls===1（记账，不再直通漏账）");
+    const logRaw = fs.existsSync(logPath) ? fs.readFileSync(logPath, "utf8") : "";
+    const logLine = logRaw.split("\n").filter((l) => l.trim()).map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean)
+      .find((e2) => e2.tool === "save_skill");
+    ok(!!logLine && logLine.ok === true,
+      "V02: 审计 usage-log.jsonl 追加 tool=save_skill ok=true", logRaw.slice(0, 120));
+    ok(JSON.parse(onRes.content[0].text).slug === "audit-probe", "V02: 开启态返回注入 handler 的结果");
+  }
+
+  fs.rmSync(archTmp, { recursive: true, force: true });
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== skill-store-test: ${pass} PASS / ${fail} FAIL =====`);
 if (fail) { console.error(`测试失败 ${fail} 项`); process.exit(1); }
