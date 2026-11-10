@@ -34,7 +34,7 @@ export function cloudBannerHtml() {
 
 // 4.2 英文书语言提示与示例问句：逐书语言取 b.lang（IF-1）。
 // 实况（CP3 复核 B6）：lib/search.mjs listBooks 尚未回填 lang，生产里 b.lang 恒 undefined，
-// 因此下面 en/zh 两个精确分支当前不可达，用户实际看到的是第 39 行的中英双语兜底。
+// 因此下面 en/zh 两个精确分支当前不可达，用户实际看到的是最后那行中英双语兜底。
 // 等 A 线把 catalog.mjs 算出的 lang 写进 meta 并读回，这两支才生效——界面无需再改。
 // 字段缺失时给「中英双语」通用引导——绝不按书名猜语言、不新增 IPC。
 export function langHintHtml(bookId) {
