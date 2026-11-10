@@ -100,8 +100,10 @@ console.log("\n--- P4-E1 正链路 ---");
   const msgs = lastBody?.messages || [];
   ok(msgs.length === 2 && msgs[0].role === "system" && msgs[1].role === "user",
     `P4-E1f: 请求消息 = system + 问题（无历史时 ${msgs.length} 条，不塞空轮）`);
-  ok(msgs[1].content.includes("[1]") && msgs[1].content.includes(raw[0].text.slice(0, 8)),
-    "P4-E1g: 问题消息带编号片段与原文（云端只依据片段回答的铁律落地）");
+  // B1/CP3：默认路径 includeSourceText=false——出网 body 不含库内 chunks.text 原文
+  // （04 报告 :83 验收点「抓一次云端出网请求体，断言不含库内 chunks.text 原文」由默认路径满足）
+  ok(msgs[1].content.includes("[1]") && !msgs[1].content.includes(raw[0].text.slice(0, 8)),
+    "P4-E1g: 默认路径只带编号片段、不带库内原文（04:83 验收点——出网 body 无 chunks.text）");
   // 存档快照：问题 + 回答 + 引用整段 text 回填（书没了存档仍留依据）
   const arc = listArchive(libDir);
   ok(arc.length === 1 && arc[0].question === Q && arc[0].answer.includes("往外丢东西"),
@@ -110,6 +112,18 @@ console.log("\n--- P4-E1 正链路 ---");
     "P4-E1i: 存档引用回填整段 text + bookId（书哪天没了，存档里仍留着当初的依据且能跳回）");
   ok(arc[0].model === "test-chat" && arc[0].segments === raw.length,
     "P4-E1j: 存档带模型名与段数（UI 快照行要展示的元数据齐全）");
+  // B1 显式确认路径：includeSourceText:true 才带原文（UI confirm 后由 B 线传 true）。
+  // 放在存档断言之后：这次调用会再落一份存档，先断完 1 条的口径，随后清档对齐后续计数。
+  {
+    const beforeTrue = reqCount;
+    const rTrue = await cloudSummary({ bookId: BOOK_ID, question: Q, topN: 6, includeSourceText: true });
+    const msgsTrue = lastBody?.messages || [];
+    ok(!rTrue.degraded && rTrue.answer.includes("往外丢东西")
+      && msgsTrue[1].content.includes("[1]") && msgsTrue[1].content.includes(raw[0].text.slice(0, 8))
+      && reqCount === beforeTrue + 1,
+      "P4-E1g2: 显式 includeSourceText:true → 原文带出网（用户确认后的合法路径，逐字引用功能保留）");
+  }
+  archiveClear(); // 清掉显式 true 那份存档，后续「失败不落存档」计数回到 0 起点
 }
 
 // ========== P4-E2 降级链路：云端失败不丢本地果实 ==========
@@ -125,8 +139,8 @@ console.log("\n--- P4-E2 降级链路 ---");
     "P4-E2b: 降级返回的每段都带原文（UI 折叠区能直接展示）");
   ok(reqCount === before + 2,
     `P4-E2c: QUOTE_FAIL 自动重试一次（请求 ${before}→${reqCount}，共 2 次）`);
-  ok(listArchive(libDir).length === 1,
-    "P4-E2d: 失败不落存档（没有答案可存，快照不凑数）");
+  ok(listArchive(libDir).length === 0,
+    "P4-E2d: 失败不落存档（没有答案可存，快照不凑数——E1 末已 archiveClear 归零）");
 
   // E2e：H3 关书传播——关掉 skill 的书，云端总结直接人话拒掉，不降级、不问云端
   setSkillEnabled(libDir, BOOK_ID, false);
