@@ -111,35 +111,47 @@ export function serviceStatus(policy, now = new Date()) {
 }
 
 // ---------- 会话预算（进程内记账；MCP server 进程寿命 = 一个智能体会话） ----------
-// 桌面长进程同一份计数器——重启清零，属预期（会话语义）
-const session = { calls: 0, chars: 0 };
+// V03/A-05：桌面长进程里多个智能体会话共用一个进程，单例计数器会把所有会话的预算
+// 混成一锅——一个会话用完，其余会话全被连坐。改为按 sessionId 分账（Map）；
+// 不传 sessionId 的旧调用落 "default" 桶，行为与旧单例完全一致（零破坏兼容）。
+const sessions = new Map();
+const DEFAULT_SESSION = "default";
 
-export function sessionUsage() {
-  return { ...session };
+function bucket(id) {
+  const key = id == null ? DEFAULT_SESSION : String(id);
+  let s = sessions.get(key);
+  if (!s) { s = { calls: 0, chars: 0 }; sessions.set(key, s); }
+  return s;
 }
 
-export function resetSessionUsage() {
-  session.calls = 0;
-  session.chars = 0;
+export function sessionUsage(sessionId) {
+  return { ...bucket(sessionId) };
+}
+
+export function resetSessionUsage(sessionId) {
+  if (sessionId == null) sessions.clear();
+  else sessions.delete(String(sessionId));
 }
 
 // 调用前检查：tier=search 计次；tier=deepRead 计次+预估字符。
 // 返回 {ok:true} 或 {ok:false, error, hint, reason}
-export function checkBudget(policy, tier, estChars = 0) {
+export function checkBudget(policy, tier, estChars = 0, sessionId) {
   const b = policy?.budget || {};
-  if (session.calls + 1 > (b.perSessionQueries ?? 30))
+  const s = bucket(sessionId);
+  if (s.calls + 1 > (b.perSessionQueries ?? 30))
     return { ok: false, reason: "queries-exhausted", error: `本会话检索/深读调用次数已用尽（上限 ${b.perSessionQueries} 次）`, hint: "这是防 token 失控的会话配额。新开一个智能体会话即可重置；或调大 usage-policy.json 的 budget.perSessionQueries。" };
-  if (tier === "deepRead" && session.chars + estChars > (b.perSessionChars ?? 200000))
-    return { ok: false, reason: "chars-exhausted", error: `本会话深读字符预算即将超限（已用 ${session.chars}，上限 ${b.perSessionChars}）`, hint: "深读是 token 大头，已达会话预算上限。请改用检索类工具定位小范围内容，或新开会话。" };
+  if (tier === "deepRead" && s.chars + estChars > (b.perSessionChars ?? 200000))
+    return { ok: false, reason: "chars-exhausted", error: `本会话深读字符预算即将超限（已用 ${s.chars}，上限 ${b.perSessionChars}）`, hint: "深读是 token 大头，已达会话预算上限。请改用检索类工具定位小范围内容，或新开会话。" };
   if (tier === "deepRead" && estChars > (b.deepReadChars ?? 80000))
     return { ok: false, reason: "single-call-too-big", error: `单次深读预估 ${estChars} 字符，超过单次上限 ${b.deepReadChars}`, hint: "请缩小读取范围（换更小的章节或用 read_range 按块号区间读），或调大 budget.deepReadChars。" };
   return { ok: true };
 }
 
 // 调用后记账
-export function chargeUsage(tier, chars) {
-  session.calls += 1;
-  if (tier === "deepRead") session.chars += chars;
+export function chargeUsage(tier, chars, sessionId) {
+  const s = bucket(sessionId);
+  s.calls += 1;
+  if (tier === "deepRead") s.chars += chars;
 }
 
 // ---------- 审计日志（usage-log.jsonl，追加写；与 feedback-export 并列的导出位） ----------
