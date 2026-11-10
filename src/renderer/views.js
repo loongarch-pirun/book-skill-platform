@@ -19,17 +19,69 @@ export const renderCite = (x, withBook = true) => {
   return `<span class="cite" data-action="cite" data-bid="${esc(x.bookId || "")}" data-cid="${esc(x.id ?? "")}">${label}</span>`;
 };
 
+// ===== 第 2 轮 · 四视图共用状态条（纯函数，顶层不碰 DOM：ESM 循环导入防 TDZ） =====
+// 4.1 云端模式醒目提示：只消费 state.llm.config.hasKey（llmConfigGet 现有返回字段），零新 IPC。
+// 措辞硬避「云端 AI 配置」六字——renderer-graph-test.mjs:331/:370 在配置卡收起态断言该串不出现。
+export function cloudBannerHtml() {
+  const on = !!(state.llm?.config?.hasKey);
+  return on
+    ? `<div class="cloudbanner on"><span class="cbtag">云端模式已开启</span><span>开启后，<b>你的提问与引用片段将发往第三方 AI</b>；书库检索与原文始终留在本机。</span></div>`
+    : `<div class="cloudbanner off"><span class="cbtag">本地模式</span><span>书与检索<b>不出本机</b>；当前未接云端 AI，不会有任何内容外发。</span></div>`;
+}
+
+// 4.2 英文书语言提示与示例问句：逐书语言取 b.lang（IF-1，A 线提供，可能尚未落地）。
+// 字段缺失时给「中英双语」通用引导——绝不按书名猜语言、不新增 IPC。
+export function langHintHtml(bookId) {
+  const b = bookId ? state.books?.find((x) => x.id === bookId) : null;
+  const zhQ = "什么是真正的强大？", enQ = "What is true strength?";
+  if (b?.lang === "en") return `<div class="langhint"><b>这本是英文原版</b>：请用英文提问，中文提问可能检不到原文。示例问句：<span class="qe">${enQ}</span></div>`;
+  if (b?.lang === "zh") return `<div class="langhint"><b>这本是中文书</b>：用中文提问即可。示例问句：<span class="qe">${zhQ}</span></div>`;
+  return `<div class="langhint">读英文书请用<b>英文</b>提问（中文提问可能检不到原文）；中文书用中文问。示例：<span class="qe">${zhQ}</span><span class="qe">${enQ}</span></div>`;
+}
+
+// 4.6 有无原件标记：只读 book asset.exists（现有 booksList 返回字段，IF-2 无需新 IPC）；
+// 无原件标「库内文本浏览」，不冒充「翻原书」。
+export function origFlagHtml(b) {
+  return b?.asset?.exists
+    ? `<span class="origflag has" title="books/ 目录里有原始文件，可看原件视图">有原件 · 可看原书</span>`
+    : `<span class="origflag" title="没有原始文件，只能看库里切好的原文块">无原件 · 库内文本浏览</span>`;
+}
+
+// 4.2 书卡语言标记（IF-1 提供 b.lang；缺字段时不标，绝不按书名猜）
+export function bookLangHtml(b) {
+  if (b?.lang === "en") return `<span class="booklang en" title="英文书请用英文提问">EN · 英文书</span>`;
+  if (b?.lang === "zh") return `<span class="booklang" title="中文书用中文提问即可">ZH · 中文书</span>`;
+  return "";
+}
+
+// 4.5 四视图「引文 / 回验」状态标签：统一口径，点引用徽标跳原文逐字核对。
+export function verifyFlagHtml(mode = "on") {
+  const map = {
+    on: ["引文可回验", "点引用徽标跳原文逐字核对"],
+    pending: ["回验待确认", "命中原文块后可逐字核对"],
+    off: ["纯浏览", "本视图不产生引文"],
+  };
+  const [label, tip] = map[mode] || map.on;
+  return `<span class="verifyflag ${mode}" title="${esc(tip)}"><span class="dot"></span>${label}</span>`;
+}
+
 // ---------- ① 书架 ----------
 export function renderShelf() {
   const books = state.books;
+  // 4.4 / 4.7：书架首屏只留「选书 + 导入」。运维提示词 / 用量治理（MCP 对外服务）收进默认折叠的 details，
+  // 仍原样渲染在同一段 HTML 里（W1 断言认 innerHTML 串，不认可见性——折叠不删串，测试不挂）。
+  const ops = `${promptBoxHTML()}${usagePanelHTML()}`;
+  const settings = ops.trim()
+    ? `<details class="settings-fold"><summary>设置 · 运维 / 技能 / 对外服务（MCP）· 默认收起</summary><div class="foldbody">${ops}</div></details>`
+    : "";
   return `
-    <div class="view-title">书架</div>
+    <div class="viewhead"><div class="view-title">书架</div>${verifyFlagHtml("off")}</div>
     <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据 · 「洗数据」给每块产前置/标签/摘要（走云端，检索永远在本机）</div>
+    ${cloudBannerHtml()}
     <div class="dropzone" id="dropzone"><b>把书拖到这里</b>（.epub / .docx / .pdf / .txt）<span class="soon">先放进书架看原件 → 点「开始加工」才切片/向量化/编目（编目结果可稍后导入）</span></div>
-    ${promptBoxHTML()}
-    ${usagePanelHTML()}
     <div class="shelf">${books.map((b) => bookCard(b)).join("") || '<div class="empty">书架空空如也——去拖本书进来</div>'}
-    </div>`;
+    </div>
+    ${settings}`;
 }
 
 // 对外服务用量面板（W1 治理，2026-10-21）：开关/定时/预算写 usage-policy.json
@@ -124,6 +176,7 @@ function bookCard(b) {
       <h3>${esc(b.title)}</h3>
       <div class="bookmeta">${meta}</div>
       <div class="tags">${tags}</div>
+      <div class="tagrow">${origFlagHtml(b)}${bookLangHtml(b)}</div>
       ${badge}
       <div class="cardfoot">
         <span class="skill-dot ${b.skillEnabled ? "" : "off"}">${b.skillEnabled ? "AI 可查" : "skill 已关"}</span>
