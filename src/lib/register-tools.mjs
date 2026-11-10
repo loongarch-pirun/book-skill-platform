@@ -4,7 +4,7 @@ import { listBooks, hybridSearch, routeAndSearch, currentLibDir } from "./search
 import { getCatalogSummary, getPersonDetail, getThemeDetail, expandNeighborhood } from "./catalog.mjs";
 import { similarChunks } from "./similar.mjs";
 import { lookupEntry } from "./lookup.mjs";
-import { readChapter, readRange, readFullBook } from "./browse.mjs";
+import { readChapter, readRange, readFullBook, RANGE_CAP, CHAPTER_TOKEN_CAP, FULL_READ_TOKEN_CAP } from "./browse.mjs";
 import { getOutline } from "./outline.mjs";
 import { checkCitation } from "./cite-check.mjs";
 import { saveSkill as defaultSaveSkill, readSkill, listSkills } from "./skill-store.mjs";
@@ -69,7 +69,31 @@ function errResult(error, hint, reason) {
   return { content: [{ type: "text", text: JSON.stringify({ error, hint, reason }) }] };
 }
 
-async function gateCall(tier, tool, handler, args) {
+// V01（第2轮 P0）：事前估算深读请求的字符体量，喂给 checkBudget 的 estChars。
+// 纯函数：不查库/不读盘，只看工具名与请求参数，按「申请规模」估，不是按工具会截断到多少估——
+// 大区间请求要在 handler 查库取块之前被拦，别等截断完才发现超量。
+// 字符口径：1 token 最坏≈4 字符（英文），中文更省，取 4 保守高估。
+// read_range 按申请跨度估并钳到 RANGE_CAP（工具自身 clampRangeBlocks 上限 80 块）：
+//   单块字符上界取 2000 → 满额 80×2000=160000 字符，刻意落在
+//   (deepReadChars=80000, perSessionChars=200000] 窗口内：保证 checkBudget 命中
+//   「single-call-too-big」而不是先撞「chars-exhausted」（检查次序见 usage-policy.mjs:104-107）。
+//   不钳会让 estChars 飙到千万级、先撞会话总闸，reason 就不是单次超限了。
+// 整章/全文有自身 token 闸兜底，事前按该工具的最大返回体量估（不放大、不误杀）。
+const CHARS_PER_TOKEN = 4;
+const CHARS_PER_BLOCK = 2000;
+function estimateDeepReadChars(name, args = {}) {
+  if (name === "read_range") {
+    const from = Number(args.from) || 1;
+    const to = Number(args.to) || from;
+    const span = Math.max(1, Math.floor(to - from + 1));
+    return Math.min(span, RANGE_CAP) * CHARS_PER_BLOCK;
+  }
+  if (name === "get_chapter") return CHAPTER_TOKEN_CAP * CHARS_PER_TOKEN;
+  if (name === "read_full_book") return FULL_READ_TOKEN_CAP * CHARS_PER_TOKEN;
+  return 0; // metadata/search 档：字符闸不适用
+}
+
+async function gateCall(tier, tool, handler, args, estChars = 0) {
   if (tier === "metadata") return handler(args);
   const libDir = currentLibDir();
   const policy = loadUsagePolicy(libDir);
@@ -78,7 +102,7 @@ async function gateCall(tier, tool, handler, args) {
     recordUsage(libDir, { tool, tier, chars: 0, ok: false, reason: st.reason });
     return errResult("知识库对外服务未开放", st.hint, st.reason);
   }
-  const gate = checkBudget(policy, tier);
+  const gate = checkBudget(policy, tier, estChars);
   if (!gate.ok) {
     recordUsage(libDir, { tool, tier, chars: 0, ok: false, reason: gate.reason });
     return errResult(gate.error, gate.hint, gate.reason);
@@ -90,8 +114,8 @@ async function gateCall(tier, tool, handler, args) {
   return out;
 }
 
-// 导出为测试钩子（usage-gate-test 直接断言分级与拒收语义）
-export { TOOL_TIERS, gateCall };
+// 导出为测试钩子（usage-gate-test 直接断言分级与拒收语义；estimateDeepReadChars 供 V01 断言）
+export { TOOL_TIERS, gateCall, estimateDeepReadChars };
 
 // gate=false：自家验收测试豁免对外闸机——stage3/guard/similar-fuzz 起进程测的是工具协议
 // 与数据链路，不该被定时窗/预算/开关左右断言（2026-10-21 18:51 主人关闸后 stage3 全红的
@@ -103,7 +127,10 @@ export function registerServerTools(server, { gate = true, deps = {} } = {}) {
     const tier = assertRegistered(name); // V02 fail-closed：缺档抛错，拒绝注册
     registered.push(name);
     const effective = handlerOverrides[name] || handler;
-    const wrapped = gate ? async (args) => gateCall(tier, name, effective, args) : effective;
+    // V01：调用前按 name/args 现算 estChars 传进闸机，超量在 handler 查库取块之前短路
+    const wrapped = gate
+      ? async (args) => gateCall(tier, name, effective, args, estimateDeepReadChars(name, args ?? {}))
+      : effective;
     server.registerTool(name, def, wrapped);
   };
   reg("list_books", {
