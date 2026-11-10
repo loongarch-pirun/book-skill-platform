@@ -33,10 +33,11 @@ export function cloudBannerHtml() {
 }
 
 // 4.2 英文书语言提示与示例问句：逐书语言取 b.lang（IF-1）。
-// 实况（CP3 复核 B6）：lib/search.mjs listBooks 尚未回填 lang，生产里 b.lang 恒 undefined，
-// 因此下面 en/zh 两个精确分支当前不可达，用户实际看到的是最后那行中英双语兜底。
-// 等 A 线把 catalog.mjs 算出的 lang 写进 meta 并读回，这两支才生效——界面无需再改。
-// 字段缺失时给「中英双语」通用引导——绝不按书名猜语言、不新增 IPC。
+// 实况（CP3 复核 B6，已由 A 线闭环）：`feat/round2-logic` 的 `54eb504` 打通 lang——
+// 编目收尾 jobs.mjs 落 meta.lang，listBooks 读回（旧库无键时现场 detectLang 抽样估、不写库），
+// engine.mjs `{ ...b }` 自动带出。本分支 `feat/round2-ui` 尚未含该提交，**合流后**下面
+// en/zh 两个精确分支即达；界面无需再改。仅当书没有语言信息（旧库抽样失败 / 书列表未加载）
+// 才落到中英双语兜底——绝不按书名猜语言、不新增 IPC。
 export function langHintHtml(bookId) {
   const b = bookId ? state.books?.find((x) => x.id === bookId) : null;
   const zhQ = "什么是真正的强大？", enQ = "What is true strength?";
@@ -95,7 +96,10 @@ export function renderShelf() {
 }
 
 // 对外服务用量面板（W1 治理，2026-10-21）：开关/定时/预算写 usage-policy.json
-// （与 skill-state.json 同目录同模式），MCP 闸机读同一份——桌面写、外部智能体守
+// （与 skill-state.json 同目录同模式），MCP 闸机读同一份——桌面写、外部智能体守。
+// 文案口径（CP3 复核后对齐 A 线 usage-policy.mjs:113）：计数器是**进程级**——
+// MCP stdio 一个进程 = 一个智能体会话，桌面长进程同一份计数器、重启清零。
+// 故写「本进程会话」，不写「本会话」（后者会被误读成聊天窗口开着的这段时间）。
 function usagePanelHTML() {
   const u = state.usage;
   if (!u) return "";
@@ -113,8 +117,8 @@ function usagePanelHTML() {
         <span class="skill-dot ${on && open ? "" : "off"}">${on && open ? "开放中" : on ? "定时关闭中" : "已手动关闭"}</span>
         <button class="ghost sm" data-action="usagetoggle">${on ? "关闭" : "打开"}</button>
       </div>
-      <div class="usagemeta">定时：工作日 ${esc(win)}${sch.weekend ? " · 周末也开" : " · 周末关"} · 预算：每会话 ${esc(String(budget.perSessionQueries ?? 30))} 次 / ${fmtK(budget.perSessionChars ?? 200000)} 字符</div>
-      <div class="usagemeta">今日：调用 ${usage.calls} 次 · 返回 ${fmtK(usage.chars)} 字符 · 拒收 ${usage.rejected} 次 ｜ 本会话：${session.calls} 次 · ${fmtK(session.chars)} 字符</div>
+      <div class="usagemeta">定时：工作日 ${esc(win)}${sch.weekend ? " · 周末也开" : " · 周末关"} · 预算：每进程会话 ${esc(String(budget.perSessionQueries ?? 30))} 次 / ${fmtK(budget.perSessionChars ?? 200000)} 字符</div>
+      <div class="usagemeta">今日：调用 ${usage.calls} 次 · 返回 ${fmtK(usage.chars)} 字符 · 拒收 ${usage.rejected} 次 ｜ 本进程会话：${session.calls} 次 · ${fmtK(session.chars)} 字符</div>
       <div class="usagehint">关闭后外部智能体的检索/翻书会被拒并收到提示；书架清单、编目浏览和引文回验永远可用（不吃预算）。</div>
     </div>`;
 }
