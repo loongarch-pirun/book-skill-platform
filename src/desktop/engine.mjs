@@ -9,7 +9,7 @@ import { resolveDirs, writeConfig, hasConfig } from "./paths.mjs";
 import { listBooks, findBook, hybridSearch, routeAndSearch, configureSearch, currentLibDir } from "../lib/search.mjs";
 import { getOutline } from "../lib/outline.mjs";
 import { listShelf, resolveAsset, safeBookId } from "../lib/assets.mjs";
-import { purgeDerived } from "../lib/derived.mjs";
+import { purgeDerived, checkDerivedPointers } from "../lib/derived.mjs";
 import { describeAsset } from "./book-view.mjs";
 import { getCatalogSummary } from "../lib/catalog.mjs";
 import { questionKeywords } from "../lib/keywords.mjs";
@@ -217,10 +217,15 @@ export function deleteBook(bookId) {
   // （loadSkillState 各消费点按 bookId 查，未知键无害），留一行痕迹供排障（C18/D3）
   try { setSkillEnabled(libDir, bookId, true); }
   catch (e) { console.warn(`  开关记录清理失败（${e?.code || e?.message}）——书库已删，残留记录无害`); }
+  // V13/A-09：移出书架后派生六落点仍在盘上（P5 拍板保留）——回执带观测清单，
+  // 让「还留了哪些派生」可看见。只读不删，不改变第一档行为。
+  const dp = checkDerivedPointers(libDir, bookId);
   const hasAsset = resolveAsset(libDir, bookId).exists;
-  return { deleted: bookId, removedAsset: false, note: hasAsset
+  const note = (hasAsset
     ? "已移出书架——书库文件已删，books/ 原件还在；点「开始加工」可重建"
-    : "已移出书架——书库文件已删（这本没有 books/ 原件，重建要重新导入文件）" };
+    : "已移出书架——书库文件已删（这本没有 books/ 原件，重建要重新导入文件）")
+    + (dp.ok && dp.existingCount > 0 ? `；编目/洗数据派生文件保留 ${dp.existingCount} 项（彻底删除时一并清）` : "");
+  return { deleted: bookId, removedAsset: false, derivedPointers: dp, note };
 }
 
 // 删书第二档「彻底删除」（V3 第四波 #168；P5 补齐派生六落点）：书库文件 + books/ 原件 +

@@ -19,17 +19,46 @@ function readLines(libDir) {
   } catch { return []; }
 }
 
+// 原子写：tmp + renameSync（同目录同盘 rename 原子）。老逻辑 writeFileSync 直写目标文件，
+// 多进程同时砍最旧时后者半截覆盖前者（V13/A-09：单写者语义下锁保护 + 原子替换双保险）。
 function writeLines(libDir, lines) {
-  fs.mkdirSync(path.join(libDir, "chat-archive"), { recursive: true });
-  fs.writeFileSync(archivePath(libDir), lines.join("\n") + "\n", "utf8");
+  const dir = path.join(libDir, "chat-archive");
+  fs.mkdirSync(dir, { recursive: true });
+  const p = archivePath(libDir);
+  const tmp = p + ".tmp-" + process.pid;
+  fs.writeFileSync(tmp, lines.join("\n") + "\n", "utf8");
+  try {
+    fs.renameSync(tmp, p);
+  } catch (e) {
+    try { fs.rmSync(tmp, { force: true }); } catch { /* 清理失败无碍 */ }
+    throw e;
+  }
+}
+
+// 跨进程砍最旧互斥：锁文件 wx 独占创建，拿不到=别的进程正在砍，跳过本次修剪
+// （append 本身 O_APPEND 原子已落盘，只晚一轮到 500 上限，无数据丢失）。
+// 单写者语义（拍板项 5）：生产写路径只走本模块，锁只防多进程交叠，不是分布式锁。
+function pruneIfNeeded(libDir) {
+  const lockPath = archivePath(libDir) + ".lock";
+  let lockFd;
+  try {
+    lockFd = fs.openSync(lockPath, "wx");
+  } catch { return; } // 已被占用 → 跳过修剪
+  try {
+    const lines = readLines(libDir);
+    if (lines.length > MAX_ENTRIES) writeLines(libDir, lines.slice(-MAX_ENTRIES));
+  } finally {
+    try { fs.closeSync(lockFd); } catch { /* 已关 */ }
+    try { fs.rmSync(lockPath, { force: true }); } catch { /* 已被并发者清走 */ }
+  }
 }
 
 // 追加一条快照（entry 由调用方备料：question/answer/mode/book/model/segments/dropped/usage/citations）；
 // 超上限自动砍最旧。写失败会抛——调用方（chat.mjs）必须 try 兜底：存档失败绝不能炸掉回答。
 // V2-D04（暴力测试 P1 修）：老逻辑 read-modify-write 全量重写，多进程并发追加时
 // 后写者覆盖先写者（实测 4 子进程×25 条只剩 4 条）。改快路：appendFileSync 单行追加，
-// O_APPEND 下小写由 OS 保证原子；仅总量超 MAX_ENTRIES 才读全量重写砍最旧
-// （残留交叠窗口：并发+超上限同时发生仍可能互覆，上界 500 守住，登记 OBSERVE）。
+// O_APPEND 下小写由 OS 保证原子；仅总量超 MAX_ENTRIES 才读全量重写砍最旧。
+// V13/A-09：砍最旧改「锁互斥 + tmp 原子替换」，闭合「并发+超上限交叠互覆」的 OBSERVE 窗口。
 export function appendArchive(libDir, entry) {
   const p = archivePath(libDir);
   const line = JSON.stringify({ ts: new Date().toISOString(), ...entry });
@@ -38,8 +67,7 @@ export function appendArchive(libDir, entry) {
   const existing = fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "";
   const sep = existing && !existing.endsWith("\n") ? "\n" : "";
   fs.appendFileSync(p, sep + line + "\n", "utf8");
-  const lines = readLines(libDir);
-  if (lines.length > MAX_ENTRIES) writeLines(libDir, lines.slice(-MAX_ENTRIES));
+  pruneIfNeeded(libDir);
 }
 
 // 列表：新 → 旧，limit 封顶（UI 翻历史用）。坏行跳过不挡好数据。

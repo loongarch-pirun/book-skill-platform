@@ -76,6 +76,29 @@ export function derivedCandidates(libDir, bookId) {
 //   wouldRemove  dryRun 模式下「本会删掉」的项
 //   removedCount  removed.length
 // dryRun:true 只列不删（真库只读验收用）。
+// V13/A-09：checkDerivedPointers = 纯读观测（不删任何东西）。移出书架（deleteBook）
+// 按 P5 拍板保留派生六落点——但没有读端时，用户与补刀路都看不到「还留了哪些」，
+// 派生指针成了隐性状态。返回 candidates.items 逐项 fs.existsSync 的存在清单。
+export function checkDerivedPointers(libDir, bookId) {
+  const cand = derivedCandidates(libDir, bookId);
+  if (!cand.ok) {
+    return { ok: false, bookId: null, input: String(bookId ?? ""), root: cand.root, rejected: true, items: [], existingCount: 0 };
+  }
+  const items = cand.items.map((it) => {
+    let exists;
+    try { exists = fs.existsSync(it.path); } catch { exists = false; }
+    return { ...it, exists };
+  });
+  return {
+    ok: true,
+    bookId: cand.bookId,
+    root: cand.root,
+    rejected: false,
+    items,
+    existingCount: items.filter((i) => i.exists).length,
+  };
+}
+
 export function purgeDerived(libDir, bookId, opts) {
   const o = opts || {};
   const dryRun = o.dryRun === true;

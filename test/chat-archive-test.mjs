@@ -64,6 +64,21 @@ fs.mkdirSync(fresh, { recursive: true });
 ok(listArchive(fresh).length === 0 && purgeBook(fresh, "x") === 0, "空目录：列表空、purge 返回 0");
 ok(!fs.existsSync(path.join(fresh, "chat-archive")), "空目录 purge 不创建存档文件（无匹配不写盘）");
 
+// ---------- 7) V13/A-09：砍最旧原子替换 + 无残留 tmp 文件 + 锁自清 ----------
+{
+  // 7a：超上限后再读——原子替换不破内容（砍最旧语义与 §5 一致，这里验写路径原子性副作用）
+  ok(listArchive(libDir, { limit: 1000 }).length === 500, "V13: 原子替换后仍 500 条（内容完好）");
+  const dirFiles = fs.readdirSync(path.join(libDir, "chat-archive"));
+  ok(!dirFiles.some((f) => f.includes(".tmp-")), "V13: 无 .tmp-* 残留（rename 成功即清）", dirFiles.join(","));
+  ok(!dirFiles.some((f) => f.endsWith(".lock")), "V13: 修剪锁用后即清（不残留 .lock）", dirFiles.join(","));
+  // 7b：再追加 1 条触发修剪路径 → 原子替换正常、锁自清
+  appendArchive(libDir, entry("问题503", "a.docx"));
+  ok(listArchive(libDir, { limit: 1000 }).length === 500, "V13: 再触发修剪仍封顶 500");
+  const dirFiles2 = fs.readdirSync(path.join(libDir, "chat-archive"));
+  ok(!dirFiles2.some((f) => f.includes(".tmp-") || f.endsWith(".lock")),
+    "V13: 修剪后目录干净（无 tmp/lock 残留）", dirFiles2.join(","));
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`===== chat-archive-test: ${pass} PASS / ${fail} FAIL =====`);
 process.exit(fail ? 1 : 0);
