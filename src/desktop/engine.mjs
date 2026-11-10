@@ -25,7 +25,7 @@ const Database = require("better-sqlite3");
 let _dirs = null, _userData = null, _packaged = false, _resourcesDir = null;
 
 // ---------- 初始化：三层解析 → 注入三个 lib + 回写环境变量（M2：spawn 的 CLI 子进程继承） ----------
-// resourcesDir 仅打包态传（main.js 给 app.getPath("resources")）：modelsDir 内置资源优先
+// resourcesDir 仅打包态传（main.js 给 process.resourcesPath）：modelsDir 内置资源优先
 // 与首启种子化都指着它。dev/test 态不传，行为与以前逐字节一致。
 export function init({ packaged = false, userData = null, resourcesDir = null } = {}) {
   _packaged = packaged;

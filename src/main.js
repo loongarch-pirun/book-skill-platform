@@ -33,8 +33,12 @@ async function boot() {
   const { registerIpc } = await import(pathToFileURL(path.join(__dirname, "desktop", "ipc.mjs")).href);
   const engine = await registerIpc({ ipcMain, app, dialog, shell, getWin: () => win });
   // 引擎初始化（三层目录解析 → 注入 lib）；模型下载进度 → 渲染进程。
-  // resourcesDir（打包态）：extraResources 落地处——modelsDir 内置资源优先与首启种子化都指着它
-  engine.init({ packaged: app.isPackaged, userData: app.getPath("userData"), resourcesDir: app.getPath("resources") });
+  // resourcesDir（打包态）：extraResources 落地处——modelsDir 内置资源优先与首启种子化都指着它。
+  // 必须用 process.resourcesPath：Electron 的 app.getPath() 只认固定名单
+  // （home|appData|assets|userData|sessionData|temp|exe|module|desktop|documents|downloads|
+  //   music|pictures|videos|recent|logs|crashDumps），"resources" 不在其中，会直接抛
+  // "Failed to get 'resources' path" → 安装版每次启动引擎都初始化失败（书架 0 本、模型永远加载中）。
+  engine.init({ packaged: app.isPackaged, userData: app.getPath("userData"), resourcesDir: process.resourcesPath });
   engine.onModelProgress((e) => {
     if (win && !win.isDestroyed()) win.webContents.send("model:progress", e);
   });

@@ -37,7 +37,7 @@ export function hasConfig(userData) {
 
 // 解析三个数据目录。packaged=false 时 userData 可省略（走项目根默认层，dev/test 用）。
 // resourcesDir 仅打包态有意义：安装包内置资源目录（extraResources 落地处，main.js 传
-// app.getPath("resources")）。modelsDir 在打包态走「内置资源优先」——resources/models
+// process.resourcesPath）。modelsDir 在打包态走「内置资源优先」——resources/models
 // 存在就直接用（713MB 不拷贝、只读；env/用户配置仍最高优先）；library/skillsDir 不优先，
 // 那两样要可写（SQLite/技能增删），由首启向导 seedBundledData 拷进 userData 后用默认层。
 export function resolveDirs({ packaged = false, userData = null, resourcesDir = null } = {}) {

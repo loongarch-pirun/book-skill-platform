@@ -1155,8 +1155,13 @@ const copyDb = (src) => {
   ok(preSrc.includes("seedStart:") && preSrc.includes("onSeedProgress:"),
     "静态: preload 暴露 seedStart/onSeedProgress 给渲染层");
   const mainSrc = stripComments(readSrc("src", "main.js"));
-  ok(mainSrc.includes('resourcesDir: app.getPath("resources")'),
+  // 只断言「打包态内置资源入口传了路径」，不锁具体取值——原版锁死 app.getPath("resources")，
+  // 而 Electron 的 app.getPath() 根本没有 "resources" 这个名字（会抛 Failed to get 'resources' path），
+  // 于是这条断言把 bug 当成了契约、在 CP3 真机里挡住修复。取值正确性由 paths-test 8b 静态守。
+  ok(/resourcesDir:\s*(process\.resourcesPath|app\.getPath\([^)]*\))/.test(mainSrc),
     "静态: main.js init 传 resources 路径（打包态内置资源入口）");
+  ok(!/app\.getPath\(["']resources["']\)/.test(mainSrc),
+    "静态: main.js 不得用 app.getPath(\"resources\")（Electron 无此路径，安装版必崩）");
 
   // ④ 向导三选项 + 模型文案（对齐审查偏差 3/5）
   const appSrc = stripComments(readSrc("src", "renderer", "app.js"));

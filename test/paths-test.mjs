@@ -103,6 +103,24 @@ ok(loadFileArg.includes("__dirname"), "main.js: loadFile 按 __dirname 定位（
 ok(!/loadFile\(["']index\.html["']\)/.test(mainSrc), "main.js: 无裸相对路径 loadFile(\"index.html\")");
 ok(mainSrc.includes("did-fail-load"), "main.js: 页面加载失败有 did-fail-load 兜底弹窗（不静默）");
 
+// 8b) main.js 静态防回归（真机验收逮到的 P0，基线遗留 6302d66）：app.getPath() 只认固定名单
+//     （home|appData|assets|userData|sessionData|temp|exe|module|desktop|documents|downloads|
+//      music|pictures|videos|recent|logs|crashDumps），传 "resources" 会直接抛
+//     "Failed to get 'resources' path" → engine.init 抛在 boot() 里，被 main.js:96 的
+//     try/catch 兜住后仍 createWindow()：窗口开得出来，但引擎没初始化，
+//     书架 0 本书、模型永远「加载中…」。这种「崩了一半还开窗」的错自动化测不出来
+//     （沙箱开不了窗口），只能静态断言。正确写法是 process.resourcesPath。
+{
+  const badNames = ["resources", "app", "root", "dist"];
+  const badHits = badNames.filter((n) => new RegExp(`app\\.getPath\\(["']${n}["']\\)`).test(mainSrc));
+  ok(badHits.length === 0, `main.js: 未调用 app.getPath() 不支持的名单外名字（含 ${JSON.stringify(badHits)}）`);
+  ok(mainSrc.includes("resourcesDir: process.resourcesPath"),
+    "main.js: resourcesDir 用 process.resourcesPath（防安装版引擎 boot 失败 P0）");
+  // 反向：只要出现 app.getPath("resources") 就是回归，哪怕同时写了正确写法
+  ok(!/app\.getPath\(["']resources["']\)/.test(mainSrc),
+    "main.js: 无 app.getPath(\"resources\") 残留（Electron 无此路径，必抛）");
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`===== paths-test: ${pass} PASS / ${fail} FAIL =====`);
 process.exit(fail ? 1 : 0);
