@@ -9,7 +9,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-const { derivedCandidates, derivedRoot, purgeDerived } = await import("../src/lib/derived.mjs");
+const { derivedCandidates, derivedRoot, purgeDerived, checkDerivedPointers } = await import("../src/lib/derived.mjs");
 
 let pass = 0, fail = 0, skipped = 0;
 const ok = (cond, msg, extra) => {
@@ -262,6 +262,37 @@ console.log("\n--- §11 近似书名不许点到兄弟书 ---");
   ok(sibling.every((f) => fs.existsSync(f)), "§11 隔壁 foo.md 的六项一格不动（数据丢失路径堵死）");
   ok(spaced.every((f) => fs.existsSync(f)), "§11 被拒的请求零副作用（自己那六项也没删）");
   fs.rmSync(tmp, { recursive: true, force: true });
+}
+
+// ---------- §12 V13/A-09：checkDerivedPointers 纯读观测 ----------
+console.log("\n--- §12 派生指针可观测（只读，不删） ---");
+{
+  const { tmp, lib } = mkTmp();
+  seedAll(lib, "obs.md");
+  const dp = checkDerivedPointers(lib, "obs.md");
+  ok(dp.ok === true && dp.bookId === "obs.md" && dp.items.length === 6,
+    "§12 六落点全部定位（items.length=6）");
+  ok(dp.existingCount === 6 && dp.items.every((i) => i.exists === true),
+    "§12 seed 后六项 exists=true（existingCount=6）");
+  // 只读：不删任何东西（六项还在）
+  ok(dp.items.every((i) => fs.existsSync(i.path)), "§12 观测后六项原样在盘（纯读，零删除）");
+  // 只放三项 → existingCount=3
+  const { tmp: t2, lib: l2 } = mkTmp();
+  const root2 = path.join(l2, "..");
+  fs.mkdirSync(path.join(root2, "catalog-tasks"), { recursive: true });
+  fs.mkdirSync(path.join(root2, "catalog-results"), { recursive: true });
+  fs.writeFileSync(path.join(root2, "catalog-tasks", "half.md.json"), "x", "utf8");
+  fs.writeFileSync(path.join(root2, "catalog-tasks", "half.md.prompt.md"), "x", "utf8");
+  fs.writeFileSync(path.join(root2, "catalog-results", "half.md.json"), "x", "utf8");
+  const dp2 = checkDerivedPointers(l2, "half.md");
+  ok(dp2.existingCount === 3 && dp2.items.filter((i) => i.exists).length === 3,
+    "§12 半量派生 → existingCount=3（精确反映落盘项）");
+  // 非法 id → rejected（与 purgeDerived 同闸门）
+  const dp3 = checkDerivedPointers(l2, " foo.md");
+  ok(dp3.rejected === true && dp3.items.length === 0 && dp3.existingCount === 0,
+    "§12 非法 id（前导空白）→ rejected（同一闸门，零副作用）");
+  fs.rmSync(tmp, { recursive: true, force: true });
+  fs.rmSync(t2, { recursive: true, force: true });
 }
 
 console.log();

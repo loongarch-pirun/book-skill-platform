@@ -19,27 +19,64 @@ function readLines(libDir) {
   } catch { return []; }
 }
 
+// 原子写：tmp + renameSync（同目录同盘 rename 原子）。老逻辑 writeFileSync 直写目标文件，
+// 多进程同时砍最旧时后者半截覆盖前者（V13/A-09：单写者语义下锁保护 + 原子替换双保险）。
 function writeLines(libDir, lines) {
-  fs.mkdirSync(path.join(libDir, "chat-archive"), { recursive: true });
-  fs.writeFileSync(archivePath(libDir), lines.join("\n") + "\n", "utf8");
+  const dir = path.join(libDir, "chat-archive");
+  fs.mkdirSync(dir, { recursive: true });
+  const p = archivePath(libDir);
+  const tmp = p + ".tmp-" + process.pid;
+  fs.writeFileSync(tmp, lines.join("\n") + "\n", "utf8");
+  try {
+    fs.renameSync(tmp, p);
+  } catch (e) {
+    try { fs.rmSync(tmp, { force: true }); } catch { /* 清理失败无碍 */ }
+    throw e;
+  }
+}
+
+// 跨进程互斥：锁文件 wx 独占创建。B4/CP3：append 与 prune 合并进同一把锁——旧实现
+// append 在锁外，A 进程修剪读到 N 行快照后、renameSync 前，B 进程追加的第 N+1 行会被
+// 旧快照整体覆盖吞掉（prune-vs-append 窗口，复核单 B4）。拿不到锁时裸 append
+// （O_APPEND 单行追加原子）保本行不丢，只把修剪让给下一个拿到锁的进程。
+function appendAndPrune(libDir, line, p) {
+  const lockPath = p + ".lock";
+  let lockFd;
+  try {
+    lockFd = fs.openSync(lockPath, "wx");
+  } catch {
+    // 锁被占用（别的进程正在追加+修剪）：裸 append 保数据，本轮不修剪
+    const existing = fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "";
+    const sep = existing && !existing.endsWith("\n") ? "\n" : "";
+    fs.appendFileSync(p, sep + line + "\n", "utf8");
+    return;
+  }
+  try {
+    // 半行保护：上次崩溃可能留下无换行结尾的半行——先补 \n，防止新旧行粘连成一条坏行
+    const existing = fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "";
+    const sep = existing && !existing.endsWith("\n") ? "\n" : "";
+    fs.appendFileSync(p, sep + line + "\n", "utf8");
+    // 锁内修剪：此刻无其他进程追加/修剪，快照 → rename 期间无人插行
+    const lines = readLines(libDir);
+    if (lines.length > MAX_ENTRIES) writeLines(libDir, lines.slice(-MAX_ENTRIES));
+  } finally {
+    try { fs.closeSync(lockFd); } catch { /* 已关 */ }
+    try { fs.rmSync(lockPath, { force: true }); } catch { /* 已被并发者清走 */ }
+  }
 }
 
 // 追加一条快照（entry 由调用方备料：question/answer/mode/book/model/segments/dropped/usage/citations）；
 // 超上限自动砍最旧。写失败会抛——调用方（chat.mjs）必须 try 兜底：存档失败绝不能炸掉回答。
 // V2-D04（暴力测试 P1 修）：老逻辑 read-modify-write 全量重写，多进程并发追加时
 // 后写者覆盖先写者（实测 4 子进程×25 条只剩 4 条）。改快路：appendFileSync 单行追加，
-// O_APPEND 下小写由 OS 保证原子；仅总量超 MAX_ENTRIES 才读全量重写砍最旧
-// （残留交叠窗口：并发+超上限同时发生仍可能互覆，上界 500 守住，登记 OBSERVE）。
+// O_APPEND 下小写由 OS 保证原子；仅总量超 MAX_ENTRIES 才读全量重写砍最旧。
+// B4/CP3：append+prune 同锁（appendAndPrune）；「并发修剪 vs 并发追加」互斥在同一临界区
+// 内完成——不再是 V13/A-09 时「锁只护 prune-vs-prune、append 仍在锁外」的半吊子口径。
 export function appendArchive(libDir, entry) {
   const p = archivePath(libDir);
   const line = JSON.stringify({ ts: new Date().toISOString(), ...entry });
   fs.mkdirSync(path.dirname(p), { recursive: true });
-  // 半行保护：上次崩溃可能留下无换行结尾的半行——先补 \n，防止新旧行粘连成一条坏行
-  const existing = fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "";
-  const sep = existing && !existing.endsWith("\n") ? "\n" : "";
-  fs.appendFileSync(p, sep + line + "\n", "utf8");
-  const lines = readLines(libDir);
-  if (lines.length > MAX_ENTRIES) writeLines(libDir, lines.slice(-MAX_ENTRIES));
+  appendAndPrune(libDir, line, p);
 }
 
 // 列表：新 → 旧，limit 封顶（UI 翻历史用）。坏行跳过不挡好数据。

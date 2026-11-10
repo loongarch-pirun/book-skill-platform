@@ -77,8 +77,18 @@ function scanBooks(libDir) {
           chapterQuality = qualityFromStats({ total: st.total || 0, withChapter: st.named || 0, avgNameLen: st.avg_len || 0 });
         } catch { chapterQuality = null; }
       }
+      // B6/CP3：lang 语义打通——meta.lang 由编目（jobs.mjs B6 改动）落库；旧库没有该键时
+      // 现场用 detectLang 抽样估（与上面 total_tokens 同款兜底模式，readonly 不写库）。
+      // engine.mjs {...b} 自动带上，B 线英文书分支从此可达。
+      let lang = meta.lang || null;
+      if (!lang) {
+        try {
+          const sample = db.prepare("SELECT text FROM chunks LIMIT 50").all().map(r => r.text);
+          lang = detectLang(sample);
+        } catch { lang = null; } // 坏库/空表：保持 null，调用方按未知处理
+      }
       db.close();
-      return { id: f.replace(/\.db$/, ""), db: dbPath, title: meta.title || f, format: meta.format, model: meta.model || null, chunks: +meta.chunk_count, chars: +meta.total_chars, pages: meta.num_pages || null, chapters: meta.num_chapters || null, total_tokens: totalTokens, chapter_quality: chapterQuality };
+      return { id: f.replace(/\.db$/, ""), db: dbPath, title: meta.title || f, format: meta.format, model: meta.model || null, chunks: +meta.chunk_count, chars: +meta.total_chars, pages: meta.num_pages || null, chapters: meta.num_chapters || null, total_tokens: totalTokens, chapter_quality: chapterQuality, lang };
     } catch {
       // 坏库过滤：句柄必须先 close——Windows 上泄漏会让删库/清理临时目录报 EBUSY
       try { db?.close(); } catch { /* close 失败无从补救，继续过滤 */ }

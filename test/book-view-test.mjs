@@ -111,6 +111,23 @@ for (const bad of ["../etc/passwd", "a/b", ""]) {
   ok(res.status === 400, "反斜杠穿越同样拒（safeBookId 双分隔符）");
 }
 
+// ===== V07/A-07：三项安全开关唯一正本（不新增 IPC，快照直接 import 断言） =====
+{
+  const { webPreferencesSnapshot, hardenedWebPreferences } = await import("../src/desktop/security-prefs.js");
+  const snap = webPreferencesSnapshot();
+  ok(snap.contextIsolation === true, "V07: webPreferencesSnapshot contextIsolation=true");
+  ok(snap.nodeIntegration === false, "V07: webPreferencesSnapshot nodeIntegration=false");
+  ok(snap.sandbox === true, "V07: webPreferencesSnapshot sandbox=true");
+  const hardened = hardenedWebPreferences();
+  ok(JSON.stringify(hardened) === JSON.stringify(snap), "V07: 主窗口 hardened 与快照同源（不留第二套真值）");
+}
+{
+  // 静态复核：main.js 的 webPreferences 必须展开唯一正本，不许出现裸写三项的第二套真值
+  const mainSrc = fs.readFileSync(path.join(import.meta.dirname, "..", "src", "main.js"), "utf8");
+  ok(mainSrc.includes("...hardenedWebPreferences()"), "V07: main.js webPreferences 展开唯一正本（不放第二套真值）");
+  ok(!/nodeIntegration:\s*true/.test(mainSrc), "V07: main.js 无 nodeIntegration:true 反写");
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`===== book-view-test: ${pass} pass / ${fail} fail =====`);
 process.exit(fail ? 1 : 0);

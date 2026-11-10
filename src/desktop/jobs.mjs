@@ -299,6 +299,14 @@ export async function startProcessing(bookId) {
     emitG({ stage: "failed", label: "加工失败", error: why });
     throw new UserError(why);
   } finally { dbRo.close(); }
+  // B6/CP3：buildTask 现场算出的 lang 落 meta（复核单首选「建库时写 meta」在 A 域的等效实现
+  // ——build-book.js 不在 A 文件域，且编目聚堆本来就是 lang 第一次被算出来的时点）。
+  // listBooks 读回后 b.lang 随 engine.mjs {...b} 进生产链路，B 线英文书分支可达。
+  {
+    const dbLang = new Database(outDb);
+    try { dbLang.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('lang',?)").run(task.book.lang); }
+    finally { dbLang.close(); }
+  }
   fs.mkdirSync(tasksDir, { recursive: true });
   const taskPath = path.join(tasksDir, `${id}.json`);
   fs.writeFileSync(taskPath, JSON.stringify(task, null, 1), "utf8");

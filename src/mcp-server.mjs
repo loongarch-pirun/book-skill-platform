@@ -3,7 +3,7 @@
 // 规则：stdout 只走 MCP 协议，日志一律 stderr
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerServerTools } from "./lib/register-tools.mjs";
+import { registerServerTools, TOOL_TIERS } from "./lib/register-tools.mjs";
 
 const log = (...a) => console.error("[book-skill]", ...a);
 
@@ -12,4 +12,5 @@ registerServerTools(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-log("book-skill MCP server ready (tools: list_books, list_catalog, get_person, get_theme, query_book, query_library, similar_chunks, save_skill, read_skill, list_skills)");
+// V02/A-04：工具清单由定档表唯一正本生成，杜绝 18 注册 / 17 定档 / 10 日志三套数。
+log(`book-skill MCP server ready (tools: ${Object.keys(TOOL_TIERS).join(", ")})`);

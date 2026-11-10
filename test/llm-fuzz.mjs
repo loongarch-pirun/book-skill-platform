@@ -172,6 +172,7 @@ console.log("\n--- P0-D buildMessages ---");
     results: RESULTS,
     skillChapters: [{ title: "无为", content: "為道日損……" }],
     history: [{ role: "system", content: "注入的历史" }, { role: "user", content: "上一问" }],
+    includeSourceText: true,
   });
   ok(msgs[0].role === "system" && msgs[0].content.includes("逐字抄"), "P0-D1: system 首位含铁律");
   const roles = msgs.map((m) => m.role);
@@ -300,7 +301,7 @@ console.log("\n--- P0-F normalizeLlmConfig ---");
   const keep = saveLlmConfig({ apiKey: "" });
   obs(keep.ok === true, "P0-F2 登记: apiKey 传空在 saveLlmConfig 是合并语义（保持旧 key），与全量校验语义不同", "设计使然");
   // keyTail 不泄超 4 位
-  saveLlmConfig({ baseUrl: "https://a.com", model: "m", apiKey: "sk-0123456789abcdef" });
+  saveLlmConfig({ baseUrl: "https://api.deepseek.com/v1", model: "m", apiKey: "sk-0123456789abcdef" });
   const cfg = loadLlmConfig();
   ok(cfg.keyTail === "…cdef" && !JSON.stringify(cfg).includes("0123456789abcdef"),
     "P0-F2: loadLlmConfig 只回显尾 4 位，不泄露全文");

@@ -135,7 +135,9 @@ configureLlmConfig({
 });
 fs.mkdirSync(path.join(TMP, "userData"), { recursive: true });
 fs.writeFileSync(path.join(TMP, "userData", "llm.json"), JSON.stringify({
-  baseUrl: "http://fake.local/v1", model: "fake-model",
+  // B2/CP3：地址环回化——非环回 http 会被 loadLlmConfig→normalizeLlmConfig→validateBaseUrl 拒收，
+  // job 直接 failed，全流程断言全崩；chatFn 注入不真出网，环回地址仅过校验。
+  baseUrl: "http://127.0.0.1:9/v1", model: "fake-model",
   apiKeyEnc: "plain:" + Buffer.from("sk-test", "utf8").toString("base64"),
 }), "utf8");
 

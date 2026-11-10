@@ -7,7 +7,9 @@ import path from "node:path";
 
 export const DEFAULT_POLICY = {
   enabled: true,
-  schedule: { workdays: ["09:00-18:30"], weekend: false, timezone: "Asia/Shanghai" },
+  // V04/A-06：与随包 library/usage-policy.json 同源对齐（00:00-24:00 + 周末开，全天开放）——
+  // 两份正本口径一致，「盘坏回退默认」与「盘好」不产生服务窗口跳变
+  schedule: { workdays: ["00:00-24:00"], weekend: true, timezone: "Asia/Shanghai" },
   budget: { perSessionChars: 200000, perSessionQueries: 30, deepReadChars: 80000 },
 };
 
@@ -15,14 +17,37 @@ export function usagePolicyPath(libDir) {
   return path.join(libDir, "usage-policy.json");
 }
 
-// 读整份策略：磁盘文件覆盖默认值（深合并，缺字段回退默认——旧文件/半截文件不伤）
+// 读整份策略：磁盘文件覆盖默认值（深合并，缺字段回退默认——旧文件/半截文件不伤）。
+// V04/A-06：不再静默吞错——返回值带 __source（"disk" / "default" / "default-after-error"）
+// 与 __error（读盘/解析失败原因），坏文件时 console.warn 明确告警；无文件=首启正常态不算错。
 export function loadUsagePolicy(libDir) {
   let disk = {};
+  let __source = "default";
+  let __error = null;
+  const p = usagePolicyPath(libDir);
+  let raw = null;
   try {
-    disk = JSON.parse(fs.readFileSync(usagePolicyPath(libDir), "utf8"));
-    if (!disk || typeof disk !== "object") disk = {};
-  } catch { /* 无文件/坏 JSON：全默认 */ }
+    raw = fs.readFileSync(p, "utf8");
+  } catch (e) {
+    if (e?.code !== "ENOENT") { __source = "default-after-error"; __error = `读取失败: ${e?.message || e}`; }
+  }
+  if (raw !== null) {
+    try {
+      disk = JSON.parse(raw);
+      if (!disk || typeof disk !== "object") { disk = {}; __source = "default-after-error"; __error = "内容不是 JSON 对象"; }
+      else __source = "disk";
+    } catch (e) {
+      disk = {};
+      __source = "default-after-error";
+      __error = `JSON 解析失败: ${e?.message || e}`;
+    }
+  }
+  if (__source === "default-after-error") {
+    console.warn(`[usage-policy] 警告：${p} 无法使用（${__error}），已回退内置默认策略并继续服务。生效来源=default-after-error，请修复或删除该文件后重启。`);
+  }
   return {
+    __source,
+    __error,
     enabled: typeof disk.enabled === "boolean" ? disk.enabled : DEFAULT_POLICY.enabled,
     schedule: { ...DEFAULT_POLICY.schedule, ...(disk.schedule || {}) },
     budget: { ...DEFAULT_POLICY.budget, ...(disk.budget || {}) },
@@ -73,45 +98,62 @@ export function inScheduleWindow(policy, now = new Date()) {
 }
 
 // 服务当前是否对检索/深读开放：{open, reason}
-// reason 供 hint 用：关闭态说清是手动关还是不在窗口
+// reason 供 hint 用：关闭态说清是手动关还是不在窗口。
+// V04/A-06：policy.__source === "default-after-error"（盘坏回退默认）时附带 fallback 标记，
+// 让上游（engine.usagePolicyGet 等）可观测「策略不是从盘上正常读到的」——不 throw、不阻断。
 export function serviceStatus(policy, now = new Date()) {
+  const out = policy?.__source === "default-after-error" ? { fallback: "policy-fallback" } : {};
   if (!policy.enabled)
-    return { open: false, reason: "manual-off", hint: "知识库对外服务当前是手动关闭状态。需要时请在桌面端书架页打开「知识库对外服务」开关，或修改 usage-policy.json 的 enabled。" };
+    return { ...out, open: false, reason: "manual-off", hint: "知识库对外服务当前是手动关闭状态。需要时请在桌面端书架页打开「知识库对外服务」开关，或修改 usage-policy.json 的 enabled。" };
   if (!inScheduleWindow(policy, now))
-    return { open: false, reason: "schedule-off", hint: "知识库对外服务当前不在允许的时间窗口内（默认工作日 9:00-18:30，周末关闭）。急用可联系主人修改 library/usage-policy.json 的 schedule 字段放宽时间窗。" };
-  return { open: true };
+    return { ...out, open: false, reason: "schedule-off", hint: "知识库对外服务当前不在允许的时间窗口内（默认全天开放 00:00-24:00 含周末，可在 usage-policy.json 的 schedule 收窄）。急用可联系主人修改 library/usage-policy.json 的 schedule 字段放宽时间窗。" };
+  return { ...out, open: true };
 }
 
 // ---------- 会话预算（进程内记账；MCP server 进程寿命 = 一个智能体会话） ----------
-// 桌面长进程同一份计数器——重启清零，属预期（会话语义）
-const session = { calls: 0, chars: 0 };
+// V03/A-05/B3-CP3：本计数为进程级，一进程=一会话。MCP 走 stdio（src/mcp-server.mjs 是
+// registerServerTools 唯一生产调用点），一进程服务一个客户端会话，「同进程两会话共桶」
+// 的前提在架构上不存在（04 重新审视报告 :100 的「或如实文档化为进程级」退路，已拍板采此）。
+// gateCall 仍按 sessionId 分账（Map）：不传落 "default" 桶，多桶语义保留给测试注入与
+// 未来可能的进程内多会话形态，语义测试钉死「A/B 两桶互不连坐」。
+const sessions = new Map();
+const DEFAULT_SESSION = "default";
 
-export function sessionUsage() {
-  return { ...session };
+function bucket(id) {
+  const key = id == null ? DEFAULT_SESSION : String(id);
+  let s = sessions.get(key);
+  if (!s) { s = { calls: 0, chars: 0 }; sessions.set(key, s); }
+  return s;
 }
 
-export function resetSessionUsage() {
-  session.calls = 0;
-  session.chars = 0;
+export function sessionUsage(sessionId) {
+  return { ...bucket(sessionId) };
+}
+
+export function resetSessionUsage(sessionId) {
+  if (sessionId == null) sessions.clear();
+  else sessions.delete(String(sessionId));
 }
 
 // 调用前检查：tier=search 计次；tier=deepRead 计次+预估字符。
 // 返回 {ok:true} 或 {ok:false, error, hint, reason}
-export function checkBudget(policy, tier, estChars = 0) {
+export function checkBudget(policy, tier, estChars = 0, sessionId) {
   const b = policy?.budget || {};
-  if (session.calls + 1 > (b.perSessionQueries ?? 30))
+  const s = bucket(sessionId);
+  if (s.calls + 1 > (b.perSessionQueries ?? 30))
     return { ok: false, reason: "queries-exhausted", error: `本会话检索/深读调用次数已用尽（上限 ${b.perSessionQueries} 次）`, hint: "这是防 token 失控的会话配额。新开一个智能体会话即可重置；或调大 usage-policy.json 的 budget.perSessionQueries。" };
-  if (tier === "deepRead" && session.chars + estChars > (b.perSessionChars ?? 200000))
-    return { ok: false, reason: "chars-exhausted", error: `本会话深读字符预算即将超限（已用 ${session.chars}，上限 ${b.perSessionChars}）`, hint: "深读是 token 大头，已达会话预算上限。请改用检索类工具定位小范围内容，或新开会话。" };
+  if (tier === "deepRead" && s.chars + estChars > (b.perSessionChars ?? 200000))
+    return { ok: false, reason: "chars-exhausted", error: `本会话深读字符预算即将超限（已用 ${s.chars}，上限 ${b.perSessionChars}）`, hint: "深读是 token 大头，已达会话预算上限。请改用检索类工具定位小范围内容，或新开会话。" };
   if (tier === "deepRead" && estChars > (b.deepReadChars ?? 80000))
     return { ok: false, reason: "single-call-too-big", error: `单次深读预估 ${estChars} 字符，超过单次上限 ${b.deepReadChars}`, hint: "请缩小读取范围（换更小的章节或用 read_range 按块号区间读），或调大 budget.deepReadChars。" };
   return { ok: true };
 }
 
 // 调用后记账
-export function chargeUsage(tier, chars) {
-  session.calls += 1;
-  if (tier === "deepRead") session.chars += chars;
+export function chargeUsage(tier, chars, sessionId) {
+  const s = bucket(sessionId);
+  s.calls += 1;
+  if (tier === "deepRead") s.chars += chars;
 }
 
 // ---------- 审计日志（usage-log.jsonl，追加写；与 feedback-export 并列的导出位） ----------

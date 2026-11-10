@@ -27,10 +27,13 @@ export function currentSkillsDir() {
 // slug：纯小写字母/数字/连字符（Agent Skills 开放标准惯例）；中文书名写 frontmatter title
 export const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 // 允许写入的文件路径白名单（防任意文件写入）；catalog.json = 技能×编目融合 P-A（机器可读索引）
-// W2（2026-10-21）：对齐 Agent Skills 开放标准目录——补 references/（只深一层的参考文档）
-// 与 scripts/（确定性操作脚本化：执行而非读入上下文）。chapters/ 与 references/ 两代并存：
-// catalog 骨架出厂 chapters/chNN-*.md；kb-research 规范样板已迁 references/（文件名保留 chNN-）。
-export const FILE_RE = /^(?:SKILL\.md|chapters\/ch\d{2}-[a-z0-9-]+\.md|references\/[a-z0-9-]+\.md|scripts\/[a-z0-9-]+\.(?:mjs|js|py|sh)|glossary\.md|patterns\.md|cheatsheet\.md|catalog\.json)$/;
+// W2（2026-10-21）：对齐 Agent Skills 开放标准目录——补 references/（只深一层的参考文档）。
+// chapters/ 与 references/ 两代并存：catalog 骨架出厂 chapters/chNN-*.md；kb-research 规范
+// 样板已迁 references/（文件名保留 chNN-）。
+// B5/CP3：scripts/ 目录移出白名单——技能包不收可执行脚本（04 重新审视报告 V09 口径：
+// 脚本落盘不入执行链；V02/A-08 已实证 scripts/ 在全 src/ 无执行链，此处补齐入口侧：
+// 直接不收，拒绝时 hint 说明）。
+export const FILE_RE = /^(?:SKILL\.md|chapters\/ch\d{2}-[a-z0-9-]+\.md|references\/[a-z0-9-]+\.md|glossary\.md|patterns\.md|cheatsheet\.md|catalog\.json)$/;
 const CHAPTER_FILE_RE = /^ch\d{2}-[a-z0-9-]+\.md$/;
 // 引用标记：〔别名·章节〕，只认 blockquote 行
 const CITATION_RE = /〔(.+?)·(.+?)〕/;
@@ -140,7 +143,9 @@ function quoteClauses(quote) {
 function verifyOneText(srcText, quote) {
   const src = normalize(stripAnnotations(srcText));
   const cls = quoteClauses(quote);
-  if (!cls.length) return { ok: true, hits: 0, total: 0 };
+  // V09/A-08：切不出 ≥4 字有效子句 = 这条引文没法回源验证 → fail-closed（不再放行）。
+  // 与 llm.mjs hitRate 的空子句语义对齐（tooShort:true），reason 链走 quote-too-short。
+  if (!cls.length) return { ok: false, tooShort: true, hits: 0, total: 0 };
   const hits = cls.filter(c => src.includes(c)).length;
   return { ok: hits / cls.length >= 0.6, hits, total: cls.length };
 }
@@ -207,8 +212,11 @@ export function verifyCitations(citations, sourcesMap) {
     const v = verifyOneText(texts.join("\n"), c.quote);
     if (!v.ok) {
       const sample = normalize(stripAnnotations(texts.join(""))).slice(0, 60);
-      errors.push({ ...c, reason: "quote-not-found",
-        hint: `该章实文（前60字）：${sample}…；子句命中 ${v.hits}/${v.total}，请照抄 query_book 返回的原文（繁体照抄，勿自行简转繁）` });
+      // V09/A-08：短到切不出有效子句的引文与「查无此句」分开说清罪名
+      errors.push({ ...c, reason: v.tooShort ? "quote-too-short" : "quote-not-found",
+        hint: v.tooShort
+          ? `引文太短/无有效子句（切不出 ≥4 字句），无法回源验证——请照抄 query_book 返回的完整原文`
+          : `该章实文（前60字）：${sample}…；子句命中 ${v.hits}/${v.total}，请照抄 query_book 返回的原文（繁体照抄，勿自行简转繁）` });
       continue;
     }
     if (!stats[bookId]) stats[bookId] = { seen: new Set(), total: entry.chapters.length };
@@ -313,7 +321,10 @@ export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) 
   let totalBytes = 0;
   for (const f of files || []) {
     if (!f || typeof f.path !== "string" || !FILE_RE.test(f.path)) {
-      push("bad-path", { file: f && f.path, hint: "允许的路径：SKILL.md、chapters/chNN-小写连字符.md、references/小写连字符.md、glossary.md、patterns.md、cheatsheet.md、catalog.json" });
+      const p = f && f.path;
+      push("bad-path", { file: p, hint: /^scripts\//.test(p || "")
+        ? `技能包不收可执行脚本（${p}）——脚本落盘不入执行链，确定性操作请蒸馏成文档内容`
+        : "允许的路径：SKILL.md、chapters/chNN-小写连字符.md、references/小写连字符.md、glossary.md、patterns.md、cheatsheet.md、catalog.json" });
       continue;
     }
     if (seen.has(f.path)) push("bad-path", { file: f.path, hint: "路径重复" });
@@ -336,8 +347,18 @@ export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) 
   }
   if (errors.length) return { ok: false, stage: "structure", errors };
 
+  // B5/CP3（04 重新审视报告 V09 验收口径）：SKILL.md 至少要有一条 > 开头的引文行——
+  // 引文是回源验证的素材，零引文包无法回源（此前「零引文包是合法形态」的读法单方面
+  // 缩小了验收范围，复核单已裁定按 04 口径补齐）。
+  const skillMdForQuote = (files || []).find(f => f && f.path === "SKILL.md");
+  if (!skillMdForQuote || !/^>\s/m.test(skillMdForQuote.content || ""))
+    return { ok: false, stage: "structure", errors: [{ reason: "no-quote", hint: "SKILL.md 至少要有一条 > 开头的引文，否则无法回源" }] };
+
   const fmData = parseFrontmatter(skillMd.content).data;
   const citations = extractCitations(files);
+  // V09/A-08：verifyOneText 空子句已 fail-closed——声称有引文但条条短到切不出有效子句的包，
+  // 会在下面 verifyCitations 里逐条以 quote-too-short 拒收（空壳引文=无法回源验证=不落盘）；
+  // 零引文包（无任何 > 行）是合法形态，不在此拦。
   const { errors: citErrors, stats: citStats } = verifyCitations(citations, fmData.sources);
   if (citErrors.length) return { ok: false, stage: "citation-check", errors: citErrors, citations_checked: citations.length };
 

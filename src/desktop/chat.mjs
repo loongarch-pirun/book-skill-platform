@@ -81,7 +81,7 @@ function legSummary(results) {
     }));
   } catch { return null; }
 }
-export async function cloudSummary({ bookId = null, question, topN = 6, skillSlug = null, history = [], memory = "" } = {}) {
+export async function cloudSummary({ bookId = null, question, topN = 6, skillSlug = null, history = [], memory = "", includeSourceText = false } = {}) {
   const q = String(question || "").trim();
   if (!q) throw new UserError("先提问再总结");
   const cfg = loadLlmConfig();
@@ -147,10 +147,15 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
   const skillChapters = (base.skill?.matched || []).map((m) => ({ title: m.title, content: m.content }));
 
   // 2) 云端生成 + 引用校验（防幻觉延伸到生成层；历史净化后随请求带上）
+  // B1/CP3：includeSourceText 默认 false——库内原文不出网（04 报告 :83 验收点「请求体不含
+  // chunks.text 原文」由默认路径满足）。用户在 UI 上明确确认后才传 true（B 线 views-ask.js
+  // 三个「总结」按钮加 confirm）；这里只透传，不松默认值。全链路仍经 askCloud/buildMessages
+  // 的唯一开关点，可审计。
   const r = await askCloud({
     config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model },
     question: q, results, skillChapters,
     history: sanitizeHistory(history, { keep: 12, maxLen: 3000 }), memory,
+    includeSourceText,
   });
   if (!r.ok) {
     // 第三波-③：降级（引用全不过/云端失败）= 失败样本——带腿归因落池

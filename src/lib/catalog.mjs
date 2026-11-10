@@ -30,6 +30,15 @@ function termFreq(texts) {
 
 // ---------- 1) schema 迁移（幂等，export/import/embed-book 三入口共用） ----------
 // nodes/edges 加 source 列（'rule'=规则图谱层 | 'llm'=编目层），edges 加 ref 列（存关系描述）
+// V13/A-09：SCHEMA_VERSION 随迁移幂等登记进 meta（唯一正本=本常量），读端 readSchemaVersion()
+// 可判「这本书的图谱结构是哪一代」——老库读不到该键 = 迁移前的旧库。
+export const SCHEMA_VERSION = 2; // 1=nodes/edges 带 source 列的初代；2=+edges.ref 列
+export function readSchemaVersion(db) {
+  try {
+    const row = db.prepare("SELECT value FROM meta WHERE key='schema_version'").get();
+    return row ? Number(row.value) : 0; // 0 = 无登记（迁移前旧库）
+  } catch { return 0; }
+}
 export function ensureCatalogSchema(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS nodes(
     id INTEGER PRIMARY KEY, type TEXT NOT NULL, name TEXT NOT NULL, ref TEXT, source TEXT);
@@ -45,6 +54,10 @@ export function ensureCatalogSchema(db) {
            CREATE INDEX IF NOT EXISTS idx_edges_src ON edges(src_type, src);
            CREATE INDEX IF NOT EXISTS idx_edges_dst ON edges(dst_type, dst);
            CREATE TABLE IF NOT EXISTS theme_vecs(name TEXT PRIMARY KEY, vec BLOB);`);
+  // V13/A-09：版本登记放最后——上面全部迁移成功才写，幂等（重复跑恒写同一值）。
+  // meta 表可能不存在（极老库）：用 try 兜底，迁移列本身已成功，版本登记下次补。
+  try { db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('schema_version',?)").run(String(SCHEMA_VERSION)); }
+  catch { /* meta 表不存在 → 下次迁移补登记 */ }
 }
 
 // ---------- 2) 聚类：中心化（对付 e5 高锥效应）+ 密度种子贪心质心 ----------

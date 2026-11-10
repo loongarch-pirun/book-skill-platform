@@ -9,19 +9,36 @@
 // 引用校验与 skill-store 的「引用回源验证」同款算法（剥「一作」校注 + 去空白标点 +
 // 子句命中率 ≥60%）——独立实现，不动老模块。
 
+import { validateBaseUrl } from "./llm-hosts.mjs";
+
 // ---------- 配置校验 ----------
 // UI 保存配置前过这里；返回 { baseUrl, apiKey, model } 或 { error }
-export function normalizeLlmConfig({ baseUrl, apiKey, model } = {}) {
+// V08/A-01：出网端点校验收敛到 llm-hosts.mjs 单正本（与 saveLlmConfig 同源，F2 零漂移）。
+// 非环回强制 https + 主机白名单；http 仅本机环回放行（测试假 API / 本地模型端点）。
+export function normalizeLlmConfig({ baseUrl, apiKey, model, allowedHosts } = {}) {
   const base = String(baseUrl || "").trim().replace(/\/+$/, "");
   const key = String(apiKey || "").trim();
   const mdl = String(model || "").trim();
-  // V2-D18（暴力测试 P0 修）：老正则只查 http(s):// 前缀，"https://a b"（中间空白主机）
-  // 能过校验但 fetch 时 URL 非法抛 TypeError，误报成 NETWORK「连不上模型服务」——用户去查
-  // 网络而不是改地址。现加空白拒查（正常地址不含空白，尾斜杠已在上一步剥掉）。
-  if (!/^https?:\/\//i.test(base) || /\s/.test(base)) return { error: "接口地址要以 http(s):// 开头（例如 https://api.deepseek.com/v1）" };
+  const v = validateBaseUrl(base, { allowedHosts });
+  if (!v.ok) return { error: v.error };
   if (!key) return { error: "请填 API key" };
   if (!mdl) return { error: "请填模型名（例如 deepseek-chat）" };
   return { baseUrl: base, apiKey: key, model: mdl };
+}
+
+// V08/A-01（接口单 IF-3）：给上层一个只读「云端模式」快照，A 侧纯函数，不新增 IPC。
+// B 可经既有 llm:configGet / chat:summary 派生展示；carriesSourceText 默认 false（请求体不带库内原文）。
+export function describeCloudMode(config = {}) {
+  const base = String(config?.baseUrl || "").trim().replace(/\/+$/, "");
+  const v = validateBaseUrl(base, { allowedHosts: config?.allowedHosts });
+  return {
+    cloud: !!base && v.ok,
+    host: v.host,
+    https: v.scheme === "https:",
+    loopback: v.loopback,
+    carriesSourceText: !!config?.includeSourceText,
+    allowedHosts: v.allowedHosts,
+  };
 }
 
 // ---------- 历史净化（IPC 边界防御：渲染层传来的对话历史不可信） ----------
@@ -56,10 +73,12 @@ const SYSTEM = `你是一个严谨的读书助手：用户提问后，你会收�
 
 // 组装 messages：system 在首、历史居中、问题+新鲜片段收尾（每轮检索都是新鲜的）
 // V3-R6：memory = 滚动对话记忆（渲染层压缩旧轮次得来），作为独立要点块钉在问题前
-export function buildMessages({ question, results, skillChapters = [], history = [], memory = "" }) {
+export function buildMessages({ question, results, skillChapters = [], history = [], memory = "", includeSourceText = false }) {
   const q = String(question || "").trim();
+  // V08/A-01：默认只带片段编号/书名/定位元数据，不把库内 r.text 原文拼进请求体。
+  // 需要带原文出网时必须显式 includeSourceText:true（整个代码里唯一可审计的开关点）。
   const passages = (results || []).map((r, i) =>
-    `[${i + 1}] 《${r.book || "?"}》${r.loc ? "· " + r.loc : ""}：\n${r.text || ""}`);
+    `[${i + 1}] 《${r.book || "?"}》${r.loc ? "· " + r.loc : ""}${includeSourceText ? `：\n${r.text || ""}` : ""}`);
   const parts = [
     `## 原文片段\n${passages.join("\n\n")}`,
     skillChapters.length
@@ -87,6 +106,10 @@ function errByStatus(status) {
 }
 
 export async function chat({ baseUrl, apiKey, model, messages, timeoutMs = 60000, temperature = 0.3, maxTokens = 1500 }) {
+  // B2/CP3：chat() 是唯一真正发请求的口子，testConnection / query-rewrite / compactHistory
+  // 三处直调不走 normalizeLlmConfig——在此收口，手改 llm.json 也打不到白名单/环回之外的主机。
+  const v = validateBaseUrl(baseUrl);
+  if (!v.ok) return llmErr("BAD_BASE_URL", v.error);
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
@@ -186,11 +209,11 @@ export function verifyAnswer(parsed, results) {
 // 重试策略（retryOnQuoteFail 默认开）：QUOTE_FAIL / BADRESP 先自动重试一次（附加加强提醒）——
 // 实测模型偶发把繁体引文写成简体（字形漂移）或 JSON 崩坏；重试后的输出仍须过同一道校验，
 // 防线强度不变，只是把"偶发抽风"与"真幻觉"区分开。
-export async function askCloud({ config, question, results, skillChapters, history, memory = "", timeoutMs, temperature, maxTokens, retryOnQuoteFail = true } = {}) {
+export async function askCloud({ config, question, results, skillChapters, history, memory = "", includeSourceText = false, timeoutMs, temperature, maxTokens, retryOnQuoteFail = true } = {}) {
   const norm = normalizeLlmConfig(config);
   if (norm.error) return llmErr("CONFIG", norm.error);
   const once = async (retryNote) => {
-    const messages = buildMessages({ question, results, skillChapters, history, memory });
+    const messages = buildMessages({ question, results, skillChapters, history, memory, includeSourceText });
     if (retryNote) messages[messages.length - 1].content += `\n\n补充要求：${retryNote}`;
     const r = await chat({ ...norm, messages, timeoutMs, temperature, maxTokens });
     if (!r.ok) return r;

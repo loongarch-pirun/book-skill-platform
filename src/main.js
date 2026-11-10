@@ -4,6 +4,8 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol, shell } = require("electron");
 const path = require("path");
 const { pathToFileURL } = require("url");
+// V07/A-07：三项安全开关唯一正本（快照供测试断言，主窗口与其同源，不留第二套真值）
+const { hardenedWebPreferences } = require("./desktop/security-prefs.js");
 
 let win = null;
 
@@ -12,7 +14,8 @@ function createWindow() {
     width: 1200, height: 780,
     backgroundColor: "#f5f1e8", // 书房纸色，避免启动白闪
     title: "我的书房",
-    webPreferences: { preload: path.join(__dirname, "preload.js") },
+    // V07/A-07：渲染进程当不可信，三项安全开关显式声明（不许自家代码例外）
+    webPreferences: { preload: path.join(__dirname, "preload.js"), ...hardenedWebPreferences() },
   });
   // 真机验收逮到的白屏真凶：loadFile 相对路径按 cwd 解析——dev 态 cwd=项目根碰巧能跑，
   // 双击 exe 时 cwd=exe 所在目录，index.html 不在那儿 → 静默空白。必须按 __dirname 定位。

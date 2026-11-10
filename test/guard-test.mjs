@@ -1014,11 +1014,12 @@ const copyDb = (src) => {
   ok((pkgSrc5.scripts["test:fast"] || "").includes("skill-validate-test"),
     "静态: package.json test:fast 含 skill-validate-test（挂载对账）");
 
-  // 白名单对齐开放标准目录：references/（一层深参考文档）+ scripts/（确定性操作脚本化）
+  // 白名单对齐开放标准目录：references/（一层深参考文档）；scripts/ 已移出（B5/CP3：
+  // 技能包不收可执行脚本——04 V09 口径「脚本落盘不入执行链」，入口侧直接不收）
   const storeSrc = stripComments(readSrc("src", "lib", "skill-store.mjs"));
   // 源码里 FILE_RE 的斜杠是转义写法（references\/），断言照源码原样匹配
-  ok(storeSrc.includes("references\\/[a-z0-9-]+\\.md") && storeSrc.includes("scripts\\/[a-z0-9-]+\\."),
-    "静态: saveSkill 白名单含 references/ 与 scripts/（开放标准目录，W2b 起可用）");
+  ok(storeSrc.includes("references\\/[a-z0-9-]+\\.md") && !storeSrc.includes("scripts\\/[a-z0-9-]+\\."),
+    "静态: saveSkill 白名单含 references/ 且不含 scripts/（B5/CP3：技能包不收可执行脚本）");
 
   // 真技能目录过一遍校验器（0 error 才允许接线通过——防止真技能烂掉没人知道）
   const { validateSkillsRoot } = await import("../src/lib/skill-validate.mjs");

@@ -74,7 +74,9 @@ function mkChat(script = new Map(), opts = {}) {
   return fn;
 }
 
-const config = { baseUrl: "https://fake.example/v1", apiKey: "sk-test", model: "fake" };
+// B2/CP3：地址环回化——非白名单 https 原会被 normalizeLlmConfig 拒收（runClean 返回 CONFIG
+// 无 stats），chatFn 注入不真出网，环回地址仅过校验。
+const config = { baseUrl: "http://127.0.0.1:9/v1", apiKey: "sk-test", model: "fake" };
 const resultsDir = () => fs.mkdtempSync(path.join(TMP, "res-"));
 // 超长无特征文本（>50 字符且不含 G2 特征）——凡希望 drop 放行的样块都用它拼
 const longText = "这一段的正文内容足够长所以完全不受短块护栏保护，属于稳稳超过五十字符红线以上的长块，可以放心交给判定流水线处理不需要担忧。";
