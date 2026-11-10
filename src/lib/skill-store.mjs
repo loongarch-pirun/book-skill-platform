@@ -27,10 +27,13 @@ export function currentSkillsDir() {
 // slug：纯小写字母/数字/连字符（Agent Skills 开放标准惯例）；中文书名写 frontmatter title
 export const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 // 允许写入的文件路径白名单（防任意文件写入）；catalog.json = 技能×编目融合 P-A（机器可读索引）
-// W2（2026-10-21）：对齐 Agent Skills 开放标准目录——补 references/（只深一层的参考文档）
-// 与 scripts/（确定性操作脚本化：执行而非读入上下文）。chapters/ 与 references/ 两代并存：
-// catalog 骨架出厂 chapters/chNN-*.md；kb-research 规范样板已迁 references/（文件名保留 chNN-）。
-export const FILE_RE = /^(?:SKILL\.md|chapters\/ch\d{2}-[a-z0-9-]+\.md|references\/[a-z0-9-]+\.md|scripts\/[a-z0-9-]+\.(?:mjs|js|py|sh)|glossary\.md|patterns\.md|cheatsheet\.md|catalog\.json)$/;
+// W2（2026-10-21）：对齐 Agent Skills 开放标准目录——补 references/（只深一层的参考文档）。
+// chapters/ 与 references/ 两代并存：catalog 骨架出厂 chapters/chNN-*.md；kb-research 规范
+// 样板已迁 references/（文件名保留 chNN-）。
+// B5/CP3：scripts/ 目录移出白名单——技能包不收可执行脚本（04 重新审视报告 V09 口径：
+// 脚本落盘不入执行链；V02/A-08 已实证 scripts/ 在全 src/ 无执行链，此处补齐入口侧：
+// 直接不收，拒绝时 hint 说明）。
+export const FILE_RE = /^(?:SKILL\.md|chapters\/ch\d{2}-[a-z0-9-]+\.md|references\/[a-z0-9-]+\.md|glossary\.md|patterns\.md|cheatsheet\.md|catalog\.json)$/;
 const CHAPTER_FILE_RE = /^ch\d{2}-[a-z0-9-]+\.md$/;
 // 引用标记：〔别名·章节〕，只认 blockquote 行
 const CITATION_RE = /〔(.+?)·(.+?)〕/;
@@ -318,7 +321,10 @@ export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) 
   let totalBytes = 0;
   for (const f of files || []) {
     if (!f || typeof f.path !== "string" || !FILE_RE.test(f.path)) {
-      push("bad-path", { file: f && f.path, hint: "允许的路径：SKILL.md、chapters/chNN-小写连字符.md、references/小写连字符.md、glossary.md、patterns.md、cheatsheet.md、catalog.json" });
+      const p = f && f.path;
+      push("bad-path", { file: p, hint: /^scripts\//.test(p || "")
+        ? `技能包不收可执行脚本（${p}）——脚本落盘不入执行链，确定性操作请蒸馏成文档内容`
+        : "允许的路径：SKILL.md、chapters/chNN-小写连字符.md、references/小写连字符.md、glossary.md、patterns.md、cheatsheet.md、catalog.json" });
       continue;
     }
     if (seen.has(f.path)) push("bad-path", { file: f.path, hint: "路径重复" });
@@ -340,6 +346,13 @@ export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) 
       push("bad-frontmatter", { file: "SKILL.md", hint: `frontmatter name（${fm.data.name}）必须等于 slug（${slug}）` });
   }
   if (errors.length) return { ok: false, stage: "structure", errors };
+
+  // B5/CP3（04 重新审视报告 V09 验收口径）：SKILL.md 至少要有一条 > 开头的引文行——
+  // 引文是回源验证的素材，零引文包无法回源（此前「零引文包是合法形态」的读法单方面
+  // 缩小了验收范围，复核单已裁定按 04 口径补齐）。
+  const skillMdForQuote = (files || []).find(f => f && f.path === "SKILL.md");
+  if (!skillMdForQuote || !/^>\s/m.test(skillMdForQuote.content || ""))
+    return { ok: false, stage: "structure", errors: [{ reason: "no-quote", hint: "SKILL.md 至少要有一条 > 开头的引文，否则无法回源" }] };
 
   const fmData = parseFrontmatter(skillMd.content).data;
   const citations = extractCitations(files);

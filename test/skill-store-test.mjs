@@ -21,6 +21,8 @@ sources:
 ---
 # 测试技能
 核心心智模型占位。
+
+> 為學日益，為道日損。〔道德经·第四十八章〕
 `;
 
 const goodChapter = (quote) => `# 第一章 · 测试
@@ -39,6 +41,8 @@ sources:
 ${coverage ? `coverage: ${coverage}\n` : ""}---
 # 测试技能
 核心心智模型占位。
+
+> 為學日益，為道日損。〔道德经·第四十八章〕
 `;
 
 // 两章引用样例（第四十八章、第八章——真库验真后 covered=2，道德经全书 81 章）
@@ -63,6 +67,10 @@ const ch08 = goodChapter("上善若水，水善利萬物而不爭。〔道德经
   ok(r.errors.some(e => e.reason === "bad-path"), "路径白名单: chapters/x.js 拒收");
   r = saveSkill(base.slug, [{ path: "SKILL.txt", content: "x" }], base);
   ok(r.errors.some(e => e.reason === "bad-path"), "路径白名单: SKILL.txt 拒收");
+  // B5/CP3：scripts/ 移出白名单——技能包不收可执行脚本，hint 说人话
+  r = saveSkill(base.slug, [{ path: "scripts/check.mjs", content: "console.log('x')" }], base);
+  ok(r.errors.some(e => e.reason === "bad-path" && /可执行脚本/.test(e.hint || "")),
+    "B5: scripts/check.mjs 拒收且 hint 说明「不收可执行脚本」", JSON.stringify(r.errors));
 }
 
 // ========== 3) 结构校验 ==========
@@ -126,7 +134,7 @@ const ch08 = goodChapter("上善若水，水善利萬物而不爭。〔道德经
       { path: "cheatsheet.md", content: "# 速查\n- 用『无为』处理：不妄为场景\n" },
     ],
     { skillsDir: tmp });
-  ok(r.ok === true && r.citations_checked === 2, `正常落盘: ok:true（校验 ${r.citations_checked} 条引用）`, JSON.stringify(r));
+  ok(r.ok === true && r.citations_checked === 3, `正常落盘: ok:true（校验 ${r.citations_checked} 条引用——B5 后 SKILL.md 引文行也计入）`, JSON.stringify(r));
   ok(fs.existsSync(path.join(tmp, "test-skill", "SKILL.md")) &&
      fs.existsSync(path.join(tmp, "test-skill", "chapters", "ch01-shui.md")) &&
      fs.existsSync(path.join(tmp, "test-skill", "cheatsheet.md")), "正常落盘: 磁盘文件齐全");
@@ -200,7 +208,7 @@ const ch08 = goodChapter("上善若水，水善利萬物而不爭。〔道德经
      cits[0].quote === "上善若水。" && cits[1].quote === "第二条", "引文提取: 只认 blockquote、行号与引文正确");
 }
 
-// ========== 14b) V09/A-08：空子句引文 fail-closed + 引文空壳拒收 + 零引文包仍放行 ==========
+// ========== 14b) V09/A-08：空子句引文 fail-closed + 引文空壳拒收；B5/CP3：零引文包拒收 ==========
 {
   const base = { slug: "test-skill", skillsDir: tmp };
 
@@ -235,10 +243,12 @@ sources:
   ok(r.ok === false && r.stage === "citation-check" && r.errors?.[0]?.reason === "quote-too-short",
     "V09: 短引文条目 → quote-too-short 拒收（空子句不再 ok:true）", JSON.stringify(r.errors));
 
-  // c) 零引文包（无任何 > 行）仍是合法形态 → 放行（控制组，防误伤 §17/§19 既有形态）
-  r = saveSkill("test-skill", [{ path: "SKILL.md", content: goodFm }], base);
-  ok(r.ok === true && r.citations_checked === 0,
-    "V09: 零引文包仍放行（合法形态，不误伤）", JSON.stringify(r.errors));
+  // c) 零引文包（SKILL.md 无任何 > 行）→ B5/CP3 拒收 no-quote（04 V09 验收口径：
+  // 引文是回源验证的素材，零引文包无法回源——复核单裁定按 04 口径补齐）
+  const noQuoteFm = goodFm.replace(/\n> 為學日益，為道日損。〔道德经·第四十八章〕\n/, "\n");
+  r = saveSkill("test-skill", [{ path: "SKILL.md", content: noQuoteFm }], base);
+  ok(r.ok === false && r.stage === "structure" && r.errors?.[0]?.reason === "no-quote",
+    "B5: 零引文包（SKILL.md 无 > 行）→ no-quote 拒收", JSON.stringify(r.errors));
 }
 
 // ========== 14c) V09/A-08 防回归：脚本只落盘不执行（skills/*/scripts 不入执行链） ==========
@@ -444,6 +454,8 @@ sources:
   道德经: daodejing-zh
 ---
 # 待删除技能
+
+> 為學日益，為道日損。〔道德经·第四十八章〕
 `;
   const base = { slug: "del-me", skillsDir: tmp };
   // a) 落一个带章节的包 → 删 → 整目录没了、列表不再有、回执带 skills/ 路径
