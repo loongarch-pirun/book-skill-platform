@@ -1,9 +1,23 @@
 // P4 云端回答存档单测：append/list/purge/clear/上限/坏行——纯 fs，tmp 目录，不碰真书库。
 // 存的是 <libDir>/chat-archive/archive.jsonl（跟书库走，换库天然隔离）。
+import { fork } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { execPath } from "node:process";
 import { appendArchive, listArchive, purgeBook, clearArchive } from "../src/desktop/chat-archive.mjs";
+
+// B4/CP3：fork 一个 worker 子进程向 libDir 追加 n 条（验证跨进程锁语义）
+const WORKER_PATH = fileURLToPath(import.meta.url).replace(/chat-archive-test\.mjs$/, "fixtures/archive-worker.mjs");
+function forkWorker(libDir, worker, count) {
+  return new Promise((resolve, reject) => {
+    const cp = fork(WORKER_PATH,
+      [JSON.stringify({ libDir, from: 0, count, worker })], { execPath, stdio: "ignore" });
+    cp.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`worker ${worker} exit ${code}`))));
+    cp.on("error", reject);
+  });
+}
 
 let pass = 0, fail = 0;
 const ok = (cond, msg) => {
@@ -77,6 +91,42 @@ ok(!fs.existsSync(path.join(fresh, "chat-archive")), "空目录 purge 不创建�
   const dirFiles2 = fs.readdirSync(path.join(libDir, "chat-archive"));
   ok(!dirFiles2.some((f) => f.includes(".tmp-") || f.endsWith(".lock")),
     "V13: 修剪后目录干净（无 tmp/lock 残留）", dirFiles2.join(","));
+}
+
+// ---------- 8) B4/CP3：4 子进程并发 append+prune——锁护住 append，零吞行 ----------
+{
+  // 独立 libDir，注入 240 条垫底（并发再加 100 条=340 < 500 不触发修剪），
+  // 验证「锁内 append」本身不丢行：4 进程各 25 条全数落盘
+  const concDir = path.join(tmp, "conc-noprune");
+  fs.mkdirSync(concDir, { recursive: true });
+  for (let i = 1; i <= 240; i++) appendArchive(concDir, entry(`垫底${i}`, "a.docx"));
+  await Promise.all([0, 1, 2, 3].map((w) => forkWorker(concDir, w, 25)));
+  const all = fs.readFileSync(path.join(concDir, "chat-archive", "archive.jsonl"), "utf8")
+    .split("\n").filter((l) => l.trim());
+  const nums = all.map((l) => { try { return JSON.parse(l).question; } catch { return null; } }).filter(Boolean);
+  const missing = [];
+  for (let w = 0; w < 4; w++) for (let i = 0; i < 25; i++) if (!nums.includes(`w${w}-${i}`)) missing.push(`w${w}-${i}`);
+  ok(all.length === 340, `B4: 并发不触发修剪时 4 进程×25 条全落盘（340 行，实际 ${all.length}）`);
+  ok(missing.length === 0, `B4: 零吞行（缺 ${missing.length} 条${missing.length ? "：" + missing.slice(0, 5).join(",") : ""}）`);
+  ok(!fs.readdirSync(path.join(concDir, "chat-archive")).some((f) => f.endsWith(".lock")),
+    "B4: 并发后无 .lock 残留");
+
+  // 再注入 400 条垫底 + 并发 100 条（=740 > 500），验证「并发 append+prune 同锁」：
+  // 修剪期间其他进程追加的行不得被旧快照 renameSync 覆盖吞掉
+  const pruneDir = path.join(tmp, "conc-prune");
+  fs.mkdirSync(pruneDir, { recursive: true });
+  for (let i = 1; i <= 400; i++) appendArchive(pruneDir, entry(`垫底${i}`, "a.docx"));
+  await Promise.all([0, 1, 2, 3].map((w) => forkWorker(pruneDir, w, 25)));
+  const lines = fs.readFileSync(path.join(pruneDir, "chat-archive", "archive.jsonl"), "utf8")
+    .split("\n").filter((l) => l.trim());
+  const qs = lines.map((l) => { try { return JSON.parse(l).question; } catch { return null; } }).filter(Boolean);
+  const lost = [];
+  for (let w = 0; w < 4; w++) for (let i = 0; i < 25; i++) if (!qs.includes(`w${w}-${i}`)) lost.push(`w${w}-${i}`);
+  ok(lines.length === 500, `B4: 超上限并发后封顶 500 行（实际 ${lines.length}）`);
+  ok(lost.length === 0, `B4: 修剪窗口零吞行——并发追加的 100 条全部幸存（缺 ${lost.length} 条${lost.length ? "：" + lost.slice(0, 5).join(",") : ""}）`);
+  ok(qs.filter((q) => q.startsWith("w")).length === 100, "B4: 100 条并发行（含触发修剪时刻的行）无一丢失");
+  ok(!fs.readdirSync(path.join(pruneDir, "chat-archive")).some((f) => f.endsWith(".lock") || f.includes(".tmp-")),
+    "B4: 并发修剪后无 tmp/lock 残留");
 }
 
 fs.rmSync(tmp, { recursive: true, force: true });
