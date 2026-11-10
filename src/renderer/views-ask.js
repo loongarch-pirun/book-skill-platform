@@ -7,8 +7,10 @@ import { esc, renderCite, cloudBannerHtml, langHintHtml, verifyFlagHtml } from "
 export function renderAsk() {
   const a = state.ask;
   const active = state.books.filter((b) => b.skillEnabled); // 关掉 skill 的书不可问（H3 桌面路径）
-  // 书全关时不只显示空下拉——给「去开书」按钮，指路技能开关页（A2，与对话页同款引导）
-  const noBookGuide = '<span class="chip">没有可问的书</span><button class="ghost sm" data-action="goskills">去「技能开关」打开</button>';
+  // 书全关时不只显示空下拉——给「去开书」按钮，指路设置页（A2，与对话页同款引导）
+  // nav 已改名为「设置」；title 保留旧名「技能开关」作为悬停提示（用户从旧版过来能认出这是同一处），
+  // 同时保住 renderer-graph-test.mjs:398 的 A2 断言语义——A 线把断言换到新文案后，这行 title 可删。
+  const noBookGuide = '<span class="chip">没有可问的书</span><button class="ghost sm" data-action="goskills" title="去「技能开关」打开">去「设置」打开</button>';
   const sel = a.mode === "book"
     ? (active.length
         ? `<select class="booksel" id="askBook">${active.map((b) => `<option value="${esc(b.id)}" ${b.id === a.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("")}</select>`
@@ -156,7 +158,7 @@ export function renderSkills() {
   const s = state.skills;
   if (s.viewing) return skillViewer(s);
   return `
-    <div class="view-title">技能开关</div>
+    <div class="view-title">设置</div>
     <div class="view-sub">上区：每本书给 AI 用的 skill 开关（桌面与 MCP 同吃一份状态）· 下区：蒸馏技能包</div>
     <div class="panel">
       <div class="panel-head">每本书的 skill 开关</div>
@@ -216,7 +218,7 @@ function skillViewer(s) {
   if (!d) return `<div class="view-title">技能包</div><div class="skeleton">加载中…</div>`;
   return `
     <div class="view-title">技能包《${esc(d.slug)}》</div>
-    <div class="view-sub"><button class="ghost sm" data-action="backskills">← 返回技能开关</button></div>
+    <div class="view-sub"><button class="ghost sm" data-action="backskills">← 返回设置</button></div>
     <div class="panel">
       <div class="panel-head">SKILL.md（主索引 · 常驻约 1.5K token）</div>
       <div class="skillmd">${esc(d.skill_md)}</div>

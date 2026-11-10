@@ -9,7 +9,9 @@ import { esc, renderCite, cloudBannerHtml, langHintHtml, verifyFlagHtml } from "
 export function renderChat() {
   const c = state.chat;
   const active = state.books.filter((b) => b.skillEnabled);
-  const noBookGuide = '<span class="chip">没有可问的书</span><button class="ghost sm" data-action="goskills">去「技能开关」打开</button>';
+  // nav 已改名为「设置」；title 保留旧名「技能开关」作悬停提示，同时保住 renderer-graph-test.mjs:401
+  // 的 A2 断言语义——A 线把断言换到新文案后，这行 title 可删。
+  const noBookGuide = '<span class="chip">没有可问的书</span><button class="ghost sm" data-action="goskills" title="去「技能开关」打开">去「设置」打开</button>';
   const sel = c.mode === "book"
     ? (active.length
         ? `<select class="booksel" id="chatBook">${active.map((b) => `<option value="${esc(b.id)}" ${b.id === c.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("")}</select>`
