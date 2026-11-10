@@ -391,14 +391,24 @@ await sleep(10);
 assert(app.state.chat.messages.length === 0, "对话：清空接线");
 
 // ---------- 5d) 书全关引导（A2）：问一问/对话两页空态都给「去开书」按钮 ----------
+// CP3 返修：断言**可见文案**「去「设置」打开」，先剥掉 title 属性再比——nav 于 CP3 由
+// 「技能开关」改名「设置」，views-ask/views-chat 的按钮有意保留 title 作悬停提示旧名
+// （老用户能认出是同一处），但测试不得依赖 title：否则可见文案再改，title 还能把断言撑绿。
+const stripTitles = (html) => html.replace(/title="[^"]*"/g, "");
 const savedEnabled = app.state.books.map((b) => b.skillEnabled);
 app.state.books.forEach((b) => { b.skillEnabled = false; });
 app.show("ask");
 await sleep(10);
-assert(mainEl.innerHTML.includes("去「技能开关」打开"), "问一问：书全关时显示去开书引导（A2）");
+assert(stripTitles(mainEl.innerHTML).includes("去「设置」打开"),
+  "问一问：书全关时显示去开书引导（A2，可见文案=新名「设置」）");
+assert(!stripTitles(mainEl.innerHTML).includes("技能开关"),
+  "问一问：剥掉 title 后旧名「技能开关」不再出现在可见文案");
 app.show("chat");
 await sleep(10);
-assert(mainEl.innerHTML.includes("去「技能开关」打开"), "对话：书全关时显示去开书引导（A2）");
+assert(stripTitles(mainEl.innerHTML).includes("去「设置」打开"),
+  "对话：书全关时显示去开书引导（A2，可见文案=新名「设置」）");
+assert(!stripTitles(mainEl.innerHTML).includes("技能开关"),
+  "对话：剥掉 title 后旧名「技能开关」不再出现在可见文案");
 app.state.books.forEach((b, i) => { b.skillEnabled = savedEnabled[i]; });
 app.show("shelf");
 await sleep(10);
