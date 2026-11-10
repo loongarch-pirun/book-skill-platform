@@ -140,6 +140,14 @@ ok(clampOutlineChapters(999) === OUTLINE_MAX && clampOutlineChapters() === OUTLI
   ok(!!b, "listBooks 扫到旧库");
   ok(b && b.total_tokens === Math.round(400 * 0.75), `listBooks 旧库现场估算 total_tokens=${b?.total_tokens}（400 字 × 0.75）`);
   ok(b && b.chapter_quality && b.chapter_quality.verdict === "reliable", `listBooks 旧库现场算 chapter_quality（${JSON.stringify(b?.chapter_quality)}）`);
+  // B6/CP3：lang 语义打通——旧库无 meta.lang → 现场估；meta.lang 有值 → 直接读回
+  ok(b && b.lang === "zh", `B6: 旧库无 meta.lang → detectLang 现场估 lang=${b?.lang}（全中文块）`);
+  const db2 = new Database(oldDb);
+  db2.prepare("INSERT INTO meta(key,value) VALUES('lang','en')").run();
+  db2.close();
+  const books2 = listBooks(libDir);
+  ok(books2.find(x => x.id === "old-book-zh.docx")?.lang === "en",
+    "B6: meta.lang 落库后 listBooks 直接读回（编目 jobs.mjs B6 落库路径的读端）");
 }
 
 // ---------- 清理（尽力而为） ----------
