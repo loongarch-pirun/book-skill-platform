@@ -55,6 +55,8 @@ title: ${name} 标题
 description: 体检测试用技能包
 ${extra}---
 # ${name}
+
+> ${name} 引文占位行（B5/CP3：SKILL.md 必须带 blockquote；不带〔〕标记不进回源计数，各场景计数断言不受影响）。
 `;
 
 // 场景包直写磁盘（模拟"落盘时合法、之后书库变了/包被手改"——saveSkill 会拒收这些，体检必须能逮）

@@ -19,7 +19,7 @@ const Database = require("better-sqlite3");
 let failed = 0;
 const assert = (cond, msg) => { console.log((cond ? "PASS" : "FAIL") + " - " + msg); if (!cond) failed++; };
 
-const CFG = { baseUrl: "http://fake.local/v1", apiKey: "k", model: "m" };
+const CFG = { baseUrl: "http://127.0.0.1:9/v1", apiKey: "k", model: "m" };  // B2/CP3：非环回 http 被 validateBaseUrl 拒收（runEnrich→normalizeLlmConfig），夹具环回化；chatFn 注入不真出网
 
 // ---------- 夹具 ----------
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-enrich-"));
@@ -280,7 +280,7 @@ const goodBatch = (req) => idxsOf(req).map(i => ({
 {
   const dir = path.join(TMP, "cfg");
   const db = makeDb("cfg.db", CHUNKS);
-  const r = await runEnrich(db, { config: { baseUrl: "http://fake.local/v1", model: "m" }, chatFn: fakeChat(goodBatch), resultsDir: dir });
+  const r = await runEnrich(db, { config: { baseUrl: "http://127.0.0.1:9/v1", model: "m" }, chatFn: fakeChat(goodBatch), resultsDir: dir });  // B2/CP3：地址环回化，专测「缺 key」分支
   assert(!r.ok && r.code === "CONFIG" && /key/.test(r.message), "缺 key → CONFIG 人话返回（不抛异常）");
   const rMiss = await runEnrich(path.join(TMP, "no-such.db"), { config: CFG, chatFn: fakeChat(goodBatch), resultsDir: dir });
   assert(!rMiss.ok && rMiss.code === "NOBOOK", "库不存在 → NOBOOK");
