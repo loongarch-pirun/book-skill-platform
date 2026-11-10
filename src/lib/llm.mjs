@@ -106,6 +106,10 @@ function errByStatus(status) {
 }
 
 export async function chat({ baseUrl, apiKey, model, messages, timeoutMs = 60000, temperature = 0.3, maxTokens = 1500 }) {
+  // B2/CP3：chat() 是唯一真正发请求的口子，testConnection / query-rewrite / compactHistory
+  // 三处直调不走 normalizeLlmConfig——在此收口，手改 llm.json 也打不到白名单/环回之外的主机。
+  const v = validateBaseUrl(baseUrl);
+  if (!v.ok) return llmErr("BAD_BASE_URL", v.error);
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {

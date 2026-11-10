@@ -245,6 +245,16 @@ const RESULTS = [
   const cm = describeCloudMode({ baseUrl: "https://api.deepseek.com/v1" });
   ok(cm.cloud === true && cm.https === true && cm.loopback === false && cm.carriesSourceText === false,
     "V08/IF-3: describeCloudMode 快照 = 云端/https/非环回/默认不带原文");
+  // B2/CP3：chat() 本体收口——绕过 normalizeLlmConfig 的直调（testConnection/query-rewrite/
+  // compactHistory）手改 llm.json 也打不到白名单/环回之外的主机
+  const badChat = await chat({ baseUrl: "https://evil.example/v1", apiKey: "k", model: "m", messages: [{ role: "user", content: "q" }] });
+  ok(badChat.ok === false && badChat.code === "BAD_BASE_URL",
+    "B2: chat() 直传白名单外 https://evil.example → { ok:false, code:'BAD_BASE_URL' }（不发请求）");
+  ok(lastBody === null || !JSON.stringify(lastBody).includes("evil.example"),
+    "B2: 拒收发生在出网前（假 API lastBody 未收到该请求）");
+  const loopChat = await chat({ baseUrl: BASE, apiKey: "k", model: "m", messages: [{ role: "user", content: "q" }] });
+  ok(loopChat.ok === true,
+    "B2: chat() 环回 http:// 假 API 放行（test:ci 本地假端点不受影响）");
 }
 
 server.closeAllConnections?.();
