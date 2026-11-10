@@ -3,7 +3,7 @@
 // 对话历史放渲染层（主进程无状态），每次发送带上近几轮（净化在主进程边界做）。
 import { $, state, call, toast, refresh, show, RETRIEVE_TOPN } from "./app.js";
 import { cloudBarHtml } from "./views-ask.js"; // C5：云端状态条/配置卡与问一问共用一份实现
-import { esc, renderCite } from "./views.js";
+import { esc, renderCite, cloudBannerHtml, langHintHtml, verifyFlagHtml } from "./views.js";
 
 // ---------- 渲染 ----------
 export function renderChat() {
@@ -17,8 +17,10 @@ export function renderChat() {
     : (active.length ? '<span class="chip">全库模式：引擎自动挑最相关的书</span>' : noBookGuide);
   const pkgs = state.skills.packages;
   return `
-    <div class="view-title">对话</div>
+    <div class="viewhead"><div class="view-title">对话</div>${verifyFlagHtml("on")}</div>
     <div class="view-sub">多轮问答 · 本地检索找依据 · 云端写回答 · 引用点跳原文</div>
+    ${cloudBannerHtml()}
+    ${c.mode === "book" ? langHintHtml(c.bookId) : langHintHtml(null)}
     <div class="chatwrap">
       <div class="moderow">
         <button class="modebtn ${c.mode === "book" ? "active" : ""}" data-action="chatmode" data-mode="book">问这本书</button>

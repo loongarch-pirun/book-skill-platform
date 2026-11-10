@@ -1,7 +1,7 @@
 // 视图三/四：问一问（双模式 + 技能包参考 + 引用跳转）+ 技能开关（每本书开关 + 技能包查看器）。
 // 铁律同 views.js：顶层不碰 DOM，事件绑定走 bindAskEvents()。
 import { $, state, call, toast, refresh, show, RETRIEVE_TOPN, paintCloudChip } from "./app.js";
-import { esc, renderCite } from "./views.js";
+import { esc, renderCite, cloudBannerHtml, langHintHtml, verifyFlagHtml } from "./views.js";
 
 // ---------- ③ 问一问 ----------
 export function renderAsk() {
@@ -16,8 +16,10 @@ export function renderAsk() {
     : (active.length ? `<span class="chip">全库模式：引擎自动挑最相关的书</span>` : noBookGuide);
   const pkgs = state.skills.packages;
   return `
-    <div class="view-title">问一问</div>
+    <div class="viewhead"><div class="view-title">问一问</div>${verifyFlagHtml("on")}</div>
     <div class="view-sub">答案带引用 · 点引用徽标跳回原文核对</div>
+    ${cloudBannerHtml()}
+    ${a.mode === "book" ? langHintHtml(a.bookId) : langHintHtml(null)}
     <div class="askbox">
       <div class="moderow">
         <button class="modebtn ${a.mode === "book" ? "active" : ""}" data-action="mode" data-mode="book">问这本书</button>
