@@ -15,6 +15,7 @@ export const state = {
   jobs: {},                   // 导入管线任务状态（bookId → {stage,label,detail,error}）
   prompt: null,               // 待编目一键提示词面板（书架）：{bookId, text, chars, path} | null
   usage: null,                // 对外服务用量治理（W1）：{policy, usage, session, open}
+  shelfFoldOpen: false,       // S8：书架「设置 · 运维 / 技能 / 对外服务（MCP）」折叠区的展开态（refresh 会重建 innerHTML，状态得存这）
   reader: { bookId: null, title: null, chapter: null, chapters: [], loadedChapter: null, highlightId: null, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false, original: null },
   ask: { mode: "book", bookId: null, question: "", loading: false, result: null, skillSlug: null },
   llm: { config: null, answer: null, error: null, loading: false, editing: false }, // 云端问答（V2 P2）：配置/回答/错误/状态

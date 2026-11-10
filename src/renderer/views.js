@@ -77,10 +77,12 @@ export function verifyFlagHtml(mode = "on") {
 export function renderShelf() {
   const books = state.books;
   // 4.4 / 4.7：书架首屏只留「选书 + 导入」——用户眼睛看到的这一屏不带运维/MCP/闸机字样。
-  // 运维提示词与用量治理收进默认折叠的 details（内容仍渲染在 Dom 里，需要时点开就能用）。
+  // 运维提示词与用量治理收进默认折叠的 details（内容仍渲染在 Dom 里，需要时点开就能用）；
+  // 展开态记在 state.shelfFoldOpen——refresh 会整块重建 innerHTML，不记在外面的话，
+  // 用户展开后点里面任意一个开关（它触发 refresh）就会立刻弹回收起，看着像「点了没反应」。
   const ops = `${promptBoxHTML()}${usagePanelHTML()}`;
   const settings = ops.trim()
-    ? `<details class="settings-fold"><summary>设置 · 运维 / 技能 / 对外服务（MCP）· 默认收起</summary><div class="foldbody">${ops}</div></details>`
+    ? `<details class="settings-fold"${state.shelfFoldOpen ? " open" : ""}><summary data-action="foldtoggle">设置 · 运维 / 技能 / 对外服务（MCP）</summary><div class="foldbody">${ops}</div></details>`
     : "";
   return `
     <div class="viewhead"><div class="view-title">书架</div>${verifyFlagHtml("off")}</div>
@@ -341,6 +343,12 @@ export function bindShelfEvents() {
       toast(ok ? "已复制——粘给任意 AI 对话框即可（输出 JSON 存到 catalog-results/）" : "复制失败——请手动全选文本框里的内容");
     }
     else if (act === "promptclose") { state.prompt = null; refresh(); }
+    else if (act === "foldtoggle") {
+      // S8：details 的展开态要记在 state 里，refresh 重建 innerHTML 时才不会弹回收起
+      e.preventDefault();
+      state.shelfFoldOpen = !state.shelfFoldOpen;
+      refresh();
+    }
     else if (act === "usagetoggle") {
       // W1 用量治理：桌面写 usage-policy.json，MCP 闸机读同一份（与 skill-toggle 同模式）
       e.stopPropagation();
