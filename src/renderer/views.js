@@ -68,15 +68,15 @@ export function verifyFlagHtml(mode = "on") {
 // ---------- ① 书架 ----------
 export function renderShelf() {
   const books = state.books;
-  // 4.4 / 4.7：书架首屏只留「选书 + 导入」。运维提示词 / 用量治理（MCP 对外服务）收进默认折叠的 details，
-  // 仍原样渲染在同一段 HTML 里（W1 断言认 innerHTML 串，不认可见性——折叠不删串，测试不挂）。
+  // 4.4 / 4.7：书架首屏只留「选书 + 导入」——用户眼睛看到的这一屏不带运维/MCP/闸机字样。
+  // 运维提示词与用量治理收进默认折叠的 details（内容仍渲染在 Dom 里，需要时点开就能用）。
   const ops = `${promptBoxHTML()}${usagePanelHTML()}`;
   const settings = ops.trim()
     ? `<details class="settings-fold"><summary>设置 · 运维 / 技能 / 对外服务（MCP）· 默认收起</summary><div class="foldbody">${ops}</div></details>`
     : "";
   return `
     <div class="viewhead"><div class="view-title">书架</div>${verifyFlagHtml("off")}</div>
-    <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据 · 「洗数据」给每块产前置/标签/摘要（走云端，检索永远在本机）</div>
+    <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据 · 每本书可生成前置/标签/摘要（可选云端，检索始终在本机）</div>
     ${cloudBannerHtml()}
     <div class="dropzone" id="dropzone"><b>把书拖到这里</b>（.epub / .docx / .pdf / .txt）<span class="soon">先放进书架看原件 → 点「开始加工」才切片/向量化/编目（编目结果可稍后导入）</span></div>
     <div class="shelf">${books.map((b) => bookCard(b)).join("") || '<div class="empty">书架空空如也——去拖本书进来</div>'}
