@@ -118,7 +118,7 @@ button { font-family: inherit; }
 .side-foot { margin-top: auto; font-size: 12px; color: var(--ink-3); padding: 8px 4px; border-top: 1px solid var(--line-soft); }
 
 /* 主区 */
-.main { overflow-y: auto; padding: 24px 32px 48px; }
+.main { overflow-y: auto; max-width: 980px; width: 100%; margin: 0 auto; padding: 24px 24px 48px; }
 .view-title { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
 .view-sub { font-size: 13px; color: var(--ink-2); margin-bottom: 16px; }
 
@@ -491,3 +491,102 @@ button { font-family: inherit; }
 .usagerow { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
 .usagemeta { font-size: 12px; color: var(--ink-3); line-height: 1.7; }
 .usagehint { font-size: 12px; color: var(--ink-3); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
+
+/* ===================== 方向 B · 第 2 轮施工状态类底座 =====================
+   层次一律用「1px 细边 + 极浅底色差 + 柔和圆角」表达（不靠投影），
+   与 V4「无阴影」原则一致；所有新色走 CSS 变量，切回深蓝灰预设自动适配。 */
+
+/* 4.1 云端模式醒目提示：常驻 view-head 下，蓝竖条=已启用 / 灰=未配置 */
+.cloudbanner {
+  display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap;
+  padding: 10px 14px; margin-bottom: 14px; border-radius: var(--r-card);
+  border: 1px solid var(--line); border-left: 3px solid var(--line-hi);
+  background: var(--bg-card); font-size: 13px; color: var(--ink-2); line-height: 1.65;
+}
+.cloudbanner.on { border-left-color: var(--accent); }
+.cloudbanner b { color: var(--ink); font-weight: 600; }
+.cloudbanner .cbtag { color: var(--accent); font-weight: 600; }
+.cloudbanner.off .cbtag { color: var(--ink-2); }
+
+/* 4.2 英文书语言提示与示例问句 */
+.langhint {
+  padding: 10px 14px; margin-bottom: 12px; border-radius: var(--r-card);
+  border: 1px solid var(--line-hi); background: var(--bg-input);
+  font-size: 13px; color: var(--ink-2); line-height: 1.7;
+}
+.langhint b { color: var(--ink); font-weight: 600; }
+.langhint .qe { display: inline-block; margin: 4px 6px 0 0; padding: 2px 10px;
+  border-radius: var(--r-pill); border: 1px solid var(--line-hi);
+  background: var(--bg-card); color: var(--accent); font-size: 12px; }
+
+/* 4.3 首启向导 alpha 声明 / 备份提示（叠加，不删旧文案） */
+.wizard-note {
+  padding: 10px 12px; margin: 10px 0; border-radius: var(--r-btn);
+  border: 1px solid var(--line); background: var(--bg-input);
+  font-size: 12px; color: var(--ink-2); line-height: 1.7;
+}
+.wizard-note.alpha { border-left: 3px solid var(--warn); }
+.wizard-note.backup { border-left: 3px solid var(--accent); }
+.wizard-note b { color: var(--ink); font-weight: 600; }
+
+/* 4.4 / 4.7 书架只留选书+导入：运维/用量/MCP 收进原生 details（零 JS） */
+.settings-fold {
+  margin-top: 12px; border: 1px solid var(--line); border-radius: var(--r-card);
+  background: var(--bg-card);
+}
+.settings-fold > summary {
+  cursor: pointer; padding: 10px 14px; font-size: 13px; color: var(--ink-2);
+  list-style: none; user-select: none;
+}
+.settings-fold > summary::-webkit-details-marker { display: none; }
+.settings-fold > summary::before { content: "▸ "; color: var(--ink-3); }
+.settings-fold[open] > summary { border-bottom: 1px solid var(--line-soft); }
+.settings-fold[open] > summary::before { content: "▾ "; }
+.settings-fold .foldbody { padding: 10px 14px 12px; }
+.settings-fold .foldbody .usagebox { margin-top: 0; border: none; padding: 0; }
+.shelf-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+
+/* 4.5 四视图「引文 / 回验」状态标签 */
+.verifyflag {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
+  color: var(--ink-2); padding: 2px 10px; border-radius: var(--r-pill);
+  border: 1px solid var(--line); background: var(--bg-card);
+}
+.verifyflag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); }
+.verifyflag.pending .dot { background: var(--warn); }
+.verifyflag.off .dot { background: var(--ink-3); }
+.viewhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 2px; }
+.viewhead .verifyflag { margin-left: auto; }
+
+/* 4.6 有无原件标记 + 语言标记（书架书卡 / 翻书工具条共用） */
+.origflag, .booklang {
+  font-size: 12px; padding: 1px 9px; border-radius: var(--r-pill);
+  border: 1px solid var(--line-hi); color: var(--ink-3); white-space: nowrap;
+}
+.origflag.has { color: var(--mint); border-color: rgba(30, 122, 60, .35); background: var(--mint-bg); }
+.booklang.en { color: var(--accent); border-color: rgba(37, 99, 235, .3); background: var(--accent-bg); }
+.bookcard .tagrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+
+/* S4 收口：翻书顶部工具条（书名 + 问这段 + 原件视图 + 有无原件） */
+.readerbar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;
+  padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-card);
+  background: var(--bg-card); font-size: 13px; color: var(--ink-2);
+}
+.readerbar .rbtitle { font-weight: 600; color: var(--ink); }
+.readerbar .spacer { flex: 1; }
+.blocklabel { font-size: 12px; color: var(--ink-3); }
+
+/* 左栏第 5 项（技能/运维/用量/MCP）视觉降级到分界线下——不删按钮、不改 data-view */
+.sidebar .navbtn[data-view="skills"] { margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--line-soft); border-radius: 0 0 var(--r-btn) var(--r-btn); }
+
+/* 响应式三档（V4 验收：900 / 1200 / 1440 无白屏错位） */
+@media (max-width: 900px) {
+  .main { padding: 16px; }
+  .shelf { grid-template-columns: 1fr; }
+  .reader { grid-template-columns: 1fr; height: auto; }
+  .chaplist { max-height: 220px; }
+}
+@media (min-width: 1440px) {
+  .main { max-width: 1080px; }
+}
