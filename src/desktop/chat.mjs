@@ -147,10 +147,14 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
   const skillChapters = (base.skill?.matched || []).map((m) => ({ title: m.title, content: m.content }));
 
   // 2) 云端生成 + 引用校验（防幻觉延伸到生成层；历史净化后随请求带上）
+  // V08/A-01：这是生产 Q&A 唯一云端出网入口。库内原文默认不出网（askCloud 默认
+  // includeSourceText:false）；此处显式 true 保留「逐字引用」功能——该开关是整份代码里
+  // 唯一允许把 chunks.text 拼进请求体的地方，用户侧明示/确认由 B 线接口单接这个开关。
   const r = await askCloud({
     config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model },
     question: q, results, skillChapters,
     history: sanitizeHistory(history, { keep: 12, maxLen: 3000 }), memory,
+    includeSourceText: true,
   });
   if (!r.ok) {
     // 第三波-③：降级（引用全不过/云端失败）= 失败样本——带腿归因落池

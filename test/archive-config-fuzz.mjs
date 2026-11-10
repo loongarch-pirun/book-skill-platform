@@ -206,24 +206,24 @@ console.log("\n--- P1-B llm-config ---");
   let c3 = loadLlmConfig();
   ok(c3.hasKey === false && !!c3.warning, "P1-B3 D07: JSON null → 按损坏处理带 warning");
   // 修复路径：坏配置上重新保存三件套能覆盖修复
-  const fix = saveLlmConfig({ baseUrl: "https://a.com", model: "m", apiKey: "sk-good1234" });
+  const fix = saveLlmConfig({ baseUrl: "https://api.deepseek.com/v1", model: "m", apiKey: "sk-good1234" });
   ok(fix.ok === true && loadLlmConfig().warning === null, "P1-B3b: 坏配置上重新保存 → 覆盖修复且 warning 清除");
 
   // B4（V2-D09）：坏 base64 的 plain: 串——Buffer.from 宽容解出垃圾，hasKey:true 但 key 无效
-  fs.writeFileSync(cfgFile, JSON.stringify({ baseUrl: "https://a.com", model: "m", apiKeyEnc: "plain:!!!@#$" }), "utf8");
+  fs.writeFileSync(cfgFile, JSON.stringify({ baseUrl: "https://api.deepseek.com/v1", model: "m", apiKeyEnc: "plain:!!!@#$" }), "utf8");
   let c4 = loadLlmConfig();
   ok(c4.hasKey === false,
     "P1-B4 D09: plain: 坏 base64 → 往返校验拒收（老逻辑解出垃圾串 hasKey:true）");
   // 合法 plain: 往返仍正常
-  fs.writeFileSync(cfgFile, JSON.stringify({ baseUrl: "https://a.com", model: "m", apiKeyEnc: "plain:" + Buffer.from("sk-ok9999", "utf8").toString("base64") }), "utf8");
+  fs.writeFileSync(cfgFile, JSON.stringify({ baseUrl: "https://api.deepseek.com/v1", model: "m", apiKeyEnc: "plain:" + Buffer.from("sk-ok9999", "utf8").toString("base64") }), "utf8");
   ok(loadLlmConfig().hasKey === true && readLlmKey() === "sk-ok9999", "P1-B4b: 合法 plain: 往返正确（校验不误伤）");
   // B5：enc: 坏数据 → decrypt 抛 → null → hasKey:false（安全侧）
-  fs.writeFileSync(cfgFile, JSON.stringify({ baseUrl: "https://a.com", model: "m", apiKeyEnc: "enc:坏数据" }), "utf8");
+  fs.writeFileSync(cfgFile, JSON.stringify({ baseUrl: "https://api.deepseek.com/v1", model: "m", apiKeyEnc: "enc:坏数据" }), "utf8");
   ok(loadLlmConfig().hasKey === false, "P1-B5: enc: 解密失败 → 按无 key 处理（安全侧）");
 
   // B6（V2-D08）：数字 apiKey——typeof 检查静默忽略，返回 ok:true 但 key 没存
   fs.rmSync(cfgFile, { force: true });
-  saveLlmConfig({ baseUrl: "https://a.com", model: "m", apiKey: "sk-keep0001" });
+  saveLlmConfig({ baseUrl: "https://api.deepseek.com/v1", model: "m", apiKey: "sk-keep0001" });
   const before6 = readLlmKey();
   const r6 = saveLlmConfig({ apiKey: 123 });
   ok(r6.ok === false,
@@ -243,7 +243,7 @@ console.log("\n--- P1-B llm-config ---");
   // B10：userData 目录不存在 → mkdirSync recursive 自建
   const deep = path.join(tmp, "不存在", "嵌套");
   configureLlmConfig({ userData: deep, ...fakeEnc });
-  ok(saveLlmConfig({ baseUrl: "https://a.com", model: "m", apiKey: "sk-deep0001" }).ok === true,
+  ok(saveLlmConfig({ baseUrl: "https://api.deepseek.com/v1", model: "m", apiKey: "sk-deep0001" }).ok === true,
     "P1-B10: userData 嵌套目录不存在 → 自动创建后保存成功");
   fs.rmSync(tmp, { recursive: true, force: true });
 }

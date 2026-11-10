@@ -43,7 +43,7 @@ configureLlmConfig({
 });
 fs.mkdirSync(path.join(TMP, "userData"), { recursive: true });
 fs.writeFileSync(path.join(TMP, "userData", "llm.json"), JSON.stringify({
-  baseUrl: "http://fake.local/v1", model: "fake-model",
+  baseUrl: "http://127.0.0.1:1/v1", model: "fake-model", // 环回假端点（V08/A-01：http 仅本机环回豁免；chatFn 注入不真出网）
   apiKeyEnc: "plain:" + Buffer.from("sk-test", "utf8").toString("base64"),
 }), "utf8");
 

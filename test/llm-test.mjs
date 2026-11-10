@@ -4,7 +4,7 @@ import http from "node:http";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { normalizeLlmConfig, buildMessages, chat, parseAnswer, verifyAnswer, askCloud, sanitizeHistory } from "../src/lib/llm.mjs";
+import { normalizeLlmConfig, buildMessages, chat, parseAnswer, verifyAnswer, askCloud, sanitizeHistory, describeCloudMode } from "../src/lib/llm.mjs";
 import { configureLlmConfig, loadLlmConfig, readLlmKey, saveLlmConfig } from "../src/desktop/llm-config.mjs";
 
 let pass = 0, fail = 0;
@@ -65,6 +65,7 @@ const RESULTS = [
     results: RESULTS,
     skillChapters: [{ title: "无为", content: "為道日損……" }],
     history: [{ role: "user", content: "上一问" }, { role: "assistant", content: "上一答" }],
+    includeSourceText: true,
   });
   ok(msgs[0].role === "system" && msgs[0].content.includes("逐字抄"), "提示词: system 在首位且含铁律");
   ok(msgs.length === 4 && msgs[1].content === "上一问" && msgs[2].role === "assistant", "提示词: 历史居中（system+历史2条+问题=4条）");
@@ -211,6 +212,39 @@ const RESULTS = [
   const big = buildMessages({ question: "q", results: [{ book: "b", text: "t" }], memory: "M".repeat(5000) });
   const bigLast = big[big.length - 1].content;
   ok(bigLast.includes("M".repeat(2000)) && !bigLast.includes("M".repeat(2500)), "F-V3b: memory 5000 字进提示词前截断到 2000（防异常记忆撑爆上下文）");
+}
+
+// ========== N) V08/A-01 出网端点收敛 + 云端请求体不带库内原文 ==========
+{
+  // V08 验收点（02-技术审.md:204）：http://任意主机被拒、云端请求体不含 chunks.text 原文
+  ok(!!normalizeLlmConfig({ baseUrl: "http://evil.example/v1", apiKey: "k", model: "m" }).error,
+    "V08: 非环回 http:// 明文任意主机 → 拒收");
+  ok(!!normalizeLlmConfig({ baseUrl: "https://evil.example/v1", apiKey: "k", model: "m" }).error,
+    "V08: https 白名单外主机 → 拒收");
+  ok(normalizeLlmConfig({ baseUrl: "https://api.deepseek.com/v1", apiKey: "k", model: "m" }).baseUrl === "https://api.deepseek.com/v1",
+    "V08: https 白名单内主机 → 放行");
+  ok(normalizeLlmConfig({ baseUrl: BASE, apiKey: "k", model: "m" }).baseUrl === BASE,
+    "V08: 本机环回 http:// → 放行（本地假 API/本地模型端点，流量不出本机）");
+  // 双拷贝同源（F2 零漂移）：配置存储侧 saveLlmConfig 也拒非环回 http
+  ok(saveLlmConfig({ baseUrl: "http://evil.example/v1", model: "m", apiKey: "sk-x" }).ok === false,
+    "V08/F2: 配置存储侧同源拒收 http://（两处校验收敛到 llm-hosts.mjs 单正本）");
+  // 默认请求体不带库内原文
+  const dfltMsgs = buildMessages({ question: "q", results: RESULTS });
+  const dfltLast = dfltMsgs[dfltMsgs.length - 1].content;
+  ok(!dfltLast.includes(RESULTS[0].text) && !dfltLast.includes(RESULTS[1].text),
+    "V08: buildMessages 默认只带编号/书名/定位，不含库内 r.text 原文");
+  const withText = buildMessages({ question: "q", results: RESULTS, includeSourceText: true });
+  ok(withText[withText.length - 1].content.includes(RESULTS[0].text),
+    "V08: 显式 includeSourceText:true 才带库内原文（唯一可审计开关）");
+  // 端到端：抓一次云端模式出网请求体，断言不含 chunks.text 原文
+  scenario = "normal"; scenarioQueue = null;
+  await askCloud({ config: CFG, question: "q", results: RESULTS });
+  ok(!JSON.stringify(lastBody).includes(RESULTS[0].text) && !JSON.stringify(lastBody).includes(RESULTS[1].text),
+    "V08: 云端请求体不含 chunks.text 原文（假 API 记 lastBody 实测）");
+  // IF-3：describeCloudMode 只读快照（A 侧纯函数，不加新 IPC）
+  const cm = describeCloudMode({ baseUrl: "https://api.deepseek.com/v1" });
+  ok(cm.cloud === true && cm.https === true && cm.loopback === false && cm.carriesSourceText === false,
+    "V08/IF-3: describeCloudMode 快照 = 云端/https/非环回/默认不带原文");
 }
 
 server.closeAllConnections?.();

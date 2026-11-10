@@ -7,6 +7,7 @@
 //   - 加密不可用时降级 plain:（base64 存 + UI 警告），文件里永远不出现裸 key。
 import fs from "node:fs";
 import path from "node:path";
+import { validateBaseUrl } from "../lib/llm-hosts.mjs";
 
 let _env = null; // { userData, available, encrypt, decrypt }
 
@@ -92,9 +93,11 @@ export function saveLlmConfig({ baseUrl, model, apiKey } = {}) {
   const keyToSet = typeof apiKey === "string" && apiKey.trim() ? apiKey.trim() : null;
   const haveKey = !!keyToSet || !!decodeKey(raw);
 
-  // 与 llm.mjs normalizeLlmConfig 同款校验（双拷贝，F2 漂移探测器常驻盯一致）——
-  // V2-D18 修：含空白主机的地址拒收（否则 fetch 抛 TypeError 误报 NETWORK）
-  if (!/^https?:\/\//i.test(next.baseUrl) || /\s/.test(next.baseUrl)) return { ok: false, error: "接口地址要以 http(s):// 开头（例如 https://api.deepseek.com/v1）" };
+  // V08/A-01：与 llm.mjs normalizeLlmConfig 同源——统一改调 llm-hosts.mjs 单正本
+  // （原双拷贝正则删除；F2 漂移探测器天然零漂移）。非环回强制 https + 主机白名单，
+  // http 仅本机环回放行，含空白主机/非法 URL 拒收（否则 fetch 抛 TypeError 误报 NETWORK）。
+  const v = validateBaseUrl(next.baseUrl);
+  if (!v.ok) return { ok: false, error: v.error };
   if (!next.model) return { ok: false, error: "请填模型名（例如 deepseek-chat）" };
   if (!haveKey) return { ok: false, error: "请填 API key" };
 
