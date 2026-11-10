@@ -140,7 +140,9 @@ function quoteClauses(quote) {
 function verifyOneText(srcText, quote) {
   const src = normalize(stripAnnotations(srcText));
   const cls = quoteClauses(quote);
-  if (!cls.length) return { ok: true, hits: 0, total: 0 };
+  // V09/A-08：切不出 ≥4 字有效子句 = 这条引文没法回源验证 → fail-closed（不再放行）。
+  // 与 llm.mjs hitRate 的空子句语义对齐（tooShort:true），reason 链走 quote-too-short。
+  if (!cls.length) return { ok: false, tooShort: true, hits: 0, total: 0 };
   const hits = cls.filter(c => src.includes(c)).length;
   return { ok: hits / cls.length >= 0.6, hits, total: cls.length };
 }
@@ -207,8 +209,11 @@ export function verifyCitations(citations, sourcesMap) {
     const v = verifyOneText(texts.join("\n"), c.quote);
     if (!v.ok) {
       const sample = normalize(stripAnnotations(texts.join(""))).slice(0, 60);
-      errors.push({ ...c, reason: "quote-not-found",
-        hint: `该章实文（前60字）：${sample}…；子句命中 ${v.hits}/${v.total}，请照抄 query_book 返回的原文（繁体照抄，勿自行简转繁）` });
+      // V09/A-08：短到切不出有效子句的引文与「查无此句」分开说清罪名
+      errors.push({ ...c, reason: v.tooShort ? "quote-too-short" : "quote-not-found",
+        hint: v.tooShort
+          ? `引文太短/无有效子句（切不出 ≥4 字句），无法回源验证——请照抄 query_book 返回的完整原文`
+          : `该章实文（前60字）：${sample}…；子句命中 ${v.hits}/${v.total}，请照抄 query_book 返回的原文（繁体照抄，勿自行简转繁）` });
       continue;
     }
     if (!stats[bookId]) stats[bookId] = { seen: new Set(), total: entry.chapters.length };
@@ -338,6 +343,9 @@ export function saveSkill(slug, files, { skillsDir = currentSkillsDir() } = {}) 
 
   const fmData = parseFrontmatter(skillMd.content).data;
   const citations = extractCitations(files);
+  // V09/A-08：verifyOneText 空子句已 fail-closed——声称有引文但条条短到切不出有效子句的包，
+  // 会在下面 verifyCitations 里逐条以 quote-too-short 拒收（空壳引文=无法回源验证=不落盘）；
+  // 零引文包（无任何 > 行）是合法形态，不在此拦。
   const { errors: citErrors, stats: citStats } = verifyCitations(citations, fmData.sources);
   if (citErrors.length) return { ok: false, stage: "citation-check", errors: citErrors, citations_checked: citations.length };
 

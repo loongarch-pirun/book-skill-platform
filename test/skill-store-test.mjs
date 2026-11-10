@@ -200,6 +200,64 @@ const ch08 = goodChapter("上善若水，水善利萬物而不爭。〔道德经
      cits[0].quote === "上善若水。" && cits[1].quote === "第二条", "引文提取: 只认 blockquote、行号与引文正确");
 }
 
+// ========== 14b) V09/A-08：空子句引文 fail-closed + 引文空壳拒收 + 零引文包仍放行 ==========
+{
+  const base = { slug: "test-skill", skillsDir: tmp };
+
+  // a) 引文空壳：> 行带〔别名·章节〕但 quote 短到切不出 ≥4 字子句 → 拒（no-citation-clause）
+  const shellFm = `---
+name: test-skill
+title: 测试技能
+description: 引文空壳测试
+sources:
+  道德经: daodejing-zh
+---
+# 测试技能
+> 啊。〔道德经·第八章〕
+`;
+  let r = saveSkill("test-skill", [{ path: "SKILL.md", content: shellFm }], base);
+  ok(r.ok === false && r.stage === "citation-check" && r.errors?.[0]?.reason === "quote-too-short",
+    "V09: 引文空壳（条条切不出有效子句）→ 拒收 quote-too-short（不再 ok:true 放行）", JSON.stringify(r.errors));
+
+  // b) 单条短引文（同章还有真实内容）→ verifyCitations 直接拒 quote-too-short（不再放行）
+  const shortOne = `---
+name: test-skill
+title: 测试技能
+description: 短引文测试
+sources:
+  道德经: daodejing-zh
+---
+# 测试技能
+> 啊。〔道德经·第八章〕
+> 上善若水，水善利萬物而不爭。〔道德经·第八章〕
+`;
+  r = saveSkill("test-skill", [{ path: "SKILL.md", content: shortOne }], base);
+  ok(r.ok === false && r.stage === "citation-check" && r.errors?.[0]?.reason === "quote-too-short",
+    "V09: 短引文条目 → quote-too-short 拒收（空子句不再 ok:true）", JSON.stringify(r.errors));
+
+  // c) 零引文包（无任何 > 行）仍是合法形态 → 放行（控制组，防误伤 §17/§19 既有形态）
+  r = saveSkill("test-skill", [{ path: "SKILL.md", content: goodFm }], base);
+  ok(r.ok === true && r.citations_checked === 0,
+    "V09: 零引文包仍放行（合法形态，不误伤）", JSON.stringify(r.errors));
+}
+
+// ========== 14c) V09/A-08 防回归：脚本只落盘不执行（skills/*/scripts 不入执行链） ==========
+{
+  const fsMod = await import("node:fs");
+  let execHit = null;
+  const walk = (dir) => {
+    for (const e of fsMod.readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) { if (!["node_modules", "release", "books", "library", "skills", ".git", "build", "catalog-results", "catalog-tasks"].includes(e.name)) walk(path.join(dir, e.name)); }
+      else if (/\.(mjs|js)$/.test(e.name)) {
+        const src = fsMod.readFileSync(path.join(dir, e.name), "utf8");
+        if (/\b(execFile|execFileSync|spawnSync)\b/.test(src) && /scripts/.test(src)) execHit = path.join(dir, e.name);
+      }
+    }
+  };
+  walk(path.join(import.meta.dirname, "..", "src"));
+  ok(execHit === null, "V09: src/ 无任何执行 skills/*/scripts 的代码路径（只落盘不执行）", execHit || "");
+}
+
 // ========== 15) 出厂自检：声称 vs 实际（coverage-check） ==========
 {
   const base = { slug: "test-skill", skillsDir: tmp };
