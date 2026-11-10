@@ -1,5 +1,8 @@
 // preload：contextBridge 把 window.study.* 暴露给渲染进程
 // 铁律：只转发 IPC，不暴露任何 Node 能力（渲染进程纯前端，碰不到 fs/sqlite）
+// V07/A-07 复核（2026-11-10）：全部 60 口逐条核对——invoke/on/off 转发 + 唯一例外
+// filePathOf（webUtils.getPathForFile，Electron 官方替代 File.path 通道），零 Node 能力外漏。
+// sandbox:true 下 preload 只允许 ipcRenderer/contextBridge/webUtils——与现状逐字吻合，无需改行为。
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 contextBridge.exposeInMainWorld("study", {
