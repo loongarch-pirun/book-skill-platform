@@ -333,6 +333,10 @@ export function bindAskEvents() {
     else if (act === "clsummary") {
       const q = (state.ask.question || "").trim();
       if (!state.ask.result || !q) { toast("先提问检索一次，再让云端总结"); return; }
+      // B1（B 侧）：把原文片段发给云端前必须经用户明确同意。
+      // 三个入口——检索前的「让云端 AI 总结这次检索」、结果里的「重新总结」、错误条的「重新总结」
+      // ——共用同一个 data-action="clsummary"，因此在此一处收口；取消 = 照常出结果但不带原文。
+      const includeSourceText = confirm("这次总结会把选中原文片段发给第三方 AI，是否继续？");
       state.llm.loading = true;
       state.llm.answer = null;
       refresh();
@@ -342,6 +346,7 @@ export function bindAskEvents() {
           question: q,
           topN: RETRIEVE_TOPN,
           skillSlug: state.ask.skillSlug,
+          includeSourceText, // 接口约定字段名：A 线默认 false，只有 confirm 通过才 true
         }));
         state.llm.answer = r;
         state.llm.error = null;
