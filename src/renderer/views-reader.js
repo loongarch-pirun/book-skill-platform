@@ -2,7 +2,7 @@
 // 编目资产（主题/人物）来自 reader:themes / reader:persons 通道（engine.mjs 自建浏览 API）。
 // 铁律同 views.js：顶层不碰 DOM，事件绑定走 bindReaderEvents()。
 import { $, state, call, toast, show } from "./app.js";
-import { esc } from "./views.js";
+import { esc, origFlagHtml, verifyFlagHtml } from "./views.js";
 
 // token 账展示：1 位小数 K 记法（1234 → "1.2K"，999 → "999"）——与 list_books 的 total_tokens 同一语义
 function fmtK(n) {
@@ -22,9 +22,16 @@ export function renderReader() {
     <div class="filterbar">正在看：${r.mode === "theme" ? "主题" : "人物"}「<b>${esc(r.filter)}</b>」的 ${r.blocks.length} 个块
       <button class="ghost sm" data-action="backchap">返回目录浏览</button></div>`;
   return `
-    <div class="view-title">${esc(r.title || r.bookId)}</div>
+    <div class="viewhead"><div class="view-title">${esc(r.title || r.bookId)}</div>${verifyFlagHtml("on")}</div>
     <div class="view-sub">原文一字不改 · 引用跳转后高亮对应块 · 读到哪不服，点「问这段」直接带去问一问</div>
-    <div class="origentry"><button class="ghost sm" data-action="original">看原件</button><span class="orighint">books/ 里的原始文件（未加工的书没有块，直接看它）</span></div>
+    <div class="readerbar">
+      <span class="rbtitle">${esc(r.title || r.bookId)}</span>
+      <button class="ghost sm" data-action="original">原件视图 · 看原件</button>
+      <span class="orighint">books/ 里的原始文件（未加工的书没有块，直接看它）</span>
+      ${origFlagHtml(state.books?.find((b) => b.id === r.bookId))}
+      <span class="spacer"></span>
+      <span class="blocklabel">原文块 · 可逐字回验</span>
+    </div>
     <div class="catstrip" id="catStrip">${catStripHtml(r)}</div>
     ${filterBar}
     <div class="reader">
