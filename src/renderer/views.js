@@ -22,11 +22,14 @@ export const renderCite = (x, withBook = true) => {
 // ===== 第 2 轮 · 四视图共用状态条（纯函数，顶层不碰 DOM：ESM 循环导入防 TDZ） =====
 // 4.1 云端模式醒目提示：只消费 state.llm.config.hasKey（llmConfigGet 现有返回字段），零新 IPC。
 // 措辞硬避「云端 AI 配置」六字——renderer-graph-test.mjs:331/:370 在配置卡收起态断言该串不出现。
+// 出网范围写全：提问/引用片段之外，加工书（洗数据 clean.mjs、编目 enrich.mjs）发的是整块原文
+// （src/lib/clean.mjs:165-174 拼【本批待判】、src/lib/enrich.mjs:184-188 拼 [idx]…\n${text}），
+// 量级比「引用片段」大一个数量级——用户有权在开之前就知道。
 export function cloudBannerHtml() {
   const on = !!(state.llm?.config?.hasKey);
   return on
-    ? `<div class="cloudbanner on"><span class="cbtag">云端模式已开启</span><span>开启后，<b>你的提问与引用片段将发往第三方 AI</b>；书库检索与原文始终留在本机。</span></div>`
-    : `<div class="cloudbanner off"><span class="cbtag">本地模式</span><span>书与检索<b>不出本机</b>；当前未接云端 AI，不会有任何内容外发。</span></div>`;
+    ? `<div class="cloudbanner on"><span class="cbtag">云端模式已开启</span><span>检索<b>始终在本机</b>；会外发的是：提问、引用片段，以及<b>加工书（洗数据 / 编目）时的书内段落</b>——都发给第三方 AI。</span></div>`
+    : `<div class="cloudbanner off"><span class="cbtag">本地模式</span><span>书与检索<b>不出本机</b>；当前未接云端 AI，不会有任何内容外发。<b>配好 key 后，加工书（洗数据 / 编目）会把书内段落发出去</b>——再决定要不要配。</span></div>`;
 }
 
 // 4.2 英文书语言提示与示例问句：逐书语言取 b.lang（IF-1，A 线提供，可能尚未落地）。
