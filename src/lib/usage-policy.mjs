@@ -7,7 +7,9 @@ import path from "node:path";
 
 export const DEFAULT_POLICY = {
   enabled: true,
-  schedule: { workdays: ["09:00-18:30"], weekend: false, timezone: "Asia/Shanghai" },
+  // V04/A-06：与随包 library/usage-policy.json 同源对齐（00:00-24:00 + 周末开，全天开放）——
+  // 两份正本口径一致，「盘坏回退默认」与「盘好」不产生服务窗口跳变
+  schedule: { workdays: ["00:00-24:00"], weekend: true, timezone: "Asia/Shanghai" },
   budget: { perSessionChars: 200000, perSessionQueries: 30, deepReadChars: 80000 },
 };
 
@@ -15,14 +17,37 @@ export function usagePolicyPath(libDir) {
   return path.join(libDir, "usage-policy.json");
 }
 
-// 读整份策略：磁盘文件覆盖默认值（深合并，缺字段回退默认——旧文件/半截文件不伤）
+// 读整份策略：磁盘文件覆盖默认值（深合并，缺字段回退默认——旧文件/半截文件不伤）。
+// V04/A-06：不再静默吞错——返回值带 __source（"disk" / "default" / "default-after-error"）
+// 与 __error（读盘/解析失败原因），坏文件时 console.warn 明确告警；无文件=首启正常态不算错。
 export function loadUsagePolicy(libDir) {
   let disk = {};
+  let __source = "default";
+  let __error = null;
+  const p = usagePolicyPath(libDir);
+  let raw = null;
   try {
-    disk = JSON.parse(fs.readFileSync(usagePolicyPath(libDir), "utf8"));
-    if (!disk || typeof disk !== "object") disk = {};
-  } catch { /* 无文件/坏 JSON：全默认 */ }
+    raw = fs.readFileSync(p, "utf8");
+  } catch (e) {
+    if (e?.code !== "ENOENT") { __source = "default-after-error"; __error = `读取失败: ${e?.message || e}`; }
+  }
+  if (raw !== null) {
+    try {
+      disk = JSON.parse(raw);
+      if (!disk || typeof disk !== "object") { disk = {}; __source = "default-after-error"; __error = "内容不是 JSON 对象"; }
+      else __source = "disk";
+    } catch (e) {
+      disk = {};
+      __source = "default-after-error";
+      __error = `JSON 解析失败: ${e?.message || e}`;
+    }
+  }
+  if (__source === "default-after-error") {
+    console.warn(`[usage-policy] 警告：${p} 无法使用（${__error}），已回退内置默认策略并继续服务。生效来源=default-after-error，请修复或删除该文件后重启。`);
+  }
   return {
+    __source,
+    __error,
     enabled: typeof disk.enabled === "boolean" ? disk.enabled : DEFAULT_POLICY.enabled,
     schedule: { ...DEFAULT_POLICY.schedule, ...(disk.schedule || {}) },
     budget: { ...DEFAULT_POLICY.budget, ...(disk.budget || {}) },
@@ -73,13 +98,16 @@ export function inScheduleWindow(policy, now = new Date()) {
 }
 
 // 服务当前是否对检索/深读开放：{open, reason}
-// reason 供 hint 用：关闭态说清是手动关还是不在窗口
+// reason 供 hint 用：关闭态说清是手动关还是不在窗口。
+// V04/A-06：policy.__source === "default-after-error"（盘坏回退默认）时附带 fallback 标记，
+// 让上游（engine.usagePolicyGet 等）可观测「策略不是从盘上正常读到的」——不 throw、不阻断。
 export function serviceStatus(policy, now = new Date()) {
+  const out = policy?.__source === "default-after-error" ? { fallback: "policy-fallback" } : {};
   if (!policy.enabled)
-    return { open: false, reason: "manual-off", hint: "知识库对外服务当前是手动关闭状态。需要时请在桌面端书架页打开「知识库对外服务」开关，或修改 usage-policy.json 的 enabled。" };
+    return { ...out, open: false, reason: "manual-off", hint: "知识库对外服务当前是手动关闭状态。需要时请在桌面端书架页打开「知识库对外服务」开关，或修改 usage-policy.json 的 enabled。" };
   if (!inScheduleWindow(policy, now))
-    return { open: false, reason: "schedule-off", hint: "知识库对外服务当前不在允许的时间窗口内（默认工作日 9:00-18:30，周末关闭）。急用可联系主人修改 library/usage-policy.json 的 schedule 字段放宽时间窗。" };
-  return { open: true };
+    return { ...out, open: false, reason: "schedule-off", hint: "知识库对外服务当前不在允许的时间窗口内（默认全天开放 00:00-24:00 含周末，可在 usage-policy.json 的 schedule 收窄）。急用可联系主人修改 library/usage-policy.json 的 schedule 字段放宽时间窗。" };
+  return { ...out, open: true };
 }
 
 // ---------- 会话预算（进程内记账；MCP server 进程寿命 = 一个智能体会话） ----------

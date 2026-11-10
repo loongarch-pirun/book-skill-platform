@@ -20,7 +20,10 @@ ok(currentLibDir() === tmp, "夹具: configureSearch 指向 tmp 空库目录");
 {
   const dflt = up.loadUsagePolicy(tmp);
   ok(dflt.enabled === true && dflt.budget.perSessionChars === 200000
-    && dflt.schedule.workdays[0] === "09:00-18:30", "默认策略：开 + 预算 20 万字符 + 工作日 9:00-18:30");
+    && dflt.schedule.workdays[0] === "00:00-24:00" && dflt.schedule.weekend === true,
+    "默认策略：开 + 预算 20 万字符 + 全天开放 00:00-24:00 含周末（V04/A-06 与随包 json 同源）");
+  ok(dflt.__source === "default" && dflt.__error === null,
+    "V04: 无文件首启 → __source=default（正常态，不算错）");
   up.saveUsagePolicy(tmp, { enabled: false });
   ok(up.loadUsagePolicy(tmp).enabled === false, "saveUsagePolicy 写 enabled=false 落盘可读回");
   up.saveUsagePolicy(tmp, { enabled: true, budget: { perSessionQueries: 5 } });
@@ -33,14 +36,16 @@ ok(currentLibDir() === tmp, "夹具: configureSearch 指向 tmp 空库目录");
 // ---------- 2) 定时窗口：inScheduleWindow（注入日期，确定性） ----------
 {
   const p = up.loadUsagePolicy(tmp);  // 全默认
+  // V04/A-06：默认窗已对齐随包 json（全天开）——窗口组改用显式策略保持原断言语义确定性
+  const pWin = { ...p, schedule: { ...p.schedule, workdays: ["09:00-18:30"], weekend: false } };
   const wed = (h, m) => new Date(2026, 9, 21, h, m);   // 2026-10-21 周三
   const sat = (h, m) => new Date(2026, 9, 24, h, m);   // 周六
-  ok(up.inScheduleWindow(p, wed(9, 0)) === true, "周三 9:00 整在窗口内");
-  ok(up.inScheduleWindow(p, wed(8, 59)) === false, "周三 8:59 在窗口外");
-  ok(up.inScheduleWindow(p, wed(18, 29)) === true, "周三 18:29 在窗口内（右开区间尾）");
-  ok(up.inScheduleWindow(p, wed(18, 30)) === false, "周三 18:30 整出窗口（右开）");
-  ok(up.inScheduleWindow(p, sat(10, 0)) === false, "周六默认关（weekend=false）");
-  const p2 = { ...p, schedule: { ...p.schedule, weekend: true } };
+  ok(up.inScheduleWindow(pWin, wed(9, 0)) === true, "周三 9:00 整在窗口内");
+  ok(up.inScheduleWindow(pWin, wed(8, 59)) === false, "周三 8:59 在窗口外");
+  ok(up.inScheduleWindow(pWin, wed(18, 29)) === true, "周三 18:29 在窗口内（右开区间尾）");
+  ok(up.inScheduleWindow(pWin, wed(18, 30)) === false, "周三 18:30 整出窗口（右开）");
+  ok(up.inScheduleWindow(pWin, sat(10, 0)) === false, "周六默认关（weekend=false）");
+  const p2 = { ...pWin, schedule: { ...pWin.schedule, weekend: true } };
   ok(up.inScheduleWindow(p2, sat(10, 0)) === true, "weekend=true 时周六也开");
   // 「24:00」日末哨兵：右开区间下真全天写 00:00-24:00（23:59 也在内）；24:30 非法整条不命中
   const p3 = { ...p, schedule: { ...p.schedule, workdays: ["00:00-24:00"] } };
@@ -48,11 +53,11 @@ ok(currentLibDir() === tmp, "夹具: configureSearch 指向 tmp 空库目录");
     "00:00-24:00 真全天：0 点整与 23:59 都在窗口内（不漏最后一分钟）");
   const p4 = { ...p, schedule: { ...p.schedule, workdays: ["00:00-24:30"] } };
   ok(up.inScheduleWindow(p4, wed(10, 0)) === false, "24:30 非法区间：整条不命中（哨兵纪律）");
-  const st = up.serviceStatus({ ...p, enabled: false }, wed(10, 0));
+  const st = up.serviceStatus({ ...pWin, enabled: false }, wed(10, 0));
   ok(st.open === false && st.reason === "manual-off" && /手动关闭/.test(st.hint), "手动关：reason=manual-off 且 hint 说人话");
-  const st2 = up.serviceStatus(p, sat(10, 0));
+  const st2 = up.serviceStatus(pWin, sat(10, 0));
   ok(st2.open === false && st2.reason === "schedule-off" && /时间窗口/.test(st2.hint), "窗口外：reason=schedule-off 且 hint 说人话");
-  const st3 = up.serviceStatus(p, wed(10, 0));
+  const st3 = up.serviceStatus(pWin, wed(10, 0));
   ok(st3.open === true, "窗口内 + 开着 = 开放");
 }
 
@@ -159,6 +164,35 @@ ok(currentLibDir() === tmp, "夹具: configureSearch 指向 tmp 空库目录");
 
   fs.rmSync(path.join(tmp, "usage-policy.json"), { force: true });
   fs.rmSync(path.join(tmp, "usage-log.jsonl"), { force: true });
+}
+
+// ---------- 5b) V04/A-06：坏策略回退可观测（不静默） ----------
+{
+  fs.writeFileSync(path.join(tmp, "usage-policy.json"), "{ 坏掉的 JSON !!!", "utf8");
+  let warned = "";
+  const origWarn = console.warn;
+  console.warn = (m) => { warned += String(m); };
+  const bad = up.loadUsagePolicy(tmp);
+  console.warn = origWarn;
+  ok(bad.__source === "default-after-error", "V04: 坏 JSON → __source=default-after-error");
+  ok(!!bad.__error && /JSON/.test(bad.__error), "V04: __error 带解析失败原因");
+  ok(bad.enabled === true && bad.budget.perSessionChars === 200000,
+    "V04: 回退后生效字段可读（默认策略兜底继续服务）");
+  ok(/default-after-error/.test(warned) && /usage-policy\.json/.test(warned) && /回退/.test(warned),
+    "V04: console.warn 明确告警（含来源与文件路径）");
+  const stBad = up.serviceStatus(bad);
+  ok(stBad.fallback === "policy-fallback",
+    "V04: serviceStatus 透出 fallback=policy-fallback（上游可观测，不阻断）");
+  // 半截文件（合法 JSON 但非对象）同样算坏
+  fs.writeFileSync(path.join(tmp, "usage-policy.json"), "42", "utf8");
+  const half = up.loadUsagePolicy(tmp);
+  ok(half.__source === "default-after-error", "V04: 非 JSON 对象（如 42）→ 同样判坏回退");
+  // 正常盘上文件 → __source=disk 且无 fallback
+  up.saveUsagePolicy(tmp, { enabled: true });
+  const disk = up.loadUsagePolicy(tmp);
+  ok(disk.__source === "disk" && disk.__error === null, "V04: 正常文件 → __source=disk");
+  ok(up.serviceStatus(disk).fallback === undefined, "V04: 正常盘无 fallback 标记");
+  fs.rmSync(path.join(tmp, "usage-policy.json"), { force: true });
 }
 
 // ---------- 6) 桌面 engine 层：usagePolicyGet/Set（tmp 目录，不碰真库） ----------
