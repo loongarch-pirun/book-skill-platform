@@ -7,7 +7,7 @@ import { lookupEntry } from "./lookup.mjs";
 import { readChapter, readRange, readFullBook } from "./browse.mjs";
 import { getOutline } from "./outline.mjs";
 import { checkCitation } from "./cite-check.mjs";
-import { saveSkill, readSkill, listSkills } from "./skill-store.mjs";
+import { saveSkill as defaultSaveSkill, readSkill, listSkills } from "./skill-store.mjs";
 import { checkSkills } from "./skill-health.mjs";
 import { loadSkillState } from "./skill-state.mjs";
 import { loadUsagePolicy, serviceStatus, checkBudget, chargeUsage, recordUsage } from "./usage-policy.mjs";
@@ -38,8 +38,26 @@ const TOOL_TIERS = {
   get_theme: "metadata", expand: "metadata", get_outline: "metadata",
   list_skills: "metadata", read_skill: "metadata", cite_check: "metadata", check_skills: "metadata",
   query_book: "search", query_library: "search", similar_chunks: "search", lookup: "search",
+  save_skill: "search",
   read_full_book: "deepRead", get_chapter: "deepRead", read_range: "deepRead",
 };
+
+// V02（第2轮 P0）：未登记工具一律拒绝注册，不许静默降级到 metadata 绕过闸机。
+// IPC 是公开 API——定档表是工具集的唯一正本，缺档 = 配置错，fail-closed 抛错而非放行。
+export function assertRegistered(name) {
+  if (!Object.prototype.hasOwnProperty.call(TOOL_TIERS, name))
+    throw new Error(`未登记工具: ${name}`);
+  return TOOL_TIERS[name];
+}
+
+// 差集自检：注册名集合必须与定档表完全一致（多一个少一个都拒绝注册）。
+export function assertTierCoverage(names) {
+  const missing = names.filter(n => !Object.prototype.hasOwnProperty.call(TOOL_TIERS, n));
+  if (missing.length) throw new Error(`未登记工具: ${missing.join(", ")}`);
+  const extra = Object.keys(TOOL_TIERS).filter(n => !names.includes(n));
+  if (extra.length) throw new Error(`定档表多出未注册工具: ${extra.join(", ")}`);
+  return true;
+}
 
 function measureChars(result) {
   try {
@@ -78,10 +96,14 @@ export { TOOL_TIERS, gateCall };
 // gate=false：自家验收测试豁免对外闸机——stage3/guard/similar-fuzz 起进程测的是工具协议
 // 与数据链路，不该被定时窗/预算/开关左右断言（2026-10-21 18:51 主人关闸后 stage3 全红的
 // 教训；闸机治外部智能体，不治自家测试。对外拒收语义由 usage-gate-test 带闸直测）
-export function registerServerTools(server, { gate = true } = {}) {
+export function registerServerTools(server, { gate = true, deps = {} } = {}) {
+  const { saveSkill = defaultSaveSkill, handlerOverrides = {} } = deps;
+  const registered = [];
   const reg = (name, def, handler) => {
-    const tier = TOOL_TIERS[name] || "metadata";
-    const wrapped = gate ? async (args) => gateCall(tier, name, handler, args) : handler;
+    const tier = assertRegistered(name); // V02 fail-closed：缺档抛错，拒绝注册
+    registered.push(name);
+    const effective = handlerOverrides[name] || handler;
+    const wrapped = gate ? async (args) => gateCall(tier, name, effective, args) : effective;
     server.registerTool(name, def, wrapped);
   };
   reg("list_books", {
@@ -325,7 +347,7 @@ export function registerServerTools(server, { gate = true } = {}) {
       })).min(1).max(120).describe("整包文件集，必须包含 SKILL.md"),
     },
   }, async ({ slug, files }) => {
-    const out = saveSkill(slug, files);
+    const out = saveSkill(slug, files); // 由 deps 注入；生产默认 defaultSaveSkill
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
@@ -363,4 +385,7 @@ export function registerServerTools(server, { gate = true } = {}) {
     const out = checkSkills();
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
+
+  // V02：注册完毕再核一次「注册名集合 === 定档表」，双向差集都为 0 才放行。
+  assertTierCoverage(registered);
 }
