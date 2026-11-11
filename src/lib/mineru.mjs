@@ -282,6 +282,7 @@ export function blocksToChunks(blocks, { sentenceSplit, collapse } = {}) {
         chunks.push({
           chapter: null, chapter_path: null, page: b.page,
           text: "", kind: b.kind, bbox: b.bbox, block_type: b.block_type,
+          block_index: b.block_index,
           image_path: b.image_path || null, seq: b.seq,
         });
       }
@@ -293,6 +294,7 @@ export function blocksToChunks(blocks, { sentenceSplit, collapse } = {}) {
       chunks.push({
         chapter: null, chapter_path: null, page: b.page,
         text: seg, kind: b.kind, bbox: b.bbox, block_type: b.block_type,
+        block_index: b.block_index,
         image_path: b.image_path || null, seq: b.seq,
         ...(b.table_html ? { table_html: b.table_html, table_rows: b.table_rows, table_header: b.table_header } : {}),
       });
