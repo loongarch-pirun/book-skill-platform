@@ -741,6 +741,22 @@ async function main(argv = process.argv.slice(2), opts = {}) {
   const isDir = fs.statSync(file).isDirectory();
   const ext = isDir ? ".md" : path.extname(file).toLowerCase();
 
+  // R1/R2 入口闸：扩展名白名单 + 魔数与扩展名一致性（判据只看文件字节，不看文件名语义）。
+  // 目录书（md 目录）跳过——目录本身没有扩展名，其下每个 md 由 R0 逐文件判。
+  // 命中即拒收 + 落一条台账（library\_rejected.jsonl），不入检索。
+  const entryGate = await import("./lib/parse-gate.mjs");
+  // 统一的拒收记账助手：打印原因 → 追加一行台账（写失败只警告，拒收结果不变）
+  const rejectBook = (stage, code, reason) => {
+    console.error(reason);
+    const r = entryGate.appendReject({ file, ext, stage, code, reason });
+    if (!r.ok) console.error(`  （台账写入失败，拒收仍生效：${r.error}）`);
+    else console.error(`  已记账：${r.path}`);
+  };
+  if (!isDir) {
+    const g = entryGate.gateFile(file);
+    if (!g.ok) { rejectBook("gate", g.code, `拒收（${g.code}）：${g.reason}`); process.exitCode = 2; return; }
+  }
+
   // 解析：每种格式单独接错（损坏文件/伪装扩展名在这里现形，而不是蹦一屏英文堆栈）
   let parsed;
   try {
@@ -750,13 +766,17 @@ async function main(argv = process.argv.slice(2), opts = {}) {
     else if (ext === ".md" || ext === ".markdown") parsed = parseMd(file);
     else { console.error("不支持的格式: " + ext + "（支持 .pdf/.epub/.docx/.md，或 md 目录）"); process.exitCode = 1; return; }
   } catch (e) {
-    console.error(`解析失败（${ext}）: ${e.message}`);
-    console.error("文件可能损坏或不是真正的 " + ext + " 文件。");
+    // R13：解析器抛错 → 标 parse_failed 记账，不入检索。与 R1/R2 同一条台账，
+    // 用 code 区分「输入本来不是书」（unsupported/fake_ext）还是「是书但解不开」
+    // （parse_failed：加密、损坏、解析器内部错误）。不抛栈给用户，只留一行原因。
+    rejectBook("parse", "parse_failed", `解析失败（${ext}）: ${e.message}\n文件可能损坏、加密或不是真正的 ${ext} 文件。`);
     process.exitCode = 1;
     return;
   }
   if (!parsed.chunks.length) {
-    console.error("解析出 0 块：文件可能是空的、扫描图片型 PDF 或加密文档。");
+    // 解析成功但一块都没切出来：扫描图片型/空白的 PDF 落到这里。同样是 parse_failed 的一种
+    // （R4 的 OCR 降级没救回来时也走这条），必须记账——否则「导入后书架什么都没有」无从追。
+    rejectBook("parse", "parse_failed", "解析出 0 块：文件可能是空的、扫描图片型 PDF 或加密文档。");
     process.exitCode = 1;
     return;
   }
@@ -787,7 +807,8 @@ async function main(argv = process.argv.slice(2), opts = {}) {
     parsed.struct = st.report;
     const gate = assessCleaned(parsed.chunks, st.report);
     if (!gate.ok) {
-      console.error(gate.reason);
+      // R13：结构化改造硬拦（内容太少/乱码严重）同样是「是书但解不开」，记 parse_failed
+      rejectBook("parse", "parse_failed", gate.reason);
       process.exitCode = 1;
       return;
     }
@@ -890,6 +911,7 @@ async function main(argv = process.argv.slice(2), opts = {}) {
   if (parsed.numPages) console.log(`  页数: ${parsed.numPages}`);
   if (parsed.chapters) console.log(`  章节: ${parsed.chapters}`);
   if (parsed.files) console.log(`  md 文件: ${parsed.files} 篇`);
+  if (parsed.skipped && parsed.skipped.length) console.log(`  R0 排除: ${parsed.skipped.length} 个（_origin/_private/-raw/代码仓库痕迹）`);
   if (parsed.droppedCode) console.log(`  已去代码块: ${parsed.droppedCode} 段`);
   if (parsed.cleanedJunk.length) console.log(`  已去页眉页脚: ${parsed.cleanedJunk.length} 种重复行`);
   return { chunkCount, totalChars, struct: parsed.struct || null };
