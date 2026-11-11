@@ -2,6 +2,9 @@
 // DDL 定稿依据：前置过滤-第1轮/01-耦合与改造设计.md:179-228（草案，五表逐列对齐，列与类型未改）。
 // 方案 A 定案：虾虾 2026-11-12；5 本真库迁移实测见 前置过滤-施工/exp-cite-migrate/exp-cite-migrate-round2-output.txt。
 // 铁律：本模块只读 chunks，绝不 UPDATE/DELETE chunks 任何一行；回滚 = DROP 五张旁挂表（设计稿 :327）。
+// 契约 v3（解析官 3573edd）后：chunks 新增 7 个描述列，本模块按列存在性分支真读
+//   （含列库搬真值、老库缺列 NULL 兜底）；五表 DDL 列未变，BLOCK_SCHEMA_VERSION 仍为 1。
+//   orig_block = "<page>/<block_type>#<block_index>"（契约 §2.4，page 必须带）。
 import crypto from "node:crypto";
 import path from "node:path";
 import { detectLang } from "./token-estimate.mjs";
@@ -93,14 +96,25 @@ export function pickVerifyTerm(db) {
   return cand.length ? { term: cand[0][0], freq: cand[0][1] } : null;
 }
 
+// 契约 v3 §2.3 的 7 个描述列。缺列不报错，读时以 NULL AS 兜底（enrich-import.mjs:25-27 同款）。
+const NEW_COLS = ["kind", "bbox", "block_type", "image_path", "seq", "table_json", "block_index"];
+
 // 方案 A 迁移：建五表 + 逐块填充 + rebuild FTS，全在一个事务里（任一步失败自动回到建表前）。
-// 字段映射（旧库只有 text 单视图，缺失字段一律 NULL，不编造）：
-//   blocks.id/seq = chunks.id；book_id = 库文件名；kind='text'（表格/图片块待新管线）；
-//   lang = meta.lang ?? detectLang(抽样)，与 search.mjs:83-89 同款；created_at = meta.built_at ?? now。
-//   block_orig.orig_text = chunks.text 一字不改；sha16 = textHash16；table_json/image_ref = NULL。
-//   block_key.key_text = chunks.text（过渡期钥匙=原文，去噪/表格拍平行待新管线）；emb 逐字节复制，不重灌。
-//   block_pos.chapter/chapter_path/page 沿用 chunks；bbox/orig_block/sentence_no/cell = NULL
-//     （bbox/orig_block 待 MinerU basic 新管线；sentence_no/cell 是引文回验命中后动态算的锚，非块属性，见 3.5）。
+// 字段映射（契约 v3 §2.2/§2.3；一个 ID 串三视图，chunks 原文一字不动）：
+//   必填 6 列：id/chapter/chapter_path/page/text/emb（emb 是契约 §4.1「建库→embed→migrate」的前提，不放宽）。
+//   blocks.id = chunks.id；book_id = 库文件名；lang = meta.lang ?? detectLang；created_at = meta.built_at ?? now。
+//   blocks.seq  ← chunks.seq，缺列/空值回退 chunks.id（旧库对齐期，契约 §5.2）。
+//   blocks.kind ← chunks.kind，缺列/空值回退 'text'。
+//   block_orig.orig_text = chunks.text 一字不改；sha16 = textHash16。
+//   block_orig.table_json ← chunks.table_json（三合一 JSON，直传不再序列化）；缺列 NULL。
+//   block_orig.image_ref  ← chunks.image_path（MinerU 相对路径，直传不编造）；缺列 NULL。
+//     §5.3 的 assets/<book_id>/<block_id>.jpg 改写需等图片落盘小步，本轮图片不落盘故不编造目标路径。
+//   block_key.key_text = chunks.text（过渡期钥匙=原文）；emb 逐字节复制，不重灌不换模型。
+//   block_pos.chapter/chapter_path/page 沿用 chunks。
+//   block_pos.bbox ← chunks.bbox（JSON 数组字符串）；缺列 NULL。
+//   block_pos.orig_block ← "<page>/<block_type>#<block_index>"（契约 §2.4，page 必须带）；
+//     page/block_type/block_index 任一缺列或为空 → NULL，不编造。
+//   block_pos.sentence_no/cell = NULL（命中后动态算的锚，非块属性，设计稿 3.5 / :422）。
 export function migrateBlockViews(db, { bookId, lang, createdAt } = {}) {
   const existing = hasBlockViews(db);
   if (existing) throw new Error(`已存在 ${existing}/5 张三视图表，拒绝静默覆盖；如需重建先 dropBlockViews()`);
@@ -108,10 +122,12 @@ export function migrateBlockViews(db, { bookId, lang, createdAt } = {}) {
   for (const c of ["id", "chapter", "chapter_path", "page", "text", "emb"]) {
     if (!cols.includes(c)) throw new Error(`chunks 缺列 ${c}，方案 A 前提不成立；实际列：${cols.join(",")}`);
   }
+  // 按列存在性分支：含列库读真值，老库缺列用 NULL AS 兜底。
+  const opt = (c) => (cols.includes(c) ? c : `NULL AS ${c}`);
   const bid = bookId || bookIdFromDb(db);
   const lg = lang || metaValue(db, "lang") || detectLang(db.prepare("SELECT text FROM chunks LIMIT 50").all().map(r => r.text));
   const ts = createdAt || metaValue(db, "built_at") || new Date().toISOString();
-  const rows = db.prepare("SELECT id, chapter, chapter_path, page, text, emb FROM chunks ORDER BY id").all();
+  const rows = db.prepare(`SELECT id, chapter, chapter_path, page, text, emb, ${NEW_COLS.map(opt).join(", ")} FROM chunks ORDER BY id`).all();
 
   db.transaction(() => {
     db.exec(BLOCK_DDL);
@@ -120,10 +136,14 @@ export function migrateBlockViews(db, { bookId, lang, createdAt } = {}) {
     const insK = db.prepare("INSERT INTO block_key(block_id,key_text,emb) VALUES (?,?,?)");
     const insP = db.prepare("INSERT INTO block_pos(block_id,chapter,chapter_path,page,bbox,orig_block,sentence_no,cell) VALUES (?,?,?,?,?,?,?,?)");
     for (const r of rows) {
-      insB.run(r.id, bid, r.id, "text", lg, null, ts);
-      insO.run(r.id, r.text, null, null, textHash16(r.text));
+      const seq = r.seq != null ? r.seq : r.id;                 // 缺列/空值回退主键
+      const kind = r.kind != null ? r.kind : "text";            // 缺列/空值回退 text
+      const origBlock = (r.page != null && r.block_type != null && r.block_index != null)
+        ? `${r.page}/${r.block_type}#${r.block_index}` : null; // 契约 §2.4，page 必须带
+      insB.run(r.id, bid, seq, kind, lg, null, ts);
+      insO.run(r.id, r.text, r.table_json ?? null, r.image_path ?? null, textHash16(r.text));
       insK.run(r.id, r.text, r.emb ? Buffer.from(r.emb) : null);
-      insP.run(r.id, r.chapter, r.chapter_path, r.page, null, null, null, null);
+      insP.run(r.id, r.chapter, r.chapter_path, r.page, r.bbox ?? null, origBlock, null, null);
     }
     db.exec("INSERT INTO block_key_fts(block_key_fts) VALUES('rebuild')");
   })();
@@ -164,6 +184,31 @@ export function verifyBlockViews(db) {
   const posBad = db.prepare(`SELECT COUNT(*) n FROM chunks c JOIN block_pos p ON p.block_id = c.id
     WHERE p.chapter IS NOT c.chapter OR p.chapter_path IS NOT c.chapter_path OR p.page IS NOT c.page`).get().n;
   add("block_pos 位置字段与 chunks 一致", posBad === 0, `不一致 ${posBad} 行`);
+
+  // 契约 v3 §2.3 七列搬运校验（按列存在性分支）：含列库真值一致，老库缺列一律 NULL/回退（不编造）。
+  // 判据可翻转：改一行 chunks 的任一新列，对应判据立刻变红。
+  const ccols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
+  const has = (c) => ccols.includes(c);
+  const seqExp = has("seq") ? "(CASE WHEN c.seq IS NOT NULL THEN c.seq ELSE c.id END)" : "c.id";
+  const kindExp = has("kind") ? "(CASE WHEN c.kind IS NOT NULL THEN c.kind ELSE 'text' END)" : "'text'";
+  const bboxExp = has("bbox") ? "c.bbox" : "NULL";
+  const tableExp = has("table_json") ? "c.table_json" : "NULL";
+  const imageExp = has("image_path") ? "c.image_path" : "NULL";
+  const origExp = (has("block_type") && has("block_index"))
+    ? "(CASE WHEN c.page IS NOT NULL AND c.block_type IS NOT NULL AND c.block_index IS NOT NULL THEN c.page || '/' || c.block_type || '#' || c.block_index ELSE NULL END)"
+    : "NULL";
+  const mapped = [
+    ["blocks.seq", "SELECT COUNT(*) n FROM chunks c JOIN blocks b ON b.id = c.id WHERE b.seq IS NOT " + seqExp, has("seq") ? "含列库真值/空值回退 id" : "老库缺列回退 id"],
+    ["blocks.kind", "SELECT COUNT(*) n FROM chunks c JOIN blocks b ON b.id = c.id WHERE b.kind IS NOT " + kindExp, has("kind") ? "含列库真值/空值回退 text" : "老库缺列回退 text"],
+    ["block_pos.bbox", "SELECT COUNT(*) n FROM chunks c JOIN block_pos p ON p.block_id = c.id WHERE p.bbox IS NOT " + bboxExp, has("bbox") ? "含列库真值" : "老库缺列全 NULL"],
+    ["block_orig.table_json", "SELECT COUNT(*) n FROM chunks c JOIN block_orig o ON o.block_id = c.id WHERE o.table_json IS NOT " + tableExp, has("table_json") ? "含列库真值" : "老库缺列全 NULL"],
+    ["block_orig.image_ref", "SELECT COUNT(*) n FROM chunks c JOIN block_orig o ON o.block_id = c.id WHERE o.image_ref IS NOT " + imageExp, has("image_path") ? "含列库真值" : "老库缺列全 NULL"],
+    ["block_pos.orig_block", "SELECT COUNT(*) n FROM chunks c JOIN block_pos p ON p.block_id = c.id WHERE p.orig_block IS NOT " + origExp, (has("block_type") && has("block_index")) ? "含列库 <page>/<type>#<idx>" : "老库缺列全 NULL"],
+  ];
+  for (const [name, sql, mode] of mapped) {
+    const bad = db.prepare(sql).get().n;
+    add(`v3 七列搬运 ${name}（${mode}）`, bad === 0, `不一致 ${bad} 行`);
+  }
 
   const picked = pickVerifyTerm(db);
   if (!picked) {
