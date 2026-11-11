@@ -393,12 +393,12 @@ async function parsePdfLegacy(file) {
 async function routePdf(file) {
   const R = await import("./lib/pdf-route.mjs");
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  let probe = null;
+  let probe;
   try {
     probe = await R.probeTextLayer(file, pdfjs);
   } catch (e) {
     // 探针都读不动（加密/坏文件）：不算「算不出阈值」，直接抛给上游按 R13 记 parse_failed
-    throw new Error(`PDF 文本层探针失败：${e.message}`);
+    throw new Error(`PDF 文本层探针失败：${e.message}`, { cause: e });
   }
   const c = R.classifyPdf(probe);
   // 字段名对齐下游（parsePdfStructured 用 route/routeReason/routeAnnotations），

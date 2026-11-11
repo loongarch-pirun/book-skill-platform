@@ -12,6 +12,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+// TextDecoder 是 Node 全局，但 eslint.config.mjs 的 globals 清单没登记它（清单只登记了
+// fetch/URL/Request/Response 这类）——显式从 node:util 引入，比往共享配置里加白名单更自包含。
+import { TextDecoder } from "node:util";
 
 // 本模块是 ESM：没有 __dirname，必须从 import.meta.url 推（之前写 __dirname 会在默认路径上
 // 抛 ReferenceError，验收测试设了 BSP_REJECT_LOG 才没暴露）。
