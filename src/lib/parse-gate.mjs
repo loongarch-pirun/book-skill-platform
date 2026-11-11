@@ -44,6 +44,31 @@ export function sniffMagic(file, size = 1024) {
   }
 }
 
+// 文本判据（判「这到底是不是文本」）：合法 UTF-8 + NUL 占比 <10%，两条都过才算文本。
+// 为什么不能只看 NUL：实测（logs\probe-nul-density.txt）随机二进制 NUL 仅 0.10%，
+// 比合法的脏 md（0.59%）还低，单条判据的间隙只有 1.4 倍，分不开。
+// 为什么不能只看 UTF-8：UTF-16LE 文本是合法「字节」，但拿它当 md 读是乱码，属真伪装。
+// 尾部允许回退 0-3 字节：head 是前 1024 字节，正好切断一个多字节字符时不该判成非文本。
+// 已知取舍：GBK/GB18030 编码的 md/txt 会被判为非文本而拒收（四个根共 1674 个文本文件实测零误杀）。
+const TEXT_NUL_PCT_MAX = 10;
+export function looksLikeText(head) {
+  let utf8ok = false;
+  for (let cut = 0; cut < 4 && !utf8ok; cut++) {
+    const end = head.length - cut;
+    if (end <= 0) break;
+    try {
+      new TextDecoder("utf-8", { fatal: true }).decode(head.subarray(0, end));
+      utf8ok = true;
+    } catch {
+      // 末尾被 1024 切断，回退一个字节再试
+    }
+  }
+  let nul = 0;
+  for (const b of head) if (b === 0) nul++;
+  const nulPct = head.length ? (nul / head.length) * 100 : 0;
+  return { utf8ok, nul, nulPct, ok: utf8ok && nulPct < TEXT_NUL_PCT_MAX };
+}
+
 function describeMagic(s) {
   if (s.isZip) return "zip 容器（PK\\x03\\x04）";
   if (s.hasNul) return "二进制（含 NUL 字节）";
@@ -71,10 +96,16 @@ export function gateFile(file) {
   if (ZIP_EXTS.includes(ext) && !s.isZip) {
     return { ok: false, code: "fake_ext", ext, reason: `伪装扩展名：名为 ${ext} 但文件头不是 zip，实际是${describeMagic(s)}` };
   }
-  if (TEXT_EXTS.includes(ext) && s.hasNul) {
-    return { ok: false, code: "fake_ext", ext, reason: `伪装扩展名：名为 ${ext} 但内容是${describeMagic(s)}，不是文本` };
+  if (TEXT_EXTS.includes(ext)) {
+    const t = looksLikeText(s.head);
+    if (!t.ok) {
+      const why = t.utf8ok
+        ? `NUL 字节占 ${t.nulPct.toFixed(1)}%（≥${TEXT_NUL_PCT_MAX}%）`
+        : `不是合法 UTF-8 编码（NUL ${t.nul} 个）`;
+      return { ok: false, code: "fake_ext", ext, reason: `伪装扩展名：名为 ${ext} 但内容是${why}，不是文本` };
+    }
   }
-  return { ok: true, ext, magic: { isPdf: s.isPdf, isZip: s.isZip } };
+  return { ok: true, ext, magic: { isPdf: s.isPdf, isZip: s.isZip, looksText: TEXT_EXTS.includes(ext) ? true : undefined } };
 }
 
 // ---------- R13 台账：被拒/解析失败的文件记账（不建库、不入检索，可事后按 reason 排查） ----------
