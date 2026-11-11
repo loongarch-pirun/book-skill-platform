@@ -11,6 +11,11 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// 本模块是 ESM：没有 __dirname，必须从 import.meta.url 推（之前写 __dirname 会在默认路径上
+// 抛 ReferenceError，验收测试设了 BSP_REJECT_LOG 才没暴露）。
+const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 // 白名单与设计稿 01:80 一致（pdf/epub/docx/txt/md）；.markdown 是现有 build-book 已支持的别名，
 // 一并收进白名单——否则「白名单放行、分派报错」会自相矛盾。
@@ -78,7 +83,7 @@ export function gateFile(file) {
 export function rejectLogPath() {
   const env = process.env.BSP_REJECT_LOG;
   if (env) return path.resolve(env);
-  return path.join(__dirname, "..", "..", "library", "_rejected.jsonl");
+  return path.join(HERE, "..", "..", "library", "_rejected.jsonl");
 }
 
 // rec: {file, ext, stage, code, reason, extra}；stage 记「在哪一道被拦」：gate / parse
