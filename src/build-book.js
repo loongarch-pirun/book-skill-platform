@@ -273,14 +273,24 @@ const pdfEngine = () => String(process.env.BSP_PDF_ENGINE ?? "").replace(/[\u200
 async function parsePdfStructured(file, opts = {}) {
   const M = await import("./lib/mineru.mjs");
   const cfg = M.mineruConfig();
-  const r = await M.parsePdfWithMineru(file, cfg, (m) => console.log(m));
+  // 真实页数交给缓存校验：只跑过 1-40 页的旧缓存不能被当成「全量」产物（804 页实测踩过）
+  const expectPages = opts.probe && opts.probe.pages ? opts.probe.pages : undefined;
+  const r = await M.parsePdfWithMineru(file, cfg, (m) => console.log(m), expectPages);
   if (!r.ok) {
     const tail = (r.stderr || r.stdout || "").trim().split("\n").slice(-3).join(" / ");
     throw new Error(`MinerU 解析失败（exit ${r.code}）${tail ? ": " + tail : ""}`);
   }
   const middle = JSON.parse(fs.readFileSync(r.jsonPath, "utf8"));
-  const { blocks: rawBlocks, dropped } = M.middleToBlocks(middle);
   const numPages = Array.isArray(middle.pages) ? middle.pages.length : 0;
+  // 页数对不上必须炸：解析层只覆盖 40 页却把 801 页的书报成功，是最难发现的一类错
+  // （检索时「书的后 95% 不见了」不会报错，只会查不到）。宁可失败让人重跑。
+  if (expectPages && numPages && numPages !== expectPages) {
+    throw new Error(
+      `MinerU 产物页数不符：文本层探针 ${expectPages} 页，产物 ${numPages} 页`
+      + `（缓存 ${path.basename(r.jsonPath)} 覆盖不全，删掉该缓存文件或换 --pages 重跑）`
+    );
+  }
+  const { blocks: rawBlocks, dropped } = M.middleToBlocks(middle);
 
   // R12：脏排版先按规则清洗（只丢命中脏规则的块，其余逐字不动）
   let blocks = rawBlocks;

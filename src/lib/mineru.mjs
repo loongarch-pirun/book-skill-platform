@@ -36,18 +36,47 @@ export function mineruAvailable(cfg = mineruConfig()) {
 export const sha256Of = (file) =>
   crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 
-// doclib 缓存里找本次解析产物：优先覆盖全部页面的那份，同覆盖取最新
-export function findMiddleJson(home, sha256, tier) {
+// doclib 缓存文件名形如 "1-801_1794419609966.json"（页范围_epochms）或 "1_17944.json"（单页）。
+// 解析出 [start, end]；认不出的返回 null（宁可不命中，也不拿错页数的产物冒充）。
+function pageRangeOf(name) {
+  const m = /^(\d+)(?:-(\d+))?_\d+\.json$/.exec(String(name));
+  if (!m) return null;
+  const start = Number(m[1]);
+  const end = m[2] === undefined ? start : Number(m[2]);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return null;
+  return { start, end };
+}
+
+// doclib 缓存里找本次解析产物。
+// **必须校验页范围**：缓存是按 (sha256, tier, 页范围) 存的，只跑过 1-40 页的旧产物同样命中
+// 同一个目录。早先只按 mtime 取最新 → --pages all 跑「全量」时拿到 1-40 页的旧 JSON，
+// 结果 801 页的书只建出 40 页还报成功（真 bug，kk-dirty-full 实测复现）。
+// expectPages 给定时只认「从第 1 页起、覆盖到 expectPages」的那份；没有就返回 null 去真跑一遍。
+// expectPages 未知（探测不到页数）时退化为取覆盖最广的一份，而不是 mtime 最新的一份。
+export function findMiddleJson(home, sha256, tier, expectPages) {
   const dir = path.join(home, "doclib", "parsed", sha256.slice(0, 2), sha256, tier);
   if (!fs.existsSync(dir)) return null;
-  const jsons = fs.readdirSync(dir).filter((f) => f.endsWith(".json"))
+  const all = fs.readdirSync(dir)
+    .filter((f) => f.endsWith(".json"))
     .map((f) => {
       const p = path.join(dir, f);
       const st = fs.statSync(p);
-      return { path: p, name: f, size: st.size, mtime: st.mtimeMs };
-    })
-    .sort((a, b) => b.mtime - a.mtime);
-  return jsons.length ? jsons[0].path : null;
+      return { path: p, name: f, size: st.size, mtime: st.mtimeMs, range: pageRangeOf(f) };
+    });
+  if (!all.length) return null;
+
+  const want = Number(expectPages);
+  if (Number.isFinite(want) && want > 0) {
+    const hit = all
+      .filter((x) => x.range && x.range.start === 1 && x.range.end >= want)
+      .sort((a, b) => a.range.end - b.range.end || b.mtime - a.mtime)[0];
+    return hit ? hit.path : null;
+  }
+  // 页数未知：取覆盖最广的，同覆盖取最新
+  const best = all
+    .map((x) => ({ ...x, span: x.range ? x.range.end - x.range.start + 1 : 0 }))
+    .sort((a, b) => b.span - a.span || b.mtime - a.mtime)[0];
+  return best ? best.path : null;
 }
 
 function run(cmd, args, { env, timeoutMs }) {
@@ -66,10 +95,10 @@ function run(cmd, args, { env, timeoutMs }) {
 }
 
 // 跑一次解析。返回 { ok, code, stdout, stderr, sha256, jsonPath, tier }
-// 已有缓存时不重复烧算力（MinerU 自己带 cache_hit，这里再按文件存在性挡一次）
-export async function parsePdfWithMineru(file, cfg = mineruConfig(), log = () => {}) {
+// 已有**覆盖全量页**的缓存时不重复烧算力（MinerU 自己带 cache_hit，这里再按页范围挡一次）
+export async function parsePdfWithMineru(file, cfg = mineruConfig(), log = () => {}, expectPages) {
   const sha256 = sha256Of(file);
-  const cached = findMiddleJson(cfg.home, sha256, cfg.tier);
+  const cached = findMiddleJson(cfg.home, sha256, cfg.tier, expectPages);
   if (cached) return { ok: true, cached: true, code: 0, stdout: "", stderr: "", sha256, jsonPath: cached, tier: cfg.tier };
 
   const env = {
@@ -77,12 +106,15 @@ export async function parsePdfWithMineru(file, cfg = mineruConfig(), log = () =>
     MINERU_HOME: cfg.home,
     PYTHONIOENCODING: "utf-8",
   };
+  // --wait 必须显式给：`mineru parse` 默认只等 60 秒就返回「解析仍在进行中」（exit 1），
+  // 801 页的书 60 秒根本跑不完。这里按同一个 timeoutMs 换算成秒，让 CLI 与本地进程守时一致。
+  const waitSec = Math.max(60, Math.ceil((cfg.timeoutMs || 1_800_000) / 1000) - 30);
   const args = ["-m", "mineru.cli.main", "parse", file,
-    "--tier", cfg.tier, "--pages", "all", "--format", "markdown", "--force"];
-  log(`  MinerU ${cfg.tier} 解析中（首次可能数十秒）…`);
+    "--tier", cfg.tier, "--pages", "all", "--format", "markdown", "--force", "--wait", String(waitSec)];
+  log(`  MinerU ${cfg.tier} 解析中（首次可能数十秒，最长等 ${waitSec}s）…`);
   const r = await run(cfg.python, args, { env, timeoutMs: cfg.timeoutMs });
   if (r.code !== 0) return { ok: false, code: r.code, stdout: r.out, stderr: r.err, sha256, jsonPath: null, tier: cfg.tier };
-  const jsonPath = findMiddleJson(cfg.home, sha256, cfg.tier);
+  const jsonPath = findMiddleJson(cfg.home, sha256, cfg.tier, expectPages);
   return { ok: Boolean(jsonPath), code: r.code, stdout: r.out, stderr: r.err, sha256, jsonPath, tier: cfg.tier };
 }
 
