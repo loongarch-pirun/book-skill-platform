@@ -72,9 +72,13 @@ export function findMiddleJson(home, sha256, tier, expectPages) {
       .sort((a, b) => a.range.end - b.range.end || b.mtime - a.mtime)[0];
     return hit ? hit.path : null;
   }
-  // 页数未知：取覆盖最广的，同覆盖取最新
-  const best = all
-    .map((x) => ({ ...x, span: x.range ? x.range.end - x.range.start + 1 : 0 }))
+  // 页数未知：同样只认认得页范围的缓存——取覆盖最广的，同覆盖取最新。
+  // 认不出页范围的（span 会被算成 0）一律不命中：宁可返回 null 去真跑一遍，
+  // 也不拿一个不知道覆盖多少页的产物冒充全量（这与已知分支用 x.range 守卫是同一条道理）。
+  const known = all.filter((x) => x.range);
+  if (!known.length) return null;
+  const best = known
+    .map((x) => ({ ...x, span: x.range.end - x.range.start + 1 }))
     .sort((a, b) => b.span - a.span || b.mtime - a.mtime)[0];
   return best ? best.path : null;
 }
