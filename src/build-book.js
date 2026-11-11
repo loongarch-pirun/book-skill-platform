@@ -406,6 +406,18 @@ async function routePdf(file) {
   return { route: c.route, routeReason: c.reason, routeAnnotations: c.annotations, probe };
 }
 
+// 回落 legacy 时重写判定注解：legacy 只取文字流，R12 的清洗与 R4 的 OCR 都没执行。
+// 直接把判定表的注解原样挂上，日志会声称做了解析层没做的事（复核单 🟡 242）。
+// routeReason 保留原样（它说的是「为什么判到这条路」，仍然成立），只改注解。
+function legacyAnnotations(route, annotations) {
+  const list = Array.isArray(annotations) ? annotations : [];
+  return list.map((a) => {
+    if (/^R12:/.test(a)) return `R12:未执行（回落 legacy 文字流，脏排版未清洗）← 原判定 ${a}`;
+    if (/^R4:/.test(a)) return `R4:未执行（回落 legacy 文字流，未跑 OCR）← 原判定 ${a}`;
+    return a;
+  });
+}
+
 // R3/R4 分流入口：默认 MinerU，不可用回落 legacy，显式指定则只认那一条
 async function parsePdf(file) {
   const mode = pdfEngine();
@@ -426,7 +438,9 @@ async function parsePdf(file) {
     const legacy = await parsePdfLegacy(file);
     legacy.route = route.route;
     legacy.routeReason = route.routeReason + "（MinerU 不可用，回落 legacy 文字流）";
-    legacy.routeAnnotations = route.routeAnnotations;
+    // 注解必须写实况：legacy 只取文字流，既没跑 R12 清洗、也没跑 R4 的 OCR。
+    // 原样挂 routeAnnotations 会让日志声称做了解析层没做的事（复核单 🟡）。
+    legacy.routeAnnotations = legacyAnnotations(route.route, route.routeAnnotations);
     return legacy;
   }
   return parsePdfStructured(file, route);
