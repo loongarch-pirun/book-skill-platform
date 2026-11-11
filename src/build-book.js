@@ -642,6 +642,14 @@ function parseMd(file) {
     items.push(...fitems);
     fileRanges.push([start, items.length]);
   }
+  const { chunks, tableStats, chapterNo } = itemsToChunks(items, fileRanges);
+  return { format: "md", chapters: chapterNo, chunks, cleanedJunk: [], droppedCode, files: files.length, tableStats, skipped };
+}
+
+// txt/md 共用的「条目 → 块」装配段（R10：TXT/MD 同走现管道）。
+// 抽出来是为了让 .txt 与 md 走**同一段**代码：以后改章节/表格/切片只在改这一处，
+// 不会出现「md 改了 txt 没改」的隐性分叉。
+function itemsToChunks(items, fileRanges) {
   const withHeadings = promotePlainHeadings(items);
 
   // P3-① 表格整表成块（promote 之后——见 mergeTableRows 注释；BSP_TABLE=0 关；
@@ -678,7 +686,44 @@ function parseMd(file) {
     for (const seg of sentenceSplit(it.text))
       chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg });
   }
-  return { format: "md", chapters: chapterNo, chunks, cleanedJunk: [], droppedCode, files: files.length, tableStats, skipped };
+  return { chunks, tableStats, chapterNo };
+}
+
+// R10：.txt → 现管道。txt 没有标记语法，两件事都得从文件本身算出来：
+//   ① 段落边界：空行一定是段落边界；此外「一行以句末标点结尾」也判段落结束。
+//      依据是不含空行的 txt 常见两种排版——(a) 排版折行：句子中间的硬换行，
+//      断处不在句末，要拼回去；(b) 逐行一段：每行都是一句/一段，必须切开
+//      （实测 books\lunyu-xueer-zh.txt 16 行全以「？」「。」「」」收尾、无空行，
+//      按空行切只剩 1 块 673 字符，一章一句全糊在一起）。
+//      两条判据都是纯粹看文件，没有「看情况」。
+//   ② 段内折行的换行换成空格（空白归一，字符流不变），不在一句话中间切块。
+// 章节靠 promotePlainHeadings 认中文序号行（一、/1. …，与 md 那条同源）。
+const TXT_PARA_END = /[。！？!?…；;][」』】）"'”’]*$|[.](?=\s*$)/;
+function parseTxt(file) {
+  const raw = fs.readFileSync(file, "utf8").replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
+  const items = [];
+  const pushPara = (lines) => {
+    const text = collapse(lines.join(" "));
+    if (text) items.push({ tag: "p", text });
+  };
+  for (const block of raw.split(/\n{2,}/)) {
+    let buf = [];
+    for (const line of block.split("\n")) {
+      if (!line.trim()) { if (buf.length) { pushPara(buf); buf = []; } continue; }
+      buf.push(line);
+      // 句末收尾 → 此处是段落边界，切一刀
+      if (TXT_PARA_END.test(line.trim())) { pushPara(buf); buf = []; }
+    }
+    if (buf.length) pushPara(buf);
+  }
+  // 没有可用标题时给个书名，避免整本挂在「前言」（与 parseMd 对无标题 md 的处理一致）。
+  // 判「有没有标题」要算上 promotePlainHeadings 会提升的那些行——否则「一、」「二、」
+  // 型的书会平白多出一层书名章节（实测 fold-test：两章被算成三章）。
+  if (!promotePlainHeadings(items).some((it) => it.tag === "h" || it.heading)) {
+    items.unshift({ tag: "h", text: path.basename(file).replace(/\.txt$/i, "") });
+  }
+  const { chunks, tableStats, chapterNo } = itemsToChunks(items, [[0, items.length]]);
+  return { format: "txt", chapters: chapterNo, chunks, cleanedJunk: [], droppedCode: 0, files: 1, tableStats, skipped: [] };
 }
 
 // R0 目录/文件黑名单（判定表第一道闸，不可关闭——它挡的是「不是书的东西」）：
@@ -687,13 +732,15 @@ function parseMd(file) {
 //     _private   作者简历/私人备注（清洗层删不掉，只能在入口拦）
 //     node_modules / .git / .svn   代码仓库痕迹
 //   文件级（设计稿 01:79「文件级 *-raw.* 同理」+ 实测补的 _origin 文件）：
-//     *-raw.md   上游转换中间产物（assets.mjs:101 书架侧已经跳过，解析侧原来没跳）
+//     *-raw.md / *-raw.txt  上游转换中间产物（assets.mjs:101 书架侧已经跳过，
+//                   解析侧原来只拦 md、没拦 txt：实测 books\ 下 3 个 -raw.txt
+//                   与同名正文并存，拦不住就一本两命）
 //     *_origin.md  d2l 中英对照目录的英文原稿（实测：294 个 md 里 139 个是 _origin，
 //                  首行是 "# Using AWS EC2 Instances"，中文正文另有同名 .md；
 //                  不拦就一本书两份正文、检索双份命中）
 // 判定只看名字，大小写不敏感；命中一律不进解析，数量记账到 skipped。
 const DIR_DENYLIST = ["_origin", "_private", "node_modules", ".git", ".svn"];
-const FILE_DENY_RE = [/-raw\.md$/i, /_origin\.md$/i];
+const FILE_DENY_RE = [/-raw\.(md|txt)$/i, /_origin\.md$/i];
 const isDeniedDir = (name) => DIR_DENYLIST.includes(String(name).toLowerCase());
 const isDeniedFile = (name) => FILE_DENY_RE.some((re) => re.test(String(name))) || /^_private/i.test(String(name));
 
@@ -830,6 +877,14 @@ async function main(argv = process.argv.slice(2), opts = {}) {
     else console.error(`  已记账：${r.path}`);
   };
   if (!isDir) {
+    // R0 文件级黑名单对「单文件入参」同样成立：目录书靠 walkMdDetailed 拦，
+    // 单文件走不到那里。实测 books\ 下三个 *-raw.txt 与正式稿并存，直接喂
+    // build-book 会把上游中间产物建成本书（书架侧 assets.mjs:101 是跳过的）。
+    if (isDeniedFile(path.basename(file))) {
+      rejectBook("gate", "denied", `拒收（denied）：文件名命中 R0 黑名单（-raw / _origin / _private），上游中间产物不是书`);
+      process.exitCode = 2;
+      return;
+    }
     const g = entryGate.gateFile(file);
     if (!g.ok) { rejectBook("gate", g.code, `拒收（${g.code}）：${g.reason}`); process.exitCode = 2; return; }
   }
@@ -841,7 +896,10 @@ async function main(argv = process.argv.slice(2), opts = {}) {
     else if (ext === ".epub") parsed = parseEpub(file);
     else if (ext === ".docx") parsed = await parseDocx(file);
     else if (ext === ".md" || ext === ".markdown") parsed = parseMd(file);
-    else { console.error("不支持的格式: " + ext + "（支持 .pdf/.epub/.docx/.md，或 md 目录）"); process.exitCode = 1; return; }
+    // R10：.txt 原来白名单放行、这里却不认，直接喂 build-book 会报「不支持的格式」
+    // 且不进台账（R1 说放行、R10 说走现管道，两边打架）。现在真走现管道。
+    else if (ext === ".txt") parsed = parseTxt(file);
+    else { console.error("不支持的格式: " + ext + "（支持 .pdf/.epub/.docx/.txt/.md，或 md 目录）"); process.exitCode = 1; return; }
   } catch (e) {
     // R13：解析器抛错 → 标 parse_failed 记账，不入检索。与 R1/R2 同一条台账，
     // 用 code 区分「输入本来不是书」（unsupported/fake_ext）还是「是书但解不开」
@@ -1030,4 +1088,4 @@ if (require.main === module) {
   process.on("unhandledRejection", e => { console.error("未处理的异步错误:", e?.stack || e?.message || e); process.exitCode = 1; });
 }
 
-module.exports = { collapse, normLine, sentenceSplit, decodeHtml, parsePdf, parseEpub, parseDocx, parseMd, parseMdFile, tableToText, promotePlainHeadings, walkMd, buildDb, main, contentHash };
+module.exports = { collapse, normLine, sentenceSplit, decodeHtml, parsePdf, parseEpub, parseDocx, parseMd, parseMdFile, parseTxt, itemsToChunks, tableToText, promotePlainHeadings, walkMd, buildDb, main, contentHash };
