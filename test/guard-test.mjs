@@ -669,8 +669,8 @@ const copyDb = (src) => {
   // ② chapter_path：解析器建路径 + 建库带列 + 检索探测回退 + 引用/UI 渐进采用
   ok(bb.includes("const chapterPathOf") && bb.includes("chapter_path TEXT"),
     "静态: chapterPathOf 建路径 + 建库 chunks 表带 chapter_path 列");
-  ok(bb.includes("INSERT INTO chunks(chapter, chapter_path, page, text)"),
-    "静态: 建库 INSERT 写 chapter_path");
+  ok(bb.includes("INSERT INTO chunks(chapter, chapter_path, page, text, kind, bbox, block_type, image_path, seq, table_json, block_index)"),
+    "静态: 建库 INSERT 写 chapter_path + 契约 v3 的 7 个描述列（共 11 列）");
   ok(searchSrc.includes("pragma_table_info('chunks')") && searchSrc.includes("chapterPath: hasPath"),
     "静态: search 探测列再取 chapter_path（老库无列回退，不做写迁移）");
   ok(llmSrc.includes("chapterPath: target.chapterPath || null"),

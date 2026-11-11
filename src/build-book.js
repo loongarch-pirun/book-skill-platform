@@ -804,7 +804,14 @@ function buildDb(file, outPath, parsed) {
         chapter TEXT,
         chapter_path TEXT,
         page INTEGER,
-        text TEXT NOT NULL
+        text TEXT NOT NULL,
+        kind TEXT,
+        bbox TEXT,
+        block_type TEXT,
+        image_path TEXT,
+        seq INTEGER,
+        table_json TEXT,
+        block_index INTEGER
       );
       CREATE VIRTUAL TABLE chunks_fts USING fts5(
         text, content='chunks', content_rowid='id', tokenize='trigram'
@@ -848,9 +855,28 @@ function buildDb(file, outPath, parsed) {
     }
 
     const tx = db.transaction(() => {
-      const ins = db.prepare("INSERT INTO chunks(chapter, chapter_path, page, text) VALUES (?,?,?,?)");
+      // 契约 v3 §3 方案 1：11 列（4 原有 + 7 新）。新列只描述块，不碰 text 一个字节。
+      const ins = db.prepare(
+        "INSERT INTO chunks(chapter, chapter_path, page, text, kind, bbox, block_type, image_path, seq, table_json, block_index) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+      );
       for (const c of parsed.chunks) {
-        const r = ins.run(c.chapter, c.chapter_path ?? null, c.page, c.text);
+        const r = ins.run(
+          c.chapter,
+          c.chapter_path ?? null,
+          c.page,
+          c.text,
+          c.kind ?? null,
+          // bbox 以 JSON 数组字符串落盘：归一化 [0,1]，顺序 [x0,y0,x1,y1]（契约 §5.1）
+          c.bbox ? JSON.stringify(c.bbox) : null,
+          c.block_type ?? null,
+          c.image_path ?? null,
+          Number.isFinite(c.seq) ? c.seq : null,
+          // 三合一序列化只在这里做一次（契约 §2.3 写死「不许各拼各的」）
+          c.table_html || c.table_header || c.table_rows
+            ? JSON.stringify({ html: c.table_html ?? null, header: c.table_header ?? null, rows: c.table_rows ?? null })
+            : null,
+          Number.isFinite(c.block_index) ? c.block_index : null
+        );
         db.prepare("INSERT INTO chunks_fts(rowid, text) VALUES (?, ?)").run(r.lastInsertRowid, c.text);
       }
     });
