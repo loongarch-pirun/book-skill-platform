@@ -269,7 +269,8 @@ function reflowPage(items) {
 const pdfEngine = () => String(process.env.BSP_PDF_ENGINE ?? "").replace(/[\u200b-\u200d]/g, "").normalize("NFKC").trim().toLowerCase();
 
 // MinerU 结构化抽取：块级 bbox + 表格 HTML + 公式 LaTeX，替代 :233 只取文字流
-async function parsePdfStructured(file) {
+// opts.route：判定表落行（R12/R3/R4）。R12 时先按规则丢脏块再转 chunks。
+async function parsePdfStructured(file, opts = {}) {
   const M = await import("./lib/mineru.mjs");
   const cfg = M.mineruConfig();
   const r = await M.parsePdfWithMineru(file, cfg, (m) => console.log(m));
@@ -278,15 +279,45 @@ async function parsePdfStructured(file) {
     throw new Error(`MinerU 解析失败（exit ${r.code}）${tail ? ": " + tail : ""}`);
   }
   const middle = JSON.parse(fs.readFileSync(r.jsonPath, "utf8"));
-  const { blocks, dropped } = M.middleToBlocks(middle);
-  const chunks = M.blocksToChunks(blocks, { sentenceSplit, collapse });
+  const { blocks: rawBlocks, dropped } = M.middleToBlocks(middle);
   const numPages = Array.isArray(middle.pages) ? middle.pages.length : 0;
+
+  // R12：脏排版先按规则清洗（只丢命中脏规则的块，其余逐字不动）
+  let blocks = rawBlocks;
+  let dirtyCleaned = null;
+  if (opts.route === "r12_dirty") {
+    const R = await import("./lib/pdf-route.mjs");
+    const c = R.cleanDirtyBlocks(rawBlocks);
+    blocks = c.blocks;
+    dirtyCleaned = { removed: c.removed, kept: blocks.length };
+    if (!blocks.length) {
+      // 全丢光了说明规则打得过宽（一本书全是脏行＝判据写错），不能静默建出空书
+      throw new Error(`R12 清洗后 0 块：${rawBlocks.length} 块全部命中脏规则，判据可能过宽`);
+    }
+  }
+
+  const chunks = M.blocksToChunks(blocks, { sentenceSplit, collapse });
+
+  // R4：OCR 降级之后复测，仍不达标就标 needs_vlm（不自动下载 1.18 GB VLM，交给上层决定）
+  let ocrAssess = null;
+  let needsVlm = false;
+  if (opts.route === "r4_ocr") {
+    const R = await import("./lib/pdf-route.mjs");
+    ocrAssess = R.assessAfterOcr(blocks, numPages);
+    needsVlm = ocrAssess.needsVlm;
+  }
+
   return {
     format: "pdf",
     engine: `mineru:${cfg.tier}`,
     numPages,
     chunks,
     cleanedJunk: [],
+    route: opts.route || null,
+    routeReason: opts.routeReason || null,
+    routeAnnotations: [...(opts.routeAnnotations || []), ...(needsVlm ? ["R4:OCR 后仍不足，标 needs_vlm（未下载 VLM）"] : [])],
+    dirtyCleaned,
+    ocrAssess,
     // 页码块被 R3 结构性剔除（不是页眉页脚启发式），单独记账
     droppedPageNumbers: dropped.length,
     structReport: {
@@ -297,6 +328,8 @@ async function parsePdfStructured(file) {
       equations: blocks.filter((b) => b.kind === "equation").length,
       images: blocks.filter((b) => b.kind === "image" || b.kind === "chart").length,
       page_numbers_dropped: dropped.length,
+      dirty_removed: dirtyCleaned ? dirtyCleaned.removed.length : 0,
+      needs_vlm: needsVlm,
     },
   };
 }
@@ -345,18 +378,48 @@ async function parsePdfLegacy(file) {
   return { format: "pdf", engine: "legacy", numPages: pages.length, chunks, cleanedJunk: [...junk] };
 }
 
+// 判定表入口：先用 pdfjs 数文本层（R3/R4）与脏行（R12），拿到唯一一条 route，
+// 再决定走哪条解析通道。判定与抽取分开——判定只读文件、不建库，可单测可复跑。
+async function routePdf(file) {
+  const R = await import("./lib/pdf-route.mjs");
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  let probe = null;
+  try {
+    probe = await R.probeTextLayer(file, pdfjs);
+  } catch (e) {
+    // 探针都读不动（加密/坏文件）：不算「算不出阈值」，直接抛给上游按 R13 记 parse_failed
+    throw new Error(`PDF 文本层探针失败：${e.message}`);
+  }
+  const c = R.classifyPdf(probe);
+  // 字段名对齐下游（parsePdfStructured 用 route/routeReason/routeAnnotations），
+  // 免得每次调用都要在三个名字之间搬一次
+  return { route: c.route, routeReason: c.reason, routeAnnotations: c.annotations, probe };
+}
+
 // R3/R4 分流入口：默认 MinerU，不可用回落 legacy，显式指定则只认那一条
 async function parsePdf(file) {
   const mode = pdfEngine();
+  // legacy 模式保留原行为，不做判定表（对照基线要能与旧版逐字比对）
   if (mode === "legacy") return parsePdfLegacy(file);
+
   const M = await import("./lib/mineru.mjs");
   const usable = M.mineruAvailable();
+  const route = await routePdf(file);
+
   if (mode === "mineru") {
     if (!usable) throw new Error("BSP_PDF_ENGINE=mineru 但 MinerU 不可用：未设 MINERU_HOME 或其下无 doclib 目录");
-    return parsePdfStructured(file);
+    return parsePdfStructured(file, route);
   }
-  if (!usable) return parsePdfLegacy(file);   // 无 MinerU 环境的老机器：零行为变化
-  return parsePdfStructured(file);
+  if (!usable) {
+    // 无 MinerU 环境的老机器：零行为变化地回落 legacy，但把判定结论留一行，
+    // 免得「明明装了 MinerU 该走结构化」的问题被静默吞掉。
+    const legacy = await parsePdfLegacy(file);
+    legacy.route = route.route;
+    legacy.routeReason = route.routeReason + "（MinerU 不可用，回落 legacy 文字流）";
+    legacy.routeAnnotations = route.routeAnnotations;
+    return legacy;
+  }
+  return parsePdfStructured(file, route);
 }
 
 // ---------- EPUB：spine 顺序，每个 xhtml = 章节，<p> = 段 ----------
@@ -773,12 +836,30 @@ async function main(argv = process.argv.slice(2), opts = {}) {
     process.exitCode = 1;
     return;
   }
+  // 判定表的落行结果（R12/R3/R4）：一行日志说清这本书为什么走这条路。
+  // needs_calibration 要排在「0 块」检查之前——它是「判定不出可信阈值」，与「解析出 0 块」
+  // 是两件事，台账里必须分开，否则下次没人知道该修阈值还是该查文件。
+  if (parsed.route) {
+    console.log(`  解析路径: ${parsed.route} — ${parsed.routeReason}`);
+    for (const a of parsed.routeAnnotations || []) console.log(`    · ${a}`);
+  }
+  if (parsed.route === "needs_calibration") {
+    rejectBook("parse", "needs_calibration", `判定表算不出可信阈值：${parsed.routeReason}`);
+    process.exitCode = 1;
+    return;
+  }
   if (!parsed.chunks.length) {
     // 解析成功但一块都没切出来：扫描图片型/空白的 PDF 落到这里。同样是 parse_failed 的一种
     // （R4 的 OCR 降级没救回来时也走这条），必须记账——否则「导入后书架什么都没有」无从追。
     rejectBook("parse", "parse_failed", "解析出 0 块：文件可能是空的、扫描图片型 PDF 或加密文档。");
     process.exitCode = 1;
     return;
+  }
+  // R12 清洗结果记账：丢了几条、丢的是什么（人工抽查用）
+  if (parsed.dirtyCleaned) {
+    const c = parsed.dirtyCleaned;
+    console.log(`  脏排版清洗: 丢弃 ${c.removed.length} 块（论坛签名/楼层号），保留 ${c.kept} 块`);
+    for (const x of c.removed.slice(0, 3)) console.log(`    · p${x.page} ${JSON.stringify(x.text)}`);
   }
 
   // P3-① 表格整表成块的账（BSP_TABLE=0 或无表书不打印）
