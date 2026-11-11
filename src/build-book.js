@@ -557,9 +557,15 @@ function parseMdFile(file) {
 // 目录 → 一书：md 文件按自然序拼接，无标题文件用文件名补一章
 function parseMd(file) {
   const stat = fs.statSync(file);
-  const files = stat.isDirectory()
-    ? walkMd(file).sort((a, b) => a.localeCompare(b, "zh", { numeric: true }))
-    : [file];
+  let skipped = [];
+  let files;
+  if (stat.isDirectory()) {
+    const walked = walkMdDetailed(file);
+    skipped = walked.skipped;
+    files = walked.files.sort((a, b) => a.localeCompare(b, "zh", { numeric: true }));
+  } else {
+    files = [file];
+  }
   const items = [];
   let droppedCode = 0;
   const fileRanges = [];   // 每个文件在 items 里的 [start, end)——表格合并不跨文件
@@ -609,20 +615,47 @@ function parseMd(file) {
     for (const seg of sentenceSplit(it.text))
       chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg });
   }
-  return { format: "md", chapters: chapterNo, chunks, cleanedJunk: [], droppedCode, files: files.length, tableStats };
+  return { format: "md", chapters: chapterNo, chunks, cleanedJunk: [], droppedCode, files: files.length, tableStats, skipped };
+}
+
+// R0 目录/文件黑名单（判定表第一道闸，不可关闭——它挡的是「不是书的东西」）：
+//   目录级（命中即整段跳过，不递归）：
+//     _origin    抓取工具的原始快照目录
+//     _private   作者简历/私人备注（清洗层删不掉，只能在入口拦）
+//     node_modules / .git / .svn   代码仓库痕迹
+//   文件级（设计稿 01:79「文件级 *-raw.* 同理」+ 实测补的 _origin 文件）：
+//     *-raw.md   上游转换中间产物（assets.mjs:101 书架侧已经跳过，解析侧原来没跳）
+//     *_origin.md  d2l 中英对照目录的英文原稿（实测：294 个 md 里 139 个是 _origin，
+//                  首行是 "# Using AWS EC2 Instances"，中文正文另有同名 .md；
+//                  不拦就一本书两份正文、检索双份命中）
+// 判定只看名字，大小写不敏感；命中一律不进解析，数量记账到 skipped。
+const DIR_DENYLIST = ["_origin", "_private", "node_modules", ".git", ".svn"];
+const FILE_DENY_RE = [/-raw\.md$/i, /_origin\.md$/i];
+const isDeniedDir = (name) => DIR_DENYLIST.includes(String(name).toLowerCase());
+const isDeniedFile = (name) => FILE_DENY_RE.some((re) => re.test(String(name))) || /^_private/i.test(String(name));
+
+// 返回 {files, skipped}：skipped 里记被 R0 拦下的相对路径，建库时打印（可审计，不是静默丢）
+function walkMdDetailed(dir, root = dir) {
+  const files = [];
+  const skipped = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const rel = path.relative(root, path.join(dir, e.name)).split(path.sep).join("/");
+    if (isDeniedDir(e.name)) { skipped.push(rel); continue; }
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      const sub = walkMdDetailed(p, root);
+      files.push(...sub.files);
+      skipped.push(...sub.skipped);
+    } else if (/\.md$/i.test(e.name)) {
+      if (isDeniedFile(e.name)) { skipped.push(rel); continue; }
+      files.push(p);
+    }
+  }
+  return { files, skipped };
 }
 
 function walkMd(dir) {
-  const out = [];
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    // V3R7-①：_private 开头的路径段（目录或文件）整段跳过——作者简历/私人备注类污染
-    // 清洗层删不掉（GG 护栏把它们当正常文本保护），只能在入口拦。md 目录书才有此问题。
-    if (/^_private/i.test(e.name)) continue;
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) out.push(...walkMd(p));
-    else if (/\.md$/i.test(e.name)) out.push(p);
-  }
-  return out;
+  return walkMdDetailed(dir).files;
 }
 
 // ---------- 建库：一书一 .db ----------
