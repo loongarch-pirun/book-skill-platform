@@ -58,16 +58,30 @@ const HEADING_MAX = 30;
 
 // w:tbl 内容 → 文本行（每行 "a | b | c"）。OOXML 表格经 mammoth 转 <table>，
 // 老 tagRe 只吃 h/p → 表格内容整块丢弃（自产样例 docx 坐实：2 表 72 格全丢）。
-const tableToText = (inner) => {
-  const out = [];
+// 结构化原件一并取出来（table_html / table_rows / table_header），块文本仍逐字不变：
+// 拍平的 "a | b | c" 定位不到「那一格」，而表结构是可还原到单元格的唯一依据。
+const cellAttr = (td, name) => {
+  const m = new RegExp(`\\b${name}\\s*=\\s*["']?(\\d+)`, "i").exec(td);
+  return m ? Math.max(1, parseInt(m[1], 10)) : 1;
+};
+// <table> 内层 → { html, header, rows:[{ text, cells:[{text,rowspan,colspan}] }] }
+// 单元格旁挂 rowspan/colspan（mammoth 对合并单元格会写 colspan/rowspan 属性）；
+// 行文本 = 各格文本以 " | " 连接，与旧 tableToText 逐字一致。
+function tableFromHtml(inner) {
+  const html = `<table>${inner}</table>`;
+  const rows = [];
   for (const tr of inner.split(/<\/tr>/i)) {
     const cells = tr.split(/<\/t[dh]>/i)
-      .map(td => collapse(decodeHtml(td.replace(/<[^>]+>/g, ""))))
-      .filter((c, i, arr) => !(i === arr.length - 1 && c === ""));  // 劈出尾部空串
-    if (cells.some(c => c !== "")) out.push(cells.join(" | "));
+      .map(td => ({
+        text: collapse(decodeHtml(td.replace(/<[^>]+>/g, ""))),
+        rowspan: cellAttr(td, "rowspan"), colspan: cellAttr(td, "colspan"),
+      }))
+      .filter((c, i, arr) => !(i === arr.length - 1 && c.text === ""));  // 劈出尾部空串
+    if (cells.some(c => c.text !== "")) rows.push({ text: cells.map(c => c.text).join(" | "), cells });
   }
-  return out;
-};
+  return { html, header: rows.length ? rows[0].cells.map(c => c.text) : [], rows };
+}
+const tableToText = (inner) => tableFromHtml(inner).rows.map(r => r.text);
 
 // 无 Word 标题样式时的章节提升：中文序号行（一、/（一）/1.）+ 短行无标点标题
 // （下一段明显更长才认，防止把图注/短列表项误升）。表格行不参与（单元格不是标题）。
@@ -95,25 +109,37 @@ const TABLE_MAX = 900;   // 与 sentenceSplit 的 900 字上限同标尺
 
 // 把一组表格行装箱成块：每组 ≤ TABLE_MAX（单行超长保持原子——行是不可分单元，
 // 永不跨行切）；表头只在非首组重复（首组自带）。
-function packTable(rows) {
-  if (rows.length <= 1) return rows.map(t => ({ tag: "p", text: t, fromTable: true }));
+// meta（可选）= { table_html, table_header, table_rows }：结构原件随块走，
+// 块文本仍逐字不变（table_rows 按行号取下本组真实行：非首组首行是重复的表头，
+// 结构里仍对应第 0 行）。
+function packTable(rows, meta) {
+  const withMeta = (rs, idx) => {
+    const o = { tag: "p", text: rs.join("\n"), fromTable: true };
+    if (meta && meta.table_html) {
+      o.table_html = meta.table_html;
+      o.table_header = meta.table_header || null;
+      o.table_rows = meta.table_rows ? idx.map(i => meta.table_rows[i]) : null;
+    }
+    return o;
+  };
+  if (rows.length <= 1) return rows.map((t, k) => withMeta([t], [k]));
   const header = rows[0];
   const groups = [];
-  let cur = [header];
+  let cur = [{ t: header, i: 0 }];
   let curLen = header.length;
   for (let k = 1; k < rows.length; k++) {
     const row = rows[k];
     if (curLen + 1 + row.length > TABLE_MAX && cur.length > 1) {
       groups.push(cur);                                   // 当前组收口
-      cur = [header, row];                                // 新组：表头随行重复
+      cur = [{ t: header, i: 0 }, { t: row, i: k }];      // 新组：表头随行重复
       curLen = header.length + 1 + row.length;
     } else {
-      cur.push(row);
+      cur.push({ t: row, i: k });
       curLen += 1 + row.length;
     }
   }
   groups.push(cur);
-  return groups.map(rs => ({ tag: "p", text: rs.join("\n"), fromTable: true }));
+  return groups.map(g => withMeta(g.map(x => x.t), g.map(x => x.i)));
 }
 
 // 连续 fromTable 行合并——但只并「同一张表」的行：tid 相同才算同表（md 里
@@ -132,8 +158,23 @@ function mergeTableRows(items, ranges) {
       const tid = it.tid;
       let j = i + 1;
       while (j < end && items[j].fromTable && (items[j].tid ?? tid) === tid) j++;
-      const rows = items.slice(i, j).map(r => r.text).filter(t => t && t.trim());
-      out.push(...packTable(rows));
+      const grp = items.slice(i, j);
+      const rows = grp.map(r => r.text).filter(t => t && t.trim());
+      // 表结构原件：docx 从 <table> 元素上带下来；md 的 GFM 表没有 rowspan/colspan，
+      // 用同一批 cells 现拼一份 HTML（结构等价、无合并跨度），再统一走 packTable。
+      const src = grp.find(r => r.table_html);
+      let meta = null;
+      if (src) {
+        meta = { table_html: src.table_html, table_header: src.table_header, table_rows: grp.map(r => r.table_cells || null).filter(Boolean) };
+      } else if (grp.every(r => r.table_cells)) {
+        const cellsArr = grp.map(r => r.table_cells);
+        meta = {
+          table_html: `<table>${cellsArr.map(cs => `<tr>${cs.map(c => `<td>${c.text}</td>`).join("")}</tr>`).join("")}</table>`,
+          table_header: cellsArr[0].map(c => c.text),
+          table_rows: cellsArr.map(cs => cs.map(c => c.text)),
+        };
+      }
+      out.push(...packTable(rows, meta && meta.table_rows.length === rows.length ? meta : null));
       i = j;
     }
   }
@@ -392,7 +433,14 @@ async function parseDocx(file) {
     const tag = m[1].toLowerCase();
     if (tag === "table") {
       const tid = ++tableSeq;
-      for (const row of tableToText(m[2])) items.push({ tag: "p", text: row, fromTable: true, tid });
+      const tbl = tableFromHtml(m[2]);
+      // 每行都挂结构原件（同一张表共享 html/header），供 packTable 把 table_html
+      // 与 table_rows 一路带到块上——块文本与旧 tableToText 逐字一致。
+      for (const row of tbl.rows)
+        items.push({
+          tag: "p", text: row.text, fromTable: true, tid,
+          table_html: tbl.html, table_header: tbl.header, table_cells: row.cells,
+        });
       continue;
     }
     const t = collapse(decodeHtml(m[2].replace(/<[^>]+>/g, "")));
@@ -438,7 +486,7 @@ async function parseDocx(file) {
     // P3-①：整表块原样进块（不过 sentenceSplit——行内的句号不该把表格切碎）。
     // 首行的「第X章」匹配仍生效（与旧行为对齐）；行内不再切章（旧行为把表内
     // 文字误读成章节标记，合并后消失——这是修复不是回归）。
-    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text }); continue; }
+    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, kind: it.table_html ? "table" : undefined, ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
     // 长段落也要过 sentenceSplit（同 epub，900 字上限）
     for (const seg of sentenceSplit(it.text))
       chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg });
@@ -493,7 +541,7 @@ function parseMdFile(file) {
       const cells = bare.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
       if (cells.every(c => /^:?-{2,}:?$/.test(c))) continue; // 分隔行
       const row = cells.join(" | ");
-      if (row.replace(/\|/g, "").trim()) items.push({ tag: "p", text: row, fromTable: true, tid: tableSeq });
+      if (row.replace(/\|/g, "").trim()) items.push({ tag: "p", text: row, fromTable: true, tid: tableSeq, table_cells: cells.map(t => ({ text: t, rowspan: 1, colspan: 1 })) });
       continue;
     }
     if (/^\s*(?:={3,}|-{3,}|\*{3,}|:{3,}|={2,}\s*".*")\s*$/.test(bare)) continue; // 分隔线/mkdocs tab
@@ -557,7 +605,7 @@ function parseMd(file) {
       continue;
     }
     // P3-①：整表块原样进块（不过 sentenceSplit——行内句号不切表）
-    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text }); continue; }
+    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, kind: it.table_html ? "table" : undefined, ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
     for (const seg of sentenceSplit(it.text))
       chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg });
   }
