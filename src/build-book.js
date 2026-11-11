@@ -761,6 +761,20 @@ function buildDb(file, outPath, parsed) {
     if (parsed.droppedCode) setMeta.run("dropped_code", String(parsed.droppedCode));
     if (parsed.struct) setMeta.run("struct_report", JSON.stringify(parsed.struct));
     if (parsed.tableStats) setMeta.run("table_stats", JSON.stringify(parsed.tableStats));
+    // R11：语种按块判定后的整书聚合标签。search.mjs:85 直接读 meta.lang，读不到才现场抽样。
+    // 只写标记，不改路径、不改正文。
+    if (parsed.lang_meta) {
+      setMeta.run("lang", parsed.lang_meta.lang);
+      setMeta.run("lang_source", "block-vote");
+      setMeta.run("lang_detail", JSON.stringify({
+        zhShare: +parsed.lang_meta.zhShare.toFixed(4),
+        chars: parsed.lang_meta.chars,
+        counts: parsed.lang_meta.counts,
+        skipped: parsed.lang_meta.skipped,
+        nameLang: parsed.lang_meta.nameLang,
+        conflict: parsed.lang_meta.conflict,
+      }));
+    }
 
     const tx = db.transaction(() => {
       const ins = db.prepare("INSERT INTO chunks(chapter, chapter_path, page, text) VALUES (?,?,?,?)");
@@ -943,6 +957,14 @@ async function main(argv = process.argv.slice(2), opts = {}) {
     chapter_quality: chapterQuality(parsed.chunks),
   };
 
+  // R11 语种标注：按块投票、按字符加权（01:163-168）。只出标签，不改路径。
+  // 取块文本全集而不是前 200 块——旧 detectLang 只看开头，中英混排书会被开头几章判反。
+  const { resolveLang } = await import("./lib/lang-tag.mjs");
+  parsed.lang_meta = resolveLang(parsed.chunks.map(c => c.text), path.basename(file));
+  if (parsed.lang_meta.conflict) {
+    console.error(`⚠ ${parsed.lang_meta.note}`);
+  }
+
   const out = outArg || path.join(path.dirname(file), "..", "library",
     title + "." + parsed.format + ".db");
   fs.mkdirSync(path.dirname(out), { recursive: true });
@@ -995,6 +1017,10 @@ async function main(argv = process.argv.slice(2), opts = {}) {
   if (parsed.skipped && parsed.skipped.length) console.log(`  R0 排除: ${parsed.skipped.length} 个（_origin/_private/-raw/代码仓库痕迹）`);
   if (parsed.droppedCode) console.log(`  已去代码块: ${parsed.droppedCode} 段`);
   if (parsed.cleanedJunk.length) console.log(`  已去页眉页脚: ${parsed.cleanedJunk.length} 种重复行`);
+  if (parsed.lang_meta) {
+    const lm = parsed.lang_meta;
+    console.log(`  语种(R11 块级判定): ${lm.lang} — 中文占字母类字符 ${(lm.zhShare * 100).toFixed(1)}%（zh ${lm.counts.zh} 块 / en ${lm.counts.en} 块 / 公式 ${lm.counts.formula} 块）`);
+  }
   return { chunkCount, totalChars, struct: parsed.struct || null };
 }
 
