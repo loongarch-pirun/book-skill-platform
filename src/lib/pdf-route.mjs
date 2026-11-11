@@ -173,10 +173,18 @@ export function classifyPdf(probe) {
   const why = probe.charsPerPage < THRESHOLDS.charsPerPageOk
     ? `${probe.charsPerPage.toFixed(1)} 字/页 < ${THRESHOLDS.charsPerPageOk}`
     : `近空白页 ${probe.pagesUnderLowChars}/${probe.pages}（${(probe.lowPageRatio * 100).toFixed(1)}%）`;
+  // 「几乎没字」的页占比分两档（设计稿 01:98-111）：≥30% 提示级、5%~30% 静默级。
+  // 两档走同一条 OCR 路径、都不自动下载 VLM；差别只在要不要向用户提「可以考虑装 VLM」。
+  const announceVlm = probe.lowPageRatio >= THRESHOLDS.lowPageRatioOcr;
+  const tier = announceVlm
+    ? `提示级（低字页 ${(probe.lowPageRatio * 100).toFixed(1)}% ≥${THRESHOLDS.lowPageRatioOcr * 100}%）`
+    : `静默级（低字页 ${(probe.lowPageRatio * 100).toFixed(1)}% <${THRESHOLDS.lowPageRatioOcr * 100}%）`;
   return {
     route: "r4_ocr",
-    reason: `文本层不足（${why}）→ 第一步 OCR 降级`,
-    annotations: ["R4:OCR 降级解析"],
+    reason: `文本层不足（${why}）→ 第一步 OCR 降级（${tier}）`,
+    annotations: announceVlm
+      ? [`R4:OCR 降级解析·${tier}`, "R4:OCR 后仍不足可考虑装 VLM（1.18 GB，本轮未装，需用户点头）"]
+      : [`R4:OCR 降级解析·${tier}`, "R4:不打扰用户（未达提示线，不弹装 VLM）"],
   };
 }
 
