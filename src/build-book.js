@@ -219,7 +219,49 @@ function reflowPage(items) {
   return out;
 }
 
-async function parsePdf(file) {
+// ---------- PDF 解析引擎选择（R3/R4 分流的实现口） ----------
+// 取值规则（三值，唯一落一条，无「看情况」）：
+//   BSP_PDF_ENGINE=mineru → 只走 MinerU basic 结构化抽取，不可用即报错（不静默降级）
+//   BSP_PDF_ENGINE=legacy → 只走原 pdfjs 文字流（对照/排障/回滚用）
+//   未设置（默认）        → MinerU 可用就走 MinerU，不可用回落 legacy
+// "可用" = 有 MINERU_HOME 且其下有 doclib 目录（src/lib/mineru.mjs:mineruAvailable）
+const pdfEngine = () => String(process.env.BSP_PDF_ENGINE ?? "").replace(/[\u200b-\u200d]/g, "").normalize("NFKC").trim().toLowerCase();
+
+// MinerU 结构化抽取：块级 bbox + 表格 HTML + 公式 LaTeX，替代 :233 只取文字流
+async function parsePdfStructured(file) {
+  const M = await import("./lib/mineru.mjs");
+  const cfg = M.mineruConfig();
+  const r = await M.parsePdfWithMineru(file, cfg, (m) => console.log(m));
+  if (!r.ok) {
+    const tail = (r.stderr || r.stdout || "").trim().split("\n").slice(-3).join(" / ");
+    throw new Error(`MinerU 解析失败（exit ${r.code}）${tail ? ": " + tail : ""}`);
+  }
+  const middle = JSON.parse(fs.readFileSync(r.jsonPath, "utf8"));
+  const { blocks, dropped } = M.middleToBlocks(middle);
+  const chunks = M.blocksToChunks(blocks, { sentenceSplit, collapse });
+  const numPages = Array.isArray(middle.pages) ? middle.pages.length : 0;
+  return {
+    format: "pdf",
+    engine: `mineru:${cfg.tier}`,
+    numPages,
+    chunks,
+    cleanedJunk: [],
+    // 页码块被 R3 结构性剔除（不是页眉页脚启发式），单独记账
+    droppedPageNumbers: dropped.length,
+    structReport: {
+      engine: `mineru:${cfg.tier}`,
+      blocks: blocks.length,
+      with_bbox: blocks.filter((b) => b.bbox).length,
+      tables: blocks.filter((b) => b.kind === "table").length,
+      equations: blocks.filter((b) => b.kind === "equation").length,
+      images: blocks.filter((b) => b.kind === "image" || b.kind === "chart").length,
+      page_numbers_dropped: dropped.length,
+    },
+  };
+}
+
+// 原实现（pdfjs 文字流 + 双栏重排 + 页眉页脚启发式），保留作回滚与对照基线
+async function parsePdfLegacy(file) {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const doc = await pdfjs.getDocument({
     data: new Uint8Array(fs.readFileSync(file)),
@@ -259,7 +301,21 @@ async function parsePdf(file) {
   for (const p of pages)
     for (const seg of sentenceSplit(p.text))
       chunks.push({ chapter: null, page: p.page, text: seg });
-  return { format: "pdf", numPages: pages.length, chunks, cleanedJunk: [...junk] };
+  return { format: "pdf", engine: "legacy", numPages: pages.length, chunks, cleanedJunk: [...junk] };
+}
+
+// R3/R4 分流入口：默认 MinerU，不可用回落 legacy，显式指定则只认那一条
+async function parsePdf(file) {
+  const mode = pdfEngine();
+  if (mode === "legacy") return parsePdfLegacy(file);
+  const M = await import("./lib/mineru.mjs");
+  const usable = M.mineruAvailable();
+  if (mode === "mineru") {
+    if (!usable) throw new Error("BSP_PDF_ENGINE=mineru 但 MinerU 不可用：未设 MINERU_HOME 或其下无 doclib 目录");
+    return parsePdfStructured(file);
+  }
+  if (!usable) return parsePdfLegacy(file);   // 无 MinerU 环境的老机器：零行为变化
+  return parsePdfStructured(file);
 }
 
 // ---------- EPUB：spine 顺序，每个 xhtml = 章节，<p> = 段 ----------
