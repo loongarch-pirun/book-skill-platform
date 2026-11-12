@@ -62,10 +62,13 @@ const fts = (db, q) => db.prepare(`SELECT c.id, c.chapter, c.page, c.text FROM c
 // ===== 4. 英文 EPUB（傲慢与偏见）：章节定位 =====
 // 2026-10-16 #58 渐进重建：旧库 2210 块是与旧 epub 不同源的旧解析产物，已用当前源文件
 // + 语义分块（BSP_SEMANTIC=1）重建为 1250 块（影子库考卷对照 6/8 打平后替换）。
+// 2026-11-13 D 轮（切片语义单元）：非 PDF 路径（epub/docx/md/txt）接入「标题并入正文 +
+// 短段打包」，块数从 1250 → 1277。这里锁的是**当前口径**的块数，不是历史口径：
+// 它防的是「改了切片却没重跑这本书」这类漂移，所以值必须跟着重建走。
 {
   const db = new Database(path.join(LIB, "pride-and-prejudice-en.epub.db"), { readonly: true });
   const meta = Object.fromEntries(db.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
-  assert(meta.num_chapters === "16" && meta.chunk_count === "1250", `epub meta: ${meta.num_chapters}章/${meta.chunk_count}块/${meta.total_chars}字符`);
+  assert(meta.num_chapters === "16" && meta.chunk_count === "1277", `epub meta: ${meta.num_chapters}章/${meta.chunk_count}块/${meta.total_chars}字符`);
   const a = fts(db, '"Mr. Bennet"');
   assert(a.length >= 1 && a[0].chapter, `英文epub抽查"Mr. Bennet"→章节「${a[0]?.chapter}」`);
   const b = fts(db, '"Pemberley"');
@@ -75,10 +78,11 @@ const fts = (db, q) => db.prepare(`SELECT c.id, c.chapter, c.page, c.text FROM c
 
 // ===== 4b. 英文 EPUB（弗兰肯斯坦）：章节定位 =====
 // 2026-10-16 #58 同批重建：旧库 803 块 → 语义分块后 711 块（考卷对照 6/8 打平）。
+// 2026-11-13 D 轮（切片语义单元）：同 4，块数 711 → 704。
 {
   const db = new Database(path.join(LIB, "frankenstein-en.epub.db"), { readonly: true });
   const meta = Object.fromEntries(db.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
-  assert(meta.num_chapters === "30" && meta.chunk_count === "711", `epub meta: ${meta.num_chapters}章/${meta.chunk_count}块/${meta.total_chars}字符`);
+  assert(meta.num_chapters === "30" && meta.chunk_count === "704", `epub meta: ${meta.num_chapters}章/${meta.chunk_count}块/${meta.total_chars}字符`);
   const a = fts(db, '"Ingolstadt"');
   assert(a.length >= 1 && a[0].chapter, `英文epub抽查"Ingolstadt"→章节「${a[0]?.chapter}」`);
   const b = fts(db, '"the creature"');

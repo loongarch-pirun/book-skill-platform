@@ -90,11 +90,35 @@
         "from": ".models",
         "to": "models",
         "filter": [
+          "Xenova/bge-m3/**",
           "Xenova/multilingual-e5-small/**",
           "Xenova/bge-small-zh-v1.5/**",
           "onnx-community/bge-reranker-v2-m3-ONNX/**",
           "!onnx-community/bge-reranker-v2-m3-ONNX/onnx/model_q4.onnx"
         ]
+      },
+      {
+        "from": "runtime/mineru-python",
+        "to": "runtime/mineru-python",
+        "filter": [
+          "**/*",
+          "!**/__pycache__/**",
+          "!**/*.pyc"
+        ]
+      },
+      {
+        "from": "runtime/mineru-models",
+        "to": "runtime/mineru-models",
+        "filter": [
+          "MinerU-4_models_onnx/**",
+          "!**/*.gguf"
+        ]
+      }
+    ],
+    "extraFiles": [
+      {
+        "from": "build/stop-mineru.ps1",
+        "to": "stop-mineru.ps1"
       }
     ],
     "win": {

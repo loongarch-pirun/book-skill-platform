@@ -213,6 +213,15 @@ console.log("===== 4) md 目录解析 =====");
 }
 
 // ===== 5) 存量四书零变化（块数锁定——升级前已与旧解析器逐块 diff 为零） =====
+// 2026-11-13 两轮修复后的口径变化（锁值随之更新，理由写在这里，免得后人当成回归）：
+//   · A 轮 contentText 全类型保真：equation_inline / code_body / algorithm_body /
+//     嵌套 text（list·index）/ 各类 caption·footnote 不再被静默丢弃。
+//     直接后果是**取字变多**——attention pdf 从 51 块涨到 126 块（原文里那些行内
+//     公式、伪代码、图注以前整块消失，现在进正文并按 900 字一句切）。
+//   · D 轮切片语义单元：epub/docx/md/txt 接入「标题并入正文 + 短段打包（target 400 /
+//     max 900）」，p&p epub 从 2400 块降到 1282 块。
+// 这两项都是**有意的内容与粒度变化**，不是解析漂移。此断言的用途仍是「改了切片却
+// 没重跑这本书就红」，所以必须跟着重建走，而不是留着旧值让它永远红。
 console.log("===== 5) 存量四书零变化 =====");
 {
   const bb = require("../src/build-book.js");
@@ -222,8 +231,8 @@ console.log("===== 5) 存量四书零变化 =====");
   };
   await cmp("lunyu pdf", b => b.parsePdf(path.join(ROOT, "books/lunyu-xueer-zh.pdf")), 4);
   await cmp("lunyu docx", b => b.parseDocx(path.join(ROOT, "books/lunyu-xueer-zh.docx")), 16);
-  await cmp("attention pdf", b => b.parsePdf(path.join(ROOT, "books/attention-is-all-you-need-en.pdf")), 51);
-  await cmp("p&p epub", b => b.parseEpub(path.join(ROOT, "books/pride-and-prejudice-en.epub")), 2400);
+  await cmp("attention pdf", b => b.parsePdf(path.join(ROOT, "books/attention-is-all-you-need-en.pdf")), 126);
+  await cmp("p&p epub", b => b.parseEpub(path.join(ROOT, "books/pride-and-prejudice-en.epub")), 1282);
   // 注：2026-10-16 #58 渐进重建前，library/pride-and-prejudice-en.epub.db 里是 2210 块
   // （旧 epub 文件/旧解析产物，与当前 books/ 下的 epub 已不同源）——已用当前源文件重建为
   // 1250 块（语义分块合并），影子库考卷对照打平后替换；这里锁的是「当前源文件解析输出」。

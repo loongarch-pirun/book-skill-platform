@@ -19,6 +19,11 @@ const regTools = (s) => registerServerTools(s, { gate: false });
 const LIB = path.join(import.meta.dirname, "..", "library");
 const GOOD = path.join(LIB, "lunyu-xueer-zh.docx.db");      // 16 块，小而全（有向量/FTS/编目）
 
+// 卫兵测试需要一个「不是当前默认引擎」的引擎名来制造不匹配。写死 'm3' 会在默认引擎
+// 改成 m3 那天失效（2026-11-13 默认引擎从 e5 换成 m3 时就踩到：这两项断言变成真不匹配失败）。
+// 用这条推导，默认引擎怎么换都不会误伤。
+const OTHER_EMBED = DEFAULT_EMBED === "e5" ? "m3" : "e5";
+
 let pass = 0, fail = 0;
 const ok = (cond, name, extra = "") => {
   if (cond) { pass++; console.log(`PASS - ${name}`); }
@@ -64,7 +69,7 @@ const copyDb = (src) => {
 {
   const dbPath = copyDb(GOOD);
   const db = new Database(dbPath);
-  db.prepare("UPDATE meta SET value='m3' WHERE key='model'").run();
+  db.prepare("UPDATE meta SET value=? WHERE key='model'").run(OTHER_EMBED);
   db.close();
   let threw = null;
   try { await hybridSearch(dbPath, "学习", 3, { rerank: false }); } catch (e) { threw = e; }
@@ -75,7 +80,7 @@ const copyDb = (src) => {
 {
   const dbPath = copyDb(GOOD);
   const db = new Database(dbPath);
-  db.prepare("UPDATE meta SET value='m3' WHERE key='model'").run();
+  db.prepare("UPDATE meta SET value=? WHERE key='model'").run(OTHER_EMBED);
   db.close();
   try { await hybridSearch(dbPath, "学习", 3, { rerank: false }); } catch { /* 预期拒跑 */ }
   let closed = true;
@@ -127,7 +132,7 @@ const copyDb = (src) => {
 {
   const dbPath = copyDb(GOOD);
   const db = new Database(dbPath);
-  db.prepare("UPDATE meta SET value='m3' WHERE key='model'").run();
+  db.prepare("UPDATE meta SET value=? WHERE key='model'").run(OTHER_EMBED);
   let threw = null;
   // 空任务空结果：若卫兵生效，报错必须是引擎不一致而不是校验失败（卫兵在 validateResult 之前）
   try { await importCatalog(db, {}, {}); } catch (e) { threw = e; }
@@ -175,6 +180,142 @@ const copyDb = (src) => {
   ok(out?.results.length > 0 && /不亦說乎|不亦说乎/.test(out.results[0].text),
     "路由: 坏库旁边的照常好书结果正常返回");
   ok(out?.routed_books.length === 1, "路由: 只路由到好书（坏库 0 分被挡不冒充）", JSON.stringify(out?.routed_books || []));
+}
+
+// ========== 9c) 指代回填：闸门开了才改问句，闸门关了零扰动（2026-11-13） ==========
+// 背景：问「这篇论文/这本书」时问句里没有指代对象，中文问 × 英文正文的字面腿全 0，
+// 语义腿归一化后参考文献条系统性高于首页署名区——实测 4 本 PDF 的作者题 4/4 答成参考文献段。
+// 把指代换成《书名》后 8/8 落首页（分数 0.02~0.08 → 0.33~0.97），但书名来源是文件名 slug，
+// 拼音/英文名塞进中文书正文等于纯噪声（简爱 0.253→0.004），所以必须过「书名锚点在正文里
+// 字面出现」这道闸门，闸门不开时问句一个字节都不许动。下面两条断言就是这道闸门的两个方向。
+{
+  // 方向一（闸门开）：attention 论文问作者，原句会答成第 11 页参考文献条 [9] Jonas Gehring；
+  // 回填后必须落到第 1 页署名区。翻转方式：把 vagueRewrite 调用注释掉，这条立刻红。
+  const dbPath = copyDb(path.join(LIB, "attention-is-all-you-need-en.pdf.db"));
+  const r = await hybridSearch(dbPath, "这篇论文的作者是谁", 3);
+  ok(r[0]?.loc === "第1页" && /Vaswani/.test(r[0]?.text || ""),
+    "回填: 指代问句落到首页署名区（闸门开才生效）",
+    JSON.stringify({ loc: r[0]?.loc, head: String(r[0]?.text || "").slice(0, 40) }));
+
+  // 方向二（闸门关）：把书名改成正文里绝不存在的串，回填必须自动放弃——
+  // 默认路径与 BSP_VAGUE=0（强制关回填）逐块同 id 同分，证明「没动它」而不是「动了但看起来一样」。
+  const db2Path = copyDb(GOOD);
+  const db2 = new Database(db2Path);
+  db2.prepare("UPDATE meta SET value='完全不存在的书名' WHERE key='title'").run();
+  db2.close();
+  const on = await hybridSearch(db2Path, "这本书讲了什么", 3);
+  process.env.BSP_VAGUE = "0";
+  let off;
+  try { off = await hybridSearch(db2Path, "这本书讲了什么", 3); }
+  finally { delete process.env.BSP_VAGUE; }
+  ok(on.length === off.length && on.every((x, i) => x.id === off[i].id && x.rerank === off[i].rerank),
+    "回填: 闸门关时问句零改动（与原句逐块同 id 同分）",
+    JSON.stringify({ on: on.map(x => x.id), off: off.map(x => x.id) }));
+
+  // 静态：接入点必须作废按原句预编码的向量——回填后字面腿用新问句、语义腿还用旧向量，
+  // 等于两条腿问两件不同的事（routeAndSearch 会把 qv 传进来，这条闸必须存在）。
+  const searchSrc = fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "search.mjs"), "utf8");
+  ok(/export function vagueRewrite\(/.test(searchSrc) && /if \(qW\) qv = null;/.test(searchSrc),
+    "静态: 回填接入 hybridSearch 且作废预编码向量（否则两腿问的不是同一件事）");
+}
+
+// ========== 9d) MinerU 运行时就绪判据 + 卸载残留（2026-11-13） ==========
+// 三条产品化尾巴（12-运行时进包/回执-运行时进包.md:139-141）：
+//   ① mineruAvailable() 假阳性：只看 home/doclib 目录存在。doclib/ 是解析产物的缓存落点，
+//      跑过一次就永久存在，服务死没死它都在 → 干净机器也「可用」→ 不回落 legacy 直调 CLI，
+//      而 CLI 是纯 HTTP 客户端，服务没起抛 ServerNotRunningError，导入直接失败且只给一句 Python 栈。
+//   ② src/main.js 打包态既没拉起随包 doclib、也没注入 BSP_MINERU_*，装完导入 PDF 必失败。
+//   ③ 卸载残留 userData/mineru-home 与 mineru-run（几百 MB，用户看不见）。
+{
+  const M = await import("../src/lib/mineru.mjs");
+
+  // ① 假阳性必须被「真探活」翻开：伪造一个只有空 doclib/ 的 home，配过=true 但探活=false。
+  // 翻转方式：把 build-book.js 里的 `configured && await M.mineruReachable()` 改回
+  // `M.mineruAvailable()`，第 ② 条静态断言立刻红；这里则守住探活本身的语义。
+  const fakeHome = fs.mkdtempSync(path.join(tmp, "fake-mineru-"));
+  fs.mkdirSync(path.join(fakeHome, "doclib"));
+  const fakeCfg = M.mineruConfig({ BSP_MINERU_HOME: fakeHome });
+  ok(M.mineruAvailable(fakeCfg) === true && (await M.mineruReachable(fakeCfg)) === false,
+    "运行时就绪: 空的 doclib 目录不再被当成可用（配置在 ≠ 服务活）",
+    `available=${M.mineruAvailable(fakeCfg)} reachable=${await M.mineruReachable(fakeCfg)}`);
+
+  // 连 doclib 目录都没有：两道判据都必须 false（没配过就是没配过）
+  const bareHome = fs.mkdtempSync(path.join(tmp, "bare-mineru-"));
+  const bareCfg = M.mineruConfig({ BSP_MINERU_HOME: bareHome });
+  ok(M.mineruAvailable(bareCfg) === false && (await M.mineruReachable(bareCfg)) === false,
+    "运行时就绪: 没配过 MinerU 的机器两道判据都 false（回落 legacy 而不是抛栈）");
+
+  // endpoint 指向没人监听的端口（服务崩了/端口漂移没更新）：配过=true、探活=false，
+  // 且必须在超时预算内返回（探活在导入路径上，不能白等半分钟）
+  const staleHome = fs.mkdtempSync(path.join(tmp, "stale-mineru-"));
+  fs.mkdirSync(path.join(staleHome, "doclib"));
+  fs.writeFileSync(path.join(staleHome, "config.yaml"), "doclib:\n  auth:\n    token: " + "x".repeat(43) + "\n");
+  fs.writeFileSync(path.join(staleHome, "doclib.endpoint.json"),
+    JSON.stringify({ pid: 1, transports: [{ base_url: "http://127.0.0.1:1", type: "tcp" }], version: 3 }));
+  const stale = M.mineruConfig({ BSP_MINERU_HOME: staleHome });
+  const t0 = Date.now();
+  const staleReach = await M.mineruReachable(stale);
+  const staleMs = Date.now() - t0;
+  ok(M.mineruAvailable(stale) === true && staleReach === false && staleMs < 3000,
+    "运行时就绪: 服务已死时报不可用且在超时预算内返回",
+    `reachable=${staleReach} ${staleMs}ms`);
+
+  // ② 静态：build-book 必须「配置在 && 真探活」两道，且必须在 minenu 分流之前算出
+  const buildSrc = fs.readFileSync(path.join(import.meta.dirname, "..", "src", "build-book.js"), "utf8");
+  ok(/const configured = M\.mineruAvailable\(\);/.test(buildSrc)
+    && /const usable = configured && await M\.mineruReachable\(\);/.test(buildSrc),
+    "静态: parsePdf 用「配置在 && 真探活」两道判据（防假阳性复活）");
+
+  // ② 打包态拉起随包 doclib + 注入 BSP_MINERU_*，且必须先于 engine.init
+  const mainSrc = fs.readFileSync(path.join(import.meta.dirname, "..", "src", "main.js"), "utf8");
+  ok(mainSrc.includes("async function bootMineru()") && /if \(!app\.isPackaged\) return null;/.test(mainSrc),
+    "静态: main.js 有随包 MinerU 就绪步骤且只在打包态启用（dev 不抢本机 ~/.mineru 正本）");
+  ok(/Object\.assign\(process\.env, r\.env\);/.test(mainSrc),
+    "静态: main.js 注入 BSP_MINERU_*（否则 mineruConfig 仍指向 ~/.mineru）");
+  const iBootMineru = mainSrc.indexOf("const mineruRuntime = await bootMineru();");
+  const iInit = mainSrc.indexOf("engine.init({");
+  ok(iBootMineru >= 0 && iInit > iBootMineru,
+    "静态: MinerU 就绪先于 engine.init（解析层读 env 决定走哪条路，反了就白起）");
+  ok(/catch \(e\) \{[\s\S]{0,200}回落到 legacy/.test(mainSrc) || /回落 legacy 解析/.test(mainSrc),
+    "静态: 就绪失败不阻断启动（回落 legacy，比白屏好）");
+
+  // src/desktop/mineru-runtime.mjs 三件：路径、就绪判据、编排入口
+  const rtSrc = fs.readFileSync(path.join(import.meta.dirname, "..", "src", "desktop", "mineru-runtime.mjs"), "utf8");
+  ok(/export function runtimePaths\(/.test(rtSrc) && /export function mineruRuntimeReady\(/.test(rtSrc)
+    && /export async function prepareMineru\(/.test(rtSrc),
+    "静态: mineru-runtime.mjs 导出 runtimePaths/mineruRuntimeReady/prepareMineru");
+  // 顺序不能反：先 basic 再 managed，否则 mode=managed 以默认 standard 校验、因 GGUF 缺失被拒
+  const iTier = rtSrc.indexOf('"parse_server.local.managed_tier", "basic"');
+  const iMode = rtSrc.indexOf('"parse_server.local.mode", "managed"');
+  ok(iTier >= 0 && iMode > iTier,
+    "静态: 先设 managed_tier=basic 再设 mode=managed（反序会因 GGUF 缺失被拒）");
+  // 独立 cwd：doclib 与托管 parse-server 各拿各的锁，不能共用
+  ok(/cwd: path\.join\(userData, "mineru-run"\)/.test(rtSrc) && /cwd: p\.cwd/.test(rtSrc),
+    "静态: doclib 用独立 cwd mineru-run（避免与别处抢 .mineru-service.lock）");
+
+  // ③ 卸载清理：自定义 NSIS 钩子 + 只删运行时产物、不碰用户数据
+  const nshPath = path.join(import.meta.dirname, "..", "build", "installer.nsh");
+  ok(fs.existsSync(nshPath), "卸载: build/installer.nsh 在位（electron-builder 自动拾取）");
+  const nsh = fs.readFileSync(nshPath, "utf8");
+  ok(/!macro customUnInstall/.test(nsh)
+    && /RMDir \/r "\$APPDATA\\\$\{APP_PACKAGE_NAME\}\\mineru-home"/.test(nsh)
+    && /RMDir \/r "\$APPDATA\\\$\{APP_PACKAGE_NAME\}\\mineru-run"/.test(nsh),
+    "卸载: customUnInstall 删 mineru-home 与 mineru-run");
+  // 书库原件在 userData\library 与 userData\books，一个字都不许删（用户数据 ≠ 运行时产物）。
+  // 只看非注释行：注释里点名 library/books 是为了讲清「为什么不动它们」，不算违规。
+  const nshCode = nsh.split("\n").filter((l) => !l.trimStart().startsWith(";")).join("\n");
+  ok(!/library/.test(nshCode) && !/\\books/.test(nshCode),
+    "卸载: 不碰 userData 下的 library/books（用户数据留在原地）",
+    (nshCode.match(/.*(library|\\books).*/) || [""])[0]);
+  const pkgForUninst = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, "..", "package.json"), "utf8"));
+  ok((pkgForUninst.build.extraFiles || []).some((e) => e.to === "stop-mineru.ps1"),
+    "卸载: stop-mineru.ps1 经 extraFiles 落进安装目录（NSIS 要按 $INSTDIR 调它）");
+  const ps1 = fs.readFileSync(path.join(import.meta.dirname, "..", "build", "stop-mineru.ps1"), "utf8");
+  // 判据是「按 exe 路径前缀筛」而不是「按进程名全杀」——后者会误伤用户自己的 ~/.mineru doclib
+  ok(/ExecutablePath/.test(ps1) && /\.StartsWith\(\$prefix/.test(ps1),
+    "卸载: 兜底按随包 python 的 exe 路径前缀筛（不按进程名一刀切误杀用户自己的 doclib）");
+  ok(/doclib\.endpoint\.json/.test(ps1) && /ParentProcessId=/.test(ps1),
+    "卸载: 先按 endpoint.json 的 pid 停整棵进程树（含 managed parse-server 子进程）");
 }
 
 // ========== 10) 静态防回归：真机拖拽/导入链路的三处已修缺陷不许复活 ==========
@@ -659,7 +800,11 @@ const copyDb = (src) => {
   // ① 表格整表成块：合并函数在位 + 整表块跳过 sentenceSplit + 逃生开关归一化
   ok(bb.includes("function packTable") && bb.includes("function mergeTableRows"),
     "静态: packTable/mergeTableRows 落盘（P3-① 表格整表成块）");
-  ok((bb.match(/if \(it\.fromTable\) \{ chunks\.push/g) || []).length === 2,
+  // 2026-11-13 起 docx 与 md 两路都改成「先切 run、表格 run 单独成块」：
+  // 原来的 `if (it.fromTable) { chunks.push` 直通写法已不存在，改成两条 runs.push({ kind: "table" })。
+  // 语义不变（整表块仍然不过 sentenceSplit），断言的锚点跟着改。
+  ok((bb.match(/if \(it\.fromTable\) \{ chunks\.push/g) || []).length === 0
+    && (bb.match(/runs\.push\(\{ kind: "table"/g) || []).length === 2,
     "静态: docx/md 两路整表块都跳过 sentenceSplit（行内句号不切表）");
   ok(/BSP_TABLE \?\? ""/.test(bb) && /normalize\("NFKC"\)/.test(bb),
     "静态: BSP_TABLE=0 逃生走零宽剥离+NFKC 归一化（P2-04 同款）");
@@ -1117,19 +1262,28 @@ const copyDb = (src) => {
   const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
   const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
 
-  // ① extraResources 四件白名单（防漂移：谁改坏了 filter，隐私数据/大模型漏进包或漏出包，这里红）
+  // ① extraResources 白名单（防漂移：谁改坏了 filter，隐私数据/大模型漏进包或漏出包，这里红）
   const pkg = JSON.parse(readSrc("package.json"));
   const er = pkg.build.extraResources;
-  ok(Array.isArray(er) && er.length === 4, `静态: extraResources 四件在位（实际 ${er?.length}）`);
+  // 2026-11-13：件数从 4 变 6 —— 运行时进包把 MinerU 的 python 运行时与模型目录加进来了
+  // （runtime/mineru-python、runtime/mineru-models）。断言语义不变：件数必须精确等于预期集合大小，
+  // 新增一件就要在这里补一行，免得谁偷偷塞件进包没人拦。
+  const EXPECT_RESOURCES = 6;
+  ok(Array.isArray(er) && er.length === EXPECT_RESOURCES, `静态: extraResources ${EXPECT_RESOURCES} 件在位（实际 ${er?.length}）`);
   const byTo = Object.fromEntries(er.map((e) => [e.to, e]));
   ok(byTo.library && byTo.library.from === "library" && byTo.skills && byTo.books
     && byTo.models && byTo.models.from === ".models",
     "静态: 四件 from/to 映射正确（.models→models，其余同名）");
+  ok(byTo["runtime/mineru-python"] && byTo["runtime/mineru-models"],
+    `静态: MinerU 运行时两件在位（python 运行时 + 模型目录），实际 to=${er.map((e) => e.to).join(",")}`);
+  // 默认引擎 2026-11-13 换成 m3，bge-m3 必须跟着进包，否则装完查库直接报引擎不一致。
+  ok(byTo.models.filter.includes("Xenova/bge-m3/**"),
+    `静态: models 含 bge-m3（默认引擎），实际 ${JSON.stringify(byTo.models.filter)}`);
   ok(byTo.models.filter.includes("Xenova/multilingual-e5-small/**")
     && byTo.models.filter.includes("Xenova/bge-small-zh-v1.5/**")
     && byTo.models.filter.some((f) => f.startsWith("onnx-community/bge-reranker-v2-m3-ONNX"))
     && byTo.models.filter.includes("!onnx-community/bge-reranker-v2-m3-ONNX/onnx/model_q4.onnx"),
-    "静态: models 三件套（e5/bge-small/reranker-int8）且排除 model_q4（实测否决件不进包）");
+    "静态: models 保留 e5/bge-small/reranker-int8 兜底档且排除 model_q4（实测否决件不进包）");
   ok(byTo.library.filter.includes("!chat-archive/**") && byTo.library.filter.includes("!feedback/**")
     && byTo.library.filter.includes("!usage-log.jsonl") && byTo.library.filter.includes("!**/*.db-wal"),
     "静态: library 排除隐私数据与 SQLite 运行时碎文件（老板个人数据不出厂）");

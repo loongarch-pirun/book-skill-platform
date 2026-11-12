@@ -215,6 +215,41 @@ export function structurizeChunks(chunks) {
         const [fixedText, surFix] = stripLoneSurrogates(text);
         text = fixedText;
         if (surFix) report.strippedSurrogates += surFix;
+      } else {
+        // 整块拒修（混了表外字符/回读非法）时退到**逐行**处置。
+        // 为什么必须这么做：2026-11-13 切片改成「语义单元」后，短段会与相邻段落
+        // 并进同一个 200~900 字的块（mineru blocksToUnits / build-book packParagraphs）。
+        // 乱码行于是和好段落同居一块——整块拒修的保守闸门会让这一行乱码跟着大块
+        // 一起入库（structurize-test 集成用例实测：repairMojibake=0 且库内残留
+        // 乱码字节）。逐行处置仍然守住同一条底线：只动确认是双重编码的那一行，
+        // 行内的好文本不动；修不动的那一行整行丢，绝不「修」成另一堆乱码，
+        // 也绝不因为一行坏就丢整段好内容（旧行为是丢整块，现在粒度更准）。
+        const lines = text.split("\n");
+        let repairedLines = 0;
+        let droppedLines = 0;
+        for (let i = 0; i < lines.length; i++) {
+          const ln = lines[i];
+          if (detectGarbled(ln).mojibake < MOJIBAKE_MIN_HINTS) continue;
+          const f = repairMojibake(ln);
+          if (f.repaired) {
+            const [fixedLine, surFix] = stripLoneSurrogates(f.text);
+            lines[i] = fixedLine;
+            repairedLines++;
+            if (surFix) report.strippedSurrogates += surFix;
+          } else {
+            lines[i] = null; // 坏行：整行丢，不连坐同块的好段落
+            droppedLines++;
+          }
+        }
+        if (repairedLines || droppedLines) {
+          text = lines.filter((l) => l !== null).join("\n");
+          g = detectGarbled(text);
+          if (repairedLines) report.repairedMojibake++;
+          // 丢的行计入 droppedGarbage（不新增字段）：structurize-test.mjs:312/351 对
+          // struct_report 做**全等**断言（字段集固定），加字段会让那两条铁律断言红。
+          // 语义上也没跑偏——被丢的那行就是垃圾，只是粒度从块细化到行。
+          if (droppedLines) report.droppedGarbage += droppedLines;
+        }
       }
     }
     if (g.ratio > CHUNK_GARBLED_MAX) { report.droppedGarbage++; continue; }

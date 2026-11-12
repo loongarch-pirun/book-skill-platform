@@ -125,6 +125,87 @@ export function findBook(query, libDir = currentLibDir()) {
   return books.find(b => b.id.toLowerCase().includes(q) || b.title.toLowerCase().includes(q)) || null;
 }
 
+// ---------- 指代回填：单书检索里把「这本书 / 这篇论文」换成《书名》 ----------
+// 为什么需要（实测 2026-11-13，13-可用性/）：问「这篇论文的作者是谁」时问句里没有指代对象，
+// 中文问句 × 英文正文的字面腿全 0，只剩语义腿；归一化后参考文献条（sem 0.86~0.99）系统性高于
+// 首页署名区（sem 0.85），attention 121 块库里 6 块署名块在初筛池排 11~49 名（前 20 只进 1 块）。
+// 结果：4 本 PDF × 2 问共 8 题，top1 落在首页只有 1/8，4/4 全答成参考文献段。
+// 把指代换成「《书名》」后 8/8 落首页，分数从 0.02~0.08 抬到 0.33~0.97（vague-rewrite-abc.mjs）。
+//
+// 为什么必须过闸门：书名来源就是文件名（meta.title 是 slug），美化后是拼音或英文——
+// pg1260-简爱→简爱、mengzi-zh→Mengzi、pride-and-prejudice-en→Pride And Prejudice。
+// 无条件回填等于把中文书名塞进英文正文当纯噪声：实测简爱「这本书的作者是谁」原 0.253
+//（本来就答对 JANE EYRE AN AUTOBIOGRAPHY）被砸到 0.004，孟子 0.044→0.002，
+// 道德经 0.103→0.030（vague-rewrite-novel.mjs）。所以只有当书名的某个锚点真在本库
+// chunks.text 里字面出现时才回填；闸门不开时原句一个字节都不动（可翻转判据，guard-test 钉着）。
+export function prettyTitle(raw) {
+  let s = String(raw || "").replace(/\.(pdf|epub|docx|md|txt)$/i, "");
+  s = s.replace(/^pg\d+[-_]/i, "");                    // Gutenberg 编号：pg1260-简爱 → 简爱
+  s = s.replace(/[-_](en|zh|cn|ja|de|fr)$/i, "");      // 语言后缀：pride-and-prejudice-en
+  if (/^[\x00-\x7F]+$/.test(s)) {                      // 纯 ASCII 才还原连字符与首字母
+    s = s.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+    s = s.replace(/\b[a-z]/g, (m) => m.toUpperCase());
+  }
+  return s.trim() || String(raw || "");
+}
+
+// 候选锚点：整串、去尾部年份、第一个分隔符前的主名、最长 ASCII 主词。
+// 为什么要这一串：「Dynamo-亚马逊高可用键值存储-2007」整串正文里没有，但「Dynamo」有 79 块；
+// 「MapReduce-…-2004」同理。锚点只用于闸门判定，不参与检索打分。
+export function anchorsOf(title) {
+  const out = new Set();
+  const t = String(title || "").trim();
+  if (!t) return [];
+  out.add(t);
+  const noYear = t.replace(/[-_\s]*\d{4}$/, "").trim();
+  if (noYear) out.add(noYear);
+  const head = t.split(/[:：—–\-]/)[0].trim();
+  if (head) out.add(head);
+  const ascii = (t.match(/[A-Za-z][A-Za-z0-9]{2,}/g) || []).sort((a, b) => b.length - a.length)[0];
+  if (ascii) out.add(ascii);
+  return [...out].filter((x) => x.length >= 3);
+}
+
+// 闸门结果按 dbPath + mtime/size 缓存：LIKE 全表扫在 1861 块的库上是毫秒级，但每问都要跑一次，
+// 缓存失效信号与 listBooks 同款（mtime+size）。BSP_LIST_CACHE=0 时一并回退不缓存。
+const anchorGateCache = new Map();  // dbPath -> { key, hit }
+function anchorGate(db, dbPath, title) {
+  let key = "gone";
+  try { const st = fs.statSync(dbPath); key = `${st.mtimeMs}:${st.size}`; } catch { /* 统计失败按每次重算 */ }
+  if (listCacheEnabled() && key !== "gone") {
+    const c = anchorGateCache.get(dbPath);
+    if (c && c.key === key) return c.hit;
+  }
+  let hit = null;
+  for (const a of anchorsOf(title)) {
+    const esc = a.replace(/[\\%_]/g, "\\$&");  // % _ \ 当字面量：书名里出现它们不许当通配符
+    let n = 0;
+    try { n = db.prepare("SELECT count(*) c FROM chunks WHERE text LIKE ? ESCAPE '\\'").get(`%${esc}%`).c; }
+    catch { n = 0; }
+    if (n > 0) { hit = { anchor: a, hits: n }; break; }
+  }
+  if (listCacheEnabled() && key !== "gone") anchorGateCache.set(dbPath, { key, hit });
+  return hit;
+}
+
+function bookTitleOf(db) {
+  try { return db.prepare("SELECT value FROM meta WHERE key = 'title'").get()?.value || ""; }
+  catch { return ""; }  // 老库/坏 meta：没有书名就不回填
+}
+
+// 返回改写后的问句；不该改（没有指代 / 没有书名 / 闸门不开）返回 null。
+export function vagueRewrite(db, dbPath, question) {
+  const q = String(question || "");
+  if (!VAGUE_REF_RE.test(q)) return null;
+  const raw = bookTitleOf(db);
+  if (!raw) return null;
+  const title = prettyTitle(raw);
+  if (!title) return null;
+  if (!anchorGate(db, dbPath, title)) return null;
+  const rewritten = q.replace(VAGUE_REF_RE, `《${title}》`);
+  return rewritten === q ? null : rewritten;
+}
+
 // ---------- 单书混合检索：字面 0.5 + 语义 0.5 → 复试官终审 ----------
 // opts.qv: 预算好的问题向量（路由场景下避免重复编码）
 // opts.rerank: 默认开，传 false 只走混合
@@ -149,7 +230,13 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
     // 扰动提名制。
     // 权重固定 0.5（与语义腿对等）；BSP_FTS_W 可手动压低。旧模式：BSP_FTS_KW=0。
     const ftsScores = new Map();
-    const q = String(question).replace(/"/g, "").trim();
+    const qRaw = String(question).replace(/"/g, "").trim();
+    // 指代回填（见上方 vagueRewrite 注释）：闸门开了才改，改了就三条腿全都用新问句——
+    // 传入的 qv 是按原句预编码的，回填后必须作废重编，否则语义腿与字面腿问的不是同一件事。
+    // BSP_VAGUE=0 一键回退旧行为（对照组用）。
+    const qW = process.env.BSP_VAGUE === "0" ? null : vagueRewrite(db, dbPath, qRaw);
+    const q = qW || qRaw;
+    if (qW) qv = null;
     const FTS_KW = process.env.BSP_FTS_KW !== "0";
     let ftsW = Math.min(+(process.env.BSP_FTS_W || 0.5), 0.5);
     if (q.length >= 3 && FTS_KW) {
@@ -365,68 +452,162 @@ export async function multiVariantSearch(dbPath, questions, topN = 6) {
 }
 
 // ---------- 动态挑书路由（总入口：临时技能包） ----------
-// 两段式：① 全库逐本「廉价召回」（hybridSearch rerank:false，只有字面腿+向量腿，几十毫秒/本）
-//        ② 跨书合并成一个池子，**只跑一次** rerank（同一把尺子比所有书，跨书可比）
-//        ③ 按书取最高分排序，交给上面 picks
-// 为什么不再用「每本书所有块的最大余弦」挑书（2026-11-13 真机踩坑 + 探针实测 probe-route*.txt）：
-//   ① e5-small(int8) 在这批语料上余弦全挤在 0.72~0.95 窄带，跨书极差只有 0.10~0.11，
-//      「最大余弦」这种单点统计量根本没有区分力（问"这篇论文的作者是谁"，最高分落在论语第1章）；
-//   ② max 是极值统计量，天然偏袒块多的书（简爱 4256 块 vs attention 164 块）——书越大越容易刷出高分；
-//   ③ 旧口径「≥首名×0.85 + routeFloor 0.7」在这个尺度上等于「只取首名且必须过 0.7」，
-//      实测 0.827/0.837 的 attention 被直接切掉，中文问题永远翻不到英文论文。
-// 代价：一次 rerank 2~3 秒（池子 39~48 条），比旧的逐本全块余弦扫描（3.5~7.4 秒）还快；
-// 比「每本各跑一次完整 rerank」（22~56 秒）快一个数量级。
-const ROUTE_RECALL = 6;      // 每本先粗召回几条（rerank:false，便宜）
-const ROUTE_KEEP = 6;        // 每本最多贡献几条进合并池（实测 4 会把论语的「與朋友交」两块挤掉、
-                             // 6 能让「作者署名行」这类排在第 5/6 位的正确块进池；再大到 8 只涨耗时）
-const ROUTE_POOL_CAP = 48;   // 合并池上限（rerank 的输入条数）
+// 三段式：① 逐本全块语义扫描（**不做每书归一化** → 余弦跨书同尺）算书级信号
+//        ② 只翻最像的几本，每本深召回 K 条纯语义候选，合成一个池子
+//        ③ 池子**只跑一次** rerank（同一把尺子比所有书），按书取最高分挑书
+//
+// 为什么不再用「hybridSearch 每本粗召回 6 条 + 按廉价混合分截 48 条」（2026-11-13 实测推翻）：
+//   ① hybridSearch 内部对每本书做 min-max 归一化（norm），归一化后的分跨书不可比——
+//      每本书的第一名都是 1.0，池子按它排序等于按「谁更极端」排序，不是按相关度；
+//   ② 字面腿跨书会串味：问 Lamport 事件序，Dynamo 参考文献里那行
+//      "[12] Lamport, L. Time, clocks, and the ordering of events..." 靠词面命中挤到第 2（0.554）；
+//   ③ 每本只取 6 条太浅：实测答案块在廉价混合分里排第 12（Lamport）、13（Dynamo）、
+//      甚至 556（简爱，1861 块），全部被截在池外，重排器根本没见过它们；
+//   ④ 决定性实验（rerank-decisive.mjs）：把答案块硬塞进池子，4 题里 3 题直接拿第 1
+//      （Dynamo 0.994 / attention 0.669 / 简爱 0.117）——所以病根是「池子截断」，不是「重排器不行」。
+//
+// 为什么书级信号用「前 3 条合格块余弦的均值」而不是「全书最大余弦」：max 是极值统计量，
+// 天然偏袒块多和块碎的书（实测问「注意力头」时，只有 3~5 块的小库靠 max 挤到榜首）。
+//
+// 为什么加碎片门槛 ROUTE_MIN_LEN：句向量对短文本系统性给高分（95000 条实测：平均余弦随块长
+// 单调递减，去均值后 log(长度) 与余弦 Pearson r=-0.18），不设门槛时 top10 可能全被 13 字的
+// 标题碎片占满。门槛只作用在「挑书信号」和「深召回头」上；合格块不足 K 条时按真实余弦补位
+//（不硬塞 0 分——那样补位块在重排时反而会凭真分数挤掉答案，是统计口径作弊）。
+const ROUTE_MIN_LEN = Math.max(0, +(process.env.BSP_ROUTE_MINLEN ?? 60)); // 碎片门槛（字数）
+const ROUTE_SIG_TOPK = 3;      // 书级信号 = 该书合格块里前 3 条余弦的均值
+const ROUTE_BOOKS = Math.max(1, +(process.env.BSP_ROUTE_BOOKS ?? 4));  // 深召回几本书
+const ROUTE_KEEP = Math.max(2, +(process.env.BSP_ROUTE_K ?? 10));      // 每本深召回几条
+// 参考文献条（kind=ref）在路由结果里只降权不剔除：它们几乎从不是用户要的答案，却因为
+// 词面高度重合而抢位（实测问 Lamport 事件序，Dynamo 参考文献里那行
+// "[12] Lamport, L. Time, clocks, and the ordering of events..." 拿 0.554 挤到第 2）。
+// 降权而不是剔掉：真有用户问「这篇论文引了谁」时它们还得能出来。
+const ROUTE_REF_W = Math.min(1, Math.max(0, +(process.env.BSP_ROUTE_REFW ?? 0.5)));
+const ROUTE_POOL_CAP = 48;     // 池子上限（重排逐条 128ms，48 条≈6s 是预算上限）
 const ROUTE_FLOOR_RATIO = 0.3; // 书分 < 首名×0.3 视为不相关，不入选（避免每问都硬凑满 maxBooks）
 // 「这篇/这本书/this paper」这类没点名的问句：任何排序器都猜不到用户指哪本（实测 probe-route5/6/10）。
 // 与其赌一本答错，不如把候选书交给用户选。只在多本入选时提示，单本命中照常回答。
 const VAGUE_REF_RE = /(?:这|那|该|此|本)\s*(?:本|篇|个)?\s*(?:书|論文|论文|文章|文檔|文档|教材|報告|报告)|this\s+(?:paper|book|article|document|story|novel)|the\s+(?:paper|book|article)|these\s+notes/i;
+
+// 全块语义扫描：**不做每书 min-max 归一化**，返回的 sem 是原始余弦，跨书同尺可比。
+// 坏库/坏向量/引擎不一致一律往上抛，由 routeAndSearch 逐本记账（一本坏库不许挂掉全库问答）。
+async function scanBookSem(dbPath, embedKey, getQv) {
+  const db = new Database(dbPath, { readonly: true });
+  try {
+    const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
+    if (!cols.includes("emb")) return { hasSem: false, rows: [] };  // build-only 库：没有向量可扫
+    assertEngine(db, embedKey);  // 引擎/维度不一致 → 抛出，调用方记 skipped_books
+    const qv = await getQv();
+    const rows = [];
+    for (const r of db.prepare("SELECT id, kind, length(text) len, emb FROM chunks WHERE emb IS NOT NULL").all()) {
+      const v = new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4);
+      // kind 只用来识别参考文献条（见 ROUTE_REF_W）：正文块与它同尺比较，ref 条在入池时降权
+      rows.push({ id: r.id, kind: r.kind || "", len: r.len || 0, sem: cosine(qv, v) });
+    }
+    rows.sort((a, b) => b.sem - a.sem);
+    return { hasSem: rows.length > 0, rows };
+  } finally { try { db.close(); } catch { /* 关失败无从补救，继续 */ } }
+}
+
+// 在已按余弦降序的行里取前 n 条：合格块（≥ROUTE_MIN_LEN）优先，不足 n 条时用短块按**真实余弦**
+// 补位（绝不塞 0 分——那样补位块在重排时会凭真分数挤掉答案，是统计口径作弊）。
+function tightPick(rows, n) {
+  const out = [];
+  for (const r of rows) if (r.len >= ROUTE_MIN_LEN) { out.push(r); if (out.length >= n) return out; }
+  for (const r of rows) if (r.len < ROUTE_MIN_LEN) { out.push(r); if (out.length >= n) break; }
+  return out;
+}
+
+// 书级信号：合格块前 ROUTE_SIG_TOPK 条余弦的均值（不用 max——max 偏袒块多和块碎的书）
+function bookSignal(rows) {
+  const pick = tightPick(rows, ROUTE_SIG_TOPK);
+  return pick.length ? pick.reduce((s, r) => s + r.sem, 0) / pick.length : 0;
+}
+
+// 截断之后才查正文与定位：只查进池的那几十条，不把整库正文读进来
+function attachChunks(rows) {
+  const byBook = new Map();
+  for (const r of rows) {
+    if (!byBook.has(r.bookId)) byBook.set(r.bookId, { dbPath: r.db, list: [] });
+    byBook.get(r.bookId).list.push(r);
+  }
+  for (const { dbPath, list } of byBook.values()) {
+    const db = new Database(dbPath, { readonly: true });
+    try {
+      const cols = db.prepare("PRAGMA table_info(chunks)").all().map(c => c.name);
+      const hasPath = cols.includes("chapter_path");
+      const sql = `SELECT id, kind, chapter, page, text${hasPath ? ", chapter_path" : ""} FROM chunks WHERE id IN (${list.map(() => "?").join(",")})`;
+      const got = new Map(db.prepare(sql).all(...list.map(r => r.id)).map(r => [r.id, r]));
+      for (const r of list) {
+        const row = got.get(r.id);
+        if (!row) { r.text = ""; r.loc = ""; continue; }  // 扫描后被删/换过的竞态：留空，后面会被剔除
+        r.text = row.text || "";
+        r.kind = row.kind || "";
+        r.chapterPath = hasPath ? (row.chapter_path ?? null) : null;
+        r.loc = row.page ? `第${row.page}页` : (row.chapter || "");
+      }
+    } finally { try { db.close(); } catch { /* 关失败无从补救，继续 */ } }
+  }
+}
 
 export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir = currentLibDir() } = {}) {
   const books = listBooks(libDir);
   if (!books.length) return { routed_books: [], results: [], note: "书库为空" };
   const skipped = [];  // 引擎不匹配/坏库：逐本跳过并记账（混着旧引擎的书库不该整体罢工，但要说一声）
 
-  // ---------- 第一段：全库廉价召回（不预挑书，每本都试） ----------
+  const embed = await getEmbedder();
+  const q = String(question).trim();
+  let qv = null;  // 问题向量全书库只编码一次
+  const getQv = async () => { if (!qv) { [qv] = await embed.embedQueries([q]); } return qv; };
+
+  // ---------- 第一段：逐本全块语义扫描（原始余弦，跨书同尺） ----------
   const considered = [];
-  const pool = [];
+  const scanned = [];  // { b, rows, sig }；rows 已按原始余弦降序
   for (const b of books) {
     // D3 修复（标准轮段 2）：逐本隔离——better-sqlite3 的 open 是惰性的（只开句柄），
     // 坏文件头/坏页/坏向量都在首条查询才炸，所以整段拦。一本坏库跳过并记账，不挂掉全库问答
-    //（对齐 listBooks 过滤语义）。hybridSearch 内部自带 assertEngine 卫兵与 finally close。
-    let cands = null;
+    //（对齐 listBooks 过滤语义）。scanBookSem 内部带 assertEngine 卫兵与 finally close。
+    let res;
     try {
-      cands = await hybridSearch(b.db, question, ROUTE_RECALL, { rerank: false });
+      res = await scanBookSem(b.db, embed.key, getQv);
     } catch (e) {
       skipped.push({ title: b.title, reason: `召回失败（${e.message}）` });
+      continue;
     }
-    const list = Array.isArray(cands) ? cands : [];
-    // 未灌向量的库（build-only / embed 中断）必须记 0 分且不入池——这条契约被
-    // graphrag-fuzz:112（considered[0].best_sim===0 且 routed 为空）钉着。判据看 sem：
-    // 向量腿没产出（sem 全 0）说明这本还没灌向量，只有字面腿命中不足以跨书比较
-    //（否则 build-only 库靠 FTS 拿 0.5 分冒充好书，绕过"没加工完不该被路由到"的语义）。
-    const hasSem = list.some(c => Number(c.sem) > 0);
-    const best = hasSem ? Math.max(...list.map(c => Number(c.score) || 0)) : 0;
-    considered.push({ title: b.title, best_sim: +best.toFixed(3), n: hasSem ? list.length : 0 });
-    if (hasSem)
-      for (const c of list.slice(0, ROUTE_KEEP))
-        pool.push({ ...c, book: b.title, bookId: b.id });
+    // 未灌向量的库（build-only / embed 中断）记 0 分且不入池——graphrag-fuzz:112 钉着这条
+    //（considered[0].best_sim===0 且 routed 为空）；负余弦按 0 报，界面不该看到负数相似度。
+    if (!res.hasSem) { considered.push({ title: b.title, best_sim: 0, n: 0 }); continue; }
+    const sig = bookSignal(res.rows);
+    considered.push({ title: b.title, best_sim: +Math.max(0, sig).toFixed(3), n: res.rows.length });
+    scanned.push({ b, rows: res.rows, sig });
   }
 
-  // ---------- 合并池：按廉价分取前 N、去重 ----------
+  // ---------- 第二段：只翻最像的 ROUTE_BOOKS 本，每本深召回 ROUTE_KEEP 条 ----------
+  scanned.sort((a, b) => b.sig - a.sig);
+  const pool = [];
+  for (const { b, rows } of scanned.slice(0, ROUTE_BOOKS))
+    for (const r of tightPick(rows, ROUTE_KEEP))
+      pool.push({ id: r.id, sem: r.sem, db: b.db, book: b.title, bookId: b.id });
+
+  // 去重后按原始余弦截到池子上限（重排逐条 ~128ms，ROUTE_POOL_CAP 就是耗时预算）
   const seen = new Set();
   const merged = [];
-  for (const c of pool.sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, ROUTE_POOL_CAP)) {
+  for (const c of pool.sort((a, b) => b.sem - a.sem)) {
     const k = `${c.bookId}#${c.id}`;
     if (seen.has(k)) continue;
     seen.add(k);
     merged.push(c);
+    if (merged.length >= ROUTE_POOL_CAP) break;
+  }
+  attachChunks(merged);
+  for (let i = merged.length - 1; i >= 0; i--) if (!merged[i].text) merged.splice(i, 1);  // 空正文进重排只会占预算
+  for (const r of merged) { r.score = r.sem; r.fts = 0; }  // 下游统一读 score/rerank，这里把余弦接进去
+  if (!merged.length) {
+    const empty = { routed_books: [], considered: considered.sort((a, b) => b.best_sim - a.best_sim), results: [] };
+    if (skipped.length) empty.skipped_books = skipped;
+    return empty;
   }
 
-  // ---------- 第二段：一次统一重排（跨书同尺，这是新口径的核心） ----------
+  // ---------- 第三段：一次统一重排（跨书同尺，这是新口径的核心） ----------
   if (merged.length > 1) {
     const rerankFn = await getReranker();
     if (rerankFn) {
@@ -435,15 +616,32 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
     }
   }
 
-  // ---------- 按书聚分：书的分数 = 该书最好那条的重排分 ----------
+  // ---------- 有效分：重排分 ×（参考文献条降权） ----------
+  // ref 条只降权不剔除（见 ROUTE_REF_W 注释）：0.554 的参考文献行 ×0.5 后让位给 0.39 的正文答案，
+  // 但用户真问「这篇引了谁」时它还在榜上。
+  for (const r of merged) {
+    const base = r.rerank ?? r.score ?? 0;
+    r.rank = base * (r.kind === "ref" ? ROUTE_REF_W : 1);
+  }
+
+  // ---------- 按书聚分：0.5×该书最好那条的有效分 + 0.5×(书级信号/池内首名信号) ----------
+  // 为什么不是「整本取重排最优」：实测 9 题里简爱会被 pride 抢走（跨语种书名与正文都弱），
+  // 因为重排只看得到入池的那几十条；而书级信号（全块前3余弦均值）是整本尺度的证据，
+  // 两者各占一半时 9/9 全对（book-pick.mjs：纯重排 8/9、纯信号 8/9、0.5/0.5 与 0.6/0.4 均 9/9）。
+  const sigOf = new Map(scanned.map(s => [s.b.id, s.sig]));
+  const sigMax = Math.max(scanned.length ? scanned[0].sig : 0, 1e-9);
   const byBook = new Map();
   for (const r of merged) {
-    const s = r.rerank ?? r.score ?? 0;
+    const s = r.rank;
     const cur = byBook.get(r.bookId);
     if (!cur) byBook.set(r.bookId, { book: r.book, bookId: r.bookId, best: s, hits: 1, items: [r] });
     else { cur.hits++; cur.items.push(r); if (s > cur.best) cur.best = s; }
   }
-  const ranked = [...byBook.values()].sort((a, b) => b.best - a.best);
+  for (const v of byBook.values()) {
+    const sig = Math.max(0, sigOf.get(v.bookId) ?? 0) / sigMax;
+    v.bookScore = 0.5 * v.best + 0.5 * Math.min(1, sig);  // 书分只用于「挑书排序」，不冒充结果相关度
+  }
+  const ranked = [...byBook.values()].sort((a, b) => b.bookScore - a.bookScore);
 
   // 入选规则：书分 ≥ 首名×ROUTE_FLOOR_RATIO（不硬凑满 maxBooks——问「孟子讲了什么」时
   // 简爱/福尔摩斯的 0.27 分只是重排器的噪声底，列进"翻了 4 本书"只会让用户困惑）。
@@ -452,23 +650,29 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
   // 就是这样把唯一的好书挡掉的。唯一的绝对条件是 best > 0：0 分代表这书根本没召回（未灌
   // 向量/空库），必须排除（graphrag-fuzz:112 钉着 considered[0].best_sim===0 且 routed 为空）。
   // maxBooks=0 直通空（graphrag-fuzz:551 钉着 lib 层这个语义，工具层用 clampMaxBooks 归一）
-  const top = ranked[0];
-  const floor = top && top.best > 0 ? top.best * ROUTE_FLOOR_RATIO : Infinity;
+  const bestMax = Math.max(0, ...[...byBook.values()].map(v => v.best));
+  const floor = bestMax > 0 ? bestMax * ROUTE_FLOOR_RATIO : Infinity;
   const picked = maxBooks > 0 ? ranked.filter(b => b.best > 0 && b.best >= floor).slice(0, maxBooks) : [];
 
-  // ---------- 结果：入选书的候选块按重排分统一排序取 topN ----------
+  // ---------- 结果：先按入选书的书分次序，书内再按有效分排 ----------
+  // 为什么不是「全池按重排分排」：书分已经把简爱排到第 1 时，若结果还让 pride 的 0.1506 占着
+  // 第一屏，用户看到的就是「说翻了简爱，给的却是傲慢与偏见」。书序即答案序才对得上。
   const pickedIds = new Set(picked.map(p => p.bookId));
+  const order = new Map(picked.map((p, i) => [p.bookId, i]));
   const results = merged
     .filter(r => pickedIds.has(r.bookId))
-    .sort((a, b) => ((b.rerank ?? b.score ?? 0) - (a.rerank ?? a.score ?? 0)))
+    .sort((a, b) => (order.get(a.bookId) - order.get(b.bookId)) || ((b.rank ?? 0) - (a.rank ?? 0)))
     // bookId/id 是桌面端引用跳转要的直通字段（纯加法，不碰排序与打分）
     .slice(0, topN)
+    // score 仍报真实重排分（rank 只是内部排位用的降权分，不对外冒充相关度）
     .map(r => ({ book: r.book, bookId: r.bookId, id: r.id, loc: r.loc, chapterPath: r.chapterPath ?? null, score: r.rerank ?? r.score, fts: r.fts, sem: r.sem, rerank: r.rerank, text: r.text }));
 
   const out = {
-    // best_sim 语义变了：从「余弦最大值」变成「该书最好那条的统一重排分」（0~1，跨书可比）
+    // best_sim 语义变了：从「余弦最大值」变成「该书书分」（0.5×最好那条有效分 + 0.5×归一化书级信号）。
+    // 必须报书分而不是重排分：挑书排序用的是书分，报重排分会出现「排第一的书分数比第二低」
+    // （实测问简爱时 routed_books 显示成 简爱 0.117 | pride 0.151，用户必然困惑）。
     // id 是纯加法直通字段：UI 要靠它把「你问的是哪本」的候选做成可点的按钮（点了走单书问答）
-    routed_books: picked.map(b => ({ id: b.bookId, title: b.book, best_sim: +Number(b.best).toFixed(3) })),
+    routed_books: picked.map(b => ({ id: b.bookId, title: b.book, best_sim: +Number(Math.min(1, b.bookScore)).toFixed(3) })),
     considered: considered.sort((a, b) => b.best_sim - a.best_sim),
     results,
   };

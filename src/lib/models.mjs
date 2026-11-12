@@ -31,7 +31,15 @@ export const EMBED_MODELS = {
   e5: { id: "Xenova/multilingual-e5-small", dtype: "int8", pooling: "mean", dim: 384, queryPrefix: "query: ", passagePrefix: "passage: ", simThreshold: 0.72, routeFloor: 0.7 },
   "zh-small": { id: "Xenova/bge-small-zh-v1.5", dtype: "q8", pooling: "cls", dim: 512, queryPrefix: "", passagePrefix: "", simThreshold: 0.5, routeFloor: 0.3 },
 };
-export const DEFAULT_EMBED = process.env.BSP_EMBED_MODEL || "e5";
+// 默认引擎 m3（bge-m3，1024 维）：按实测在这里定，不是因为「越大越好」。
+// 决定性对照（13 本书库、8 道题、同一套路由与重排）：
+//   中文问 × 英文书这种跨语言对，e5-small 的答案块在自家书内排到第 55 名（简爱 1861 块里），
+//   把召回窗口开到 10 条也捞不到；bge-m3 同一对排第 1 名。e5 上这是「扩池也救不回来」的硬伤。
+// 代价只有建库侧：批量编码 m3 是 86.2ms/块、e5 是 11.2ms/块（7.7 倍），
+//   但查询侧只编码 1 条问题：m3 21.8ms、e5 6.8ms，差 15ms，用户感知不到。
+//   模型体积 m3 542.1MB vs e5 112.6MB —— 这是唯一真金白银的代价，已计入本地模型总账。
+// 回退：BSP_EMBED_MODEL=e5（旧库在 library.bak-e5/，拷回来即可）。
+export const DEFAULT_EMBED = process.env.BSP_EMBED_MODEL || "m3";
 
 let _tf = null, _pipe = null, _pipeKey = null, _rerank = null;
 

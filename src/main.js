@@ -29,7 +29,31 @@ function createWindow() {
   });
 }
 
+// 随包 MinerU 运行时就绪（仅打包态）——必须在 engine.init 之前，因为解析层在读
+// BSP_MINERU_* 决定走 MinerU 还是回落 legacy。失败不阻断启动：导入 PDF 时解析层会
+// 探活失败并回落 legacy，用户仍能导入，只是没有结构化能力（比白屏好）。
+async function bootMineru() {
+  if (!app.isPackaged) return null; // dev 态用本机 ~/.mineru 正本，不抢
+  try {
+    const rt = await import(pathToFileURL(path.join(__dirname, "desktop", "mineru-runtime.mjs")).href);
+    const check = rt.mineruRuntimeReady(process.resourcesPath);
+    if (!check.ready) {
+      console.warn("[mineru] 随包运行时不完整，跳过：", check.missing.join(" ; "));
+      return null;
+    }
+    const r = await rt.prepareMineru(process.resourcesPath, app.getPath("userData"), {
+      log: (m) => console.log("[mineru-runtime]", m),
+    });
+    Object.assign(process.env, r.env);
+    return r;
+  } catch (e) {
+    console.error("[mineru] 随包运行时就绪失败，回落 legacy 解析：", e?.message || e);
+    return null;
+  }
+}
+
 async function boot() {
+  const mineruRuntime = await bootMineru();
   const { registerIpc } = await import(pathToFileURL(path.join(__dirname, "desktop", "ipc.mjs")).href);
   const engine = await registerIpc({ ipcMain, app, dialog, shell, getWin: () => win });
   // 引擎初始化（三层目录解析 → 注入 lib）；模型下载进度 → 渲染进程。
@@ -68,7 +92,7 @@ async function boot() {
   // handler 懒取 libDir（用户点击时才触发，彼时目录已解析）——protocol.handle 在 whenReady 后注册
   const { createAssetProtocol } = await import(pathToFileURL(path.join(__dirname, "desktop", "book-view.mjs")).href);
   protocol.handle("book", createAssetProtocol());
-  return { engine, jobs, enrichJob };
+  return { engine, jobs, enrichJob, mineruRuntime };
 }
 
 app.whenReady().then(async () => {

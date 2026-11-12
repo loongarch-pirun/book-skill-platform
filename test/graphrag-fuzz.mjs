@@ -72,6 +72,11 @@ function makeDb(libDir, name, { chunks = [], nodes = [], edges = [], fts = true,
 // 真库只读拷贝（破坏性实验全在副本上；原件永不触碰）
 const PP_DB = path.join(ROOT, "library", "pride-and-prejudice-en.epub.db");
 const MZ_DB = path.join(ROOT, "library", "mengzi-zh.docx.db");
+// 编目层用的底座：主 library 已于 2026-11-13 换成 m3 口径重建，pride 那本只剩原文与向量，
+// 没有 LLM 编目（生成编目要云端 key，且块边界变了旧任务书会错位），所以 W1-D1 这类
+// 依赖 nodes/ref.mention_count 的断言改读 test/fixtures/library 下那份带编目的只读副本。
+// 注意：只给编目断言用；embed/routeAndSearch 相关用例仍必须用 PP_DB（与默认引擎同口径）。
+const PP_CAT_DB = path.join(__dirname, "fixtures", "library", "pride-and-prejudice-en.epub.db");
 function copyBook(src, tag) {
   const { tmp, lib } = mkTmp(tag);
   const dst = path.join(lib, path.basename(src));
@@ -265,8 +270,8 @@ console.log("\n--- W1 实体链接对抗 ---");
     "S2T_MAP 只有简→繁单向：问题繁体「齊宣王」对书内简体 match_names 两形都不中；真库中文书均为繁体（孟子/道德经），影响面=简体自建书+繁体提问组合");
   safeRm(t7);
 
-  // —— 真库 sanity：命中 factor = IDF 衰减公式复算 ——
-  const ppW1 = new Database(PP_DB, { readonly: true });
+  // —— 真库 sanity：命中 factor = IDF 衰减公式复算（走带 LLM 编目的夹具，主库无编目） ——
+  const ppW1 = new Database(PP_CAT_DB, { readonly: true });
   const hitReal = linkEntities(ppW1, "what does darcy say about pride");
   const mDarcy = hitReal.find(x => /Darcy/.test(x.name));
   let factorOk = false;

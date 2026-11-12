@@ -192,6 +192,48 @@ const chapterPathOf = (stack) => {
   return parts.length ? parts.join(" › ") : null;
 };
 
+// ---------- 非 PDF：段落合并成语义单元 ----------
+// PDF 走 mineru 的 blocksToUnits（有 bbox/seq 可依），epub/docx/md/txt 手里只有
+// 段落序列，能用的信号是「章节边界 + 段落长度」。碎片（对话行、诗歌行、列表项、
+// 单句段落）在单段落粒度上被切成 20~50 字的小块；实测 e5-small(int8) 对短文本
+// 系统性给高分（log(长度) 与余弦 Pearson r=-0.18，n=95000），这些碎片永远排在
+// 正文前面、把答案块挤出召回窗。规则只有两条：
+//   ① 只在同一章内合并——章节边界是作者给的语义边界，跨章合并会把两章的话
+//      糊进同一个引用；
+//   ② 累积到 UNIT_TARGET 停药，硬上限 UNIT_MAX 与 sentenceSplit 同标尺（900），
+//      保证单块仍能整段喂给模型、也仍能 sentenceSplit 再切。
+// 标题（epub 的 h1-6）并入其后正文首行——与 PDF 的 R1 同口径。标题单独成块
+// 只会得到 20~40 字的纯标签块（没有答案），正是要消灭的碎片。docx/md 两路
+// 的标题是章节名、已在调用方被剔除，走不到这里。
+const UNIT_TARGET_PARAS = 400;
+const UNIT_MAX_PARAS = 900;
+function packParagraphs(list) {
+  const out = [];
+  let buf = null;
+  let pendingHeading = null;
+  const flush = () => { if (buf) { out.push({ text: buf, kind: "text" }); buf = null; } };
+  for (const p of list) {
+    if (p.heading) {
+      flush();
+      // 连续多个标题（卷/章连排）只留最后一个当本段前缀，前面的各自独立成块，
+      // 免得把两个标题串成一个假句
+      if (pendingHeading) out.push({ text: pendingHeading, kind: "heading" });
+      pendingHeading = p.text;
+      continue;
+    }
+    const cand = pendingHeading ? pendingHeading + "\n" + p.text : p.text;
+    pendingHeading = null;
+    if (!buf) { buf = cand; continue; }
+    if (buf.length >= UNIT_TARGET_PARAS || (buf.length + 1 + cand.length) > UNIT_MAX_PARAS) {
+      flush(); buf = cand; continue;
+    }
+    buf += "\n" + cand;
+  }
+  flush();
+  if (pendingHeading) out.push({ text: pendingHeading, kind: "heading" });  // 末尾孤立标题不吞
+  return out;
+}
+
 // ---------- PDF：按页提取，识别重复页眉页脚 ----------
 // 双栏论文重排：扫描中部候选栏界，选「跨越项最少且左右份额均衡」的位置 → 按「通栏行 + 左栏 + 右栏」阅读序重组。
 // 单栏页行文通宽，任何中部栏界都有大量项跨越 → 检测不触发，走原同行 x 序拼接路径，行为零变化
@@ -431,7 +473,10 @@ async function parsePdf(file) {
   if (mode === "legacy") return parsePdfLegacy(file);
 
   const M = await import("./lib/mineru.mjs");
-  const usable = M.mineruAvailable();
+  // 两道判据：配过（home/doclib 在）不等于能跑。服务没起时 CLI 会抛
+  // ServerNotRunningError（纯 HTTP 客户端），比回落 legacy 更糟，所以真探一次活。
+  const configured = M.mineruAvailable();
+  const usable = configured && await M.mineruReachable();
   const route = await routePdf(file);
 
   // R13 兜底：探针算不出可信数字（0 页）就不该再花钱跑 MinerU——实测 0 页 PDF 走 MinerU
@@ -523,10 +568,11 @@ function parseEpub(file) {
     if (!kept.length) continue;
     chapterNo++;
     const chapter = f.title || `章节 ${chapterNo}`;
-    // 长段落也要过 sentenceSplit（900 字上限）：单个大段落直接入块会让向量质量和 FTS 定位双输
-    for (const p of kept)
+    // 先把本章段落并成语义单元（标题并入正文首行，短段打包到 400 字），
+    // 再过 sentenceSplit（900 字上限）：单个大段落直接入块会让向量质量和 FTS 定位双输
+    for (const p of packParagraphs(kept))
       for (const seg of sentenceSplit(p.text))
-        chunks.push({ chapter, page: null, text: seg, seq: ++seq, kind: p.heading ? "heading" : "text" });
+        chunks.push({ chapter, page: null, text: seg, seq: ++seq, kind: p.kind });
   }
   return { format: "epub", chapters: chapterNo, chunks, cleanedJunk: [...runningJunk] };
 }
@@ -587,6 +633,17 @@ async function parseDocx(file) {
   let seq = 0;
   // P3-② 章节层级：docx 按 h1-h6 标签层级入栈；扁平 chapter 行为逐字不变
   let pathStack = [];
+  // 三段式：先给每个正文段落定章（chapter 变则不能合并，见 packParagraphs 规则①），
+  // 再按「同章连续正文」打包成语义单元，最后逐单元过 sentenceSplit。
+  // 表格是打包的硬边界：整表块必须原样入块、不被前后正文吞并。
+  const runs = [];      // [{ kind:"text", chapter, chapter_path, texts:[...] } | { kind:"table", chapter, chapter_path, it }]
+  let runKey = null;
+  const pushText = (text) => {
+    const cp = chapterPathOf(pathStack);
+    const key = chapter + "\u0000" + cp;
+    if (runKey !== key) { runs.push({ kind: "text", chapter, chapter_path: cp, texts: [] }); runKey = key; }
+    runs[runs.length - 1].texts.push(text);
+  };
   for (const it of slicedItems) {
     if (it.heading) { chapterNo++; chapter = it.text; pathStack = [it.text]; continue; }
     if (/^h[1-6]$/.test(it.tag)) {
@@ -601,10 +658,22 @@ async function parseDocx(file) {
     // P3-①：整表块原样进块（不过 sentenceSplit——行内的句号不该把表格切碎）。
     // 首行的「第X章」匹配仍生效（与旧行为对齐）；行内不再切章（旧行为把表内
     // 文字误读成章节标记，合并后消失——这是修复不是回归）。
-    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, seq: ++seq, kind: it.table_html ? "table" : "text", ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
-    // 长段落也要过 sentenceSplit（同 epub，900 字上限）
-    for (const seg of sentenceSplit(it.text))
-      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg, seq: ++seq, kind: "text" });
+    if (it.fromTable) {
+      runs.push({ kind: "table", chapter, chapter_path: chapterPathOf(pathStack), it });
+      runKey = null;   // 表格切断当前正文串：前后正文不可跨表合并
+      continue;
+    }
+    pushText(it.text);
+  }
+  for (const r of runs) {
+    if (r.kind === "table") {
+      const it = r.it;
+      chunks.push({ chapter: r.chapter, chapter_path: r.chapter_path, page: null, text: it.text, seq: ++seq, kind: it.table_html ? "table" : "text", ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) });
+      continue;
+    }
+    for (const u of packParagraphs(r.texts.map(text => ({ text }))))
+      for (const seg of sentenceSplit(u.text))
+        chunks.push({ chapter: r.chapter, chapter_path: r.chapter_path, page: null, text: seg, seq: ++seq, kind: "text" });
   }
   return { format: "docx", chapters: chapterNo, chunks, cleanedJunk: [], tableStats };
 }
@@ -726,6 +795,16 @@ function itemsToChunks(items, fileRanges) {
   // P3-② 章节层级：pathStack 维护「卷 › 章 › 节」栈（md 按 # 层级）；
   // 扁平 chapter 行为逐字不变（chapter 仍是叶节点名），chapter_path 是新增字段
   let pathStack = [];
+  // 与 docx 同构的三段式：先按「章 + 表」把正文切成连续串，再逐串打包成
+  // 语义单元。标题在这条路上是章节名（不并入正文，与 md 目录书的 h 语义一致）。
+  const runs = [];
+  let runKey = null;
+  const pushText = (text) => {
+    const cp = chapterPathOf(pathStack);
+    const key = chapter + "\u0000" + cp;
+    if (runKey !== key) { runs.push({ kind: "text", chapter, chapter_path: cp, texts: [] }); runKey = key; }
+    runs[runs.length - 1].texts.push(text);
+  };
   for (const it of slicedItems) {
     if (it.tag === "h" || it.heading) {
       chapterNo++; chapter = it.text;
@@ -737,9 +816,22 @@ function itemsToChunks(items, fileRanges) {
       continue;
     }
     // P3-①：整表块原样进块（不过 sentenceSplit——行内句号不切表）
-    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, seq: ++seq, kind: it.table_html ? "table" : "text", ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
-    for (const seg of sentenceSplit(it.text))
-      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg, seq: ++seq, kind: "text" });
+    if (it.fromTable) {
+      runs.push({ kind: "table", chapter, chapter_path: chapterPathOf(pathStack), it });
+      runKey = null;   // 表格切断正文串
+      continue;
+    }
+    pushText(it.text);
+  }
+  for (const r of runs) {
+    if (r.kind === "table") {
+      const it = r.it;
+      chunks.push({ chapter: r.chapter, chapter_path: r.chapter_path, page: null, text: it.text, seq: ++seq, kind: it.table_html ? "table" : "text", ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) });
+      continue;
+    }
+    for (const u of packParagraphs(r.texts.map(text => ({ text }))))
+      for (const seg of sentenceSplit(u.text))
+        chunks.push({ chapter: r.chapter, chapter_path: r.chapter_path, page: null, text: seg, seq: ++seq, kind: "text" });
   }
   return { chunks, tableStats, chapterNo };
 }

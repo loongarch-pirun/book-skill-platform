@@ -12,7 +12,11 @@ import { generateSkillScaffold } from "../src/lib/catalog-skill.mjs";
 let failed = 0;
 const assert = (cond, msg) => { console.log((cond ? "PASS" : "FAIL") + " - " + msg); if (!cond) failed++; };
 
-const LIB = path.join(import.meta.dirname, "..", "library");
+// 编目验收要的是「已灌 LLM 编目」的库；2026-11-13 全库换 m3 引擎重建后，
+// 主 library 里的 pride 是新切的块、没有编目数据（catalog_model 为空、theme_vecs 0 行），
+// 拿它跑这条测试测的就不是编目层了。所以把带完整编目的那份 e5 库当只读夹具挪进
+// test/fixtures/library/（7.5MB，只读不写，回滚演练仍在系统临时目录的副本上做）。
+const LIB = path.join(import.meta.dirname, "fixtures", "library");
 const ppDb = path.join(LIB, "pride-and-prejudice-en.epub.db");
 const db = new Database(ppDb, { readonly: true });
 
@@ -109,7 +113,7 @@ assert(now.n === +meta.catalog_chunk_count && now.b === +meta.catalog_text_bytes
 
 // 7b) 骨架自动生成（技能×编目融合 P-B）：章节表/主题/人物全从库里查出——查出来的是真值，手写的才吹牛
 const realChapters = db.prepare("SELECT COUNT(*) n FROM chunks WHERE chapter IS NOT NULL AND chapter != '' GROUP BY chapter").all().length;
-const scaf = generateSkillScaffold("pride");
+const scaf = generateSkillScaffold("pride", { libDir: LIB });
 assert(scaf.cataloged === true && scaf.chunks_total === +meta.chunk_count && scaf.chapters_total === realChapters,
   `骨架: ${scaf.chapters_total} 章 / ${scaf.chunks_total} 块 == 库里实际值（真值，不靠手写）`);
 const cat = JSON.parse(scaf.files.find(f => f.path === "catalog.json").content);
@@ -125,7 +129,7 @@ const scafMd = scaf.files.find(f => f.path === "SKILL.md").content;
 assert(scafMd.includes("sources:") && scafMd.includes(scaf.book_id), "骨架 SKILL.md: frontmatter sources 填真值");
 assert(!/ch\d{2}-[a-z0-9-]+\.md/.test(scafMd),
   "骨架 SKILL.md: 章节表不写 .md 文件名（否则撞 coverageCheck 的 broken-reference 校验——文件名只在 catalog.json 里）");
-const scafMiss = generateSkillScaffold("不存在的书");
+const scafMiss = generateSkillScaffold("不存在的书", { libDir: LIB });
 assert(scafMiss.error === "book-not-found" && Array.isArray(scafMiss.available), "骨架: 书名未命中返回错误 + 书目清单");
 
 // 7c) 人物深查（P-D）：卡罗琳——身份/书中写法/关系边/提到她代表原文块
