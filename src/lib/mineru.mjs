@@ -15,13 +15,19 @@
 //
 // 本模块只做「取产物 + 转块」，不写库、不碰 DDL（那是建库官的域）。
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 import { spawn } from "node:child_process";
 
 // 默认取值全部可用环境变量覆盖：产品化时装包路径会变，代码里不写死一处
 export function mineruConfig(env = process.env) {
-  const home = env.BSP_MINERU_HOME || env.MINERU_HOME || "";
+  // home 探测链（按优先级）：显式环境变量 → 用户约定的默认目录 ~/.mineru。
+  // 为什么要有第 3 档：不设环境变量时 home 为空串，mineruAvailable() 直接 false，
+  // parsePdf 会静默回落 pdfjs 文字流（build-book.js:436-444 的 legacy 分支）——
+  // 解析层等于白换，而且用户看不到任何报错。这档只负责「去常见位置找」，
+  // 找没找到仍由 mineruAvailable() 的 doclib 存在性判定，判定逻辑一行不动。
+  const home = env.BSP_MINERU_HOME || env.MINERU_HOME || path.join(os.homedir(), ".mineru");
   const python = env.BSP_MINERU_PYTHON || "python";
   const tier = env.BSP_MINERU_TIER || "basic";   // 本轮只认 basic，不加载 VLM
   const timeoutMs = Number(env.BSP_MINERU_TIMEOUT_MS || 30 * 60 * 1000);
