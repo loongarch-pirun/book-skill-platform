@@ -432,6 +432,22 @@ async function parsePdf(file) {
   const usable = M.mineruAvailable();
   const route = await routePdf(file);
 
+  // R13 兜底：探针算不出可信数字（0 页）就不该再花钱跑 MinerU——实测 0 页 PDF 走 MinerU
+  // 会以 "Failed to load document" 失败，台账记成 parse_failed，把「判定不出」和「解析失败」
+  // 混成一类，下次没人知道该修阈值还是该查文件。必须在分流前短路。
+  if (route.route === "needs_calibration") {
+    return {
+      format: "pdf",
+      engine: "none",
+      numPages: 0,
+      chunks: [],
+      cleanedJunk: [],
+      route: route.route,
+      routeReason: route.routeReason,
+      routeAnnotations: route.routeAnnotations,
+    };
+  }
+
   if (mode === "mineru") {
     if (!usable) throw new Error("BSP_PDF_ENGINE=mineru 但 MinerU 不可用：未设 MINERU_HOME 或其下无 doclib 目录");
     return parsePdfStructured(file, route);
