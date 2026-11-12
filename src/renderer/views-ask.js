@@ -49,9 +49,18 @@ function askResultHtml(r) {
   const routed = r.mode === "library"
     ? `<div class="routed-note">引擎自动翻了 ${r.routed_books?.length || 0} 本书：${(r.routed_books || []).map((b) => esc(b.title)).join("、") || "（没有足够相关的书）"}</div>`
     : "";
+  // 歧义提示（P1）：问句没点名（「这篇论文/这本书」）且多本书分数咬得紧时，别赌一本答错——
+  // 把候选书直接摆出来让用户点，点了走「问这本书」，答案立刻变准。
+  // 实测依据：13 本书上无论怎么调参，「这篇论文的作者是谁」的冠军永远是英文小说的 Author 页
+  //（简爱 BY THE AUTHOR / 福尔摩斯 Author: Arthur Conan Doyle），真正要问的那本只能排到 4~9 名。
+  const cands = (r.routed_books || []).filter((b) => b.id).slice(0, 4);
+  const ambiguous = r.mode === "library" && r.ambiguous && cands.length >= 2
+    ? `<div class="routed-note">你问的是哪一本？点一下我再按那本重答（不点就按上面排在首位的书答）：
+        ${cands.map((b) => `<button class="ghost sm" data-action="pickbook" data-bid="${esc(b.id)}">${esc(b.title)}</button>`).join(" ")}</div>`
+    : "";
   const skill = r.skill ? skillCtxHtml(r.skill) : "";
-  if (!r.results?.length) return routed + skill + '<div class="empty">没有检索到相关内容</div>';
-  return routed + skill + cloudAnswerHtml(r) + `<div class="results">${r.results.map((x) => `
+  if (!r.results?.length) return routed + ambiguous + skill + '<div class="empty">没有检索到相关内容</div>';
+  return routed + ambiguous + skill + cloudAnswerHtml(r) + `<div class="results">${r.results.map((x) => `
     <div class="result">
       <div class="rhead">
         <span class="rbook">${esc(x.book || "")}</span>
@@ -330,6 +339,15 @@ export function bindAskEvents() {
       const q = el.dataset.q || "";
       const box = $("#askQ");
       if (box) box.value = q;
+      submitAsk();
+    }
+    else if (act === "pickbook") {
+      // 「你问的是哪本？」点候选书 → 切到单书模式，用同一个问题重答（答案立刻准）
+      const bid = el.dataset.bid;
+      if (!bid) return;
+      state.ask.mode = "book";
+      state.ask.bookId = bid;
+      refresh();
       submitAsk();
     }
     else if (act === "clsummary") {

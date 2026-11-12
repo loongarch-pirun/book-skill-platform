@@ -68,10 +68,17 @@ assert(qb3R.results?.length >= 1 && /lunyu|论语/.test(qb3R.book) && qb3R.note,
 const ql = await client.callTool({ name: "query_library", arguments: { question: "和朋友相处要讲信用", topN: 3 } });
 const qlR = JSON.parse(ql.content[0].text);
 const routedTitles = qlR.routed_books.map(b => b.title);
+// 2026-11-13 路由改两段式后：挑书本数不再由「默认窗口 4」决定，而由「书分 ≥ 首名×0.3」决定
+// （旧口径 maximum-cosine + 0.85 相对闸门，默认 4 本是为对抗 kk 效应硬调出来的）。
+// 新判据改成三条可翻转的真契约：①论语必须在清单里；②不许混进英文书；
+// ③每本入选书的分都不低于首名×0.3（把 ROUTE_FLOOR_RATIO 调成 0 会立刻破这条）。
+// 本数上限仍是默认窗口 4，超了同样算破契约。
+const qFloor = qlR.routed_books.length ? Math.max(...qlR.routed_books.map(b => b.best_sim)) : 0;
 assert(qlR.routed_books.length >= 1 && /lunyu|论语/.test(routedTitles.join(","))
   && routedTitles.every(t => !/frankenstein|attention|prejudice/i.test(t))
-  && qlR.routed_books.length === 4,
-  `query_library 自动挑书: ${qlR.routed_books.map(b => b.title + "(" + b.best_sim + ")").join(", ")}`);
+  && qlR.routed_books.length <= 4
+  && qlR.routed_books.every(b => b.best_sim >= qFloor * 0.3 - 1e-6),
+  `query_library 自动挑书: ${qlR.routed_books.map(b => b.title + "(" + b.best_sim + ")").join(", ")}（入选门槛=${(qFloor * 0.3).toFixed(3)}）`);
 assert(qlR.results.length >= 1 && qlR.results.every(r => r.book && r.loc !== undefined), `总入口结果带书的归属 + 定位`);
 
 // 4b. 英文问题路由到英文书
