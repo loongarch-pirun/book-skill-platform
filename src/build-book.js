@@ -1063,6 +1063,26 @@ function buildDb(file, outPath, parsed) {
     if (parsed.files) setMeta.run("md_files", String(parsed.files));
     if (parsed.droppedCode) setMeta.run("dropped_code", String(parsed.droppedCode));
     if (parsed.struct) setMeta.run("struct_report", JSON.stringify(parsed.struct));
+    // 判定表落账（R12/R3/R4）：走了哪条路、什么理由、哪个引擎、OCR 之后够不够，
+    // 必须进书库，不能只留在控制台那几行日志里。
+    // 修的是真 bug：parsePdfStructured 早就返回 structReport（含 needs_vlm），但 buildDb
+    // 从没读过它，于是「R4 第二步仍不足 → 标 needs_vlm」只存在于日志、库里查不到
+    // （2026-11-12 12:59 实测：13 本 PDF 库 meta 里一个 route/needs_vlm 键都没有）。
+    // 不并进 struct_report：那个键的字段集被 structurize-test.mjs:312/351 逐字全等断言，
+    // 塞新键会把清洗账的回归测试弄红。非 PDF 不写这个键（meta 保持原样）。
+    if (parsed.route || parsed.structReport) {
+      setMeta.run("parse_report", JSON.stringify({
+        route: parsed.route ?? null,
+        route_reason: parsed.routeReason ?? null,
+        engine: parsed.engine ?? null,
+        ocr_assess: parsed.ocrAssess ?? null,
+        blocks_with_bbox: parsed.structReport?.with_bbox ?? null,
+        blocks_tables: parsed.structReport?.tables ?? null,
+        blocks_equations: parsed.structReport?.equations ?? null,
+        blocks_images: parsed.structReport?.images ?? null,
+        needs_vlm: parsed.structReport?.needs_vlm ?? null,
+      }));
+    }
     if (parsed.tableStats) setMeta.run("table_stats", JSON.stringify(parsed.tableStats));
     // R11：语种按块判定后的整书聚合标签。search.mjs:85 直接读 meta.lang，读不到才现场抽样。
     // 只写标记，不改路径、不改正文。
