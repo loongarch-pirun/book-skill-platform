@@ -23,9 +23,16 @@ import path from "node:path";
 //   re     命中即丢的正则（字符串，便于外部 JSON 覆盖）
 //   flags  正则 flags，默认 "iu"
 //   scope  "text" 只测块正文；"block_type" 测块的 block_type 列
+//   unless 命中这条正则的块**不丢**（保留）。用于「同一形状里混着真内容」的场景：
+//          署名行和纯联系行都带邮箱，但署名行载着作者身份，丢了就问不出来作者是谁。
 //   note   为什么这条算脏（写给人看，接线时能自己判断该不该开）
 //   enabled 默认是否启用
 // ---------------------------------------------------------------------------
+// 人名对识别（供 unless 用）：「Firstname Lastname」这种相邻两个大写词。
+// 为什么不能只靠「有大写词」：单位名（Google Brain / University of Toronto）也是大写词，
+// 必须把单位常用词排除掉，剩下的才算人名。这张表是数据，可按需加词。
+const ORG_WORDS = "(?:Google|Brain|Research|University|Institute|Department|Laboratory|Lab|College|School|Academy|Center|Centre|Inc|Ltd|Corp|Corporation|Company|Group|Team|Division|Foundation|Society|Association|Laboratories|Universidad|Università|Universität)";
+const PERSON_PAIR = `\\b(?!(?:${ORG_WORDS})\\b)[A-Z][\\p{L}'’.\\-]{1,20}\\s+(?!(?:${ORG_WORDS})\\b)[A-Z][\\p{L}'’.\\-]{1,20}\\b`;
 export const DEFAULT_RULES = [
   {
     id: "arxiv_id",
@@ -47,7 +54,11 @@ export const DEFAULT_RULES = [
     enabled: true,
     scope: "text",
     re: "[\\w.+-]+@[\\w-]+\\.[\\w.]{2,}",
-    note: "作者联系邮箱行。实测 attention 命中 8 块（每位作者一行），整段检索会被邮箱刷屏。",
+    // unless：署名行不能丢。实测（CP2 对照抓到）attention 的 8 块「作者姓名 + 单位 + 邮箱」被整块
+    // 丢掉后，问「这篇论文的作者是谁」前 3 条全是参考文献——比不过滤更糟。所以：
+    // 同时出现「人名声对」的邮箱块＝署名，保留；只有邮箱没有名字的才是联系行垃圾。
+    unless: PERSON_PAIR,
+    note: "纯联系邮箱行（无署名的邮箱清单）。带姓名的署名行由 unless 放行——那份行载着作者身份，丢了就问不出作者是谁。",
   },
   {
     id: "contribution_footnote",
@@ -127,6 +138,13 @@ export function compileRules(rules) {
     .filter(Boolean);
 }
 
+// unless：命中保留正则的块不丢。编译期一并处理，缺省无这项。
+const withUnless = (r) => {
+  if (!r.unless) return r;
+  try { return { ...r, unlessRe: new RegExp(r.unless, r.flags || "iu") }; }
+  catch (e) { console.error(`⚠ 规则 ${r.id} 的 unless 正则非法，本次当成没有保留项：${e.message}`); return r; }
+};
+
 const fieldOf = (c, scope) => (scope === "block_type" ? String(c.block_type ?? "") : String(c.text ?? ""));
 
 // 编译期把「块首命中」翻译成正则锚定，而不是在匹配时偷偷截断文本——
@@ -140,7 +158,7 @@ export function filterNoiseChunks(chunks, { rules, source = "builtin", off = fal
   const list = Array.isArray(chunks) ? chunks : [];
   if (off) return { chunks: list, report: { off: true, total: list.length, dropped: 0, byRule: {}, source } };
 
-  const compiled = compileRules(rules || DEFAULT_RULES).map(anchored);
+  const compiled = compileRules(rules || DEFAULT_RULES).map(anchored).map(withUnless);
   if (!compiled.length) return { chunks: list, report: { total: list.length, dropped: 0, byRule: {}, source } };
 
   const kept = [];
@@ -158,6 +176,8 @@ export function filterNoiseChunks(chunks, { rules, source = "builtin", off = fal
       if (!v) continue;
       // maxChars：给规则加长度上限（页脚规则专用），长块不受该规则管——防「整类丢」把正文挖空
       if (r.maxChars && String(c.text ?? "").length > r.maxChars) continue;
+      // unless：这一条虽然命中，但它同时具备 should-keep 的特征（如邮箱行里带着作者姓名）→ 放行
+      if (r.unlessRe && r.unlessRe.test(v)) continue;
       // whole=true 表示「整块就是这类垃圾」（如纯 arXiv 号行），用锚定正则；
       // 否则「块里出现即算」（如邮箱、授权声明句）。
       if (r.whole) {
