@@ -763,6 +763,202 @@ function parseTxt(file) {
   return { format: "txt", chapters: chapterNo, chunks, cleanedJunk: [], droppedCode: 0, files: 1, tableStats, skipped: [] };
 }
 
+// ---------- PPTX（R7）：zip 魔数 + ppt/ 目录；每 slide 按形状成块 ----------
+// 判定表 R7「每 slide 一个块单元，文本+备注分开」。块粒度取「形状」而不是「整页」：
+// 一页里标题形状与正文形状是两类东西，合成一个块会把标题埋进正文的 text stream 里，
+// kind 也没法一页两种值。块文本 = 该形状内各段以 \n 连接（段是 <a:p>，字是 <a:t>）。
+// 位置：page = slide 文件名里的数字（从 1），block_index = 页内块序号（从 0，与 MinerU 同标尺），
+// block_type 用 slide_title / slide_text 标明来源，三者齐了 block_pos.orig_block 才能定位。
+// notesSlides 本轮不解析（设计稿 01:85 已写明），所以备注文字不会出现在块里。
+const PPT_SLIDE_RE = /^ppt\/slides\/slide(\d+)\.xml$/i;
+const PPT_TITLE_PH = new Set(["title", "ctrTitle"]);
+function parsePptx(file) {
+  const zip = new AdmZip(file);   // 非 zip 在这里直接抛错（上游 main 统一接住记账）
+  // 必须按数字升序：字符串序会把 slide10 排到 slide2 前面（12 页以上的书必错）
+  const slides = zip.getEntries()
+    .map(e => ({ entry: e, no: parseInt((PPT_SLIDE_RE.exec(e.entryName) || [])[1] || "", 10) }))
+    .filter(s => Number.isFinite(s.no))
+    .sort((a, b) => a.no - b.no);
+
+  const chunks = [];
+  let seq = 0;
+  let chapterNo = 0;
+  for (const s of slides) {
+    const doc = new DOMParser().parseFromString(zip.readAsText(s.entry), "application/xml");
+    // getElementsByTagName 返回文档顺序 —— 保序靠它，不自己排
+    const shapes = [...doc.getElementsByTagName("p:sp")];
+    const local = [];
+    let title = "";
+    for (const sp of shapes) {
+      const ph = sp.getElementsByTagName("p:ph")[0];
+      // 无 <p:ph> 的形状一律 text：实测「我的书房-项目讲解.pptx」12 页 0 个占位符，
+      // 靠版式猜标题不可靠，只有显式声明了 title/ctrTitle 才算标题。
+      const isTitle = Boolean(ph) && PPT_TITLE_PH.has(String(ph.getAttribute("type") || "").trim());
+      const paras = [];
+      for (const p of sp.getElementsByTagName("a:p")) {
+        const t = collapse([...p.getElementsByTagName("a:t")].map(x => x.textContent || "").join(""));
+        // L1 去噪：纯页码行（"12" / "第 12 页"），与 epub/docx 同一把尺子
+        if (!t || PAGE_ONLY.test(t)) continue;
+        paras.push(t);
+      }
+      if (!paras.length) continue;
+      if (isTitle && !title) title = paras[0];
+      local.push({
+        text: paras.join("\n"),
+        kind: isTitle ? "heading" : "text",
+        block_type: isTitle ? "slide_title" : "slide_text",
+        block_index: local.length,
+      });
+    }
+    if (!local.length) continue;   // 纯图片页/空白页：没有可检文字，不产块
+    chapterNo++;
+    const chapter = title || `幻灯片 ${s.no}`;
+    for (const b of local)
+      chunks.push({
+        chapter, chapter_path: null, page: s.no, text: b.text, seq: ++seq,
+        kind: b.kind, block_type: b.block_type, block_index: b.block_index, bbox: null,
+      });
+  }
+  return { format: "pptx", chapters: chapterNo, chunks, numPages: slides.length, cleanedJunk: [] };
+}
+
+// ---------- XLSX（R8）：zip 魔数 + xl/ 目录；每 sheet 转表块 ----------
+// 判定表 R8「每 sheet 转表块（复用 packTable 的表头重复机制）」：块文本 = 各行以 \n 连接、
+// 行内各格以 " | " 连接（与 docx 的 tableFromHtml 逐字同款），结构原件走 {html,header,rows}
+// 三键——buildDb:888 只认这三个键，另造键等于 table_json 失联。
+// 位置：page = sheet 在 workbook 里的序号（从 1，空 sheet 也占号），block_index = sheet 内块序号（从 0）。
+const xlsxEsc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// 列字母 → 0 基列号（"A"=0，"AA"=26）；单元格靠 r="B3" 定位，不靠出现次序
+const xlsxCol = (ref) => {
+  const m = /^([A-Z]+)/i.exec(String(ref || ""));
+  if (!m) return -1;
+  let n = 0;
+  for (const ch of m[1].toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n - 1;
+};
+// Excel 日期序列号 → YYYY-MM-DD（基准 1899-12-30，实测 46328 = 2026-11-02，与样书手对一致）
+const XLSX_EPOCH_MS = Date.UTC(1899, 11, 30);
+const xlsxSerialDate = (v) => {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return String(v);
+  return new Date(XLSX_EPOCH_MS + Math.round(n * 86400000)).toISOString().slice(0, 10);
+};
+// 内置日期格式号（Excel 规范）+ 自定义 formatCode 含 yy/dd 的（样书 165=y"yyy-mm-dd"）
+const XLSX_BUILTIN_DATE = new Set([14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 28, 29, 30, 31, 34, 35, 36, 45, 46, 47, 50, 57]);
+const xlsxIsDateFmt = (numFmtId, code) =>
+  XLSX_BUILTIN_DATE.has(numFmtId) || (/[ymd]/i.test(String(code || "")) && !/[#0]/.test(String(code || "")));
+function parseXlsx(file) {
+  const zip = new AdmZip(file);
+  const read = (n) => { const e = zip.getEntry(n); return e ? zip.readAsText(e) : null; };
+
+  // 共享字符串（样书没有这个部件，全部 inlineStr —— 两条路都得走）
+  const shared = [];
+  const ssXml = read("xl/sharedStrings.xml");
+  if (ssXml) {
+    const ss = new DOMParser().parseFromString(ssXml, "application/xml");
+    for (const si of ss.getElementsByTagName("si"))
+      shared.push([...si.getElementsByTagName("t")].map(x => x.textContent || "").join(""));
+  }
+
+  // 样式：cellXfs 的 s="N" 是索引，映射到 numFmtId；numFmtId 决定这格是不是日期
+  const styleFmt = [];
+  const stXml = read("xl/styles.xml");
+  if (stXml) {
+    const st = new DOMParser().parseFromString(stXml, "application/xml");
+    const custom = new Map();
+    for (const nf of st.getElementsByTagName("numFmt"))
+      custom.set(parseInt(nf.getAttribute("numFmtId") || "", 10), nf.getAttribute("formatCode") || "");
+    const xfs = st.getElementsByTagName("cellXfs")[0];
+    if (xfs) for (const xf of xfs.getElementsByTagName("xf")) {
+      const id = parseInt(xf.getAttribute("numFmtId") || "0", 10) || 0;
+      styleFmt.push({ id, date: xlsxIsDateFmt(id, custom.get(id)) });
+    }
+  }
+
+  // workbook.xml 的 sheet 顺序 = 展示顺序；r:id 经 workbook.xml.rels 映射到实际部件路径
+  const wbXml = read("xl/workbook.xml");
+  const relXml = read("xl/_rels/workbook.xml.rels");
+  if (!wbXml) throw new Error("xlsx 缺 xl/workbook.xml，不是真正的 xlsx");
+  const wb = new DOMParser().parseFromString(wbXml, "application/xml");
+  const rels = new Map();
+  if (relXml) {
+    const rd = new DOMParser().parseFromString(relXml, "application/xml");
+    for (const r of rd.getElementsByTagName("Relationship"))
+      rels.set(r.getAttribute("Id"), r.getAttribute("Target"));
+  }
+  const sheets = [...wb.getElementsByTagName("sheet")].map((sh, i) => {
+    // xmldom 对 r:id 这种带前缀的属性，getAttribute("r:id") 在部分文件上取不到，兜底扫属性名
+    let rid = sh.getAttribute("r:id") || sh.getAttribute("id") || "";
+    if (!rid) for (const a of sh.attributes || []) if (/:id$/i.test(a.name)) { rid = a.value; break; }
+    let target = rels.get(rid) || "";
+    target = String(target).replace(/^\/+/, "").replace(/^\.\//, "");
+    if (target && !target.startsWith("xl/")) target = "xl/" + target;
+    return { name: sh.getAttribute("name") || `Sheet${i + 1}`, path: target || `xl/worksheets/sheet${i + 1}.xml` };
+  });
+
+  const chunks = [];
+  let seq = 0;
+  sheets.forEach((sheet, idx) => {
+    const xml = read(sheet.path);
+    if (!xml) return;                                  // 部件缺失：跳过，但 page 号仍占位
+    const doc = new DOMParser().parseFromString(xml, "application/xml");
+    const grid = [];
+    for (const row of doc.getElementsByTagName("row")) {
+      const cells = [];
+      for (const c of row.getElementsByTagName("c")) {
+        const col = xlsxCol(c.getAttribute("r"));
+        if (col < 0) continue;
+        const t = c.getAttribute("t") || "n";
+        const vEl = c.getElementsByTagName("v")[0];
+        const raw = vEl ? (vEl.textContent || "") : "";
+        let val = "";
+        if (t === "inlineStr") {
+          const is = c.getElementsByTagName("is")[0];
+          val = is ? [...is.getElementsByTagName("t")].map(x => x.textContent || "").join("") : "";
+        } else if (t === "s") {
+          const si = parseInt(raw, 10);
+          val = Number.isFinite(si) && shared[si] != null ? shared[si] : "";
+        } else if (t === "b") {
+          val = raw === "1" ? "TRUE" : "FALSE";
+        } else if (raw !== "") {
+          const sIdx = parseInt(c.getAttribute("s") || "", 10);
+          const fmt = Number.isFinite(sIdx) ? styleFmt[sIdx] : null;
+          val = fmt && fmt.date ? xlsxSerialDate(raw) : raw;
+        }
+        // 单元格里的 NUL 是 xlsx 常见脏字符（页脚/隐藏列残留），去掉再用；
+        // 用 split/join 而不是正则，免得 eslint no-control-regex 红
+        cells[col] = collapse(String(val).split(String.fromCharCode(0)).join(""));
+      }
+      if (cells.some(v => v && v.length)) grid.push(cells);
+    }
+    if (!grid.length) return;                          // 空 sheet 跳过（设计：空 sheet 不产块）
+    // 补齐到等宽并掐掉右侧全空列：表块要求矩形，否则表头与数据行错位
+    const width = Math.max(...grid.map(r => r.length));
+    const rows = grid.map(r => Array.from({ length: width }, (_, i) => r[i] ?? ""));
+    let cut = width;
+    while (cut > 0 && rows.every(r => !r[cut - 1])) cut--;
+    const rect = rows.map(r => r.slice(0, Math.max(1, cut)));
+    const cellTexts = rect.map(r => r.map(v => v ?? ""));
+    // 块文本按行拼接时掐掉行尾空单元：合并单元格的行（标题行/表头行）会留一串空格，
+    // join 出来就是 "标题 |  |  |  |" 的噪声。结构 table_rows 仍保留矩形，可无损还原。
+    const rowTexts = cellTexts.map(cs => {
+      let n = cs.length;
+      while (n > 0 && !cs[n - 1]) n--;
+      return cs.slice(0, n).join(" | ");
+    });
+    const tableHtml = `<table>${cellTexts.map(cs => `<tr>${cs.map(c => `<td>${xlsxEsc(c)}</td>`).join("")}</tr>`).join("")}</table>`;
+    const items = packTable(rowTexts, { table_html: tableHtml, table_header: cellTexts[0], table_rows: cellTexts });
+    items.forEach((it, bi) => {
+      chunks.push({
+        chapter: sheet.name, chapter_path: null, page: idx + 1, text: it.text, seq: ++seq,
+        kind: it.table_html ? "table" : "text", block_type: "sheet_table", block_index: bi,
+        bbox: null, table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows,
+      });
+    });
+  });
+  return { format: "xlsx", chapters: sheets.length, chunks, numPages: sheets.length, cleanedJunk: [] };
+}
+
 // R0 目录/文件黑名单（判定表第一道闸，不可关闭——它挡的是「不是书的东西」）：
 //   目录级（命中即整段跳过，不递归）：
 //     _origin    抓取工具的原始快照目录
@@ -962,7 +1158,11 @@ async function main(argv = process.argv.slice(2), opts = {}) {
     // R10：.txt 原来白名单放行、这里却不认，直接喂 build-book 会报「不支持的格式」
     // 且不进台账（R1 说放行、R10 说走现管道，两边打架）。现在真走现管道。
     else if (ext === ".txt") parsed = parseTxt(file);
-    else { console.error("不支持的格式: " + ext + "（支持 .pdf/.epub/.docx/.txt/.md，或 md 目录）"); process.exitCode = 1; return; }
+    // R7/R8：入口闸已放行 .pptx/.xlsx，这里必须真认得它们，否则会出现
+    // 「白名单说能进、分派说不支持」的两头打架（R10 的 .txt 就踩过这坑）。
+    else if (ext === ".pptx") parsed = parsePptx(file);
+    else if (ext === ".xlsx") parsed = parseXlsx(file);
+    else { console.error("不支持的格式: " + ext + "（支持 .pdf/.epub/.docx/.pptx/.xlsx/.txt/.md，或 md 目录）"); process.exitCode = 1; return; }
   } catch (e) {
     // R13：解析器抛错 → 标 parse_failed 记账，不入检索。与 R1/R2 同一条台账，
     // 用 code 区分「输入本来不是书」（unsupported/fake_ext）还是「是书但解不开」
@@ -1151,4 +1351,4 @@ if (require.main === module) {
   process.on("unhandledRejection", e => { console.error("未处理的异步错误:", e?.stack || e?.message || e); process.exitCode = 1; });
 }
 
-module.exports = { collapse, normLine, sentenceSplit, decodeHtml, parsePdf, parseEpub, parseDocx, parseMd, parseMdFile, parseTxt, itemsToChunks, tableToText, promotePlainHeadings, walkMd, buildDb, main, contentHash };
+module.exports = { collapse, normLine, sentenceSplit, decodeHtml, parsePdf, parseEpub, parseDocx, parsePptx, parseXlsx, parseMd, parseMdFile, parseTxt, itemsToChunks, tableToText, promotePlainHeadings, walkMd, buildDb, main, contentHash };

@@ -40,3 +40,9 @@ books/皮润作业.docx
 catalog-tasks/皮润作业.docx.json
 # 本机一键启动脚本（路径本机化）
 启动书库软件.cmd
+
+# 临时探针脚本（现场调试用一次性文件，不进仓库也不进 lint；
+# 2026-11-12 实测：17 个未忽略的 tmp-probe*.cjs 让 `eslint .` 从 0 涨到 75 errors）
+tmp-probe*.cjs
+tmp-probe*.mjs
+tmp-*.cjs
