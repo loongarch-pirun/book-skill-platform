@@ -382,9 +382,13 @@ async function parsePdfLegacy(file) {
 
   // 页内切分：每块带页码
   const chunks = [];
+  // 契约 §2.2：seq 与 kind 在**所有**引擎上都要显式产出。这里原样只写 page/text，
+  // 会让「PDF 100% 有 kind」这句话只在 mineru 引擎上成立——回落 legacy 时 PDF 一样全 NULL，
+  // blocks.seq 又得靠 block-schema.mjs 的 id 兜底。兜底只服务老库，不服务新数据。
+  let seq = 0;
   for (const p of pages)
     for (const seg of sentenceSplit(p.text))
-      chunks.push({ chapter: null, page: p.page, text: seg });
+      chunks.push({ chapter: null, page: p.page, text: seg, seq: ++seq, kind: "text" });
   return { format: "pdf", engine: "legacy", numPages: pages.length, chunks, cleanedJunk: [...junk] };
 }
 
@@ -504,7 +508,7 @@ function parseEpub(file) {
     // 长段落也要过 sentenceSplit（900 字上限）：单个大段落直接入块会让向量质量和 FTS 定位双输
     for (const p of kept)
       for (const seg of sentenceSplit(p.text))
-        chunks.push({ chapter, page: null, text: seg, seq: ++seq, kind: p.heading ? "heading" : undefined });
+        chunks.push({ chapter, page: null, text: seg, seq: ++seq, kind: p.heading ? "heading" : "text" });
   }
   return { format: "epub", chapters: chapterNo, chunks, cleanedJunk: [...runningJunk] };
 }
@@ -579,10 +583,10 @@ async function parseDocx(file) {
     // P3-①：整表块原样进块（不过 sentenceSplit——行内的句号不该把表格切碎）。
     // 首行的「第X章」匹配仍生效（与旧行为对齐）；行内不再切章（旧行为把表内
     // 文字误读成章节标记，合并后消失——这是修复不是回归）。
-    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, seq: ++seq, kind: it.table_html ? "table" : undefined, ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
+    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, seq: ++seq, kind: it.table_html ? "table" : "text", ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
     // 长段落也要过 sentenceSplit（同 epub，900 字上限）
     for (const seg of sentenceSplit(it.text))
-      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg, seq: ++seq });
+      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg, seq: ++seq, kind: "text" });
   }
   return { format: "docx", chapters: chapterNo, chunks, cleanedJunk: [], tableStats };
 }
@@ -715,9 +719,9 @@ function itemsToChunks(items, fileRanges) {
       continue;
     }
     // P3-①：整表块原样进块（不过 sentenceSplit——行内句号不切表）
-    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, seq: ++seq, kind: it.table_html ? "table" : undefined, ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
+    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, seq: ++seq, kind: it.table_html ? "table" : "text", ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
     for (const seg of sentenceSplit(it.text))
-      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg, seq: ++seq });
+      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg, seq: ++seq, kind: "text" });
   }
   return { chunks, tableStats, chapterNo };
 }
