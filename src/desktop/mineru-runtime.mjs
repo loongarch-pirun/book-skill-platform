@@ -16,7 +16,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { spawn } from "node:child_process";
+import { spawn, execFileSync } from "node:child_process";
 
 const TCP_PORT = 18980;
 const MANAGED_PORT = 18580;
@@ -57,8 +57,42 @@ function readToken(configPath) {
   return m ? m[1] : null;
 }
 
-function writeConfig(home, models) {
+// 收紧 MINERU_HOME 的 Windows DACL——不收紧则 doclib 起不来（真机实测）。
+//
+// 为什么必须做：MinerU 在 private_file.py 的 _protect_windows_file（约 :204-215）里读父目录
+// DACL，只要有任何一条「非继承、允许、且写掩码命中 0x500D0156」的 ACE，且它的 SID 不是
+// 当前用户/SYSTEM/Administrators/OWNER RIGHTS，就抛：
+//   PermissionError: Credential configuration directory must not be writable by other users.
+// doclib 于是当场退出（stdio 是 ignore，用户什么都看不见），endpoint.json 永不生成，
+// 表现为「服务 30s 没起来」——这条链我在 2026-11-13 用组装好的 runtime 真机跑出来过。
+//
+// userData（%APPDATA%\book-skill-platform）默认继承 user 目录的 DACL，里面常混进**别的机器**
+// 留下的孤儿 SID（本机实测 3 个，Translate 都解析不出账户名）：那些 SID 属于已不存在的账户，
+// 但 ACE 还在、还带 Modify，于是永远过不了校验。
+//
+// 所以建完 mineru-home 立刻把继承断开，只留 当前用户 + SYSTEM + Administrators。
+// 这不是「放宽」，是收紧：去掉所有陌生 SID 的写权限。失败不抛——留给后面真实的启动失败去报，
+// 免得在非 Windows 或受限环境里因为 ACL 拿不到就整体不可用。
+function tightenHomeAcl(home, log) {
+  if (process.platform !== "win32") return;
+  const user = process.env.USERNAME;
+  if (!user) return;
+  try {
+    execFileSync("icacls", [
+      home, "/inheritance:r",
+      "/grant:r", `${user}:(OI)(CI)F`,
+      "/grant:r", "SYSTEM:(OI)(CI)F",
+      "/grant:r", "Administrators:(OI)(CI)F",
+    ], { stdio: "ignore", windowsHide: true, timeout: 15000 });
+  } catch (e) {
+    log(`icacls 收紧 DACL 失败（${e.message}），继续尝试起服务`);
+  }
+}
+
+function writeConfig(home, models, log = () => {}) {
   fs.mkdirSync(home, { recursive: true });
+  // 必须在写 config.yaml 之前收紧：MinerU 是在读配置时校验目录 DACL 的
+  tightenHomeAcl(home, log);
   const configPath = path.join(home, "config.yaml");
   let token = fs.existsSync(configPath) ? readToken(configPath) : null;
   let generated = false;
@@ -86,6 +120,19 @@ function writeConfig(home, models) {
   return { configPath, token, generated };
 }
 
+// 把 stderr 日志的最后几行摘出来，附在启动失败的报错里。
+// 否则「30s 没就绪」这句话对定位零帮助——真因（DACL/PermissionError/端口）全在日志里。
+function tailLog(logPath, lines = 6) {
+  try {
+    const txt = fs.readFileSync(logPath, "utf8").trim();
+    if (!txt) return "（stderr 为空）";
+    const tail = txt.split(/\r?\n/).slice(-lines).join(" | ");
+    return `\n  doclib stderr 尾部: ${tail}`;
+  } catch {
+    return "";
+  }
+}
+
 async function status(home, token) {
   try {
     const r = await fetch(`${serviceBase(home)}/api/v1/server/status`, {
@@ -97,8 +144,7 @@ async function status(home, token) {
   } catch { return null; }
 }
 
-async function putConfig(home, token, key, value) {
-  const r = await fetch(`${serviceBase(home)}/api/v1/configs/${key}`, {
+async function putConfig(home, token, key, value) {  const r = await fetch(`${serviceBase(home)}/api/v1/configs/${key}`, {
     method: "PUT",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ value }),
@@ -117,7 +163,7 @@ export async function prepareMineru(resourcesDir, userData, { log = () => {} } =
   const manifest = path.join(p.models, "MinerU-4_models_onnx", ".mineru_files.json");
   if (!fs.existsSync(manifest)) throw new Error(`缺少随包 basic onnx 模型: ${p.models}`);
 
-  const { configPath, token, generated } = writeConfig(p.home, p.models);
+  const { configPath, token, generated } = writeConfig(p.home, p.models, log);
   log(`config ${generated ? "已生成" : "复用"} ${configPath}`);
   // 独立 cwd：doclib 与托管 parse-server 各拿各的 .mineru-service.lock，不跟别处抢
   fs.mkdirSync(p.cwd, { recursive: true });
@@ -128,14 +174,21 @@ export async function prepareMineru(resourcesDir, userData, { log = () => {} } =
   } else {
     if (!s) {
       const env = { ...process.env, MINERU_HOME: p.home, PYTHONIOENCODING: "utf-8" };
+      // stderr 落文件而不是 ignore：doclib 起不来时的真因（DACL 被拒、缺 VC 运行时、
+      // 端口全占）只在这里能看到，丢掉它等于让用户和我们都只能看到「30s 没就绪」。
+      const errLog = path.join(p.cwd, "doclib.stderr.log");
+      let errFd = null;
+      try { errFd = fs.openSync(errLog, "w"); } catch { /* 开不了就退回 ignore */ }
       const child = spawn(p.python, ["-m", "mineru.doclib.app"], {
-        cwd: p.cwd, env, detached: true, stdio: "ignore", windowsHide: true,
+        cwd: p.cwd, env, detached: true, windowsHide: true,
+        stdio: ["ignore", errFd == null ? "ignore" : errFd, errFd == null ? "ignore" : errFd],
       });
+      if (errFd != null) { try { fs.closeSync(errFd); } catch { /* 子进程已继承句柄 */ } }
       child.unref();
-      log(`已拉起 doclib (pid ${child.pid}, cwd ${p.cwd})`);
+      log(`已拉起 doclib (pid ${child.pid}, cwd ${p.cwd}, stderr ${errLog})`);
     }
     for (let i = 0; i < 30 && !(s = await status(p.home, token)); i++) await sleep(1000);
-    if (!s) throw new Error("doclib 服务未在 30s 内就绪");
+    if (!s) throw new Error(`doclib 服务未在 30s 内就绪${tailLog(path.join(p.cwd, "doclib.stderr.log"))}`);
     // 顺序不能反：先 basic 再 managed，否则 mode=managed 会以默认 standard 校验、因 GGUF 缺失被拒
     const a = await putConfig(p.home, token, "parse_server.local.managed_tier", "basic");
     const b = await putConfig(p.home, token, "parse_server.local.mode", "managed");

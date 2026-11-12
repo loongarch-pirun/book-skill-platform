@@ -292,6 +292,17 @@ const copyDb = (src) => {
   // 独立 cwd：doclib 与托管 parse-server 各拿各的锁，不能共用
   ok(/cwd: path\.join\(userData, "mineru-run"\)/.test(rtSrc) && /cwd: p\.cwd/.test(rtSrc),
     "静态: doclib 用独立 cwd mineru-run（避免与别处抢 .mineru-service.lock）");
+  // 单独成一条：2026-11-13 真机跑组装好的 runtime 时它让 doclib 当场退出、endpoint.json 永不生成，
+  // 表面上只说「服务 30s 没就绪」。MinerU 的 _protect_windows_file 会拒掉父目录 DACL 里任何
+  // 陌生 SID 的写权限；userData 默认继承的 DACL 常混进别的机器留下的孤儿 SID。
+  ok(/function tightenHomeAcl\(/.test(rtSrc) && /\/inheritance:r/.test(rtSrc)
+    && rtSrc.indexOf("\n  tightenHomeAcl(home, log);") > 0
+    && rtSrc.indexOf("\n  tightenHomeAcl(home, log);") < rtSrc.indexOf("fs.writeFileSync(configPath"),
+    "静态: MINERU_HOME 建目录即收紧 DACL 且早于写 config（不收紧则 doclib 被 PermissionError 拒启）");
+  // stderr 不能丢：ignore 时 DACL 被拒这类真因一个字都看不到，只剩「30s 没就绪」
+  ok(/doclib\.stderr\.log/.test(rtSrc) && /tails?Log|tailLog/.test(rtSrc)
+    && !/detached: true, stdio: "ignore"/.test(rtSrc),
+    "静态: doclib 的 stderr 落文件并附进超时报错（不 ignore）");
 
   // ③ 卸载清理：自定义 NSIS 钩子 + 只删运行时产物、不碰用户数据
   const nshPath = path.join(import.meta.dirname, "..", "build", "installer.nsh");
