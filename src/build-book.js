@@ -1086,6 +1086,20 @@ function buildDb(file, outPath, parsed) {
       }));
     }
     if (parsed.tableStats) setMeta.run("table_stats", JSON.stringify(parsed.tableStats));
+    // 脏内容过滤落账（CP1）：丢了几块、每条规则各丢几块、规则表从哪来。
+    // 为什么要进库：书架上「这本书怎么少了两千字」必须能查到原因，不能只留在控制台。
+    if (parsed.noiseReport) {
+      const nr = parsed.noiseReport;
+      setMeta.run("noise_report", JSON.stringify({
+        total: nr.total ?? null,
+        dropped: nr.dropped ?? null,
+        kept: nr.kept ?? null,
+        by_rule: nr.byRule ?? null,
+        rules_source: nr.source ?? null,
+        off: nr.off ?? false,
+        error: nr.error ?? null,
+      }));
+    }
     // R11：语种按块判定后的整书聚合标签。search.mjs:85 直接读 meta.lang，读不到才现场抽样。
     // 只写标记，不改路径、不改正文。
     if (parsed.lang_meta) {
@@ -1271,6 +1285,34 @@ async function main(argv = process.argv.slice(2), opts = {}) {
       console.log(`  结构化改造: 去空块 ${r.droppedEmpty} · 去垃圾块 ${r.droppedGarbage} · 修乱码块 ${r.repairedMojibake} · 清控制符 ${r.strippedControls} / 私用区 ${r.strippedPua} / 替换符 ${r.strippedFffd} / 孤立代理对 ${r.strippedSurrogates} 处`);
     }
   }
+  // 脏内容规则过滤（CP1）：解析产物里混着 arXiv 号/授权声明/作者邮箱/贡献脚注/Gutenberg 版权页，
+  // 它们被当正文入库后会被 BM25 顶上来，这就是用户说的「检索不知所云」。
+  // 为什么放在这里：结构化改造之后（坏数据已清）、切片之前（脏块不该参与并块与向量化）。
+  // 为什么不用引擎的 type 标签：CP0 实测（10-产品化\cp0-wash.txt）证明这类脏块大多被 MinerU
+  // 标成 text，按 type 洗只能把真噪声从 15.9% 降到 15.3%，等于没洗。
+  // 铁律：规则是数据不是代码（加一条 JSON 即可）、只丢整块不改剩余块一个字节、
+  //       BSP_NOISE=0 整段关、洗空了要抛错而不是静默建库。
+  const noiseOff = String(process.env.BSP_NOISE ?? "").replace(/[\u200b-\u200d]/g, "").normalize("NFKC").trim() === "0";
+  try {
+    const N = await import("./lib/noise-rules.mjs");
+    const { rules, source } = N.loadRules();
+    const nr = N.filterNoiseChunks(parsed.chunks, { rules, source, off: noiseOff });
+    parsed.chunks = nr.chunks;
+    parsed.noiseReport = nr.report;
+    if (!noiseOff && nr.report.dropped) {
+      const detail = Object.entries(nr.report.byRule).filter(([, n]) => n > 0)
+        .map(([id, n]) => `${id} ${n}`).join(" · ");
+      console.log(`  脏内容过滤: 丢弃 ${nr.report.dropped} 块 / 保留 ${nr.report.kept} 块（${detail}）`);
+      for (const x of (nr.report.removed || []).slice(0, 3)) {
+        console.log(`    · p${x.page} [${x.rule}] ${JSON.stringify(x.text)}`);
+      }
+    }
+  } catch (e) {
+    // 洗数据失败不能把建库拖死，但必须留痕（静默吞掉会让人以为过滤生效了）
+    console.error(`⚠ 脏内容过滤失败，按未过滤继续（${e.message}）`);
+    parsed.noiseReport = { error: String(e.message || e) };
+  }
+
   try { opts.onStage?.("slice"); } catch (e) { console.error(`  横幅回调异常（不阻断建库）: ${e?.message || e}`); }
 
   // 语义分块（BSP_SEMANTIC=1，默认关——存量行为零变化）：本地 e5 零成本，先并后切——
