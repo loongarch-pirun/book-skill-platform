@@ -22,8 +22,16 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 // 白名单与设计稿 01:80 一致（pdf/epub/docx/txt/md）；.markdown 是现有 build-book 已支持的别名，
 // 一并收进白名单——否则「白名单放行、分派报错」会自相矛盾。
-export const EXT_WHITELIST = [".pdf", ".epub", ".docx", ".txt", ".md", ".markdown"];
-const ZIP_EXTS = [".epub", ".docx"];
+// R7/R8：.pptx / .xlsx 是 OOXML（zip 容器），老板口径「PPT 也要能吞进来」；
+// 与 .docx 同一族，解析器见 build-book.js 的 parsePptx / parseXlsx。
+export const EXT_WHITELIST = [".pdf", ".epub", ".docx", ".pptx", ".xlsx", ".txt", ".md", ".markdown"];
+const ZIP_EXTS = [".epub", ".docx", ".pptx", ".xlsx"];
+// R7/R8：老二进制格式（BIFF8 / OLE 复合文档）不在白名单，且单独给人话理由——
+// 只说「不在白名单」用户不知道该存成什么。判据仍是扩展名，落点仍是 unsupported。
+const LEGACY_OFFICE_HINT = {
+  ".ppt": "老式二进制 PPT（OLE 复合文档）不支持，请用 PowerPoint 另存为 .pptx 再导入",
+  ".xls": "老式二进制 Excel（BIFF8）不支持，请用 Excel 另存为 .xlsx 再导入",
+};
 const TEXT_EXTS = [".txt", ".md", ".markdown"];
 const PK_SIG = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
 const PDF_SIG = Buffer.from("%PDF-", "latin1");
@@ -84,9 +92,13 @@ function describeMagic(s) {
 export function gateFile(file) {
   const ext = path.extname(file).toLowerCase();
   if (!EXT_WHITELIST.includes(ext)) {
+    // R7/R8 老格式：理由写具体（存成什么），结果不变——仍是 unsupported。
+    const hint = LEGACY_OFFICE_HINT[ext];
     return {
       ok: false, code: "unsupported", ext,
-      reason: `扩展名「${ext || "(无扩展名)"}」不在白名单（${EXT_WHITELIST.join(" / ")}），拒收`,
+      reason: hint
+        ? `${hint}（拒收）`
+        : `扩展名「${ext || "(无扩展名)"}」不在白名单（${EXT_WHITELIST.join(" / ")}），拒收`,
     };
   }
   const s = sniffMagic(file);
