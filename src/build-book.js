@@ -401,7 +401,9 @@ async function routePdf(file) {
   try {
     probe = await R.probeTextLayer(file, pdfjs);
   } catch (e) {
-    // 探针都读不动（加密/坏文件）：不算「算不出阈值」，直接抛给上游按 R13 记 parse_failed
+    // 探针都读不动（加密/坏文件）：这是「文件本身读不了」，不是 R13 的「算不出阈值」，
+    // 抛给上游记 parse_failed（R14）。R13/needs_calibration 只由 classifyPdf:146-149 在
+    // 「探针能返回但 pages=0」时给，两者语义不同，别混称。
     throw new Error(`PDF 文本层探针失败：${e.message}`, { cause: e });
   }
   const c = R.classifyPdf(probe);
