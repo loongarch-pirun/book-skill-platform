@@ -474,7 +474,8 @@ function parseEpub(file) {
       if (!/^(p|h[1-6]|blockquote|li)$/.test(tag)) continue;
       const t = collapse(el.textContent || "");
       // L1 去噪：纯页码行（"12"/"第 12 页"）是排版残留不是内容
-      if (t.length >= 8 && !PAGE_ONLY.test(t)) paras.push(t);
+      // 带上 heading 标记：下游要把 h1-6 落成 kind='heading'（契约 §2.2），只留纯文本就分不出来了
+      if (t.length >= 8 && !PAGE_ONLY.test(t)) paras.push({ text: t, heading: /^h[1-6]$/.test(tag) });
     }
     if (!paras.length) continue;
     files.push({ title, paras });
@@ -484,7 +485,7 @@ function parseEpub(file) {
   // 只删「重复」不删「首次」——章节标题各章不同不会误伤；PDF 路径早有同款逻辑。
   const lineFreq = new Map();
   for (const f of files) {
-    for (const k of new Set(f.paras.map(normLine).filter(k => k.length > 0 && k.length <= 20)))
+    for (const k of new Set(f.paras.map(p => normLine(p.text)).filter(k => k.length > 0 && k.length <= 20)))
       lineFreq.set(k, (lineFreq.get(k) || 0) + 1);
   }
   const runningJunk = new Set([...lineFreq.entries()]
@@ -492,15 +493,18 @@ function parseEpub(file) {
 
   const chunks = [];
   let chapterNo = 0;
+  // 契约 §2.2：seq 必须按文档真实顺序自增，不允许落库时拿主键兜底（block-schema.mjs 那句 r.seq ?? r.id）。
+  // epub 的顺序天然存在：spine 顺序 → 本章段落顺序 → 段内句序，三层都定，所以这里直接数。
+  let seq = 0;
   for (const f of files) {
-    const kept = f.paras.filter(t => !runningJunk.has(normLine(t)));
+    const kept = f.paras.filter(p => !runningJunk.has(normLine(p.text)));
     if (!kept.length) continue;
     chapterNo++;
     const chapter = f.title || `章节 ${chapterNo}`;
     // 长段落也要过 sentenceSplit（900 字上限）：单个大段落直接入块会让向量质量和 FTS 定位双输
-    for (const t of kept)
-      for (const seg of sentenceSplit(t))
-        chunks.push({ chapter, page: null, text: seg });
+    for (const p of kept)
+      for (const seg of sentenceSplit(p.text))
+        chunks.push({ chapter, page: null, text: seg, seq: ++seq, kind: p.heading ? "heading" : undefined });
   }
   return { format: "epub", chapters: chapterNo, chunks, cleanedJunk: [...runningJunk] };
 }
@@ -557,6 +561,8 @@ async function parseDocx(file) {
   const chunks = [];
   let chapter = "前言";
   let chapterNo = 0;
+  // 契约 §2.2：seq 按文档真实顺序自增（这里就是 slicedItems 的遍历顺序），落库时不拿主键兜底。
+  let seq = 0;
   // P3-② 章节层级：docx 按 h1-h6 标签层级入栈；扁平 chapter 行为逐字不变
   let pathStack = [];
   for (const it of slicedItems) {
@@ -573,10 +579,10 @@ async function parseDocx(file) {
     // P3-①：整表块原样进块（不过 sentenceSplit——行内的句号不该把表格切碎）。
     // 首行的「第X章」匹配仍生效（与旧行为对齐）；行内不再切章（旧行为把表内
     // 文字误读成章节标记，合并后消失——这是修复不是回归）。
-    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, kind: it.table_html ? "table" : undefined, ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
+    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, seq: ++seq, kind: it.table_html ? "table" : undefined, ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
     // 长段落也要过 sentenceSplit（同 epub，900 字上限）
     for (const seg of sentenceSplit(it.text))
-      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg });
+      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg, seq: ++seq });
   }
   return { format: "docx", chapters: chapterNo, chunks, cleanedJunk: [], tableStats };
 }
@@ -690,6 +696,9 @@ function itemsToChunks(items, fileRanges) {
   }
 
   const chunks = [];
+  // 契约 §2.2：seq 必须按文档真实顺序自增，落库时不许拿主键兜底
+  // （block-schema.mjs 的 `r.seq != null ? r.seq : r.id` 只用于老库兼容，不是正向逻辑）
+  let seq = 0;
   let chapter = "前言";
   let chapterNo = 0;
   // P3-② 章节层级：pathStack 维护「卷 › 章 › 节」栈（md 按 # 层级）；
@@ -706,9 +715,9 @@ function itemsToChunks(items, fileRanges) {
       continue;
     }
     // P3-①：整表块原样进块（不过 sentenceSplit——行内句号不切表）
-    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, kind: it.table_html ? "table" : undefined, ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
+    if (it.fromTable) { chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: it.text, seq: ++seq, kind: it.table_html ? "table" : undefined, ...(it.table_html ? { table_html: it.table_html, table_header: it.table_header, table_rows: it.table_rows } : {}) }); continue; }
     for (const seg of sentenceSplit(it.text))
-      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg });
+      chunks.push({ chapter, chapter_path: chapterPathOf(pathStack), page: null, text: seg, seq: ++seq });
   }
   return { chunks, tableStats, chapterNo };
 }
