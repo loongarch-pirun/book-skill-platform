@@ -25,14 +25,152 @@ import path from "node:path";
 //   scope  "text" 只测块正文；"block_type" 测块的 block_type 列
 //   unless 命中这条正则的块**不丢**（保留）。用于「同一形状里混着真内容」的场景：
 //          署名行和纯联系行都带邮箱，但署名行载着作者身份，丢了就问不出来作者是谁。
+//          可写具名谓词（如 "byline"）引用代码里的比较型判据，也可写正则（向后兼容）。
+//          具名谓词登记在 NAMED_PREDICATES；新增保留理由才需要加谓词，加脏内容类型仍只需加 JSON。
 //   note   为什么这条算脏（写给人看，接线时能自己判断该不该开）
 //   enabled 默认是否启用
 // ---------------------------------------------------------------------------
-// 人名对识别（供 unless 用）：「Firstname Lastname」这种相邻两个大写词。
-// 为什么不能只靠「有大写词」：单位名（Google Brain / University of Toronto）也是大写词，
-// 必须把单位常用词排除掉，剩下的才算人名。这张表是数据，可按需加词。
-const ORG_WORDS = "(?:Google|Brain|Research|University|Institute|Department|Laboratory|Lab|College|School|Academy|Center|Centre|Inc|Ltd|Corp|Corporation|Company|Group|Team|Division|Foundation|Society|Association|Laboratories|Universidad|Università|Universität)";
-const PERSON_PAIR = `\\b(?!(?:${ORG_WORDS})\\b)[A-Z][\\p{L}'’.\\-]{1,20}\\s+(?!(?:${ORG_WORDS})\\b)[A-Z][\\p{L}'’.\\-]{1,20}\\b`;
+// 人名对识别（供 unless 用）
+//
+// 【为什么改了两版 —— O1 的教训】
+// 第一版是「两个相邻大写词 = 人名对」，配一张单位词黑名单（ORG_WORDS）做负向断言。
+// 独立验收（11-全盘替换\CP1-附加核查-unless版.md 观察项 O1）构造真垃圾实测推翻了它：
+//   「contact: support@example.com for more info」「Email us at info@spam.org now」
+//   「University of Toronto contact@cs.toronto.edu」—— 三条纯联系行全被放行。
+// 根因不是黑名单少列了几个词，而是判据方向错了：黑名单永远列不全，等于把「确定是署名」
+// 松成了「不排除是署名」。同一份核查也给了翻转方式（删掉 University 一词，第三条立刻变丢弃），
+// 证明旧判定完全押在黑名单完整性上。
+//
+// 第二版（现行）改成正向白名单，只认一件事：**邮箱的本地部分和块里的人名对得上**。
+//   - 真正的署名行，邮箱必然由某个作者名派生（avaswani@ ⊃ Vaswani、jeff@ ← Jeffrey、
+//     rsg@ ← R. Stockton Gaines 的缩写）—— 这是署名行的定义性特征。
+//   - 联系行的邮箱是岗位名（support@ / info@ / editor@），和块里的任何词都对不上，
+//     哪怕块里凑出一堆大写词也没用。
+// 这样判据不再依赖「穷举所有单位词」，而是依赖「邮箱与名字是否同源」，方向反过来了。
+//
+// 【代价，如实记下】这条判据不可能写成纯正则——它要比较邮箱本地部分与块内人名的对应关系。
+// 所以设计铁律①（规则是数据）在这里退了一步：**规则表仍是数据，但 unless 的判据逻辑是代码**，
+// 通过具名谓词（unless: "byline"）引用，外部 JSON 可以整条关掉或换成自己的正则。
+// 加一类新脏内容仍然只需加一条 JSON；只有「新增一种保留理由」才需要加一个谓词。
+const ORG_STOP = new Set(
+  [
+    "Google", "Brain", "Research", "University", "Institute", "Department", "Laboratory", "Lab",
+    "College", "School", "Academy", "Center", "Centre", "Inc", "Ltd", "Corp", "Corporation",
+    "Company", "Group", "Team", "Division", "Foundation", "Society", "Association",
+    "Laboratories", "Universidad", "Università", "Universität",
+  ].map((w) => w.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase())
+);
+
+// 角色邮箱：这是「纯联系行」的本质特征 —— 本地部分不是人名而是岗位。
+// 与旧黑名单不同，这张表小、封闭、稳定：邮箱命名惯例就那么几十个，不像单位名无穷无尽。
+const ROLE_LOCAL = new Set(
+  [
+    "postmaster", "hostmaster", "webmaster", "abuse", "noreply", "donotreply", "admin", "administrator",
+    "support", "help", "helpdesk", "info", "information", "contact", "contactus", "sales", "marketing",
+    "press", "media", "office", "enquiries", "inquiries", "service", "services", "mail", "email",
+    "editor", "editors", "editorial", "team", "hr", "jobs", "careers", "billing", "accounts", "finance",
+    "legal", "privacy", "security", "feedback", "complaints", "subscribe", "unsubscribe", "news",
+    "newsletter", "events", "workshop", "conference", "chair", "program", "secretariat", "registrar",
+    "admission", "admissions", "library", "reception", "frontdesk", "general", "hello",
+    "permissions", "submissions", "copyright", "publisher", "reprints", "ordering", "orders",
+  ]
+);
+
+const EMAIL_TOKEN = /[\w.+-]+@[\w-]+\.[\w.]{2,}/g;
+
+const normWord = (s) =>
+  String(s).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z]/g, "");
+
+// `{jdoe, jsmith}@cs.stanford.edu` 这类合署邮箱拆成单个邮箱：学术论文极常见，
+// 不拆会把一条真署名行误判成联系行（实测用例 C 第一版就栽在这里）。
+function explodeEmails(text) {
+  const out = [];
+  const groupRe = /\{\s*([^{}]+?)\s*\}\s*@\s*([\w.-]+)/g;
+  let m;
+  let rest = String(text);
+  while ((m = groupRe.exec(rest))) {
+    for (const part of m[1].split(/[,;]/)) {
+      const local = part.trim().replace(/^[<>"']|[<>"']$/g, "");
+      if (local) out.push(`${local}@${m[2]}`);
+    }
+  }
+  rest = rest.replace(groupRe, " ");
+  return out.concat(rest.match(EMAIL_TOKEN) || []);
+}
+
+function isRoleMailbox(localRaw) {
+  const l = String(localRaw).toLowerCase();
+  if (ROLE_LOCAL.has(l)) return true;
+  const parts = l.split(/[._\-+]/).filter(Boolean);
+  if (parts.some((p) => ROLE_LOCAL.has(p))) return true;
+  for (const r of ROLE_LOCAL) {
+    if (r.length >= 5 && l.startsWith(r)) return true; // support123 / info2024
+  }
+  return false;
+}
+
+// 署名行判据：块里邮箱的本地部分能与块内人名对上（缩写式也算）。
+export function isBylineBlock(text) {
+  const t = String(text ?? "");
+  const emails = explodeEmails(t);
+  if (!emails.length) return false;
+
+  // 域名片段不算人名（挡掉 google-brain@google.com 这种「自己跟自己对上」）
+  const domainWords = new Set();
+  for (const e of emails) {
+    for (const w of String(e.split("@")[1] || "").split(/[.\-_0-9]/)) {
+      const n = normWord(w);
+      if (n.length >= 2) domainWords.add(n);
+    }
+  }
+
+  const names = [];
+  const initials = [];
+  const re = /\b[A-Z][\p{L}'’.\-]{0,30}/gu;
+  let m;
+  while ((m = re.exec(t))) {
+    const raw = m[0];
+    const bare = raw.replace(/[.'’\-]+$/, "");
+    // "R. Stockton Gaines" 里的 "R." —— 单字母不单独当人名，但要进缩写池，
+    // 否则 rsg@ 这种「首字母缩写」邮箱永远对不上（实测用例栽过一次）。
+    if (normWord(bare).length === 1) {
+      const ch = normWord(bare)[0];
+      if (ch) initials.push(ch);
+      continue;
+    }
+    const n = normWord(bare);
+    if (!n.length) continue;
+    if (ORG_STOP.has(n) || domainWords.has(n)) continue;
+    if (n.length >= 3) {
+      names.push(n);
+      initials.push(n[0]);
+    }
+  }
+  if (!names.length) return false;
+
+  const initialsStr = initials.join("");
+  for (const e of emails) {
+    const localRaw = e.split("@")[0];
+    if (isRoleMailbox(localRaw)) continue;
+    const local = normWord(localRaw);
+    if (local.length < 3) {
+      // 极短本地部分只可能是缩写邮箱（rsg@）
+      if (local.length >= 2 && initialsStr.includes(local)) return true;
+      continue;
+    }
+    for (const n of names) {
+      if (local === n) return true;
+      if (local.includes(n)) return true;      // avaswani ⊃ vaswani
+      if (n.startsWith(local)) return true;    // jeff ← Jeffrey
+    }
+    if (local.length <= 5 && initialsStr.includes(local)) return true; // rsg ↔ R. Stockton Gaines
+  }
+  return false;
+}
+
+// unless 的具名谓词。外部 JSON 里写 unless: "byline" 即可引用；
+// 写别名字符串仍当正则处理（向后兼容旧规则表）。
+const NAMED_PREDICATES = { byline: isBylineBlock };
 export const DEFAULT_RULES = [
   {
     id: "arxiv_id",
@@ -55,9 +193,10 @@ export const DEFAULT_RULES = [
     scope: "text",
     re: "[\\w.+-]+@[\\w-]+\\.[\\w.]{2,}",
     // unless：署名行不能丢。实测（CP2 对照抓到）attention 的 8 块「作者姓名 + 单位 + 邮箱」被整块
-    // 丢掉后，问「这篇论文的作者是谁」前 3 条全是参考文献——比不过滤更糟。所以：
-    // 同时出现「人名声对」的邮箱块＝署名，保留；只有邮箱没有名字的才是联系行垃圾。
-    unless: PERSON_PAIR,
+    // 丢掉后，问「这篇论文的作者是谁」前 3 条全是参考文献——比不过滤更糟。
+    // 现行判据 "byline" = 邮箱本地部分与块内人名同源（见文件上方 O1 注释）。
+    // 早先的黑名单式判据会把「contact: support@example.com」这类联系行放进来，已废弃。
+    unless: "byline",
     note: "纯联系邮箱行（无署名的邮箱清单）。带姓名的署名行由 unless 放行——那份行载着作者身份，丢了就问不出作者是谁。",
   },
   {
@@ -138,9 +277,14 @@ export function compileRules(rules) {
     .filter(Boolean);
 }
 
-// unless：命中保留正则的块不丢。编译期一并处理，缺省无这项。
+// unless：命中保留判据的块不丢。编译期一并处理，缺省无这项。
+// 支持两种写法：
+//   unless: "byline"            → 引用具名谓词（比较型判据，纯正则表达不了）
+//   unless: "(?i)Firstname"     → 旧写法，当正则处理（外部 JSON 兼容）
 const withUnless = (r) => {
   if (!r.unless) return r;
+  const pred = NAMED_PREDICATES[r.unless];
+  if (pred) return { ...r, unlessFn: pred, unlessKind: r.unless };
   try { return { ...r, unlessRe: new RegExp(r.unless, r.flags || "iu") }; }
   catch (e) { console.error(`⚠ 规则 ${r.id} 的 unless 正则非法，本次当成没有保留项：${e.message}`); return r; }
 };
@@ -177,7 +321,9 @@ export function filterNoiseChunks(chunks, { rules, source = "builtin", off = fal
       // maxChars：给规则加长度上限（页脚规则专用），长块不受该规则管——防「整类丢」把正文挖空
       if (r.maxChars && String(c.text ?? "").length > r.maxChars) continue;
       // unless：这一条虽然命中，但它同时具备 should-keep 的特征（如邮箱行里带着作者姓名）→ 放行
-      if (r.unlessRe && r.unlessRe.test(v)) continue;
+      if (r.unlessFn) {
+        if (r.unlessFn(v)) continue;
+      } else if (r.unlessRe && r.unlessRe.test(v)) continue;
       // whole=true 表示「整块就是这类垃圾」（如纯 arXiv 号行），用锚定正则；
       // 否则「块里出现即算」（如邮箱、授权声明句）。
       if (r.whole) {

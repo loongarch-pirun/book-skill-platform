@@ -11,6 +11,7 @@ import { hybridSearch, routeAndSearch, listBooks } from "../src/lib/search.mjs";
 import { assertEngine, DEFAULT_EMBED } from "../src/lib/models.mjs";
 import { importCatalog } from "../src/lib/catalog.mjs";
 import { registerServerTools, TOPN_SCHEMA, clampTopN } from "../src/lib/register-tools.mjs";
+import { filterNoiseChunks, isBylineBlock, DEFAULT_RULES } from "../src/lib/noise-rules.mjs";
 // 自家验收豁免对外闸机（W3.5）：本文件起 mock server 只为测工具行为，定时窗/预算/开关
 // 不该左右断言（2026-10-21 18:51 主人在桌面端关闸后 CI 时段外会全红的教训；
 // 对外拒收语义由 usage-gate-test 带闸直测）
@@ -327,6 +328,86 @@ const copyDb = (src) => {
     "卸载: 兜底按随包 python 的 exe 路径前缀筛（不按进程名一刀切误杀用户自己的 doclib）");
   ok(/doclib\.endpoint\.json/.test(ps1) && /ParentProcessId=/.test(ps1),
     "卸载: 先按 endpoint.json 的 pid 停整棵进程树（含 managed parse-server 子进程）");
+}
+
+// ========== 9e) 邮箱块判据：署名保留 / 联系行丢弃（O1 修法，2026-11-13） ==========
+// 为什么单独钉这一段：独立验收（11-全盘替换\CP1-附加核查-unless版.md 观察项 O1）实测证明
+// 早先的「两个相邻大写词 = 署名」是黑名单式判据，三条纯联系行全被放行：
+//   「contact: support@example.com for more info」
+//   「Email us at info@spam.org now」
+//   「University of Toronto contact@cs.toronto.edu」
+// 换成「邮箱本地部分与块内人名同源」的正向判据后全部丢弃。这一段就是那次实验的回归钉：
+// 把 isBylineBlock 退回大写词对，B 组 15 条里前 3 条立刻变「放行」，本节转红。
+{
+  // A. 现有 13 本语料里真实存在的 7 个含邮箱块（必须保留 —— 丢了就问不出作者是谁）
+  const realBylines = [
+    "Attention Is All You Need Ashish Vaswani∗ Google Brain avaswani@google.com",
+    "Noam Shazeer∗ Google Brain noam@google.com",
+    "Niki Parmar∗ Google Research nikip@google.com",
+    "Jakob Uszkoreit∗ Google Research usz@google.com Llion Jones∗ Google Research llion@google.com",
+    "Aidan N. Gomez∗ † University of Toronto aidan@cs.toronto.edu",
+    "Łukasz Kaiser∗ Google Brain lukaszkaiser@google.com Illia Polosukhin∗ ‡ illia.polosukhin@gmail.com",
+    "MapReduce: Simplified Data Processing on Large Clusters Jeffrey Dean and Sanjay Ghemawat jeff@google.com, sanjay@google.com Google, Inc.",
+  ];
+  // B. 纯联系行（必须丢弃）—— 前三条正是验收官构造出来放行掉的
+  const contactLines = [
+    "contact: support@example.com for more info",
+    "Email us at info@spam.org now",
+    "University of Toronto contact@cs.toronto.edu",
+    "jeff@google.com, sanjay@google.com",
+    "Google Brain google-brain@google.com",
+    "For more information, please contact the editor at editor@journal.org",
+    "Correspondence should be addressed to: admin@example.org",
+    "Send comments to webmaster@site.com",
+    "Department of Computer Science, Some University, info@univ.edu",
+    "Please email us at help@support.com with any questions",
+    "Editorial Office, Journal of Machine Learning, editor@jmlr.org",
+    "Questions? Write to the Secretariat at secretariat@icml.cc",
+    "Copyright 2020 Association for Computing Machinery. Contact permissions@acm.org",
+    "Manuscripts should be sent to submissions@journal.org before December",
+    "No part may be reproduced without written permission. Reach us at legal@publisher.com",
+  ];
+  // C. 合成真署名行（含缩写邮箱与合署邮箱，都是学术论文常见形态）
+  const synthBylines = [
+    "Leslie Lamport leslie@research.digital.com",
+    "R. Stockton Gaines rsg@acm.org",
+    "Jeffrey Dean jeff@google.com",
+    "Ashish Vaswani, Noam Shazeer avaswani@google.com",
+    "Aidan N. Gomez aidan@cs.toronto.edu",
+    "Jane Doe, John Smith {jdoe, jsmith}@cs.stanford.edu",
+  ];
+
+  for (const s of [...realBylines, ...synthBylines]) {
+    ok(isBylineBlock(s), `邮箱判据: 署名行放行 —— ${s.replace(/\s+/g, " ").slice(0, 42)}`);
+  }
+  for (const s of contactLines) {
+    ok(!isBylineBlock(s), `邮箱判据: 联系行不认作署名 —— ${s.replace(/\s+/g, " ").slice(0, 42)}`);
+  }
+
+  // D. 端到端：真走 filterNoiseChunks，署名块留在库里、联系行被 author_email 丢掉
+  const all = [
+    ...realBylines.map((text, i) => ({ id: `byline-${i}`, kind: "text", text })),
+    ...contactLines.map((text, i) => ({ id: `contact-${i}`, kind: "text", text })),
+  ];
+  const out = filterNoiseChunks(all, { rules: DEFAULT_RULES, source: "guard-test" });
+  const keptIds = new Set(out.chunks.map((c) => c.id));
+  ok(realBylines.every((_, i) => keptIds.has(`byline-${i}`)),
+    "邮箱判据: 端到端 7 条真署名块全部保留（filterNoiseChunks 不误杀）",
+    `${out.report.dropped} 块被丢`);
+  ok(contactLines.every((_, i) => !keptIds.has(`contact-${i}`)),
+    "邮箱判据: 端到端 15 条联系行全部被判为噪声丢弃",
+    `kept=${out.report.kept}`);
+  ok(out.report.byRule.author_email === contactLines.length,
+    "邮箱判据: 15 条丢块全部记账在 author_email 名下（可审计、可单独关闭）",
+    JSON.stringify(out.report.byRule));
+
+  // E. 静态：unless 已从「大写词对黑名单」换成具名谓词 byline
+  const noiseSrc = fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "noise-rules.mjs"), "utf8");
+  ok(/unless:\s*"byline"/.test(noiseSrc), "静态: author_email 的 unless 引用具名谓词 byline");
+  ok(!/const PERSON_PAIR\s*=/.test(noiseSrc) && !/\bPERSON_PAIR\b/.test(noiseSrc.replace(/\/\/.*$/gm, "")),
+    "静态: 大写词对判据（PERSON_PAIR）已移除，不许退回黑名单式");
+  ok(/NAMED_PREDICATES/.test(noiseSrc) && /unlessFn/.test(noiseSrc),
+    "静态: 具名谓词登记表与 unlessFn 分支都在（外部 JSON 仍可写正则作 unless）");
 }
 
 // ========== 10) 静态防回归：真机拖拽/导入链路的三处已修缺陷不许复活 ==========
