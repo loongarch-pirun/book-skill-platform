@@ -1,0 +1,58 @@
+{
+ "generatedAt": "2026-11-13T17:29:27.026Z",
+ "topN": 4,
+ "total": 80,
+ "caliberOf": {
+  "hitRate": "perbook",
+  "fullRate": "perbook",
+  "avgFirstRank": "perbook",
+  "routeAcc": "route",
+  "dirtyRate": "perbook"
+ },
+ "metrics": {
+  "hitRate": 0.7375,
+  "fullRate": 0.7375,
+  "avgFirstRank": 3.737,
+  "routeAcc": 0.4625,
+  "dirtyRate": 0.0031
+ },
+ "detail": {
+  "full": 59,
+  "partial": 0,
+  "miss": 21,
+  "hit": 59,
+  "hitRate": 0.7375,
+  "fullRate": 0.7375,
+  "avgFirstRank": 3.737,
+  "avgFirstRankHitOnly": 1.508,
+  "dirtyRate": 0.0031,
+  "dirtyTotal": 1,
+  "dirtyQ": 1,
+  "returnedTotal": 320,
+  "prodDirtyRate": 0,
+  "prodDirtyTotal": 0,
+  "prodDirtyQ": 0,
+  "legacyHit": 75,
+  "legacyRate": 0.9375,
+  "legacyAvgFirstRank": 1.36,
+  "damageRate": 0,
+  "avgLatencyMs": 2841,
+  "routeTotal": 80,
+  "routeFull": 37,
+  "routePartial": 0,
+  "routeHit": 37,
+  "routeHitRate": 0.4625,
+  "routeFullRate": 0.4625,
+  "routeAvgFirstRank": 6.063,
+  "routeAcc": 0.4625,
+  "routeAccHitOnly": 1
+ },
+ "direction": {
+  "hitRate": true,
+  "fullRate": true,
+  "avgFirstRank": false,
+  "routeAcc": true,
+  "dirtyRate": false
+ },
+ "source": "from-book:perbook-dirty.json"
+}
