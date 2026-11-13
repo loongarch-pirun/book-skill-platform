@@ -238,6 +238,46 @@ export const DEFAULT_RULES = [
     maxChars: 160,
     note: "引擎判定为页脚/页边注、且短到只可能是页眉页脚条款的块。长脚注保留——那些往往是正文内容。",
   },
+  // ---- P0-5 补的三类脏内容 -------------------------------------------------
+  // 为什么这三条放内置表而不是 ./config/noise-rules.json：package.json 的 build.files
+  // 只有 ["src/**/*", "package.json"]，config/ 不在打包名单里 —— 写进外部 JSON 在本机
+  // 有效、装出来的产品里失效，等于同一个库两种行为。而本文件就是规则表（铁律①），
+  // 往 DEFAULT_RULES 里加条目 = 加 JSON，函数一行不动。config/noise-rules.json 仍保留
+  // 为本机覆盖入口（loadRules 会整表替换）。
+  {
+    id: "journal_masthead_table",
+    enabled: true,
+    scope: "block_type",
+    re: "^table$",
+    whole: true,
+    // 为什么按「表」认而不是按文字认：PDF 里 ACM 刊头被解析成 3x2 短表，
+    // kind/block_type 都是 table。而 filterNoiseChunks 对表块只放行 block_type 规则
+    // （isStructural 时跳过 scope:"text"，见主函数上方注释），所以 scope:"text" 的
+    // 刊头正则永远打不到它 —— 这不是取巧，是这一层唯一能命中表块的入口。
+    // maxChars：全库 13 个 table 块长度实测 60、60、211、237、262…851，120 恰好只留
+    // 那两个 ACM 刊头（各 60 字符），零误杀可证（探针 _probe-p0-5-threshold.log）。
+    maxChars: 120,
+    note: "短表块 = 版式残留（期刊刊头/卷期行被解析成 3x2 表）。实测 Lamport 1978 的 #25/#82 = \"Communications | July 1978 / of | Volume 21 / the ACM | Number 7\"，检索时顶掉正文。",
+  },
+  {
+    id: "copyright_line",
+    enabled: true,
+    scope: "text",
+    // 只认「整块就是一行版权声明」。不带 $ 的宽松写法会误杀混排块：pride #994
+    // 是「版权行 + 一句正文对白」（97 字符），整块丢就把对白丢了 —— 那是 P0-6
+    // 行内清洗的活，不是这里的。所以这条宁可窄：whole + 行尾锚定。
+    re: "^\\[?\\s*(?:copyright\\s*\\d{4}|©\\s*\\d{4}|\\(c\\)\\s*\\d{4}|copyright\\s+©\\s*\\d{4})[^\\n]{0,80}\\]?\\s*$",
+    whole: true,
+    note: "整块只有一行版权声明（如 pride #432 \"[Copyright 1894 by George Allen.]\"）。混排块不动——把版权行从正文块里摘出来属于行内清洗，另算。",
+  },
+  {
+    id: "page_number_only",
+    enabled: true,
+    scope: "text",
+    re: "^(?:[-–—]\\s*)?\\d{1,4}(?:\\s*[-–—])?$",
+    whole: true,
+    note: "孤立页码块（\"12\" / \"- 204 -\"）。本库 13 本实测 0 命中（页码行已在结构化改造时清掉），加它是为覆盖其他引擎/其他书的产出；命中面无法在本库上翻转，翻转证据见 test/quality-gate.mjs 的合成块断言。",
+  },
 ];
 
 // 外部覆盖：文件里给 {rules:[...]} 或 [...]，整表替换（不是追加——替换才好「删干净」）
