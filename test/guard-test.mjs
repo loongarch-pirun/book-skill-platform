@@ -410,6 +410,62 @@ const copyDb = (src) => {
     "静态: 具名谓词登记表与 unlessFn 分支都在（外部 JSON 仍可写正则作 unless）");
 }
 
+// ========== 9f) 换引擎留下的两处坑：建库侧引擎同源 + 升级时旧库让位 ==========
+// 翻红方式（都实测过）：
+//  ① 把 embed-book.js 的 modelKey 兜底改回 `|| "e5"` → 下面 2 条静态断言红
+//  ② 把 engine.mjs 的 migrateStaleBundledLibrary 整段删掉/改写 → 下面几条静态断言红
+// 静态断言只能抓「代码被删/被改写」，抓不到「函数还在但一进来就 return」——
+// 那种关停由 16-升级迁移\upgrade-migrate-probe.mjs 兜（实测 6 项红），两者互补不可替换。
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const readSrc = (...p) => fs.readFileSync(path.join(projRoot, ...p), "utf8");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+
+  // ① 建库侧不许自己写死引擎：命令行 > 环境变量 > 与查询侧同源的 DEFAULT_EMBED
+  //   （2026-11-13 默认引擎 e5→m3，embed-book.js 仍硬编码 "e5"，新导入的书灌 e5、
+  //    查询用 m3，jobs-test / jobs-fuzz / soak-test 三个失败同源于此）
+  const embedSrc = stripComments(readSrc("src", "embed-book.js"));
+  ok(/const modelKeyArg\s*=\s*process\.argv\[3\]\s*\|\|\s*process\.env\.BSP_EMBED_MODEL\s*\|\|\s*null/.test(embedSrc),
+    "静态: embed-book.js 的模型优先级是「命令行 > 环境变量 > null」");
+  ok(/const modelKey\s*=\s*modelKeyArg\s*\|\|\s*models\.DEFAULT_EMBED/.test(embedSrc),
+    "静态: embed-book.js 的兜底是与查询侧同源的 DEFAULT_EMBED（不许再硬编码具体引擎名）");
+  const badDefault = embedSrc.split("\n").filter((l) => /modelKey\s*=.*\|\|\s*"(e5|m3|zh-small)"/.test(l));
+  ok(badDefault.length === 0,
+    `静态: embed-book.js 没有把引擎名写死成兜底值（实际 ${badDefault.length} 处）`);
+
+  // ② 升级换代：旧引擎库必须让位给随包新库，但有用户成果的一律不动
+  const engSrc = stripComments(readSrc("src", "desktop", "engine.mjs"));
+  ok(/export function migrateStaleBundledLibrary\s*\(/.test(engSrc),
+    "静态: engine.mjs 暴露 migrateStaleBundledLibrary（升级换代入口）");
+  ok(/function dbModel\s*\(/.test(engSrc) && /function userCatalogWork\s*\(/.test(engSrc),
+    "静态: 换代判据用到 dbModel（读库内引擎标记）与 userCatalogWork（有没有用户成果）");
+  ok(/\.bak-/.test(engSrc) && /renameSync/.test(engSrc),
+    "静态: 旧库让位是 rename 成 .bak-<旧引擎>（可回滚、不原地覆盖）");
+  // 三判据必须同时存在：随包也有同名文件、两边引擎标记都在且不同、旧库无用户成果
+  // 注意：仓库里这些文件是 CRLF，「顶格 }」得按 /\r?\n}\r?\n/ 找，别只按 \n 切。
+  const migBody = engSrc.slice(engSrc.indexOf("export function migrateStaleBundledLibrary"));
+  const migEnd = migBody.search(/\r?\n\}\r?\n/);
+  const migFn = migEnd > 0 ? migBody.slice(0, migEnd) : migBody;
+  ok(/dbModel\(src\)/.test(migFn) && /dbModel\(dst\)/.test(migFn),
+    "静态: 换代要同时读随包库与用户库的引擎标记（缺一边就无法判断是真换代还是猜）");
+  ok(/userCatalogWork\(dst\)/.test(migFn),
+    "静态: 换代前必须查 userCatalogWork（有用户成果的库不许动）");
+  ok(/stale\.push/.test(migFn),
+    "静态: 有用户成果的库进 stale 记账，不静默（用户看得见哪本没迁）");
+  // 幂等铁律不许被换掉：已存在即跳过仍然是默认路径（换代只是它前面的例外）
+  ok(/if \(fs\.existsSync\(dst\)\) \{\s*report\.skipped\.push\(sub\);\s*continue;\s*\}/.test(engSrc),
+    "静态: scanTree 的幂等铁律仍在（换代不许顺手把「已存在即跳过」删掉）");
+
+  // ③ main.js 必须在 engine.init 之后、createWindow 之前触发迁移，且失败不挡启动
+  const mainSrc = stripComments(readSrc("src", "main.js"));
+  const initAt = mainSrc.indexOf("engine.init({");
+  const migAt = mainSrc.indexOf("migrateStaleBundledLibrary()");
+  ok(initAt > -1 && migAt > initAt,
+    "静态: main.js 的升级迁移在 engine.init 之后调用（要等 _resourcesDir/_userData 就位）");
+  ok(/try\s*\{[\s\S]{0,200}?migrateStaleBundledLibrary\(\)[\s\S]{0,300}?\}\s*catch/.test(mainSrc),
+    "静态: 升级迁移包在 try/catch 里（迁移失败不许挡住启动）");
+}
+
 // ========== 10) 静态防回归：真机拖拽/导入链路的三处已修缺陷不许复活 ==========
 {
   const projRoot = path.join(import.meta.dirname, "..");
@@ -812,13 +868,16 @@ const copyDb = (src) => {
 
   // ① lib 层存在且导出五件套（纯函数零依赖——单测可 node 直跑的根本）
   const libSrc = readSrc("src", "lib", "structurize.mjs");
+  const structSrc = stripComments(libSrc);
   for (const fn of ["detectGarbled", "repairMojibake", "structurizeChunks", "assessCleaned", "structChanged"]) {
     ok(new RegExp(`export function ${fn}\\(`).test(libSrc), `静态: structurize.mjs 导出 ${fn}（P2 五件套）`);
   }
 
   // ② build-book 顺序契约：结构化改造在语义分块之前（流程=结构化改造→切片→洗数据）
   const bbSrc = stripComments(readSrc("src", "build-book.js"));
-  const structAt = bbSrc.indexOf("structurizeChunks(parsed.chunks)");
+  // 匹配「调用形状」而不是某一版实参写法：F9 修法给 structurizeChunks 传的是
+  // 清洗前原文变量（rawChunks），写死 parsed.chunks 会在改个变量名时假红
+  const structAt = bbSrc.search(/structurizeChunks\(\s*[\w.]+\s*\)/);
   const sliceAt = bbSrc.indexOf('process.env.BSP_SEMANTIC === "1"');
   ok(structAt > -1 && sliceAt > -1 && structAt < sliceAt,
     "静态: build-book 先结构化改造后语义分块（P2 流程顺序：结构化改造→切片→洗数据）");
@@ -827,9 +886,24 @@ const copyDb = (src) => {
   // 实现不误红），精确语义由 fuzz F4 十值矩阵行为断言兜底
   ok(/BSP_STRUCT[\s\S]{0,300}?\.trim\(\)\s*===?\s*"0"/.test(bbSrc) && /await import\("\.\/lib\/structurize\.mjs"\)/.test(bbSrc),
     "静态: BSP_STRUCT=0 逃生开关在（归一化后精确比较，语义由 F4 行为矩阵锁）");
-  const gateAt = bbSrc.indexOf("assessCleaned(parsed.chunks, st.report)");
+  const gateAt = bbSrc.search(/assessCleaned\(\s*[\w.]+\s*,\s*[\w.]+\s*,\s*[\w.]+\s*\)/);
   ok(gateAt > -1 && /if \(!gate\.ok\) \{[\s\S]{0,200}?process\.exitCode = 1;[\s\S]{0,80}?return;/.test(bbSrc.slice(gateAt)),
     "静态: assessCleaned 硬闸门拦在切片前（exitCode=1 + return，不烧算力不建库）");
+  // ③b F9 契约：assessCleaned 必须收到**清洗前**的原文（第三参），否则乱码块已被
+  // structurizeChunks 剔除，只剩干净残局，一本编码错乱的书会被「内容太少」判走
+  // （entry-adversarial-fuzz 的 F9 全链用例实测就是这么红的）
+  ok(/assessCleaned\(\s*[\w.]+\s*,\s*[\w.]+\s*,\s*[\w.]+\s*\)/.test(bbSrc) && /export function assessCleaned\(\s*chunks\s*,\s*report\s*=\s*null\s*,\s*rawChunks\s*=\s*null\s*\)/.test(structSrc),
+    "静态: assessCleaned 收清洗前原文（乱码书报乱码而非「内容太少」，F9）");
+  ok(/rawRatio\s*>\s*STRUCT_GARBLED_MAX[\s\S]{0,600}?totalChars\s*<\s*STRUCT_MIN_CHARS/.test(structSrc),
+    "静态: 乱码判据只改报因不改放行（原文乱码超线仍须残局不足才拦，否则能修的书被误拦）");
+  // ③c F8 契约：段落打包不得把「纯符号/数字段」并进正文块。
+  // 块级垃圾判据（structurizeChunks 的「没有任何中英文字就丢」）只在块边界上生效，
+  // 一旦被并进 400 字大块，论坛楼层号「12345678」与装饰行「。。。。。。」就跟着
+  // 正文入库、谁也再判不出来（entry-adversarial-fuzz 的 F8 全链用例实测就是这么红的）。
+  const packAt = bbSrc.indexOf("function packParagraphs(");
+  const packFn = packAt > -1 ? bbSrc.slice(packAt, bbSrc.indexOf("\n}\n", packAt) > 0 ? bbSrc.indexOf("\n}\n", packAt) : packAt + 3000) : "";
+  ok(packAt > -1 && /!\/\[\\u4e00-\\u9fffA-Za-z\]\/\.test\(cand\)/.test(packFn),
+    "静态: 段落打包遇到纯符号/数字段先 flush 再单独成块（F8：垃圾块不被并进正文）");
   // ④ 账进 meta + onStage 两段（桌面横幅据此分格；CLI 不传即静默）
   ok(/setMeta\.run\("struct_report"/.test(bbSrc), "静态: 清洗账写 meta.struct_report（可审计）");
   ok(/opts\.onStage\?\.\("structurize"\)/.test(bbSrc) && /opts\.onStage\?\.\("slice"\)/.test(bbSrc),

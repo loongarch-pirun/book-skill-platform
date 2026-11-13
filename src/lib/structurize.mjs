@@ -155,7 +155,13 @@ export function repairMojibake(text) {
 // 顺序很关键——先让 structurizeChunks 把能修的双重编码修掉，再拿残局评：
 // 可修的文件被放过（修完比拦下更符合「清洗乱码符号」的诉求），
 // 修不动的（真二进制垃圾/编码错乱）才因人话失败进不了切片。
-export function assessCleaned(chunks, report = null) {
+// rawChunks（可选，第三参）：清洗**之前**的块。
+// 为什么需要它：structurizeChunks 已经把乱码块与坏行剔掉并计入 droppedGarbage，
+// 只拿清洗后的残局算乱码率永远是 0——一本编码错乱的书会被「内容太少」判走，
+// 用户于是去查加密/扫描，真实病根（编码不对）反而藏住了（entry-adversarial-fuzz
+// 的 F9 全链用例实测就是这么红的）。传了原文就先按原文体检：原文乱码率超线
+// 直接报乱码并说清清洗剔掉了多少；字数闸门只兜「干净文本确实太少」这一种。
+export function assessCleaned(chunks, report = null, rawChunks = null) {
   if (!chunks.length) {
     return { ok: false, reason: "结构化改造后 0 块：全文都是空块/乱码块——文件可能是扫描图片、加密文档或已损坏。" };
   }
@@ -164,6 +170,26 @@ export function assessCleaned(chunks, report = null) {
     const g = detectGarbled(String(c?.text ?? ""));
     totalChars += String(c?.text ?? "").length;
     bad += g.bad;
+  }
+  if (rawChunks?.length) {
+    let rawChars = 0, rawBad = 0;
+    for (const c of rawChunks) {
+      const s = String(c?.text ?? "");
+      rawChars += s.length;
+      rawBad += detectGarbled(s).bad;
+    }
+    const rawRatio = rawChars ? rawBad / rawChars : 0;
+    if (rawRatio > STRUCT_GARBLED_MAX) {
+      // 原文乱码超线时**只在两个字据上**改判因，不改放行结论：
+      //   · 清洗后已无实质内容 → 报「乱码严重」而不是「内容太少」（F9 场景）
+      //   · 清洗后仍有足量干净正文 → 放行（乱码行已被逐行剔掉/修好，这是
+      //     structurize-test 第 5 组「脏 md 建库成功」的前提：能修的书不该被拦）
+      // 换句话说：rawRatio 只决定「报什么因」，决定「是否放行」的仍是清洗后的残局。
+      if (totalChars < STRUCT_MIN_CHARS) {
+        const dropped = report ? report.droppedGarbage + report.droppedEmpty : 0;
+        return { ok: false, reason: `乱码严重（清洗前约 ${(rawRatio * 100).toFixed(0)}% 的字符是乱码符号${dropped ? `，已剔除 ${dropped} 个坏块/坏行` : ""}，清洗后只剩 ${totalChars} 字符）：文件可能编码不对或已损坏，换个来源再试。` };
+      }
+    }
   }
   if (totalChars < STRUCT_MIN_CHARS) {
     return { ok: false, reason: `内容太少（全文 ${totalChars} 字符）：文件可能是空的、加密文档或扫描图片型 PDF。` };

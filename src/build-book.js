@@ -223,6 +223,12 @@ function packParagraphs(list) {
     }
     const cand = pendingHeading ? pendingHeading + "\n" + p.text : p.text;
     pendingHeading = null;
+    // 纯符号/数字段（论坛楼层号「12345678」、装饰行「。。。。。。」）不并进正文块：
+    // 块级垃圾判据（structurizeChunks 里「没有任何中英文字就丢」）只能在块边界上
+    // 生效，一旦被并进 400 字的大块，这一行垃圾就跟着正文一起入库、谁也再判不出来
+    // （entry-adversarial-fuzz 的 F8 全链用例实测就是这么红的，与「乱码行被并进
+    // 大块导致 repairMojibake 拒修」同族）。单独成块交给结构化改造去丢。
+    if (!/[\u4e00-\u9fffA-Za-z]/.test(cand)) { flush(); out.push({ text: cand, kind: "text" }); continue; }
     if (!buf) { buf = cand; continue; }
     if (buf.length >= UNIT_TARGET_PARAS || (buf.length + 1 + cand.length) > UNIT_MAX_PARAS) {
       flush(); buf = cand; continue;
@@ -1362,10 +1368,13 @@ async function main(argv = process.argv.slice(2), opts = {}) {
   const structOff = String(process.env.BSP_STRUCT ?? "").replace(/[\u200b-\u200d]/g, "").normalize("NFKC").trim() === "0";
   if (!structOff) {
     const { structurizeChunks, assessCleaned } = await import("./lib/structurize.mjs");
-    const st = structurizeChunks(parsed.chunks);
+    // 清洗前的原文留一份：assessCleaned 要靠它分辨「原文是乱码」和「原文本来就短」。
+    // 只留长度与字符（不留引用），避免与 st.chunks 抢同一批对象。
+    const rawChunks = parsed.chunks;
+    const st = structurizeChunks(rawChunks);
     parsed.chunks = st.chunks;
     parsed.struct = st.report;
-    const gate = assessCleaned(parsed.chunks, st.report);
+    const gate = assessCleaned(parsed.chunks, st.report, rawChunks);
     if (!gate.ok) {
       // R13：结构化改造硬拦（内容太少/乱码严重）同样是「是书但解不开」，记 parse_failed
       rejectBook("parse", "parse_failed", gate.reason);
