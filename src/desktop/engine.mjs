@@ -61,7 +61,9 @@ export function applyConfig(patch) {
 export async function seedBundledData(onProgress = () => {}) {
   if (!_packaged || !_resourcesDir || !_userData)
     throw new UserError("只有安装版能初始化内置书库（开发态数据就在项目里，不用初始化）");
-  const report = { copied: [], skipped: [], failed: [], bytes: 0 };
+  const report = { copied: [], skipped: [], replaced: [], stale: [], failed: [], bytes: 0 };
+  // 先做引擎换代迁移（已存在的旧库若与随包库不是同一个引擎，先让位），见 migrateStaleBundledLibrary
+  try { report.replaced = migrateStaleBundledLibrary().migrated; } catch { /* 迁移失败不挡种子化 */ }
   // 预扫成拷贝计划（已存在的在预扫阶段就跳过，不计入总量）；目录建目录、文件拷文件
   const plan = [];
   for (const name of ["library", "skills", "books"]) {
@@ -93,6 +95,105 @@ export async function seedBundledData(onProgress = () => {}) {
     throw new UserError(`初始化未完成：${report.failed.length} 个项目没拷过去（${report.failed[0]}）——再点一次「使用内置书库」会接着拷，已拷好的不会覆盖`);
   }
   return report;
+}
+
+// ---------- 引擎换代迁移：旧版内置书库（另一套向量引擎）在升级后必须让位 ----------
+// 为什么必须有这一步：seedBundledData 的铁律是「目标已存在即跳过」（用户数据永不覆盖），
+// 但默认向量引擎从 e5(384 维) 换成 m3(1024 维) 之后，随包库是整套重灌过的。升级安装时
+// userData\library 里已经躺着旧引擎的 13 本，幂等规则把新库整批挡在门外，而查询侧用新引擎
+// → assertEngine 逐本抛「引擎不一致」→ routeAndSearch 13 本全 skip、召回 0 条
+// （实测 routed_books=0 / results=0 / skipped_books 13 本）。不是库坏了，是新旧两代不能共存。
+// 判据（三条全中才动，缺一不动——宁可留下一个「需要重灌」的旧库，也不赌用户数据）：
+//  ① 同名文件在随包 library 里也有（用户自己导入的书永远不会被这条名字规则误伤）；
+//  ② 两边 meta.model 都存在且不同（真·换代；缺标记的老库不猜，跳过）；
+//  ③ userData 那本没有任何 LLM 编目成果（catalog_model / source='llm' 节点 / theme_vecs）。
+//     编目是用户烧了钱和时间的产物，为换引擎把它删掉不可接受——这种库留着不动、只在
+//     report.stale 里如实记账（搜索对它是坏的，但坏得可见，好过悄悄吃掉用户的工作）。
+// 动的时候用 rename 转成 .bak-<旧引擎>（同盘瞬间完成、不多占空间、可回滚）再拷新库。
+export function migrateStaleBundledLibrary() {
+  const out = { migrated: [], stale: [], skipped: [] };
+  if (!_packaged || !_resourcesDir || !_userData) return out;
+  const from = path.join(_resourcesDir, "library");
+  const to = path.join(_userData, "library");
+  let names = [];
+  try { names = fs.readdirSync(from).filter((f) => f.endsWith(".db")); } catch { return out; }
+  if (!fs.existsSync(to)) return out;  // 目标目录都没有 → 走正常种子化，没有迁移对象
+  for (const name of names) {
+    const src = path.join(from, name);
+    const dst = path.join(to, name);
+    if (!fs.existsSync(dst)) continue;  // 目标不存在 → 走正常拷贝
+    let newModel = null, oldModel = null;
+    try { newModel = dbModel(src); oldModel = dbModel(dst); }
+    catch (e) { out.skipped.push(`${name}（读不了 meta：${e.code || e.message}）`); continue; }
+    if (!newModel || !oldModel || newModel === oldModel) continue;  // 同代/缺标记：不猜
+    let worked = null;
+    try { worked = userCatalogWork(dst); } catch { worked = "编目状态读不出来"; }
+    if (worked) { out.stale.push(`${name}（${oldModel}→${newModel}，${worked}，未动）`); continue; }
+    const bak = `${dst}.bak-${oldModel}`;
+    try {
+      if (fs.existsSync(bak)) fs.rmSync(bak, { force: true });
+      fs.renameSync(dst, bak);          // 同盘 rename：瞬间、不占额外空间、可回滚
+      fs.copyFileSync(src, dst);
+      out.migrated.push(`${name}（${oldModel}→${newModel}，旧库留在 ${path.basename(bak)}）`);
+    } catch (e) {
+      // 半途失败先把旧库放回去：留一个换了一半的库比留着旧库更糟
+      try { if (!fs.existsSync(dst) && fs.existsSync(bak)) fs.renameSync(bak, dst); } catch { /* 尽力而为 */ }
+      out.skipped.push(`${name}（迁移失败：${e.code || e.message}）`);
+    }
+  }
+  return out;
+}
+
+// 读库的向量引擎标记（meta.model）。读不出来/没有 meta 表一律 null，绝不猜。
+function dbModel(dbPath) {
+  let db;
+  try {
+    db = new Database(dbPath, { readonly: true });
+    const row = db.prepare("SELECT value FROM meta WHERE key='model'").get();
+    return row?.value || null;
+  } finally { try { db?.close(); } catch { /* 关不上不致命 */ } }
+}
+
+// 这本库有没有用户自己烧出来的成果（LLM 编目 / 洗数据）。返回人话描述（有）或 null（没有）。
+// 三条分开 try：老库可能连这些表都没有，缺表就是「没处理过」，不算读失败。
+// 覆盖面按写入方来：catalog.mjs 写 meta.catalog_* / nodes(source='llm') / theme_vecs；
+// enrich-import.mjs 给 chunks 加 ctx/tags/questions 三列并建 summaries / chunk_tags；
+// clean-import.mjs 建 quarantine。任何一样有货就说明用户在这本书上花过钱或时间。
+function userCatalogWork(dbPath) {
+  const db = new Database(dbPath, { readonly: true });
+  try {
+    const bits = [];
+    let catalogModel = null;
+    try {
+      for (const k of ["catalog_model", "clean_at", "enrich_at"]) {
+        const v = db.prepare("SELECT value FROM meta WHERE key=?").get(k)?.value || null;
+        if (v && k === "catalog_model") catalogModel = v;
+        else if (v) bits.push(`${k}=${String(v).slice(0, 24)}`);
+      }
+    } catch { /* 没有 meta 表 */ }
+    let llmNodes = 0;
+    try {
+      const cols = db.prepare("PRAGMA table_info(nodes)").all().map((c) => c.name);
+      if (cols.includes("source")) llmNodes = db.prepare("SELECT COUNT(*) n FROM nodes WHERE source='llm'").get().n;
+    } catch { /* 没有 nodes 表 */ }
+    let themeVecs = 0;
+    try { themeVecs = db.prepare("SELECT COUNT(*) n FROM theme_vecs").get().n; } catch { /* 没有 theme_vecs 表 */ }
+    // 洗数据成果：ctx 列有货、或有任何 summaries/chunk_tags/quarantine 行
+    let ctxRows = 0;
+    try {
+      const cols = db.prepare("PRAGMA table_info(chunks)").all().map((c) => c.name);
+      if (cols.includes("ctx")) ctxRows = db.prepare("SELECT COUNT(*) n FROM chunks WHERE ctx IS NOT NULL AND ctx<>''").get().n;
+    } catch { /* 没有 chunks 表 */ }
+    for (const t of ["summaries", "chunk_tags", "quarantine"]) {
+      try { const n = db.prepare(`SELECT COUNT(*) n FROM ${t}`).get().n; if (n > 0) bits.push(`${t} ${n} 行`); }
+      catch { /* 没这张表 */ }
+    }
+    if (catalogModel) bits.push(`catalog_model=${catalogModel}`);
+    if (llmNodes > 0) bits.push(`${llmNodes} 个 LLM 编目节点`);
+    if (themeVecs > 0) bits.push(`${themeVecs} 条主题向量`);
+    if (ctxRows > 0) bits.push(`${ctxRows} 块洗过的数据`);
+    return bits.length ? bits.join(" / ") : null;
+  } finally { try { db.close(); } catch { /* 关不上不致命 */ } }
 }
 
 // 预扫：填拷贝计划 + 累计 skipped。目录进计划（mkdir 用）；已存在的文件跳过（幂等铁律）；

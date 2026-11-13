@@ -1,5 +1,5 @@
 // 向量化 + 概念关联图谱（模型可换：m3 / e5 / zh-small，唯一入口见 lib/models.mjs）
-// 用法: node embed-book.js <book.db> [模型key]（缺省取 BSP_EMBED_MODEL，再缺省 e5）
+// 用法: node embed-book.js <book.db> [模型key]（缺省取 BSP_EMBED_MODEL，再缺省与查询侧同源的 DEFAULT_EMBED）
 // 干三件事：
 //   1) 用向量模型给每块原文算向量（存 chunks.emb），模型名写进 meta.model
 //   2) 生成概念节点（英文按词频、中文按二字组频，零 LLM）
@@ -39,7 +39,10 @@ function extractConcepts(chunks) {
 
 (async () => {
   const dbPath = process.argv[2];
-  const modelKey = process.argv[3] || process.env.BSP_EMBED_MODEL || "e5";
+  // 显式优先级：命令行 > 环境变量 > 查询侧同源的 DEFAULT_EMBED。
+  // 绝不硬编码 "e5"：默认引擎改 m3 后，若建库仍灌 e5，查询用 m3 读会立刻
+  // 「引擎不一致」（jobs-test / jobs-fuzz / soak-test 三个失败同源）。
+  const modelKeyArg = process.argv[3] || process.env.BSP_EMBED_MODEL || null;
   if (!dbPath || !fs.existsSync(dbPath)) { console.error("用法: node embed-book.js <book.db> [m3|e5|zh-small]"); process.exit(1); }
   // L4 误导修复：embed-book 只吃建好的库。拿书原文件来的人最常见，给下一步指令
   if (!dbPath.toLowerCase().endsWith(".db")) {
@@ -50,6 +53,7 @@ function extractConcepts(chunks) {
 
   const models = await import(pathToFileURL(path.join(__dirname, "lib", "models.mjs")).href);
   const catalog = await import(pathToFileURL(path.join(__dirname, "lib", "catalog.mjs")).href);
+  const modelKey = modelKeyArg || models.DEFAULT_EMBED; // 与查询侧同源，杜绝「建库 e5 / 查询 m3」错位
   const db = require("better-sqlite3")(dbPath);
   const meta = Object.fromEntries(db.prepare("SELECT key,value FROM meta").all().map(r => [r.key, r.value]));
   const title = meta.title || path.basename(dbPath, ".db");

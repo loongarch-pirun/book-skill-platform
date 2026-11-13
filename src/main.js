@@ -63,6 +63,20 @@ async function boot() {
   //   music|pictures|videos|recent|logs|crashDumps），"resources" 不在其中，会直接抛
   // "Failed to get 'resources' path" → 安装版每次启动引擎都初始化失败（书架 0 本、模型永远加载中）。
   engine.init({ packaged: app.isPackaged, userData: app.getPath("userData"), resourcesDir: process.resourcesPath });
+  // 升级换代：旧版内置书库用的是另一套向量引擎（e5/384），新版随包库是 m3/1024。幂等铁律让它
+  // 永远拷不进去，而查询侧用新引擎 → 13 本逐本「引擎不一致」，全库问答召回 0 条、书架看着有书
+  // 却问不出东西。这里在起窗口前做一次迁移（只顶替能证明没被用户动过的旧内置库，见 engine.mjs
+  // 的 migrateStaleBundledLibrary）。失败不挡启动：宁可这一版还是旧的，也不能开不了机。
+  if (app.isPackaged) {
+    try {
+      const m = engine.migrateStaleBundledLibrary();
+      if (m.migrated.length) console.log(`[library] 引擎换代：${m.migrated.length} 本旧库已让位给随包新库`, m.migrated);
+      if (m.stale.length) console.warn(`[library] 这些旧库带着你的编目/洗数据成果，没敢动（需要在设置里重灌向量）`, m.stale);
+      if (m.skipped.length) console.warn(`[library] 迁移跳过`, m.skipped);
+    } catch (e) {
+      console.error("[library] 引擎换代迁移失败，本次按原样启动：", e?.message || e);
+    }
+  }
   engine.onModelProgress((e) => {
     if (win && !win.isDestroyed()) win.webContents.send("model:progress", e);
   });
