@@ -14,8 +14,19 @@ import { getEmbedder, DEFAULT_EMBED } from "../src/lib/models.mjs";
 // 与基线对账后才替换正式库；不设=正式库，门语义不变）
 const LIB = process.env.BSP_EVAL_LIB || path.join(import.meta.dirname, "..", "library");
 
-const GOLDEN = [
-  // 名册说明（2026-10-19 考卷重建时盘点）：
+// 书架改名映射：考卷按「建库时的书名」写题，但架上的库文件后来换了中文名/英文名。
+// 以前靠 startsWith 硬匹配，名字一对不上就整本按「佚书」丢弃——那不是题不会，是记错账。
+// 这张表只做「考卷书名 → 架上库文件前缀」的对应，不改任何判分口径。
+// 2026-11-13 实测：17 本考卷书里 5 本属此情况，修完有效题数从 52 回到 80。
+const BOOK_ALIAS = {
+  "jane-eyre-en.epub": "pg1260-简爱.epub",
+  "sherlock-holmes-adventures-en.epub": "pg1661-福尔摩斯冒险史.epub",
+  "dynamo-2007-en.pdf": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+  "lamport-1978-en.pdf": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+  "mapreduce-2004-en.pdf": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+};
+
+const GOLDEN = [  // 名册说明（2026-10-19 考卷重建时盘点）：
   //   · 在架书（library/ 有库）正常计分：论语×2 版/孟子/道德经/P&P/Frankenstein/attention/凤凰/kkndme；
   //   · 【佚书】标记的条目（d2l/og-aws/SDP/hello-algo/简爱/福尔摩斯/三篇论文）——书曾建库编目，
   //     但库不在本机（V3 第二波~第三波-3 的历史资产，catalog JSON 仍在 git），跑时自动丢弃不计分；
@@ -194,7 +205,8 @@ const TOPN = 4;
 // 1) 校验金标准真的在书里（防止我记错原文导致误判）
 const valid = [];
 for (const e of GOLDEN) {
-  const f = fs.readdirSync(LIB).find(x => x.startsWith(e.book) && x.endsWith(".db"));
+  const want = BOOK_ALIAS[e.book] || e.book;
+  const f = fs.readdirSync(LIB).find(x => x.startsWith(want) && x.endsWith(".db"));
   if (!f) { console.log(`[丢弃] ${e.book}: 找不到库文件`); continue; }
   const db = new Database(path.join(LIB, f), { readonly: true });
   const ok = e.g.some(g => db.prepare("SELECT COUNT(*) n FROM chunks WHERE instr(lower(text), lower(?)) > 0").get(g).n > 0);
