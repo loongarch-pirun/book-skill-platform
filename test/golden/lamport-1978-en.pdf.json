@@ -1,0 +1,31 @@
+[
+  {
+    "q": "what relation does lamport define to order events in a distributed system",
+    "a": "In this paper, we discuss the partial ordering defined by the “happened before\" relation, and give a distributed algorithm for extending it to a consistent total ordering of all the events.",
+    "g": [
+      "happened before"
+    ]
+  },
+  {
+    "q": "what does lamport introduce into the system to assign numbers to events",
+    "a": "A distributed algorithm is given for synchronizing a system of logical clocks which can be used to totally order the events.",
+    "g": [
+      "logical clock"
+    ]
+  },
+  {
+    "q": "what must the system of clocks satisfy so events can be ordered by their timestamps",
+    "a": "Ordering the Events Totally\nWe can use a system of clocks satisfying the Clock Condition to place a total ordering on the set of all system events.",
+    "g": [
+      "clock condition"
+    ]
+  },
+  {
+    "q": "how are ties broken when two events happen to get the same clock value",
+    "a": "To break ties, we use any arbitrary total ordering < of the processes.",
+    "g": [
+      "total ordering",
+      "break ties"
+    ]
+  }
+]

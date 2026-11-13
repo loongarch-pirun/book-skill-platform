@@ -1,0 +1,31 @@
+[
+  {
+    "q": "which functional language inspired the map and reduce primitives",
+    "a": "Our abstraction is inspired by the map and reduce primitives present in Lisp and many other functional languages.",
+    "g": [
+      "lisp"
+    ]
+  },
+  {
+    "q": "what is the primary mechanism mapreduce uses for fault tolerance",
+    "a": "Like MapReduce, it relies on re-execution as a mechanism for implementing fault-tolerance.",
+    "g": [
+      "re-execut"
+    ]
+  },
+  {
+    "q": "what does the master launch to handle straggler machines that slow down completion",
+    "a": "6 Backup Tasks\nOne of the common causes that lengthens the total time taken for a MapReduce operation is a “straggler”: a machine that takes an unusually long time to complete one of the last few map or reduce tasks in the computation.",
+    "g": [
+      "backup task"
+    ]
+  },
+  {
+    "q": "why does mapreduce schedule map tasks close to the data they process",
+    "a": "Our locality optimization draws its inspiration from techniques such as active disks [12, 15], where computation is pushed into processing elements that are close to local disks, to reduce the amount of data sent across I/O subsystems or the network.",
+    "g": [
+      "locality",
+      "network bandwidth"
+    ]
+  }
+]

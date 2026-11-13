@@ -1,0 +1,39 @@
+[
+  {
+    "q": "what partitioning technique does dynamo use to spread its keys across nodes",
+    "a": "2 Ensuring Uniform Load distribution\nDynamo uses consistent hashing to partition its key space across its replicas and to ensure uniform load distribution.",
+    "g": [
+      "consistent hashing"
+    ]
+  },
+  {
+    "q": "what mechanism does dynamo use to capture causality between different versions of the same object",
+    "a": "Dynamo uses vector clocks [12] in order to capture causality between different versions of the same object.",
+    "g": [
+      "vector clock"
+    ]
+  },
+  {
+    "q": "what quorum-like technique keeps writes available when some replicas are temporarily down",
+    "a": "Using hinted handoff, Dynamo ensures that the read and write operations are not failed due to temporary node or network failures.",
+    "g": [
+      "sloppy quorum",
+      "hinted handoff"
+    ]
+  },
+  {
+    "q": "what structure is used in anti-entropy to synchronize divergent replicas",
+    "a": "Dynamo uses Merkle trees for anti-entropy as follows: Each node maintains a separate Merkle tree for each key range (the set of keys covered by a virtual node) it hosts.",
+    "g": [
+      "merkle"
+    ]
+  },
+  {
+    "q": "what load distribution did dynamo choose for uniform performance across nodes",
+    "a": "Operational experience has shown that this approach distributes the load of key distribution uniformly across the storage nodes, which is important to meet the latency requirements and to ensure fast bootstrapping.",
+    "g": [
+      "uniform load",
+      "uniform"
+    ]
+  }
+]

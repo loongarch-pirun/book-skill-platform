@@ -1,0 +1,52 @@
+[
+  {
+    "q": "who is the woman who outwits sherlock holmes in a scandal in bohemia",
+    "a": "And when he speaks of Irene Adler, or when he refers to her\nphotograph, it is always under the honourable title of the woman.",
+    "g": [
+      "Irene Adler"
+    ]
+  },
+  {
+    "q": "what is the address of sherlock holmes's london lodgings",
+    "a": "A CASE OF IDENTITY\n“My dear\nfellow,” said Sherlock Holmes as we sat on either side of the fire in his\nlodgings at Baker Street, “life is infinitely stranger than anything\nwhich the mind of man could invent.",
+    "g": [
+      "Baker Street",
+      "221B"
+    ]
+  },
+  {
+    "q": "what kind of snake is the deadly serpent in the speckled band",
+    "a": "“It is a swamp adder!",
+    "g": [
+      "swamp adder"
+    ]
+  },
+  {
+    "q": "who is the friend and colleague who helps sherlock holmes and narrates the cases",
+    "a": "“This is my friend and\ncolleague, Dr. Watson, who is occasionally good enough to help me in my cases.",
+    "g": [
+      "Watson"
+    ]
+  },
+  {
+    "q": "who brought jabez wilson the newspaper advertisement about the red-headed league",
+    "a": "Vincent Spaulding seemed to know so much about it that I thought\nhe might prove useful, so I just ordered him to put up the shutters for the day\nand to come right away with me.",
+    "g": [
+      "Spaulding"
+    ]
+  },
+  {
+    "q": "what did john openshaw's relatives receive from london before dying, marked with K.K.K.",
+    "a": "The young man took from his waistcoat a crumpled envelope, and turning to the\ntable he shook out upon it five little dried orange pips.",
+    "g": [
+      "orange pips"
+    ]
+  },
+  {
+    "q": "who did holmes confront and release for the theft of the blue carbuncle",
+    "a": "“The game’s up, Ryder,” said Holmes quietly.",
+    "g": [
+      "Ryder"
+    ]
+  }
+]

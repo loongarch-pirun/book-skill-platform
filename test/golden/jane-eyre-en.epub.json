@@ -1,0 +1,59 @@
+[
+  {
+    "q": "what was impossible to do on the day the novel opens",
+    "a": "CHAPTER I\nThere was no possibility of taking a walk that day.",
+    "g": [
+      "no possibility of taking a walk"
+    ]
+  },
+  {
+    "q": "what is the name of mr rochester's country estate",
+    "a": "I am an old\nresident in this neighbourhood, sir, and I never heard of a Mrs. Rochester at\nThornfield Hall.”\nI saw a grim smile contort Mr.",
+    "g": [
+      "Thornfield"
+    ]
+  },
+  {
+    "q": "who is rochester's first wife hidden in the attic at thornfield",
+    "a": "—— (a date of fifteen\nyears back), Edward Fairfax Rochester, of Thornfield Hall, in the county of ——,\nand of Ferndean Manor, in ——shire, England, was married to my sister, Bertha\nAntoinetta Mason, daughter of Jonas Mason, merchant, and of Antoinetta his\nwife, a Creole, at —— church, Spanish Town, Jamaica.",
+    "g": [
+      "Bertha"
+    ]
+  },
+  {
+    "q": "简爱离开盖茨黑德之后就读的学校叫什么",
+    "a": "LOWOOD INSTITUTION.",
+    "g": [
+      "Lowood"
+    ]
+  },
+  {
+    "q": "who is the clergyman who runs lowood school and humiliates jane in public",
+    "a": "“Mr. Brocklehurst, I believe I intimated in the letter which I wrote to you\nthree weeks ago, that this little girl has not quite the character and\ndisposition I could wish: should you admit her into Lowood school, I should be\nglad if the superintendent and teachers were requested to keep a strict eye on\nher, and, above all, to guard against her worst fault, a tendency to deceit.",
+    "g": [
+      "Brocklehurst"
+    ]
+  },
+  {
+    "q": "who is the little french girl that jane works for as governess at thornfield",
+    "a": "Adèle claimed\nyour outward attention for a while; yet I fancied your thoughts were elsewhere:\nbut you were very patient with her, my little Jane; you talked to her and\namused her a long time.",
+    "g": [
+      "Adèle"
+    ]
+  },
+  {
+    "q": "whose laugh does jane keep hearing from the third storey of thornfield",
+    "a": "When thus alone, I not unfrequently heard Grace Poole’s laugh: the same peal,\nthe same low, slow ha! ha! which, when first heard, had thrilled me: I heard,\ntoo, her eccentric murmurs; stranger than her laugh.",
+    "g": [
+      "Grace Poole"
+    ]
+  },
+  {
+    "q": "who proposes marriage to jane while she is living with the rivers family",
+    "a": "Jane, you would not\nrepent marrying me—be certain of that; we must be married.",
+    "g": [
+      "St. John",
+      "St.John"
+    ]
+  }
+]

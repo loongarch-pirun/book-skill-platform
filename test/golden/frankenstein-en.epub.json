@@ -1,0 +1,60 @@
+[
+  {
+    "q": "who writes the letters that open the novel",
+    "a": "Farewell, Walton!",
+    "g": [
+      "walton"
+    ]
+  },
+  {
+    "q": "who is falsely accused of william's murder",
+    "a": "William and Justine were\nassassinated, and the murderer escapes; he walks about the world free, and\nperhaps respected.",
+    "g": [
+      "justine"
+    ]
+  },
+  {
+    "q": "who teaches the creature language in the cottage",
+    "a": "I learned also the names of the cottagers\nthemselves.The youth and his companion had each of them several names, but the\nold man had only one, which was father.The girl was called\nsister or Agatha, and the youth Felix, brother, or\nson.",
+    "g": [
+      "felix"
+    ]
+  },
+  {
+    "q": "what does the creature ask victor to create for him",
+    "a": "He continued,\n“You must create a female for me with whom I can live in the interchange of\nthose sympathies necessary for my being.",
+    "g": [
+      "companion",
+      "female"
+    ]
+  },
+  {
+    "q": "which university does victor attend",
+    "a": "Chapter 3\nWhen I had attained the age of seventeen my parents resolved that I should\nbecome a student at the university of Ingolstadt.",
+    "g": [
+      "ingolstadt"
+    ]
+  },
+  {
+    "q": "which outdated philosopher's work first inspires victor",
+    "a": "In this house I chanced to find a volume of\nthe works of Cornelius Agrippa.",
+    "g": [
+      "agrippa"
+    ]
+  },
+  {
+    "q": "怪物最后说要把自己怎么样",
+    "a": "I\nshall ascend my funeral pile triumphantly and exult in the agony of the\ntorturing flames.",
+    "g": [
+      "flames",
+      "pyre"
+    ]
+  },
+  {
+    "q": "弗兰肯斯坦在哪个城市读大学",
+    "a": "I thought I\nsaw Elizabeth, in the bloom of health, walking in the streets of Ingolstadt.",
+    "g": [
+      "ingolstadt"
+    ]
+  }
+]

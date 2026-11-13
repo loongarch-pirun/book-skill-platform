@@ -1,0 +1,59 @@
+[
+  {
+    "q": "what is the famous opening sentence about",
+    "a": "IT is a truth universally acknowledged, that a single man in possession\nof a good fortune must be in want of a wife.",
+    "g": [
+      "truth universally acknowledged"
+    ]
+  },
+  {
+    "q": "how many daughters does the bennet family have",
+    "a": "Five daughters\nsuccessively entered the world, but yet the son was to come; and Mrs.\nBennet, for many years after Lydia’s birth, had been certain that he\nwould.",
+    "g": [
+      "five"
+    ]
+  },
+  {
+    "q": "whom does mr collins marry after being rejected",
+    "a": "Charlotte, the wife of Mr.Collins, was a\nmost humiliating picture!",
+    "g": [
+      "charlotte"
+    ]
+  },
+  {
+    "q": "who finds lydia and wickham in london",
+    "a": "He came to tell Mr.Gardiner that he\nhad found out where your sister and Mr.Wickham were, and that he\nhad seen and talked with them both—Wickham repeatedly, Lydia once.",
+    "g": [
+      "gardiner"
+    ]
+  },
+  {
+    "q": "what is mr darcy's estate called",
+    "a": "Her thoughts were all fixed on that\none spot of Pemberley House, whichever it might be, where Mr.Darcy then\nwas.",
+    "g": [
+      "pemberley"
+    ]
+  },
+  {
+    "q": "who tries to separate jane and bingley",
+    "a": "That he had been concerned in the measures\ntaken to separate Mr.Bingley and Jane, she had never doubted; but she\nhad always attributed to Miss Bingley the principal design and\narrangement of them.",
+    "g": [
+      "caroline",
+      "miss bingley"
+    ]
+  },
+  {
+    "q": "达西先生的庄园叫什么名字",
+    "a": "To Pemberley, therefore, they were to go.",
+    "g": [
+      "pemberley"
+    ]
+  },
+  {
+    "q": "what legal arrangement means the estate passes to collins",
+    "a": "“Your father’s estate is entailed on Mr. Collins, I think?",
+    "g": [
+      "entail"
+    ]
+  }
+]
