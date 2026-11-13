@@ -380,8 +380,34 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
     if (rerankFn) {
       const scores = await rerankFn(q, final.map(r => r.text));
       const TIE = CATALOG_ON ? +(process.env.BSP_CATALOG_TIE || 0.02) : 0;
-      final = final.map((r, i) => ({ ...r, rerank: +scores[i].toFixed(4) }))
+      let ranked = final.map((r, i) => ({ ...r, rerank: +scores[i].toFixed(4) }))
         .sort((a, b) => (b.rerank + TIE * ((b.catW || 0) + (b.enrW || 0))) - (a.rerank + TIE * ((a.catW || 0) + (a.enrW || 0))));
+
+      // P0-4 终排保送向量召回第 1 名（BSP_SEM_GUARD=0 关 = 旧行为，对照组用）
+      //
+      // 为什么要有这道保险：复试官是字面匹配器，语义等价但措辞不同的题它一律看低。
+      // 实测 pride 开篇题（「what is the famous opening sentence about」）唯一正确答案
+      // 向量召回排第 1/1277，重排后掉到第 20/20 —— 纯重排把它整条踢出候选池，
+      // 无论后面怎么答都答不对。这不是重排噪声，是重排的系统性盲区。
+      // 但也不能废掉重排：重排整体 +11 分（83→93），独漏的只有这一类题。
+      //
+      // 所以只做最小干预：向量召回第 1 名若不在重排后的 topN 内，替换掉末位。
+      // 不扩池（池子大小不变，被挤下的末位与它换位，进池不进 topN）——扩池会稀释
+      // 提示词、并让下游（邻块扩展/展示层）看到预算外的块。
+      // 翻转判据：BSP_SEM_GUARD=0 → v2-eval rerank on 掉回 74/80=93，且漏题清单
+      // 重新出现 what is the famous opening sentence about；默认开 → 75/80=94。
+      if (process.env.BSP_SEM_GUARD !== "0" && ranked.length > topN) {
+        let best = ranked[0];
+        for (const r of ranked) if ((r.sem ?? 0) > (best.sem ?? 0)) best = r;
+        const bi = ranked.findIndex(r => r.id === best.id);
+        if (bi >= topN) {
+          const dropped = ranked[topN - 1];      // 重排后的末位
+          const out = [...ranked.slice(0, topN - 1), best];
+          for (let i = topN; i < ranked.length; i++) out.push(i === bi ? dropped : ranked[i]);
+          ranked = out;                          // 长度不变：末位与保送块换位，不扩池
+        }
+      }
+      final = ranked;
     }
   }
   // P3-③ 邻块扩展（BSP_NEIGHBOR=1 开，默认关）：复试官终排后，对终排结果按
