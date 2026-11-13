@@ -38,7 +38,11 @@ assert(fs.existsSync(cleanVer), "材料: kk-clean-louzhu.pdf 在位（净版标�
   let built;
   try { built = await buildBook.main([dirty, "-o", dbPath], {}); }
   finally { console.error = origErr; process.exitCode = keepExit; }
-  assert(!!built && fs.existsSync(dbPath), `kk 建库成功（${built ? `${built.chunks} 块` : `失败: ${captured.join(" / ").slice(0, 120)}`}）——脏 PDF 过真解析管线`);
+  // buildBook.main 返回的是 { chunkCount, totalChars, struct }（src/build-book.js:1526），
+  // 不是 { chunks }。这里原来读 built.chunks 拿到 undefined，断言本身靠 existsSync 过、
+  // 只有报错文案是空的——文案空着的失败信息等于没有信息，一并订正。
+  assert(!!built && fs.existsSync(dbPath) && built.chunkCount > 0,
+    `kk 建库成功（${built ? `${built.chunkCount} 块 / ${built.totalChars} 字` : `失败: ${captured.join(" / ").slice(0, 120)}`}）——脏 PDF 过真解析管线`);
 
   // 预读块文本，按水贴特征预判（与护栏同规则筛：短实义块/引文特征块会被 G1/G2 拦回，预判即排除）
   const { buildCleanTasks, isSubstantiveShort, hasQuotedOrCodeFeature } = await import("../src/lib/clean.mjs");
@@ -71,7 +75,14 @@ assert(fs.existsSync(cleanVer), "材料: kk-clean-louzhu.pdf 在位（净版标�
   const { runClean } = await import("../src/lib/clean.mjs");
   const { importClean, restoreClean } = await import("../src/lib/clean-import.mjs");
   const resDir = fs.mkdtempSync(path.join(tmp, "res-"));
-  const r = await runClean(dbPath, { chatFn: fakeChat, config: { baseUrl: "https://fake.example/v1", apiKey: "sk-test", model: "fake" }, resultsDir: resDir });
+  // 本用例的 chatFn 是本地假函数（零网络零成本），不是真云端。
+  // 但 normalizeLlmConfig 会在调用假函数之前先做 V08 出网端点校验
+  // （src/lib/llm-hosts.mjs:24-50，默认白名单只有 api.deepseek.com / open.bigmodel.cn），
+  // 所以原来写的 https://fake.example/v1 会被 CONFIG 挡在门外、连假函数都进不去。
+  // 改用环回地址：llm-hosts.mjs:43 明确「环回为本地假 API，不受外部主机白名单约束」，
+  // 保持原意（这个测试从头到尾不出网），并顺带覆盖那条环回放行语义。
+  // 一旦有人把环回豁免收掉，这里立刻红——不是恒真写法。
+  const r = await runClean(dbPath, { chatFn: fakeChat, config: { baseUrl: "http://127.0.0.1:9/v1", apiKey: "sk-test", model: "fake" }, resultsDir: resDir });
   assert(r.ok, `runClean 成功（判删 ${r.stats?.dropped} 块，护栏拦回 ${r.stats ? r.stats.guardedG1 + r.stats.guardedG2 + r.stats.guardedG3 : "-"}）`);
   assert(r.stats?.dropped === shuiIdx.length, `判删数=预判数（${r.stats?.dropped} === ${shuiIdx.length}）——回放零漂移`);
 

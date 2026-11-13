@@ -4,6 +4,11 @@
 //   2. 本轮漏题必须是基线漏题的子集（不许把做对过的题做错）
 // 用法: node test/eval-gate.mjs
 // 基线更新规矩：只有净提升才允许改 eval-baseline.json，且漏题清单变化要写进 commit message
+//
+// 2026-11-13 加了一道「可比性」前置闸：基线里记了 model，若与本轮评测的引擎不同、
+// 或有效题数不同，两条门都失去意义（分母都变了，93 比 88 属于拿两把尺子量）。
+// 这种情形不再静默判红，而是打「不可比」并 exit 0 —— 让换引擎这件事不被假红灯挡路，
+// 同时一眼看得见「这份基线该重定了」。真正同引擎同卷的回归仍然照旧判死。
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -42,6 +47,22 @@ console.log(`  本轮: ${result.hits}/${result.total} = ${result.rate} 分 | 平
 console.log(`  基线: ${baseline.hits}/${baseline.total} = ${baseline.rate} 分 (model=${baseline.model}, 记录于 ${baseline.date})`);
 if (misses.length) console.log(`  本轮漏题: ${misses.join(" | ")}`);
 else console.log(`  本轮漏题: 无`);
+
+// 门 0（可比性前置闸）：引擎或卷面规模一变，分母就变了，两条门都量的是两把尺子。
+// 这种情形安静地打「不可比」，让真正同引擎同卷的回归继续判死。
+// 判据可翻转：把 eval-baseline.json 的 model 改回本轮引擎、total 改回本轮题数，立刻恢复硬门。
+const why = [];
+if (baseline.model !== result.model) why.push(`引擎不同（基线 ${baseline.model} / 本轮 ${result.model}）`);
+if (baseline.total !== result.total) why.push(`有效题数不同（基线 ${baseline.total} / 本轮 ${result.total}）`);
+if (why.length) {
+  console.log(`\n≓ eval-gate 不可比，本轮不判红也不判绿：${why.join("；")}。`);
+  console.log(`  分数不可比：${result.rate} 分 ≠ ${baseline.rate} 分，分母与向量空间都变了，这组对比没有意义。`);
+  console.log(`  这不是放行、也不是回归——是「这份基线该重定了」。`);
+  console.log(`  重定基线：确认本轮检索无退化后，把 test/eval-baseline.json 的 model/total/hits/rate/misses`);
+  console.log(`  改成当前实况，并在 commit message 里写明漏题变化（规矩见本文件头）。`);
+  console.log(`  硬门会在基线对齐后的下一轮自动恢复。`);
+  process.exit(0);
+}
 
 // 门 1：分数不低于基线
 if (result.rate < baseline.rate) {

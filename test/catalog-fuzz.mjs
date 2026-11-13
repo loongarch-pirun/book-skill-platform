@@ -33,7 +33,13 @@ const obs = (cond, name, note = "") => {
 const safeRm = (p) => { try { fs.rmSync(p, { recursive: true, force: true }); } catch { } };
 
 // P&P 真库只读拷贝（注入边/改 meta 全在副本上）
-const PP_DB = path.join(ROOT, "library", "pride-and-prejudice-en.epub.db");
+// 用**带编目成果的夹具**而不是主库：主库是每次重建的产物（本轮 m3/1277 块、无任何
+// 编目数据，themes/persons 表都不存在），一整套 getPersonDetail/getThemeDetail/
+// 骨架断言全靠编目层，指着主库等于指着空气——7 条 P2-A 全红就是这么来的。
+// 夹具（test/fixtures/library/…，e5/384、12 主题 25 人物）与 graphrag-fuzz 的
+// PP_CAT_DB 是同一份；它只被当数据源读，不参与任何 assertEngine（唯一那处
+// assertEngine 用的是本文件自建的合成库）。
+const PP_DB = path.join(__dirname, "fixtures", "library", "pride-and-prejudice-en.epub.db");
 function copyPp(tag) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `bsp-p2-${tag}-`));
   const libDir = path.join(tmp, "library");

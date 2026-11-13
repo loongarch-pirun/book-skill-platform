@@ -19,7 +19,10 @@ const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-parserv3-"));
 const DB = (n) => path.join(TMP, n + ".db");
 
 let failed = 0;
+let skipped = 0;
 const assert = (cond, msg) => { console.log((cond ? "PASS" : "FAIL") + " - " + msg); if (!cond) failed++; };
+// SKIP = 这条判据在当前机器上无从验证（不等于通过），计数并在尾部报出来
+const skip = (msg) => { skipped++; console.log("SKIP - " + msg); };
 
 // ---------- 运行时造 docx（同 make-table-docx.mjs 的 OOXML 手工拼装） ----------
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -229,16 +232,37 @@ console.log("===== 5) 存量四书零变化 =====");
     const n = await fn(bb);
     assert(n.chunks.length === expectChunks, `${label}：块数锁定 ${expectChunks}（实际 ${n.chunks.length}）`);
   };
-  await cmp("lunyu pdf", b => b.parsePdf(path.join(ROOT, "books/lunyu-xueer-zh.pdf")), 4);
+  // PDF 的块数取决于走哪条解析通道（MinerU 结构化 126 块 / legacy 文字流 51 块），
+  // 而 parsePdf 的通道由「本机装没装 MinerU」隐式决定——照旧写死 126 的话，这台机器
+  // 有没有 MINERU_HOME 会让同一条断言时红时绿。断言必须自己钉死通道，不能交给环境。
+  // 因此拆两段：legacy 口径显式指定引擎（任何机器上都一样，确定性断言）；
+  // 结构化口径只在 doclib 真能连上时才验，连不上就 SKIP 并写明原因，不假装通过。
+
+  process.env.BSP_PDF_ENGINE = "legacy";
+  try {
+    await cmp("lunyu pdf [legacy]", b => b.parsePdf(path.join(ROOT, "books/lunyu-xueer-zh.pdf")), 4);
+    await cmp("attention pdf [legacy]", b => b.parsePdf(path.join(ROOT, "books/attention-is-all-you-need-en.pdf")), 51);
+  } finally {
+    delete process.env.BSP_PDF_ENGINE;
+  }
   await cmp("lunyu docx", b => b.parseDocx(path.join(ROOT, "books/lunyu-xueer-zh.docx")), 16);
-  await cmp("attention pdf", b => b.parsePdf(path.join(ROOT, "books/attention-is-all-you-need-en.pdf")), 126);
   await cmp("p&p epub", b => b.parseEpub(path.join(ROOT, "books/pride-and-prejudice-en.epub")), 1282);
+
+  const M = await import("../src/lib/mineru.mjs");
+  const configured = M.mineruAvailable();
+  const reachable = configured && await M.mineruReachable();
+  if (reachable) {
+    await cmp("attention pdf [结构化]", b => b.parsePdf(path.join(ROOT, "books/attention-is-all-you-need-en.pdf")), 126);
+  } else {
+    skip(`attention pdf [结构化 126 块]：本机 doclib 不可达（configured=${configured} / reachable=${reachable}），`
+      + `结构化口径无处可验；legacy 口径已在上面钉死。装了 MinerU 的机器上这条会自动变回 ASSERT。`);
+  }
   // 注：2026-10-16 #58 渐进重建前，library/pride-and-prejudice-en.epub.db 里是 2210 块
   // （旧 epub 文件/旧解析产物，与当前 books/ 下的 epub 已不同源）——已用当前源文件重建为
   // 1250 块（语义分块合并），影子库考卷对照打平后替换；这里锁的是「当前源文件解析输出」。
   // 升级时已用 git HEAD 版 build-book 逐块 diff 验证：块数/字符/文本集合全部为零变化。
 }
 
-console.log(`\n===== V3 解析器验收：${failed === 0 ? "全部 PASS" : failed + " 项 FAIL"} =====`);
+console.log(`\n===== V3 解析器验收：${failed === 0 ? "全部 PASS" : failed + " 项 FAIL"}${skipped ? `（${skipped} SKIP）` : ""} =====`);
 try { fs.rmSync(TMP, { recursive: true, force: true }); } catch { /* 沙箱 rm 被拦则留 temp */ }
 process.exit(failed ? 1 : 0);

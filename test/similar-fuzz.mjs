@@ -1,7 +1,9 @@
 // 终期暴力测试 P3：similar.mjs 相似块查询爆破（V2 融合轮）。
 // 攻击面：src/lib/similar.mjs 的 similarChunks（P-E 以块找块）+ MCP similar_chunks 工具契约。
 // 铁律：真库只读拷贝到 tmp；topN 矩阵用 tmp 合成库（随机 384 维向量，零模型）；
-//   text 入口才加载真模型（e5，BSP_RERANK=0 不碰复试官）；不碰真 library 原件。
+//   text 入口才加载真模型（默认引擎，见 lib/models.mjs 的 DEFAULT_EMBED；BSP_RERANK=0 不碰复试官）；
+//   不碰真 library 原件。断言一律不许写死引擎名——引擎由 BSP_EMBED_MODEL/DEFAULT_EMBED 决定，
+//   写死会在换引擎那天变成假失败（e5→m3 换引擎时就恰恰红在这里）。
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -19,6 +21,7 @@ const Database = require("better-sqlite3");
 const { similarChunks, clampTopN, MAX_TOPN } = await import("../src/lib/similar.mjs");
 const { configureSearch } = await import("../src/lib/search.mjs");
 const { registerServerTools } = await import("../src/lib/register-tools.mjs");
+const { DEFAULT_EMBED } = await import("../src/lib/models.mjs");
 
 let pass = 0, fail = 0, observe = 0;
 const ok = (cond, name, extra = "") => {
@@ -31,7 +34,8 @@ const obs = (cond, name, note = "") => {
 };
 const safeRm = (p) => { try { fs.rmSync(p, { recursive: true, force: true }); } catch { } };
 
-// tmp 内自建合成库：n 个块 + 随机 384 维向量（e5 同维度）+ meta 表（listBooks 放行）
+// tmp 内自建合成库：n 个块 + 随机 384 维向量 + meta 表（listBooks 放行）。
+// 这份库只走 chunk_id 入口（零模型，B 段以外不 assertEngine），向量维度与真实引擎无关
 function makeVecDb(libDir, name, n = 30) {
   const p = path.join(libDir, name);
   const db = new Database(p);
@@ -67,7 +71,7 @@ function makeNullVecDb(libDir, name) {
   db.close();
   return p;
 }
-// 真库只读拷贝（16 块真 e5 向量，text 入口用）
+// 真库只读拷贝（真向量，维度随当前默认引擎；text 入口用）
 const LUNYU = path.join(ROOT, "library", "lunyu-xueer-zh.docx.db");
 function copyLunyu(tag) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `bsp-p3-${tag}-`));
@@ -155,15 +159,17 @@ console.log("\n--- P3-A similarChunks chunk_id 入口 ---");
   safeRm(tmp);
 }
 
-// ========== P3-B text 入口（真模型 e5；BSP_RERANK=0 不碰复试官） ==========
+// ========== P3-B text 入口（真模型＝当前默认引擎；BSP_RERANK=0 不碰复试官） ==========
 console.log("\n--- P3-B similarChunks text 入口（真库拷贝） ---");
 process.env.BSP_RERANK = "0"; // 复试官与本入口无关（只混检用），省一次 568M 模型加载
 {
-  // B1：正常 text → 现算查询向量，embed_model 透出
+  // B1：正常 text → 现算查询向量，embed_model 透出真实引擎名。
+  // 判据必须是「回显的引擎 == 当前默认引擎」而不是写死 "e5"：引擎一换，写死的那条
+  // 就变成假失败（e5→m3 切换当天实测红在这里，产品其实完全正常）。
   const { tmp, db: lunyu } = copyLunyu("b1");
   const r1 = await similarChunks(lunyu, { text: "学而时习之，不亦说乎" });
-  ok(!r1.error && r1.results.length > 0 && r1.embed_model === "e5" && r1.query?.text === "学而时习之，不亦说乎",
-    `P3-B1: text 入口正常（${r1.results?.length} 条 / embed_model=${r1.embed_model} / query 回显）`);
+  ok(!r1.error && r1.results.length > 0 && r1.embed_model === DEFAULT_EMBED && r1.query?.text === "学而时习之，不亦说乎",
+    `P3-B1: text 入口正常（${r1.results?.length} 条 / embed_model=${r1.embed_model}（默认引擎 ${DEFAULT_EMBED}）/ query 回显）`);
   ok(r1.results.every((x) => x.text && typeof x.score === "number"),
     "P3-B1b: text 入口结果同样带 text/score（引用规格一致）");
 
