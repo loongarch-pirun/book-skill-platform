@@ -383,7 +383,7 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
       let ranked = final.map((r, i) => ({ ...r, rerank: +scores[i].toFixed(4) }))
         .sort((a, b) => (b.rerank + TIE * ((b.catW || 0) + (b.enrW || 0))) - (a.rerank + TIE * ((a.catW || 0) + (a.enrW || 0))));
 
-      // P0-4 终排保送向量召回第 1 名（BSP_SEM_GUARD=0 关 = 旧行为，对照组用）
+      // P0-4 终排保送「池内语义分最高的那一个」（BSP_SEM_GUARD=0 关 = 旧行为，对照组用）
       //
       // 为什么要有这道保险：复试官是字面匹配器，语义等价但措辞不同的题它一律看低。
       // 实测 pride 开篇题（「what is the famous opening sentence about」）唯一正确答案
@@ -391,7 +391,12 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
       // 无论后面怎么答都答不对。这不是重排噪声，是重排的系统性盲区。
       // 但也不能废掉重排：重排整体 +11 分（83→93），独漏的只有这一类题。
       //
-      // 所以只做最小干预：向量召回第 1 名若不在重排后的 topN 内，替换掉末位。
+      // 口径必须说准（复核 🟡-3）：这里保送的是「进入复试池后 sem 最高的那一块」，
+      // 不是「全书向量召回第 1 名」。池子由 :360 的 RECALL 决定
+      // （min(max(topN*4,12),20)，编目/洗数据命中时 +8），所以池子是 topN 的一个
+      // 有限窗口：池外还有更贴近问题的块也不会被保送进来。保送的范围 = 这个窗口。
+      //
+      // 所以只做最小干预：池内 sem 最高的块若不在重排后的 topN 内，替换掉末位。
       // 不扩池（池子大小不变，被挤下的末位与它换位，进池不进 topN）——扩池会稀释
       // 提示词、并让下游（邻块扩展/展示层）看到预算外的块。
       // 翻转判据：BSP_SEM_GUARD=0 → v2-eval rerank on 掉回 74/80=93，且漏题清单
