@@ -108,7 +108,7 @@ const JUNK = [
   { name: "page_number", re: /^(page\s*)?\d{1,4}(\s*(of|\/)\s*\d{1,4})?$/i },
   { name: "copyright_line", re: /(©|\(c\)|copyright|all rights reserved|permission to make|licensed under)/i },
   { name: "toc_line", re: /\.{3,}\s*\d{1,4}\s*$|…{3,}\s*\d{1,4}\s*$/ },
-  { name: "latex_residue", re: /^(?:[\\{}_\^$\s]|\\(?:mathrm|underset|overset|frac|sum|tau|nu|kappa|xi|leq|geq|gtrsim|gtrsim|cdot|times|alpha|beta|gamma|delta|sigma|lambda|infty|sqrt|left|right|text|begin|end)\b|[_^]\s*\{|[a-z]\s*_\s*\{)/i },
+  { name: "latex_residue", re: /^(?:[\\{}_\^$\s]|\\(?:mathrm|underset|overset|frac|sum|tau|nu|kappa|xi|leq|geq|lesssim|gtrsim|cdot|times|alpha|beta|gamma|delta|sigma|lambda|infty|sqrt|left|right|text|begin|end)\b|[_^]\s*\{|[a-z]\s*_\s*\{)/i },
   { name: "mojibake", re: /[\uFFFD\uE000-\uF8FF]|锟斤拷|烫烫|屯屯/ },
   { name: "separator", re: /^[\s\-=_*#~·•\.]{1,20}$/ },
 ];
