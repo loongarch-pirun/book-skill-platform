@@ -87,6 +87,35 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
   console.log();
 }
 
+// ---------------------------------------------------------------- 样例 3：规则③（块尾切断，后半截不在结果里）
+// 样例 1/2 用的都是库里真实接缝，走的是规则②（两块拼起来才完整）。
+// 规则③ 管的是另一种损伤：后半截压根没被检索回来，只能靠命中块里的前半截判 partial。
+// 补这一节的原因：2026-11-14 CP1 复核实测发现，此前 judge-test 里**没有任何断言**覆盖规则③
+// —— 把 judge.mjs:112 的 required 门槛改坏、或整段删掉，本文件原本一处都不会红。
+// （复核探针：24-CP1复核\probe-judge-rule3.mjs）
+{
+  console.log("[样例 3] 规则③ —— 块尾把答案句切断，后半截不在任何命中块里");
+  const a = "The coordinator then sends the new version (along with the new vector clock) to the N highest-ranked reachable nodes.";
+  const golden = { q: "规则③ 样例", a, g: ["coordinator", "vector clock"] };
+  const required = Math.max(4, Math.ceil(a.length * 0.5));
+
+  // 只检回一块，块尾停在句子中间：后半截根本不在结果里，邻块也没检回 → 规则② 用不上
+  const cut = [{ id: 87, text: "Upon receiving a put() request for a key, the coordinator generates the vector clock for the new version. The coordinator then sends the new version (along with the new vector c" }];
+  const v = judge(cut, golden);
+  console.log(`    新尺子: level=${v.level} prefixLen=${v.prefixLen ?? "-"} —— ${v.why}`);
+  check("块内只有 a 的前半截（无邻块可拼）→ 判 partial", v.level === "partial");
+  check(`前缀长度 ${v.prefixLen} 达到门槛 ${required} 且不足全句 ${a.length}`, v.prefixLen >= required && v.prefixLen < a.length);
+  check("旧尺子对同一块判 hit（关键词都在）", legacyJudge(cut, golden.g).hit === true);
+  check("新旧结论不同（规则③ 也是真翻转）", (legacyJudge(cut, golden.g).hit === true) !== (v.level === "full"));
+
+  // 门槛下沿：前缀不足一半 → 按设计判 miss（不能把「沾边几个字」当命中）
+  const under = [{ id: 87, text: a.slice(0, required - 1) }];
+  const v2 = judge(under, golden);
+  console.log(`    前缀不足一半（${required - 1}/${a.length} → 门槛 ${required}）时: level=${v2.level}`);
+  check("前缀不到一半 → 判 miss", v2.level === "miss");
+  console.log();
+}
+
 // ---------------------------------------------------------------- 对照：完整句应判 full
 {
   console.log("[对照] pride id=42 开篇句 —— 完整落在单块内，应判 full");
