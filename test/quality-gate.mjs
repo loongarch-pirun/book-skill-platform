@@ -326,8 +326,7 @@ async function runBook(items) {
     const t0 = Date.now();
     const rs = await hybridSearch(path.join(LIB, it.file), it.q, TOP_N, { rerank: RERANK });
     const lat = Date.now() - t0;
-    const v = judge(rs, it);
-    const lg = legacyJudge(rs, it.g);
+    const v = judge(rs, it); // 只为进度日志好看；判级不落 raw（见 ④ 说明）
     // hybridSearch 的返回项没有 bookId 字段（按书口径书是已知的），这里补上库文件名，
     // 好让脏块查询知道去哪个库取块文本。
     const bookId = it.file.replace(/\.db$/, "");
@@ -336,8 +335,11 @@ async function runBook(items) {
       book: it.book, file: it.file, q: it.q,
       perN: {
         [TOP_N]: {
-          lat, level: v.level, rank: v.rank, why: v.why,
-          legacyHit: lg.hit, legacyRank: lg.rank,
+          // ④（虾虾 2026-11-14 13:02 派）：raw 里**不存** level/rank/why/legacyHit/legacyRank。
+          // 判级是「召回块 + 当前考卷」的函数，把它的结果钉进 raw，等于把某一天的卷子
+          // 一起钉进原始数据：卷子一改（改 a、加 alt），raw 立刻作废，还得花 95 分钟重跑。
+          // 现在 raw 只存「召回了哪 4 块」这个客观事实，判级搬到 computeMetrics 里现算。
+          lat,
           nRes: rs.length,
           books: rs.map(r => ({ bookId, id: r.id, score: r.score })),
           routed: [],
@@ -361,15 +363,14 @@ async function runRoute(items) {
     const res = await routeAndSearch(it.q, { topN: TOP_N, libDir: LIB });
     const lat = Date.now() - t0;
     const rs = res.results || [];
-    const v = judge(rs, it);
-    const lg = legacyJudge(rs, it.g);
+    const v = judge(rs, it); // 只为进度日志好看；判级不落 raw（见 ④ 说明）
     const d = dirtyOf(rs);
     raw.items.push({
       book: it.book, file: it.file, q: it.q,
       perN: {
         [TOP_N]: {
-          lat, level: v.level, rank: v.rank, why: v.why,
-          legacyHit: lg.hit, legacyRank: lg.rank,
+          // ④：同 runBook，raw 只记客观召回结果，不记判级。
+          lat,
           nRes: rs.length,
           books: rs.map(r => ({ bookId: r.bookId, id: r.id, score: r.score })),
           routed: (res.routed_books || []).map(b => b.title || b.id),
@@ -420,19 +421,47 @@ function pickN(it, N, where) {
   }
   return d;
 }
-export function computeMetrics(rawBook, rawRoute, N) {
+// ④（虾虾 2026-11-14 13:02 派）：判级不再信 raw，一律用**当前考卷**现算。
+// raw 只记客观事实（召回了哪几块、延迟、脏块），判级是「召回块 + 卷子」的函数。
+// 卷子改了（修 a、加 alt）raw 仍然有效——这才是「原始数据」该有的性质。
+const textCache = new Map();
+function chunkText(bookId, id) {
+  const k = bookId + "#" + id;
+  if (!textCache.has(k)) {
+    const r = dbByBookId(bookId).prepare("SELECT text FROM chunks WHERE id = ?").get(id);
+    textCache.set(k, r ? r.text : "");
+  }
+  return textCache.get(k);
+}
+function judgeOf(rawItem, d, goldens, where) {
+  const defaultBookId = String(rawItem.file || "").replace(/\.db$/, "");
+  const rs = (d.books || []).map(b => {
+    const bid = b.bookId || defaultBookId;
+    return { bookId: bid, id: b.id, score: b.score, text: chunkText(bid, b.id) };
+  });
+  const g = goldens.find(x => x.q === rawItem.q && (!x.book || x.book === rawItem.book));
+  if (!g) {
+    throw new Error(`${where}找不到题目「${rawItem.q}」（${rawItem.book}）在当前考卷里的条目`
+      + ` —— 这份 raw 与当前考卷不是同一份题单，请用当前卷重跑，或核对 --from-book 指的哪份`);
+  }
+  return { v: judge(rs, g), lg: legacyJudge(rs, g.g || []), rs };
+}
+
+export function computeMetrics(rawBook, rawRoute, N, goldens = null) {
+  const GOLDS = goldens || loadItems();
   const rows = (rawBook.items || []).map(it => {
     const d = pickN(it, N, "按书口径 raw ");
-    const hit = d.level === "full" || d.level === "partial";
+    const { v, lg } = judgeOf(it, d, GOLDS, "按书口径 raw ");
+    const hit = v.level === "full" || v.level === "partial";
     const formDirty = d.formDirty || [];
     const prodDirty = d.prodDirty || [];
     return {
-      q: it.q, book: it.book, level: d.level, rank: d.rank || 0,
+      q: it.q, book: it.book, level: v.level, rank: v.rank || 0,
       hit,
       dirtyCount: formDirty.length,
       prodDirtyCount: prodDirty.length,
       nRes: d.nRes || 0,
-      lat: d.lat || 0, legacyHit: !!d.legacyHit, legacyRank: d.legacyRank || 0,
+      lat: d.lat || 0, legacyHit: !!lg.hit, legacyRank: lg.rank || 0,
     };
   });
   const n = rows.length || 1;
@@ -457,10 +486,11 @@ export function computeMetrics(rawBook, rawRoute, N) {
   // 路由准确率：端到端口径量（按书口径下它恒等于命中率，没有意义）
   const routeRows = (rawRoute && rawRoute.items ? rawRoute.items : []).map(it => {
     const d = pickN(it, N, "端到端口径 raw ");
-    const hit2 = d.level === "full" || d.level === "partial";
+    const { v: v2 } = judgeOf(it, d, GOLDS, "端到端口径 raw ");
+    const hit2 = v2.level === "full" || v2.level === "partial";
     const expectedId = String(it.file || "").replace(/\.db$/, "");
-    const hitBook = hit2 && d.rank > 0 && d.books ? (d.books[d.rank - 1] || {}).bookId : null;
-    return { hit: hit2, routeOk: hit2 && hitBook === expectedId, rank: d.rank || 0, level: d.level };
+    const hitBook = hit2 && v2.rank > 0 && d.books ? (d.books[v2.rank - 1] || {}).bookId : null;
+    return { hit: hit2, routeOk: hit2 && hitBook === expectedId, rank: v2.rank || 0, level: v2.level };
   });
   const rFull = routeRows.filter(r => r.level === "full").length;
   const rPartial = routeRows.filter(r => r.level === "partial").length;
