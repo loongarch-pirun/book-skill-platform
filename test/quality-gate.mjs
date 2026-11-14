@@ -594,6 +594,17 @@ if (seam.total > 0 && seam.rate < 1) {
   process.exit(1);
 }
 
+// 防 judge 放水（复核 🟡-4）：旧尺子是关键词判据，只要答案句里的一个长词命中就算 hit，
+// 天然比新尺子松（实测 full 59 / 旧尺子命中 75，旧的多出 16 条正是虚命中）。
+// 所以「新尺子的 full 数 > 旧尺子命中数」在因果上说不通：更严的判据不可能比更松的判出更多
+// 完整命中。一旦出现，说明有人把新尺子放松了（或旧尺子收紧到失真），必须红。
+// 这条不是恒真项：正常数据下 full(59) < legacyHit(75)，恒为绿；只有放水才翻红。
+if (res.detail.full > res.detail.legacyHit) {
+  console.log(`\n✗ 判分尺子疑似放水：新尺子 full ${res.detail.full} > 旧尺子命中 ${res.detail.legacyHit}`
+    + ` —— 更严的判据不可能判出更多完整命中，请检查 test/lib/judge.mjs`);
+  process.exit(1);
+}
+
 if (regress.length) {
   console.log(`\n✗ 退化项（${regress.length} 项）：${regress.map(k => LABEL[k]).join("、")}`);
   process.exit(1);
