@@ -15,7 +15,7 @@ import { validateBaseUrl } from "./llm-hosts.mjs";
 // UI 保存配置前过这里；返回 { baseUrl, apiKey, model } 或 { error }
 // V08/A-01：出网端点校验收敛到 llm-hosts.mjs 单正本（与 saveLlmConfig 同源，F2 零漂移）。
 // 非环回强制 https + 主机白名单；http 仅本机环回放行（测试假 API / 本地模型端点）。
-export function normalizeLlmConfig({ baseUrl, apiKey, model, allowedHosts } = {}) {
+export function normalizeLlmConfig({ baseUrl, apiKey, model, allowedHosts, reasoningEffort } = {}) {
   const base = String(baseUrl || "").trim().replace(/\/+$/, "");
   const key = String(apiKey || "").trim();
   const mdl = String(model || "").trim();
@@ -23,7 +23,8 @@ export function normalizeLlmConfig({ baseUrl, apiKey, model, allowedHosts } = {}
   if (!v.ok) return { error: v.error };
   if (!key) return { error: "请填 API key" };
   if (!mdl) return { error: "请填模型名（例如 deepseek-chat）" };
-  return { baseUrl: base, apiKey: key, model: mdl };
+  // P0-10：可选透传（配置里有才带，没配就是空串——chat() 据此决定发不发）。
+  return { baseUrl: base, apiKey: key, model: mdl, reasoningEffort: String(reasoningEffort || "").trim() };
 }
 
 // V08/A-01（接口单 IF-3）：给上层一个只读「云端模式」快照，A 侧纯函数，不新增 IPC。
@@ -105,7 +106,7 @@ function errByStatus(status) {
   return llmErr("HTTP", `模型服务返回异常（${status}）`);
 }
 
-export async function chat({ baseUrl, apiKey, model, messages, timeoutMs = 60000, temperature = 0.3, maxTokens = 1500 }) {
+export async function chat({ baseUrl, apiKey, model, messages, timeoutMs = 60000, temperature = 0.3, maxTokens = 1500, reasoningEffort = "" }) {
   // B2/CP3：chat() 是唯一真正发请求的口子，testConnection / query-rewrite / compactHistory
   // 三处直调不走 normalizeLlmConfig——在此收口，手改 llm.json 也打不到白名单/环回之外的主机。
   const v = validateBaseUrl(baseUrl);
@@ -115,10 +116,17 @@ export async function chat({ baseUrl, apiKey, model, messages, timeoutMs = 60000
   try {
     let res;
     try {
+      // P0-10：可选 reasoning_effort。**只有配置里显式给了才发**，默认请求体与改造前
+      // 逐字节相同（无该字段）——避免给不认识它的服务端塞未知字段。
+      // 为什么需要它：本机 Ollama + qwen3.5:4b 是 thinking 模型，不发该字段时 max_tokens
+      // 全被 reasoning 吃掉、content 返回空 → BADRESP「模型没有返回内容」（实测 30.3s 空）。
+      // 发 "none" 后 1.0s 返回完整 JSON。取值不做任何默认/兜底：用户配置什么就发什么。
+      const body = { model, messages, temperature, max_tokens: maxTokens };
+      if (typeof reasoningEffort === "string" && reasoningEffort.trim()) body.reasoning_effort = reasoningEffort.trim();
       res = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens }),
+        body: JSON.stringify(body),
         signal: ctl.signal,
       });
     } catch (e) {
@@ -215,6 +223,7 @@ export async function askCloud({ config, question, results, skillChapters, histo
   const once = async (retryNote) => {
     const messages = buildMessages({ question, results, skillChapters, history, memory, includeSourceText });
     if (retryNote) messages[messages.length - 1].content += `\n\n补充要求：${retryNote}`;
+    // P0-10：reasoningEffort 随 config 进来（normalizeLlmConfig 已归一），空串 = 不发该字段。
     const r = await chat({ ...norm, messages, timeoutMs, temperature, maxTokens });
     if (!r.ok) return r;
     const parsed = parseAnswer(r.text);

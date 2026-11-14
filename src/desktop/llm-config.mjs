@@ -54,7 +54,7 @@ function encodeKey(key) {
 
 // 给 UI 的形态：不含明文 key
 export function loadLlmConfig() {
-  if (!llmConfigReady()) return { baseUrl: "", model: "", hasKey: false, keyTail: null, encryption: "unknown", warning: null };
+  if (!llmConfigReady()) return { baseUrl: "", model: "", hasKey: false, keyTail: null, encryption: "unknown", reasoningEffort: "", warning: null };
   const raw = readRaw();
   const key = decodeKey(raw);
   const broken = !!raw.__broken; // V2-D07：配置损坏态透出（不再是静默的「没配置」）
@@ -64,6 +64,8 @@ export function loadLlmConfig() {
     hasKey: !!key,
     keyTail: key ? "…" + key.slice(-4) : null,
     encryption: _env.available ? "safeStorage" : "plain",
+    // P0-10：可选生成参数，原样透出给 UI（空串 = 不配 = 请求体不发该字段）。
+    reasoningEffort: String(raw.reasoningEffort || "").trim(),
     warning: broken
       ? "配置文件已损坏，已按未配置处理——重新填写并保存即可修复"
       : (_env.available ? null : "系统加密不可用，key 以本机可读形式保存（不推荐）"),
@@ -78,11 +80,13 @@ export function readLlmKey() {
 
 // 保存：baseUrl / model 传了就更新；apiKey 非空才更新 key（空 = 不改，防误清）。
 // 合并后做完整性校验，不完整直接拒收（不落盘半成品）。
-export function saveLlmConfig({ baseUrl, model, apiKey } = {}) {
+export function saveLlmConfig({ baseUrl, model, apiKey, reasoningEffort } = {}) {
   if (!llmConfigReady()) return { ok: false, error: "未配置存储目录" };
   // V2-D08（暴力测试 P1 修）：apiKey 传了但非字符串（如数字 123）——老逻辑 typeof
   // 检查不过被静默忽略，返回 ok:true 但 key 没存，调用方以为存成功了。现显式拒收。
   if (apiKey !== undefined && typeof apiKey !== "string") return { ok: false, error: "API key 格式不对（应是文本）" };
+  // P0-10：reasoningEffort 同款「传了才改」语义（不传 = 保留原值，防误清）。
+  if (reasoningEffort !== undefined && typeof reasoningEffort !== "string") return { ok: false, error: "reasoning_effort 格式不对（应是文本，如 none / low / medium / high，留空=不发该字段）" };
   const raw = readRaw();
   const next = {
     // 与 llm.mjs normalizeLlmConfig 对齐：trim + 去尾斜杠在**校验前**完成——
@@ -103,6 +107,8 @@ export function saveLlmConfig({ baseUrl, model, apiKey } = {}) {
 
   const out = { baseUrl: next.baseUrl.replace(/\/+$/, ""), model: next.model };
   out.apiKeyEnc = keyToSet ? encodeKey(keyToSet) : raw.apiKeyEnc;
+  // P0-10：传了就写（空串也算显式清除），不传保留原值。
+  out.reasoningEffort = reasoningEffort !== undefined ? String(reasoningEffort).trim() : String(raw.reasoningEffort || "").trim();
   try {
     fs.mkdirSync(_env.userData, { recursive: true });
     fs.writeFileSync(cfgPath(), JSON.stringify(out, null, 2), "utf8");

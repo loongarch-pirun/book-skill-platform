@@ -96,12 +96,14 @@ export function cloudBarHtml() {
         <div class="cfgrow"><input id="llmBase" placeholder="接口地址，如 https://api.deepseek.com/v1" value="${esc(c.baseUrl || "")}"></div>
         <div class="cfgrow"><input id="llmModel" placeholder="模型名，如 deepseek-chat" value="${esc(c.model || "")}"></div>
         <div class="cfgrow"><input id="llmKey" type="password" placeholder="${c.hasKey ? "已存 key（尾号 " + esc(c.keyTail || "") + "），留空不改" : "API key（sk-…，仅保存在本机）"}"></div>
+        <div class="cfgrow"><input id="llmReason" placeholder="思考档位（可选，如 none / low / medium / high；留空=不发该字段）" value="${esc(c.reasoningEffort || "")}"></div>
         <div class="cfgbtns">
           <button class="primary sm" data-action="llmsave">保存</button>
           <button class="ghost sm" data-action="llmtest">测试连接</button>
           <button class="ghost sm" data-action="llmclose">取消</button>
         </div>
         <div class="cfgwarn">检索永远在本机；发送给云端 AI 的只有「你的问题 + 这次检索到的原文片段」。</div>
+        <div class="cfgwarn">思考档位只在本机模型（如 Ollama + qwen3.5）需要时填：这类模型会把输出预算全花在思考上，导致正文为空、报「模型没有返回内容」——填 none 即可。云端 OpenAI 兼容接口一般留空。</div>
         ${c.warning ? `<div class="cfgwarn">${esc(c.warning)}</div>` : ""}
       </div>`;
   }
@@ -318,8 +320,10 @@ export function bindAskEvents() {
       const baseUrl = $("#llmBase")?.value.trim() || undefined;
       const model = $("#llmModel")?.value.trim() || undefined;
       const apiKey = $("#llmKey")?.value.trim() || undefined;
+      // P0-10：思考档位可留空（= 请求体不发 reasoning_effort，与改造前逐字节一致）。
+      const reasoningEffort = $("#llmReason") ? $("#llmReason").value.trim() : undefined;
       try {
-        const cfg = await call(window.study.llmConfigSet({ baseUrl, model, apiKey }));
+        const cfg = await call(window.study.llmConfigSet({ baseUrl, model, apiKey, reasoningEffort }));
         state.llm.config = cfg;
         state.llm.editing = false;
         state.llm.error = null;

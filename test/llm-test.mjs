@@ -257,6 +257,35 @@ const RESULTS = [
     "B2: chat() 环回 http:// 假 API 放行（test:ci 本地假端点不受影响）");
 }
 
+// ========== O) P0-10 可选 reasoning_effort（配置里有才发，默认不发） ==========
+// 为什么加：本机 Ollama + qwen3.5:4b 是 thinking 模型，请求体不带该字段时 max_tokens 全被
+// reasoning 吃掉、content 返回空 → BADRESP「模型没有返回内容」（实测 24.1s 空）；带上
+// "none" 后 0.32s 返回完整 JSON。翻转判据：删掉 chat() 里那两行 body 组装 → 本条断言红。
+// 契约：不配 = 请求体键与改造前**逐字节一致**（不许给不认识该字段的服务端塞未知字段）。
+{
+  const before = lastBody;
+  await chat({ baseUrl: BASE, apiKey: "k", model: "m", messages: [{ role: "user", content: "q" }] });
+  const b0 = lastBody || {};
+  ok(JSON.stringify(Object.keys(b0)) === JSON.stringify(["model", "messages", "temperature", "max_tokens"]),
+    "P0-10: 不配 reasoningEffort → 请求体键与改造前逐字节一致（无未知字段）", JSON.stringify(Object.keys(b0)));
+  await chat({ baseUrl: BASE, apiKey: "k", model: "m", messages: [{ role: "user", content: "q" }], reasoningEffort: "none" });
+  ok(lastBody?.reasoning_effort === "none", 'P0-10: 配 "none" → 请求体带 reasoning_effort:"none"', JSON.stringify(lastBody?.reasoning_effort));
+  await chat({ baseUrl: BASE, apiKey: "k", model: "m", messages: [{ role: "user", content: "q" }], reasoningEffort: "" });
+  ok(!("reasoning_effort" in (lastBody || {})), 'P0-10: 配空串 → 不发该字段（留空 = 不配，不硬编码默认值）');
+  // 配置落盘：传了才改（与 apiKey 同款语义），不传保留原值
+  const tmpR = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-llm-r-"));
+  configureLlmConfig({ userData: tmpR, available: false, encrypt: (s) => Buffer.from("ENC:" + s, "utf8"), decrypt: (b) => b.toString("utf8").slice(4) });
+  const s1 = saveLlmConfig({ baseUrl: BASE, model: "test-chat", apiKey: "sk-r0001", reasoningEffort: "none" });
+  ok(s1.ok && s1.config.reasoningEffort === "none", "P0-10: 保存配置落盘 reasoningEffort");
+  const s2 = saveLlmConfig({ model: "test-chat2" });
+  ok(s2.ok && s2.config.reasoningEffort === "none", "P0-10: 只改模型不动 reasoningEffort（传了才改）");
+  const s3 = saveLlmConfig({ reasoningEffort: "" });
+  ok(s3.ok && s3.config.reasoningEffort === "", "P0-10: 显式传空串可清除（回到不发该字段）");
+  const s4 = saveLlmConfig({ reasoningEffort: 123 });
+  ok(s4.ok === false, "P0-10: reasoningEffort 非字符串 → 拒收（不静默忽略）");
+  void before;
+}
+
 server.closeAllConnections?.();
 server.close();
 

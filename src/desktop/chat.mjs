@@ -38,6 +38,7 @@ export async function testConnection() {
     baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model,
     messages: [{ role: "user", content: "只回复两个字：收到" }],
     maxTokens: 16, timeoutMs: 20000,
+    reasoningEffort: cfg.reasoningEffort,
   });
   if (!r.ok) throw new UserError(r.message);
   return { reply: String(r.text || "").trim().slice(0, 40) };
@@ -125,7 +126,7 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
   } else {
     ({ base, rewrite } = await askWithRewrite({
       bookId, question: q, topN, skillSlug, history,
-      config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model },
+      config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model, reasoningEffort: cfg.reasoningEffort },
     }));
   }
   const raw = base.results || [];
@@ -152,7 +153,7 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
   // 三个「总结」按钮加 confirm）；这里只透传，不松默认值。全链路仍经 askCloud/buildMessages
   // 的唯一开关点，可审计。
   const r = await askCloud({
-    config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model },
+    config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model, reasoningEffort: cfg.reasoningEffort },
     question: q, results, skillChapters,
     history: sanitizeHistory(history, { keep: 12, maxLen: 3000 }), memory,
     includeSourceText,
@@ -243,6 +244,7 @@ export async function compactHistory({ history = [], prevMemory = "" } = {}) {
   const r = await chat({
     baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model,
     temperature: 0.2, maxTokens: 400, timeoutMs: 15000,
+    reasoningEffort: cfg.reasoningEffort,
     messages: [
       { role: "system", content: "你是对话记忆压缩器：把一段「读书助手与用户」的对话历史压成 200 字以内的要点记忆——用户关心什么、聊到哪些书与话题、已有哪些结论与待办。只输出要点文本本身，不要客套。" },
       { role: "user", content: (prior ? `【已有记忆（合并进新要点）】\n${prior}\n\n` : "") + old.map(h => `${h.role === "assistant" ? "答" : "问"}：${h.content}`).join("\n") },
