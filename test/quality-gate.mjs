@@ -60,6 +60,7 @@
 // 样本是现扫的，不依赖任何预置文件：库变了，断言跟着变。
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { createRequire } from "node:module";
 
 const R4 = path.resolve(import.meta.dirname, "..");
@@ -140,6 +141,29 @@ function loadItems() {
     for (const it of arr) items.push({ book, file: libFile(book), ...it });
   }
   return items;
+}
+
+// ---- 考卷指纹（防「基线是旧卷」的静默假红）--------------------------------
+// 为什么需要它：2026-11-14 撞了个真事故 —— quality-baseline.json 生成于 01:29，
+// test/golden/frankenstein-en.epub.json 在 10:01 被校准过 3 条标准答案句（8c2074e），
+// 基线却还是旧卷的。拿新卷跑旧基线会报 3 项红，看表面像「检索退化」，
+// 实际是**考卷换了、基线没跟着换**。这种红是假红，比漏报更坏：它会让人去改产品代码
+// 或者改数字糊绿。所以基线里必须带考卷指纹，跑的时候算一遍当前指纹，不一致就拒绝比数。
+//
+// 指纹口径：把 test/golden/ 下每个 .json 的文件名 + 字节内容按文件名排序连起来做 sha256。
+// 用**字节**不用解析后的对象：答案句里多一个空格、改一个标点都要算变（考卷就是考卷）。
+// 只取前 16 位十六进制，够区分、又不至于把基线文件撑大。
+function goldenFingerprint() {
+  const dir = GOLDEN_DIR;
+  const files = fs.readdirSync(dir).filter(x => x.endsWith(".json")).sort();
+  const h = crypto.createHash("sha256");
+  for (const f of files) {
+    h.update(f);
+    h.update("\u0000");
+    h.update(fs.readFileSync(path.join(dir, f)));
+    h.update("\u0000");
+  }
+  return { sha: h.digest("hex").slice(0, 16), files: files.length };
 }
 
 // ---- 脏块查询 --------------------------------------------------------------
@@ -495,6 +519,7 @@ const CALIBER_OF = {
 };
 
 // ---- 主流程 ----------------------------------------------------------------
+const GOLDEN = goldenFingerprint();
 const items = loadItems();
 let rawBook, rawRoute;
 if (FROM_BOOK || FROM_ROUTE) {
@@ -531,6 +556,23 @@ let regress = [];
 let base = null;
 if (fs.existsSync(BASELINE)) {
   base = JSON.parse(fs.readFileSync(BASELINE, "utf8"));
+  // 考卷指纹校验：基线是「某一份考卷下的成绩单」，考卷一变，这份成绩单就作废。
+  // 旧基线（本字段引入前落的）没有 golden 段 → 也按「无法确认」处理，必须重落一次。
+  // 这里 exit 2 而不是 exit 1：红是「指标退化」，这是「尺子对不上卷子」，两类事不能混成一个信号。
+  const baseSha = base && base.golden && base.golden.sha;
+  if (!baseSha) {
+    console.log(`\n✗ 基线没有考卷指纹（${path.basename(BASELINE)} 是旧格式）—— 无法确认它量的是不是当前这份卷`);
+    console.log(`  当前考卷指纹：${GOLDEN.sha}（${GOLDEN.files} 个文件）`);
+    console.log(`  处理：用当前考卷重落基线  node test/quality-gate.mjs --from-book=<raw> --from-route=<raw> --write-baseline`);
+    process.exit(2);
+  }
+  if (baseSha !== GOLDEN.sha) {
+    console.log(`\n✗ 考卷已变，基线作废 —— 拒绝比数（不是检索退化，是尺子对不上卷子）`);
+    console.log(`  基线记录的考卷指纹：${baseSha}（${base.golden.files} 个文件，${base.generatedAt || "时间未知"}）`);
+    console.log(`  当前考卷指纹：      ${GOLDEN.sha}（${GOLDEN.files} 个文件）`);
+    console.log(`  处理：用当前考卷重落基线  node test/quality-gate.mjs --from-book=<raw> --from-route=<raw> --write-baseline`);
+    process.exit(2);
+  }
   base = base.metrics || base;
 }
 for (const k of Object.keys(DIRECTION)) {
@@ -575,6 +617,9 @@ if (has("write-baseline")) {
     generatedAt: new Date().toISOString(),
     topN: N,
     total: res.total,
+    // 考卷指纹：这份基线是「哪一份卷子」下的成绩单。卷子变了（改答案句、增删题）
+    // 指纹就变，下一次跑会被 :5xx 的校验挡住，不再静默报假红。
+    golden: { sha: GOLDEN.sha, files: GOLDEN.files },
     caliberOf: CALIBER_OF,
     metrics: res.metrics,
     detail: res.detail,
