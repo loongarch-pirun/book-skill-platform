@@ -383,9 +383,22 @@ function enrichDirty(raw) {
 
 // ---- 五项指标 --------------------------------------------------------------
 // raw 的形状：{ items: [{ book, file, q, perN: { [N]: {...} } }] }
+// 复核 🟡-2：perN[N] 缺失以前一律 `|| {}` 静默兜成空对象，指标会全变 0 却照样打印
+// 「绿」——那是把错数据当好数据。现在缺 N 就 throw，宁可红也不许静默算错。
+function pickN(it, N, where) {
+  const d = it.perN && (it.perN[N] || it.perN[String(N)]);
+  if (!d) {
+    const have = it.perN ? Object.keys(it.perN).join(",") : "（无 perN）";
+    throw new Error(
+      `${where}的第 ${it.q || it.file} 条没有 topN=${N} 的原始数据`
+      + `（raw 里只有 topN=${have}）——请确认 --topN 与 raw 的 meta.topN 一致`
+    );
+  }
+  return d;
+}
 export function computeMetrics(rawBook, rawRoute, N) {
   const rows = (rawBook.items || []).map(it => {
-    const d = (it.perN && (it.perN[N] || it.perN[String(N)])) || {};
+    const d = pickN(it, N, "按书口径 raw ");
     const hit = d.level === "full" || d.level === "partial";
     const formDirty = d.formDirty || [];
     const prodDirty = d.prodDirty || [];
@@ -419,7 +432,7 @@ export function computeMetrics(rawBook, rawRoute, N) {
 
   // 路由准确率：端到端口径量（按书口径下它恒等于命中率，没有意义）
   const routeRows = (rawRoute && rawRoute.items ? rawRoute.items : []).map(it => {
-    const d = (it.perN && (it.perN[N] || it.perN[String(N)])) || {};
+    const d = pickN(it, N, "端到端口径 raw ");
     const hit2 = d.level === "full" || d.level === "partial";
     const expectedId = String(it.file || "").replace(/\.db$/, "");
     const hitBook = hit2 && d.rank > 0 && d.books ? (d.books[d.rank - 1] || {}).bookId : null;
@@ -501,7 +514,13 @@ if (FROM_BOOK || FROM_ROUTE) {
   }
 }
 const N = FROM_BOOK
-  ? (Number(argOf("topN", "")) || (rawBook.meta && rawBook.meta.Ns ? rawBook.meta.Ns[0] : 4))
+  // 缺省 N 从 raw 的 meta.topN 取（runBook/runRoute 在 :299/:333 写的就是 meta.topN）。
+  // 复核 🟡-2：这里原本读 meta.Ns（不存在的键）→ 忘带 --topN 就静默按 4 算，
+  // 拿一份 topN=1 的 raw 过来会按 N=4 找不到 perN[4]，指标全变 0 却照样出「绿」结论。
+  // 现在两处都收口：这里读 meta.topN；computeMetrics 里 perN[N] 缺失直接 throw。
+  ? (Number(argOf("topN", "")) || (rawBook.meta && rawBook.meta.topN) || (() => {
+      throw new Error("--from-book 的 raw 里没有 meta.topN，请显式带 --topN=");
+    })())
   : TOP_N;
 const res = computeMetrics(rawBook, rawRoute, N);
 
