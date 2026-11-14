@@ -506,7 +506,7 @@ export async function multiVariantSearch(dbPath, questions, topN = 6) {
 //（不硬塞 0 分——那样补位块在重排时反而会凭真分数挤掉答案，是统计口径作弊）。
 const ROUTE_MIN_LEN = Math.max(0, +(process.env.BSP_ROUTE_MINLEN ?? 60)); // 碎片门槛（字数）
 const ROUTE_SIG_TOPK = 3;      // 书级信号 = 该书合格块里前 3 条余弦的均值
-const ROUTE_BOOKS = Math.max(1, +(process.env.BSP_ROUTE_BOOKS ?? 4));  // 深召回几本书
+const ROUTE_BOOKS = Math.max(1, +(process.env.BSP_ROUTE_BOOKS ?? 8));  // 深召回几本书
 const ROUTE_KEEP = Math.max(2, +(process.env.BSP_ROUTE_K ?? 10));      // 每本深召回几条
 // 参考文献条（kind=ref）在路由结果里只降权不剔除：它们几乎从不是用户要的答案，却因为
 // 词面高度重合而抢位（实测问 Lamport 事件序，Dynamo 参考文献里那行
