@@ -1,7 +1,11 @@
 {
- "generatedAt": "2026-11-13T17:29:27.026Z",
+ "generatedAt": "2026-11-14T05:00:07.674Z",
  "topN": 4,
  "total": 80,
+ "golden": {
+  "sha": "e3dd9ad411b734d8",
+  "files": 11
+ },
  "caliberOf": {
   "hitRate": "perbook",
   "fullRate": "perbook",
@@ -10,21 +14,21 @@
   "dirtyRate": "perbook"
  },
  "metrics": {
-  "hitRate": 0.7375,
-  "fullRate": 0.7375,
-  "avgFirstRank": 3.737,
-  "routeAcc": 0.4625,
+  "hitRate": 0.7125,
+  "fullRate": 0.7125,
+  "avgFirstRank": 3.95,
+  "routeAcc": 0.4375,
   "dirtyRate": 0.0031
  },
  "detail": {
-  "full": 59,
+  "full": 57,
   "partial": 0,
-  "miss": 21,
-  "hit": 59,
-  "hitRate": 0.7375,
-  "fullRate": 0.7375,
-  "avgFirstRank": 3.737,
-  "avgFirstRankHitOnly": 1.508,
+  "miss": 23,
+  "hit": 57,
+  "hitRate": 0.7125,
+  "fullRate": 0.7125,
+  "avgFirstRank": 3.95,
+  "avgFirstRankHitOnly": 1.509,
   "dirtyRate": 0.0031,
   "dirtyTotal": 1,
   "dirtyQ": 1,
@@ -36,16 +40,23 @@
   "legacyRate": 0.9375,
   "legacyAvgFirstRank": 1.36,
   "damageRate": 0,
-  "avgLatencyMs": 2841,
+  "avgLatencyMs": 24498,
   "routeTotal": 80,
-  "routeFull": 37,
+  "routeFull": 35,
   "routePartial": 0,
-  "routeHit": 37,
-  "routeHitRate": 0.4625,
-  "routeFullRate": 0.4625,
-  "routeAvgFirstRank": 6.063,
-  "routeAcc": 0.4625,
+  "routeHit": 35,
+  "routeHitRate": 0.4375,
+  "routeFullRate": 0.4375,
+  "routeAvgFirstRank": 6.275,
+  "routeAcc": 0.4375,
   "routeAccHitOnly": 1
+ },
+ "seam": {
+  "total": 184,
+  "newPartial": 184,
+  "rate": 1,
+  "legacyHit": 167,
+  "legacyRate": 1
  },
  "direction": {
   "hitRate": true,
