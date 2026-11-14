@@ -182,6 +182,16 @@ function fileSig(p) {
   };
 }
 
+// 落基线时从 detail 里摘掉 avgLatencyMs：延迟不是判据，且极易被当时的机器负载污染。
+// 2026-11-14 那版基线把它记成 24498ms（旧基线 2841ms，差 8.6 倍），纯粹因为写基线时
+// 整机 CPU 100%（两个探针在跑）—— 数字本身没错，错在它跟着「成绩单」一起被当成基准。
+// 要记就单独记进 payload.latency 并标明 informational，别混进 detail。
+// （复核 2026-11-14 指出；虾虾记为 ② 名下的新账②）
+function baselineDetail(detail) {
+  const { avgLatencyMs, ...rest } = detail;
+  return rest;
+}
+
 // ---- 脏块查询 --------------------------------------------------------------
 const rules = loadRules().rules;
 const chunkCache = new Map();
@@ -684,7 +694,15 @@ if (has("write-baseline")) {
     golden: { sha: GOLDEN.sha, files: GOLDEN.files },
     caliberOf: CALIBER_OF,
     metrics: res.metrics,
-    detail: res.detail,
+    // detail 里原本带着 avgLatencyMs（这一版是 24498ms，旧基线 2841ms，差 8.6 倍）。这不是性能退化，
+    // 是写基线那一刻整机 100% 负载（两个探针在烧）采出来的。延迟不在五项判据里，但它跟着「成绩单」
+    // 一起进了基线，将来谁拿它当性能基准就会被坑。处置：detail 里摘掉，单独记 latency 段并标明非判据。
+    detail: baselineDetail(res.detail),
+    latency: {
+      kind: "informational",   // 非判据：不参与红绿，也不与旧基线比较
+      avgLatencyMs: res.detail.avgLatencyMs,
+      note: "采集时整机 CPU 100%（同期有多个探针在跑）。此数不作性能基准。",
+    },
     seam: { total: seam.total, newPartial: seam.newPartial, rate: seam.rate, legacyHit: seam.legacyHit, legacyRate: seam.legacyRate },
     direction: DIRECTION,
     // source 以前只存 path.basename()，落盘成 `from-book:gate.book.json`：交付目录里同时有
