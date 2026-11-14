@@ -100,10 +100,15 @@ console.log("\n--- P4-E1 正链路 ---");
   const msgs = lastBody?.messages || [];
   ok(msgs.length === 2 && msgs[0].role === "system" && msgs[1].role === "user",
     `P4-E1f: 请求消息 = system + 问题（无历史时 ${msgs.length} 条，不塞空轮）`);
-  // B1/CP3：默认路径 includeSourceText=false——出网 body 不含库内 chunks.text 原文
-  // （04 报告 :83 验收点「抓一次云端出网请求体，断言不含库内 chunks.text 原文」由默认路径满足）
+  // P0-9 契约变更（原「永远不发」→ 现「未经同意不发／同意后必发」）：
+  //   旧断言把「默认不带原文」钉成设计，后果是模型只收到书名和章号，
+  //   src/lib/llm.mjs 的 verifyAnswer 必然判引用全飞 → QUOTE_FAIL → 整包降级
+  //   （这就是「配了 key 也答不出成句答案」的病 B 根因）。
+  //   新契约：未在配置里存过同意（sendSourceText 为 null/false）→ 不发；存过 true → 必发。
+  //   翻转判据：把下面第 2 段「存 sendSourceText:true 后不带参数调用」改回旧的永远不发，
+  //   该断言立刻红（P4-E1g3）。
   ok(msgs[1].content.includes("[1]") && !msgs[1].content.includes(raw[0].text.slice(0, 8)),
-    "P4-E1g: 默认路径只带编号片段、不带库内原文（04:83 验收点——出网 body 无 chunks.text）");
+    "P4-E1g: 未经同意（配置无 sendSourceText）默认只带编号片段、不带库内原文");
   // 存档快照：问题 + 回答 + 引用整段 text 回填（书没了存档仍留依据）
   const arc = listArchive(libDir);
   ok(arc.length === 1 && arc[0].question === Q && arc[0].answer.includes("往外丢东西"),
@@ -122,6 +127,35 @@ console.log("\n--- P4-E1 正链路 ---");
       && msgsTrue[1].content.includes("[1]") && msgsTrue[1].content.includes(raw[0].text.slice(0, 8))
       && reqCount === beforeTrue + 1,
       "P4-E1g2: 显式 includeSourceText:true → 原文带出网（用户确认后的合法路径，逐字引用功能保留）");
+  }
+  // P0-9 新契约的另一半：同意过一次（落盘 sendSourceText:true）之后，不带参数也必发原文。
+  // 这就是「一次性同意 + 记住选择」的实现证据：调用方不传 includeSourceText 时由配置决定。
+  // 翻转判据：把 src/desktop/chat.mjs 的 includeSrc 改回 `includeSourceText === true`（旧写法，
+  //   无视配置），这条立刻红。
+  {
+    const saved = saveLlmConfig({ sendSourceText: true });
+    ok(saved.ok === true && saved.config.sendSourceText === true,
+      `P4-E1g3a: sendSourceText:true 落盘并回读（${JSON.stringify(saved.config?.sendSourceText)}）`);
+    const before2 = reqCount;
+    const r2 = await cloudSummary({ bookId: BOOK_ID, question: Q, topN: 6 });
+    const msgs2 = lastBody?.messages || [];
+    ok(!r2.degraded && r2.includeSourceText === true
+      && msgs2[1].content.includes(raw[0].text.slice(0, 8)) && reqCount === before2 + 1,
+      "P4-E1g3b: 同意后（配置 sendSourceText:true）不带参数调用也必发原文（记住选择的翻转点）");
+  }
+  // 拒绝过（sendSourceText:false）→ 不发原文，且界面会拿到 includeSourceText:false 以便提示代价。
+  {
+    const saved = saveLlmConfig({ sendSourceText: false });
+    ok(saved.ok === true && saved.config.sendSourceText === false,
+      "P4-E1g4a: sendSourceText:false 落盘并回读（明确拒绝 ≠ 从没问过）");
+    const before3 = reqCount;
+    const r3 = await cloudSummary({ bookId: BOOK_ID, question: Q, topN: 6 });
+    const msgs3 = lastBody?.messages || [];
+    ok(!r3.degraded && r3.includeSourceText === false
+      && !msgs3[1].content.includes(raw[0].text.slice(0, 8)) && reqCount === before3 + 1,
+      "P4-E1g4b: 拒绝后不带参数调用绝不含原文（隐私红线：没点过头就不发）");
+    ok(saveLlmConfig({ sendSourceText: "true" }).ok === false,
+      "P4-E1g4c: sendSourceText 只认布尔——字符串 \"true\" 被拒收（不许把看起来真的值当同意）");
   }
   archiveClear(); // 清掉显式 true 那份存档，后续「失败不落存档」计数回到 0 起点
 }

@@ -82,7 +82,7 @@ function legSummary(results) {
     }));
   } catch { return null; }
 }
-export async function cloudSummary({ bookId = null, question, topN = 6, skillSlug = null, history = [], memory = "", includeSourceText = false } = {}) {
+export async function cloudSummary({ bookId = null, question, topN = 6, skillSlug = null, history = [], memory = "", includeSourceText = null } = {}) {
   const q = String(question || "").trim();
   if (!q) throw new UserError("先提问再总结");
   const cfg = loadLlmConfig();
@@ -148,15 +148,22 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
   const skillChapters = (base.skill?.matched || []).map((m) => ({ title: m.title, content: m.content }));
 
   // 2) 云端生成 + 引用校验（防幻觉延伸到生成层；历史净化后随请求带上）
-  // B1/CP3：includeSourceText 默认 false——库内原文不出网（04 报告 :83 验收点「请求体不含
-  // chunks.text 原文」由默认路径满足）。用户在 UI 上明确确认后才传 true（B 线 views-ask.js
-  // 三个「总结」按钮加 confirm）；这里只透传，不松默认值。全链路仍经 askCloud/buildMessages
-  // 的唯一开关点，可审计。
+  // P0-9（病 B 修）：原来这里缺省 false，于是模型永远只收到「书名 + 章号」，一个字原文都没有，
+  //   verifyAnswer 必然判 citations 全飞 → QUOTE_FAIL → 整包降级。改法不是偷偷默认发原文，而是
+  //   「一次性同意 + 记住选择」：
+  //     - 调用方显式传 true/false（问一问页每次 confirm 的结论）→ 以此为准，最高优先级；
+  //     - 不传（对话页）→ 读 llm.json 的 sendSourceText：true = 用户点过「允许」；
+  //       false = 点过「拒绝」；null = 从没选过，一律按「不发」走（隐私红线缺省不发）。
+  //       界面的补问逻辑在 views-chat.js 的 ensureSourceTextConsent()：它先本地检索一次拿到
+  //       真实字数，再问一次，然后把选择写回 llm.json——所以到这里的 null 就是「不发」。
+  //   注意：这条开关对环回本机 Ollama 同样生效，不给「本地就静默发原文」留后门。
+  const includeSrc = includeSourceText === true ? true
+    : (includeSourceText === false ? false : cfg.sendSourceText === true);
   const r = await askCloud({
     config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model, reasoningEffort: cfg.reasoningEffort },
     question: q, results, skillChapters,
     history: sanitizeHistory(history, { keep: 12, maxLen: 3000 }), memory,
-    includeSourceText,
+    includeSourceText: includeSrc,
   });
   if (!r.ok) {
     // 第三波-③：降级（引用全不过/云端失败）= 失败样本——带腿归因落池
@@ -168,7 +175,7 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
     } catch { /* 回写失败不影响降级返回 */ }
     // 降级通道（UI 对齐 A1）：云端失败不丢本地果实——已检索到的原文一并回给 UI，
     // 对话页在错误气泡下挂「本地原文」折叠区；问一问页本地结果本就在下方，天然降级。
-    return { degraded: true, error: r.message, results, mode: base.mode, book: base.book || null, rewrite, full_read: !!fullRead };
+    return { degraded: true, error: r.message, results, mode: base.mode, book: base.book || null, rewrite, full_read: !!fullRead, includeSourceText: includeSrc };
   }
   // P4 引用快照：每次成功回答落一份（问题 + 引用片段原文 + 回答）——失败不落（没答案可存）。
   // citations 的 n 是 1 基片段编号，回填整段 text：书哪天没了，存档里仍留着当初的依据。
@@ -198,7 +205,7 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
       });
     } catch { /* 回写失败不影响回答 */ }
   }
-  return { answer: r.answer, citations: r.citations, dropped: r.dropped, usage: r.usage, segments: raw.length, mode: base.mode, book: base.book || null, rewrite, full_read: !!fullRead };
+  return { answer: r.answer, citations: r.citations, dropped: r.dropped, usage: r.usage, segments: raw.length, mode: base.mode, book: base.book || null, rewrite, full_read: !!fullRead, includeSourceText: includeSrc };
 }
 
 // ---------- P4 存档：列表 / 删书联动 / 清空（UI 消费；libDir 取不到时安全退化） ----------

@@ -179,6 +179,32 @@ const RESULTS = [
   ok(save2.ok === true && save2.config.model === "deepseek-reasoner" && readLlmKey() === "sk-abc12345", "存储: 只改模型不动 key");
   ok(save2.config.baseUrl === "https://api.deepseek.com/v1", "存储: baseUrl 尾部斜杠已归一");
 
+  // ---------- P0-9：sendSourceText 必须是三态（true=允许过 / false=拒绝过 / null=从没问过） ----------
+  // 为什么是三态：只用 true/false 会把「从没问过」和「明确拒绝过」混成一种，
+  // 界面就再也没法在第一次发问时补问一次（补问是 P0-9「一次性同意」的入口）。
+  // 翻转判据：把 loadLlmConfig 里的三态读法改回 `!!raw.sendSourceText`，
+  // 下面「从没选过 = null」与「拒绝过 = false 但不等于 null」两条立刻红。
+  ok(save2.config.sendSourceText === null,
+    `P0-9/存储: 从没选过 → sendSourceText=null（不是 false，界面才知道该补问一次；实际 ${JSON.stringify(save2.config.sendSourceText)}）`);
+  const diskNever = JSON.parse(fs.readFileSync(path.join(tmp, "llm.json"), "utf8"));
+  ok(!("sendSourceText" in diskNever), "P0-9/存储: 从没选过 → 落盘不写该键（缺省即不发，不伪造同意）");
+  ok(saveLlmConfig({ sendSourceText: "true" }).ok === false,
+    "P0-9/存储: sendSourceText 只认布尔 → 字符串 \"true\" 拒收（不把看起来真的值当同意）");
+  ok(saveLlmConfig({ sendSourceText: 1 }).ok === false, "P0-9/存储: sendSourceText=1 也拒收（只认 true/false）");
+  const savedTrue = saveLlmConfig({ sendSourceText: true });
+  ok(savedTrue.ok === true && savedTrue.config.sendSourceText === true,
+    "P0-9/存储: 允许发送原文 → 落盘 true 并回读");
+  ok(JSON.parse(fs.readFileSync(path.join(tmp, "llm.json"), "utf8")).sendSourceText === true,
+    "P0-9/存储: true 确实写进 llm.json（重启后仍是同意状态，不用再问）");
+  const keepTrue = saveLlmConfig({ model: "deepseek-reasoner" });
+  ok(keepTrue.ok === true && keepTrue.config.sendSourceText === true,
+    "P0-9/存储: 只改模型不动 sendSourceText（传了才改，与 apiKey 同款语义）");
+  const savedFalse = saveLlmConfig({ sendSourceText: false });
+  ok(savedFalse.ok === true && savedFalse.config.sendSourceText === false,
+    "P0-9/存储: 明确拒绝 → 落盘 false（≠ null，之后不再打扰）");
+  ok(savedFalse.config.sendSourceText !== null && savedFalse.config.sendSourceText !== undefined,
+    "P0-9/存储: 拒绝是「记得住的拒绝」，不会被当成从没问过而反复弹窗");
+
   // 加密不可用 → 降级 plain: + 警告（仍不出现裸 key）
   configureLlmConfig({ userData: tmp, available: false, encrypt: fakeEnc.encrypt, decrypt: fakeEnc.decrypt });
   saveLlmConfig({ apiKey: "sk-xyz9999" });
@@ -229,18 +255,28 @@ const RESULTS = [
   ok(saveLlmConfig({ baseUrl: "http://evil.example/v1", model: "m", apiKey: "sk-x" }).ok === false,
     "V08/F2: 配置存储侧同源拒收 http://（两处校验收敛到 llm-hosts.mjs 单正本）");
   // 默认请求体不带库内原文
+  // P0-9 契约变更（原「永远不发」→ 现「未经同意不发／同意后必发」）：
+  //   旧断言把「不带原文」钉成设计，结果是模型只收到书名和章号、一个字原文都没有，
+  //   verifyAnswer 必然判引用全飞 → src/lib/llm.mjs 的 QUOTE_FAIL 分支整包降级
+  //   （这就是「配了 key 也答不出成句答案」的病 B 根因）。
+  //   新契约：缺省（没传 includeSourceText = 用户没同意）不发；显式 true（用户点过同意）必发。
+  //   翻转判据：把下面两处 includeSourceText: true 改回 false / 删掉，
+  //   第 236-238 与 240-243 两条断言立刻红——证明「同意后必发」不是恒真。
   const dfltMsgs = buildMessages({ question: "q", results: RESULTS });
   const dfltLast = dfltMsgs[dfltMsgs.length - 1].content;
   ok(!dfltLast.includes(RESULTS[0].text) && !dfltLast.includes(RESULTS[1].text),
-    "V08: buildMessages 默认只带编号/书名/定位，不含库内 r.text 原文");
+    "P0-9: 未经同意（未传 includeSourceText）buildMessages 只带编号/书名/定位，不含 r.text 原文");
   const withText = buildMessages({ question: "q", results: RESULTS, includeSourceText: true });
   ok(withText[withText.length - 1].content.includes(RESULTS[0].text),
-    "V08: 显式 includeSourceText:true 才带库内原文（唯一可审计开关）");
-  // 端到端：抓一次云端模式出网请求体，断言不含 chunks.text 原文
+    "P0-9: 同意后（includeSourceText:true）必带库内原文——否则模型无从引用");
+  // 端到端：抓一次云端模式出网请求体。未同意 → 不含原文；同意 → 必含原文。
   scenario = "normal"; scenarioQueue = null;
   await askCloud({ config: CFG, question: "q", results: RESULTS });
   ok(!JSON.stringify(lastBody).includes(RESULTS[0].text) && !JSON.stringify(lastBody).includes(RESULTS[1].text),
-    "V08: 云端请求体不含 chunks.text 原文（假 API 记 lastBody 实测）");
+    "P0-9: 未经同意时云端请求体不含 chunks.text 原文（假 API 记 lastBody 实测）");
+  await askCloud({ config: CFG, question: "q", results: RESULTS, includeSourceText: true });
+  ok(JSON.stringify(lastBody).includes(RESULTS[0].text),
+    "P0-9: 同意后云端请求体必含 chunks.text 原文（同意与否是唯一变量，其余不变）");
   // IF-3：describeCloudMode 只读快照（A 侧纯函数，不加新 IPC）
   const cm = describeCloudMode({ baseUrl: "https://api.deepseek.com/v1" });
   ok(cm.cloud === true && cm.https === true && cm.loopback === false && cm.carriesSourceText === false,

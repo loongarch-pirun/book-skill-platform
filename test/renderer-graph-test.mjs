@@ -43,12 +43,16 @@ global.document = {
 };
 global.CustomEvent = global.CustomEvent || class CustomEvent { constructor(t) { this.type = t; } };
 global.location = { reload() {} };
-global.confirm = () => true; // 删书/清存档确认框（views.js del、views-chat.js archclear）——桩里一律放行
+// 确认框桩：默认放行（删书/清存档/云端同意框）。P0-9 段要能切成「用户拒绝」，故做成可切换 + 计数。
+let confirmAnswer = true;
+let confirmCalls = 0;
+global.confirm = () => { confirmCalls++; return confirmAnswer; };
 
 // ---------- window.study IPC stub（记录调用，返回约定形状） ----------
 const ipcCalls = [];
 let chatSummaryCalls = 0;
 let askTopN = null;
+let lastLlmPatch = null; // P0-9：记最后一次 llmConfigSet 的补丁，验「记住选择」真的写下去了
 const chatSummaryArgs = [];
 const archiveCalls = [];
 let archiveCleared = false;
@@ -90,8 +94,9 @@ const studyStub = {
   enrichStatus: () => reply({}),
   enrichAudit: (bookId) => { ipcCalls.push("enrichAudit"); return reply({ ready: false }); },
   ask: (payload) => { ipcCalls.push("ask"); askTopN = payload?.topN; return reply({ mode: "book", results: [{ id: 1, book: "测试书", bookId: "t.docx", loc: "第一章", text: "學而時習之", rerank: 0.9 }] }); },
-  llmConfigGet: () => { ipcCalls.push("llmConfigGet"); return reply({ baseUrl: "", model: "", hasKey: false, keyTail: null, encryption: "unknown", warning: null }); },
-  llmConfigSet: () => reply({ baseUrl: "https://x", model: "m", hasKey: true, keyTail: "…test", encryption: "safeStorage", warning: null }),
+  llmConfigGet: () => { ipcCalls.push("llmConfigGet"); return reply({ baseUrl: "", model: "", hasKey: false, keyTail: null, encryption: "unknown", sendSourceText: null, warning: null }); },
+  // P0-9：llmConfigSet 要如实回写 sendSourceText（UI 的「记住选择」靠返回值刷新 state）
+  llmConfigSet: (patch) => { ipcCalls.push("llmConfigSet"); lastLlmPatch = patch || {}; return reply({ baseUrl: "https://x", model: "m", hasKey: true, keyTail: "…test", encryption: "safeStorage", sendSourceText: patch && ("sendSourceText" in patch) ? patch.sendSourceText : null, warning: null }); },
   llmTest: () => reply({ reply: "收到" }),
   chatSummary: (payload) => { chatSummaryCalls++; chatSummaryArgs.push(payload); return chatSummaryCalls === 2
     ? reply({ degraded: true, error: "云端引用核验失败，已降级为原文片段", results: [{ book: "测试书", bookId: "t.docx", id: 1, loc: "第一章", text: "本地原文甲" }], mode: "book", book: "测试书" })
@@ -389,6 +394,75 @@ assert(mainEl.innerHTML.includes("看本地检索到的 1 段原文") && mainEl.
 click("chatclear", {});
 await sleep(10);
 assert(app.state.chat.messages.length === 0, "对话：清空接线");
+
+// ---------- 5c-P0-9) 发送原文：一次性同意 + 记住选择 + 随时可改的开关 ----------
+// 病 B：原来对话页从不传 includeSourceText，模型只收到书名和章号 → 必然 QUOTE_FAIL 整包降级。
+// 新契约：从没选过（sendSourceText=null）→ 首次发问弹一次明确选择；选完写进 llm.json 记住。
+// 翻转判据：把 views-chat.js 的 ensureSourceTextConsent 调用删掉（回到旧的「不问不发」），
+//   下面「首次发问弹了一次并记住」与「同意后 includeSourceText=true」两条立刻红。
+{
+  const savedCfg = app.state.llm.config;
+  app.state.llm.config = { ...savedCfg, hasKey: true, sendSourceText: null };
+  const confBefore = confirmCalls;
+  const askBefore = ipcCalls.filter((c) => c === "ask").length;
+  const chatBefore = chatSummaryArgs.length;
+  confirmAnswer = true; // 用户点「确定」= 允许
+  getEl("#chatQ").value = "首次发问要问一次";
+  click("chatgo", {});
+  await sleep(40);
+  assert(confirmCalls === confBefore + 1,
+    `P0-9/UI: 从没选过 → 首次发问弹了一次明确选择（confirm ${confBefore}→${confirmCalls}）`);
+  assert(ipcCalls.filter((c) => c === "ask").length === askBefore + 1,
+    "P0-9/UI: 弹框前先本地预检索一次（为了报准「会发多少字」，检索不出网）");
+  const firstArgs = chatSummaryArgs[chatBefore];
+  assert(firstArgs?.includeSourceText === true,
+    `P0-9/UI: 这次点「允许」→ chatSummary 立刻带 includeSourceText:true（实际 ${JSON.stringify(firstArgs?.includeSourceText)}）`);
+  assert(lastLlmPatch?.sendSourceText === true,
+    `P0-9/UI: 选择写回配置记住（llmConfigSet 收到 sendSourceText:true，实际 ${JSON.stringify(lastLlmPatch?.sendSourceText)}）`);
+  assert(app.state.llm.config?.sendSourceText === true, "P0-9/UI: 记住后 state 立刻是 true（不用刷新页面）");
+
+  // 第二次发问：不再弹框，直接按记忆发原文
+  const confBefore2 = confirmCalls;
+  const chatBefore2 = chatSummaryArgs.length;
+  getEl("#chatQ").value = "第二次发问不该再问";
+  click("chatgo", {});
+  await sleep(40);
+  assert(confirmCalls === confBefore2,
+    `P0-9/UI: 第二次发问不再弹框（confirm 仍是 ${confirmCalls}——「只问一次」）`);
+  assert(chatSummaryArgs[chatBefore2]?.includeSourceText === true,
+    "P0-9/UI: 第二次直接按记忆发原文");
+
+  // 开关：随时可改。点一下从「允许」变「不允许」
+  assert(mainEl.innerHTML.includes("发送原文：允许"),
+    "P0-9/UI: 状态条显示当前选择（发送原文：允许）");
+  const chatBefore3 = chatSummaryArgs.length;
+  click("llmsrc", {});
+  await sleep(30);
+  assert(lastLlmPatch?.sendSourceText === false && app.state.llm.config?.sendSourceText === false,
+    "P0-9/UI: 点开关 → 立刻改成不允许并记住（用户可以反悔）");
+  getEl("#chatQ").value = "关了之后就不该再发";
+  click("chatgo", {});
+  await sleep(40);
+  assert(chatSummaryArgs[chatBefore3]?.includeSourceText === false,
+    `P0-9/UI: 关掉后 chatSummary 带 includeSourceText:false（实际 ${JSON.stringify(chatSummaryArgs[chatBefore3]?.includeSourceText)}）`);
+  const noteMsg = app.state.chat.messages.find((m) => m.role === "note");
+  assert(!!noteMsg && /只发书名和章号/.test(noteMsg.content) && /随时可切/.test(noteMsg.content),
+    `P0-9/UI: 拒绝时界面明说代价并给可改入口（note：「${(noteMsg?.content || "").slice(0, 28)}…」）`);
+
+  // 明确拒绝过（false）≠ 从没问过（null）：拒绝后不该再弹框
+  const confBefore3 = confirmCalls;
+  getEl("#chatQ").value = "拒绝过就别再问";
+  click("chatgo", {});
+  await sleep(40);
+  assert(confirmCalls === confBefore3,
+    "P0-9/UI: 已经拒绝过（false）→ 不再反复弹框打扰（三态的意义）");
+
+  // 恢复现场
+  app.state.llm.config = savedCfg;
+  confirmAnswer = true;
+  click("chatclear", {});
+  await sleep(10);
+}
 
 // ---------- 5d) 书全关引导（A2）：问一问/对话两页空态都给「去开书」按钮 ----------
 // CP3 返修：断言**可见文案**「去「设置」打开」，先剥掉 title 属性再比——nav 于 CP3 由

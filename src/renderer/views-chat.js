@@ -172,6 +172,43 @@ async function maybeCompact() {
   c.memoryBusy = false;
 }
 
+// P0-9（病 B）：把原文发给云端前的「一次性同意 + 记住选择」。
+// 为什么要有：主进程 chat.mjs 的 includeSourceText 缺省 false，模型只收到书名和章号、一个字原文
+// 都没有，verifyAnswer 必然判引用全飞 → QUOTE_FAIL → 整包降级（这是「配了 key 也答不出成句答案」
+// 的根因）。但也不能反过来默认偷偷发原文——隐私红线的精神是「用户明确点过头才发」。
+// 三态语义（落 llm.json 的 sendSourceText）：true=允许过；false=拒绝过；null=从没选过。
+// 只问一次：选完立刻写回配置，之后不再打扰；随时可用上方「发送原文」开关改。
+// 问答永远是本机检索，所以这里先跑一次本地检索只为拿到**真实字数**——一个字都不出网。
+async function ensureSourceTextConsent({ q, bookId, skillSlug }) {
+  const cfg = state.llm.config || {};
+  if (!cfg.hasKey) return false;              // 没配 key 走不到云端，不打扰
+  if (cfg.sendSourceText === true) return true;
+  if (cfg.sendSourceText === false) return false;
+  let host = "";
+  try { host = new URL(cfg.baseUrl).host; } catch { host = String(cfg.baseUrl || ""); }
+  const local = /^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/.test(host);
+  let segs = 0;
+  let chars = q.length;
+  try {
+    const pre = await call(window.study.ask({ bookId, question: q, topN: RETRIEVE_TOPN, skillSlug }));
+    const rs = pre?.results || [];
+    segs = rs.length;
+    chars += rs.reduce((n, r) => n + String(r.text || "").length, 0);
+  } catch { /* 预检索失败不影响发问：字数按「问题字数」低估报出，仍如实说明 */ }
+  const allow = confirm(
+    `要把原文发给云端 AI 吗？\n\n` +
+    `会发出去：你的问题 + 这次检索到的 ${segs} 段原文全文（共约 ${chars} 字）\n` +
+    `发给谁：${host || "（未填地址）"}${local ? "（本机模型，数据不出本机）" : ""}\n\n` +
+    `选「确定」= 允许，之后不再询问（可随时在上方开关里改）\n` +
+    `选「取消」= 只发书名和章号——云端 AI 看不到原文，就没法基于原文作答`
+  );
+  try {
+    const next = await call(window.study.llmConfigSet({ sendSourceText: allow }));
+    state.llm.config = next;                  // 记住选择：下次发问不再问
+  } catch (e) { toast("记住这个选择失败：" + e.message); }
+  return allow;
+}
+
 async function sendChat() {
   const c = state.chat;
   if (c.loading) return;
@@ -184,6 +221,14 @@ async function sendChat() {
   c.loading = true;
   refresh();
   try {
+    // P0-9：首次发问弹一次明确选择（选完记住）；已有选择则直接按记忆走。
+    const allow = await ensureSourceTextConsent({ q, bookId: c.mode === "book" ? c.bookId : null, skillSlug: c.skillSlug });
+    if (allow === false && state.llm.config?.sendSourceText === false && !c.srcHinted) {
+      // 拒绝时界面必须明说代价，并给随时可改的入口——别让用户以为是模型笨。
+      c.srcHinted = true;
+      c.messages.push({ role: "note", content: "只发书名和章号——云端 AI 看不到原文，回答只能靠书名和章节名推测。想改：上方「发送原文」按钮，随时可切。" });
+      refresh();
+    }
     const r = await call(window.study.chatSummary({
       bookId: c.mode === "book" ? c.bookId : null,
       question: q,
@@ -191,6 +236,7 @@ async function sendChat() {
       skillSlug: c.skillSlug,
       history,
       memory: c.memory || "", // V3-R6：滚动对话记忆随轮携带
+      includeSourceText: allow, // P0-9：本轮是否带原文（true/false 由这次/上次的选择决定）
     }));
     if (r.degraded) c.messages.push({ role: "assistant", error: r.error, results: r.results || [], rewrite: r.rewrite }); // A1：降级通道，错误消息携带本地原文 + 换法建议
     else {

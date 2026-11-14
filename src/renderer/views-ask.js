@@ -102,16 +102,23 @@ export function cloudBarHtml() {
           <button class="ghost sm" data-action="llmtest">测试连接</button>
           <button class="ghost sm" data-action="llmclose">取消</button>
         </div>
-        <div class="cfgwarn">检索永远在本机；发送给云端 AI 的只有「你的问题 + 这次检索到的原文片段」。</div>
+        <div class="cfgwarn">检索永远在本机；发送给云端 AI 的只有「你的问题 + 书名和章号」。原文片段要不要一起发，由你第一次发问时点的那一下决定——不发原文，它就没法基于原文作答。随时可用下方「发送原文」开关改。</div>
         <div class="cfgwarn">思考档位只在本机模型（如 Ollama + qwen3.5）需要时填：这类模型会把输出预算全花在思考上，导致正文为空、报「模型没有返回内容」——填 none 即可。云端 OpenAI 兼容接口一般留空。</div>
         ${c.warning ? `<div class="cfgwarn">${esc(c.warning)}</div>` : ""}
       </div>`;
   }
+  // P0-9：发送原文的两态开关。三态语义见 llm-config.mjs（true/false/null）：
+  // null = 从没问过 → 显示「未选」，第一次发问时才弹一次明确选择；这里让用户随时能反悔。
+  const src = c.sendSourceText === true ? "允许" : (c.sendSourceText === false ? "不允许" : "未选");
+  const srcCls = c.sendSourceText === true ? "chip ok" : "chip";
   return `
     <div class="cloudrow">
       ${c.hasKey
         ? `<span class="chip ok">云端 AI 已就绪 · ${esc(c.model || "")} · 尾号 ${esc(c.keyTail || "")}</span>`
         : '<span class="chip">云端 AI 未配置——填一把 API key，就能让它基于原文写总结</span>'}
+      ${c.hasKey
+        ? `<button class="${srcCls}" data-action="llmsrc" title="是否把检索到的原文一起发给云端 AI。默认不发：只发书名和章号，它就没法基于原文作答。">发送原文：${src}</button>`
+        : ""}
       <button class="ghost sm" data-action="llmedit">${c.hasKey ? "换配置" : "填 API key"}</button>
     </div>`;
 }
@@ -338,6 +345,19 @@ export function bindAskEvents() {
         const r = await call(window.study.llmTest());
         toast(`连接成功——模型回复「${r.reply}」`);
       } catch (err) { toast("连接失败：" + err.message); }
+    }
+    else if (act === "llmsrc") {
+      // P0-9：随时可改的「发送原文」开关。三态里 null（从没问过）按「当没允许」处理 → 点一下变允许。
+      // 这是用户显式点击，所以直接写 true/false，不再弹确认框。
+      const cur = state.llm.config?.sendSourceText === true;
+      try {
+        const cfg = await call(window.study.llmConfigSet({ sendSourceText: !cur }));
+        state.llm.config = cfg;
+        toast(!cur
+          ? "已允许发送原文——云端 AI 能基于原文作答了"
+          : "已停止发送原文——之后只发书名和章号，云端 AI 无法基于原文作答");
+      } catch (err) { toast("切换失败：" + err.message); }
+      refresh();
     }
     else if (act === "askre") { // 换个问法 chips（V3-R1）：填回问题框重新检索+总结
       const q = el.dataset.q || "";
