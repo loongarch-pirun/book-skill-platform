@@ -166,6 +166,22 @@ function goldenFingerprint() {
   return { sha: h.digest("hex").slice(0, 16), files: files.length };
 }
 
+// ---- raw 输入指纹（防「基线是拿哪份 raw 量的」追溯断链）--------------------
+// 为什么需要它：② 落基线时 source 只记了 path.basename()，落盘成 `from-book:gate.book.json`。
+// 可仓库/交付目录里同时躺过 _raw-newvolume\gate.book.json 和根目录的 gate-live.book.json 两份，
+// 光看 basename 谁也说不清这次量的是哪一份 —— 跟「基线是旧卷」同一个病，只是对象从考卷换成 raw。
+// 所以：路径记绝对路径，内容记 sha256 前 16 位 + 字节数，三者一起才算能追溯。
+// （复核 2026-11-14 指出；虾虾记为 ② 名下的新账①）
+function fileSig(p) {
+  const abs = path.resolve(p);
+  const buf = fs.readFileSync(abs);
+  return {
+    path: abs,
+    sha: crypto.createHash("sha256").update(buf).digest("hex").slice(0, 16),
+    bytes: buf.length,
+  };
+}
+
 // ---- 脏块查询 --------------------------------------------------------------
 const rules = loadRules().rules;
 const chunkCache = new Map();
@@ -671,7 +687,14 @@ if (has("write-baseline")) {
     detail: res.detail,
     seam: { total: seam.total, newPartial: seam.newPartial, rate: seam.rate, legacyHit: seam.legacyHit, legacyRate: seam.legacyRate },
     direction: DIRECTION,
-    source: FROM_BOOK ? `from-book:${path.basename(FROM_BOOK)}` : "live",
+    // source 以前只存 path.basename()，落盘成 `from-book:gate.book.json`：交付目录里同时有
+    // _raw-newvolume\gate.book.json 和根目录旧的 gate-live.book.json，光看文件名谁也说不清量的哪份。
+    // 现在改成绝对路径 + 内容 sha + 字节数（跟考卷指纹同一个道理，只是对象换成 raw 输入）。
+    source: FROM_BOOK ? `from-book:${path.resolve(FROM_BOOK)}` : "live",
+    inputs: {
+      book: FROM_BOOK ? fileSig(FROM_BOOK) : null,
+      route: FROM_ROUTE ? fileSig(FROM_ROUTE) : null,
+    },
   };
   fs.writeFileSync(BASELINE, JSON.stringify(payload, null, 1), "utf8");
   console.log(`\n基线已写：${BASELINE}`);
