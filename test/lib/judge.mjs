@@ -66,6 +66,12 @@ function longestPrefixIn(text, a, minK = 0) {
  * @returns { level: "full"|"partial"|"miss", rank, ...诊断字段 }
  */
 export function judge(results, golden) {
+  // 翻转验证开关：把新尺子临时换成旧逻辑（只看关键词），
+  // 用来证明闸门的接缝识别率断言真的能红。默认关闭。
+  if (process.env.BSP_LEGACY_JUDGE === "1") {
+    const lg0 = legacyJudge(results, golden?.g ?? []);
+    return { level: lg0.hit ? "full" : "miss", rank: lg0.rank || 0, legacy: lg0, why: "旧逻辑（翻转验证用）" };
+  }
   const a = normText(golden?.a);
   const g = (golden?.g ?? []).map(x => String(x).toLowerCase());
   const legacy = legacyJudge(results, g);

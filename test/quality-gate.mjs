@@ -43,6 +43,21 @@
 //     的规则，盖不住形态垃圾（实测整库形态垃圾 53 块，产品表只盖住 3 块），
 //     用产品表量第五项永远是 0，闸门就废了。形态口径与 21-切块质量 报告同源，可复跑。
 //     产品规则口径的脏块数一并打印（prodDirtyTotal / prodDirtyRate），只作记账。
+//
+// ── 第④行「切块损伤」为什么不能是恒真 0 ──────────────────────────────────
+// 「切块损伤率 partial÷hit」在本卷 80 题上恒为 0：实测 80 条标准答案句在库里
+// intact 80 / split 0 / none 0（见 23-质量彻底解决施工\probe-00b-split.mjs）——
+// 这 80 条答案句恰好没被切开，所以这一行在卷内是恒真行，不配当指标充数。
+// 但「这把尺子认不认得出接缝」这件事本身必须可测、必须能翻转，所以闸门里加一条
+// **接缝自测断言**：
+//   · 现扫全库 13 个库，把「一句答案被切在相邻两块接缝上」的真实句子挖出来当样本
+//     （几何判定，不靠尺子，所以尺子坏了样本还在）；
+//   · 新尺子 judge() 必须对每一条判 partial（认得出切伤）；
+//   · 旧尺子 legacyJudge() 必须对每一条判 hit（认不出——只看关键词还在就算过，
+//     这正是 P0-2 要治的病）；
+//   · 任一条不成立 → 闸门红 exit 1。
+// 翻转：把 judge() 换回旧逻辑 → 接缝识别率掉到 0 → 闸门红。
+// 样本是现扫的，不依赖任何预置文件：库变了，断言跟着变。
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
@@ -60,7 +75,7 @@ try {
   Database = createRequire("C:/Users/JIANG XIAO HUA/Desktop/book-skill-platform-r3/package.json")("better-sqlite3");
 }
 
-const { judge, legacyJudge } = await import("./lib/judge.mjs");
+const { judge, legacyJudge, normText, isTerminator } = await import("./lib/judge.mjs");
 const { filterNoiseChunks, loadRules } = await import("../src/lib/noise-rules.mjs");
 
 // ---- 参数 ------------------------------------------------------------------
@@ -173,6 +188,108 @@ function dirtyOf(rs, defaultBookId) {
     }
   }
   return { formDirty, prodDirty };
+}
+
+// ---- 第④行的自测断言：接缝识别率 ---------------------------------------------
+// 本卷 80 题的标准答案句在库里 intact 80 / split 0（实测见
+// 23-质量彻底解决施工\probe-00b-split.mjs），所以「切块损伤率 partial÷hit」
+// 在这份卷子上恒为 0 —— 一行恒为 0 的指标永远不可能变红，等于充数。
+//
+// 改法：这一行不进五项指标，改成闸门内的一条自测断言 ——
+//   几何扫描全库，找出「一句答案被切在相邻两块接缝上」的真实句子当样本
+//   （判定只看几何：句首在 A 块内且 A 块里句首前是句读、句尾落在 B 块，不看尺子）；
+//   要求新尺子 judge() 对这些样本全部判 partial（能认出切块损伤）；
+//   同时记下旧尺子 legacyJudge() 对同批样本的虚命中数（旧尺子只看关键词，
+//   关键词在 A 块里就算过，答案句被切开它照样放行）。
+// 任一条样本不被新尺子判 partial → 识别率 < 1 → 闸门红 exit 1。
+// 翻转证据：把 judge() 换回旧逻辑 → 识别率掉到 0 → 闸门红。
+const HARD = ".!?。！？";
+const CLOSE = "\"”’')）】」』";
+const SEAM_MIN_LEN = 40;
+const SEAM_PER_BOOK = 40;
+
+// 相邻两块拼起来按硬句读切句，找「起点在 A 块内（且 A 块里句首前是句读）、终点落在 B 块内」的跨块句
+function seamSentences(aText, bText) {
+  const out = [];
+  const combined = aText + " " + bText;
+  const aLen = aText.length;
+  let start = 0;
+  for (let i = 0; i < combined.length; i++) {
+    if (!isTerminator(combined, i)) continue;
+    let end = i + 1;
+    while (end < combined.length && CLOSE.includes(combined[end])) end++;
+    if (start < aLen && end > aLen) {
+      const beforeA = aText.slice(0, start).replace(/\s+$/, "");
+      if (beforeA.length > 0 && isTerminator(beforeA, beforeA.length - 1)) {
+        out.push(combined.slice(start, end));
+      }
+    }
+    start = end;
+  }
+  return out;
+}
+
+// 扫全库找接缝样本（纯几何判定，与尺子无关；样本现扫，不依赖预置文件）
+function scanSeamSamples() {
+  const samples = [];
+  for (const f of fs.readdirSync(LIB).filter(x => x.endsWith(".db")).sort()) {
+    const db = new Database(path.join(LIB, f), { readonly: true });
+    const rows = db.prepare("SELECT id, text FROM chunks WHERE id ORDER BY id").all();
+    db.close();
+    let perBook = 0;
+    for (let i = 0; i < rows.length - 1 && perBook < SEAM_PER_BOOK; i++) {
+      const A = rows[i], B = rows[i + 1];
+      if (B.id !== A.id + 1) continue;
+      for (const s of seamSentences(A.text, B.text)) {
+        const a = normText(s);
+        if (a.length < SEAM_MIN_LEN) continue;
+        // 单块就已包含整句的，不算「被切开」（几何过滤，不看尺子）
+        if (normText(A.text).includes(a) || normText(B.text).includes(a)) continue;
+        samples.push({ book: f.replace(/\.db$/, ""), aId: A.id, bId: B.id, a, aText: A.text, bText: B.text });
+        if (++perBook >= SEAM_PER_BOOK) break;
+      }
+    }
+  }
+  return samples;
+}
+
+// 旧尺子用的关键词：从答案句里挑一个落在 A 块里的长词（旧尺子只看词在不在块里）
+function seamKeyword(a, aText) {
+  const tokens = a.match(/[A-Za-z][A-Za-z'-]{5,}|[\u4e00-\u9fa5]{4,}/g) || [];
+  const low = String(aText ?? "").toLowerCase();
+  let best = "";
+  for (const t of tokens) {
+    const lt = t.toLowerCase();
+    if (lt.length > best.length && low.includes(lt)) best = lt;
+  }
+  return best;
+}
+
+// 跑接缝自测断言
+function runSeamAssertion() {
+  const samples = scanSeamSamples();
+  let newPartial = 0, legacyHit = 0, legacyCnt = 0;
+  const fails = [];
+  for (const s of samples) {
+    const rs = [{ id: s.aId, text: s.aText }, { id: s.bId, text: s.bText }];
+    const kw = seamKeyword(s.a, s.aText);
+    const v = judge(rs, { q: "seam", a: s.a, g: kw ? [kw] : ["seam"] });
+    if (v.level === "partial") newPartial++;
+    else fails.push({ book: s.book, aId: s.aId, bId: s.bId, level: v.level });
+    if (kw) {
+      legacyCnt++;
+      if (legacyJudge(rs, [kw]).hit) legacyHit++;
+    }
+  }
+  return {
+    total: samples.length,
+    newPartial,
+    rate: samples.length ? +(newPartial / samples.length).toFixed(4) : 0,
+    legacyTotal: legacyCnt,
+    legacyHit,
+    legacyRate: legacyCnt ? +(legacyHit / legacyCnt).toFixed(4) : 0,
+    fails,
+  };
 }
 
 // ---- 现跑（慢路径）----------------------------------------------------------
@@ -421,6 +538,19 @@ console.log(`明细（端到端口径）：full ${res.detail.routeFull} / partia
   + ` | 命中率 ${res.detail.routeHitRate} | 平均首中名次 ${res.detail.routeAvgFirstRank}`
   + ` | 路由准确率 ${res.detail.routeAcc}（命中题内 ${res.detail.routeAccHitOnly}）`);
 
+// 第④行的自测断言：接缝识别率（本卷答案句没被切，所以卷内 partial÷hit 恒为 0；
+// 这里用全库真实接缝样本验证「新尺子能认出切块损伤、旧尺子会放过」这件事本身）
+const seam = runSeamAssertion();
+console.log(`接缝自测断言：样本 ${seam.total} 条（几何扫库现扫）`
+  + ` | 新尺子认出 partial ${seam.newPartial} 条，识别率 ${seam.rate}`
+  + ` | 旧尺子对同批样本虚命中 ${seam.legacyHit}/${seam.legacyTotal}(${seam.legacyRate})`
+  + ` | 断言：识别率必须 = 1，缺一条即红`);
+if (seam.fails.length) {
+  for (const f of seam.fails.slice(0, 5)) {
+    console.log(`  ✗ 接缝样本未被新尺子判 partial：${f.book} #${f.aId}→#${f.bId}（判成 ${f.level}）`);
+  }
+}
+
 if (has("write-baseline")) {
   const payload = {
     generatedAt: new Date().toISOString(),
@@ -429,12 +559,20 @@ if (has("write-baseline")) {
     caliberOf: CALIBER_OF,
     metrics: res.metrics,
     detail: res.detail,
+    seam: { total: seam.total, newPartial: seam.newPartial, rate: seam.rate, legacyHit: seam.legacyHit, legacyRate: seam.legacyRate },
     direction: DIRECTION,
     source: FROM_BOOK ? `from-book:${path.basename(FROM_BOOK)}` : "live",
   };
   fs.writeFileSync(BASELINE, JSON.stringify(payload, null, 1), "utf8");
   console.log(`\n基线已写：${BASELINE}`);
   process.exit(0);
+}
+
+// 第④行的自测断言也参与红绿：识别率掉到 1 以下 → 闸门红
+if (seam.total > 0 && seam.rate < 1) {
+  console.log(`\n✗ 接缝识别率退化：${seam.newPartial}/${seam.total}（识别率 ${seam.rate} < 1）`
+    + ` —— 新尺子认不出切块损伤，这把尺子不合格`);
+  process.exit(1);
 }
 
 if (regress.length) {
