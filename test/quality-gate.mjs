@@ -554,7 +554,10 @@ console.log(`口径：命中/full/名次/脏块 = 按书检索 hybridSearch（�
 console.log(`指标                本次      基线      方向   结论`);
 let regress = [];
 let base = null;
-if (fs.existsSync(BASELINE)) {
+// --write-baseline 是「重落基线」本身，它不参与比数，所以不能被「基线作废」挡住：
+// 否则旧格式基线会把自己锁死——报错让我们跑 --write-baseline 重落，而重落又被同一条校验
+// 拦下 exit 2，谁也修不回来。（2026-11-14 施工官自测发现，见 01-改动清单.md ② 段）
+if (fs.existsSync(BASELINE) && !has("write-baseline")) {
   base = JSON.parse(fs.readFileSync(BASELINE, "utf8"));
   // 考卷指纹校验：基线是「某一份考卷下的成绩单」，考卷一变，这份成绩单就作废。
   // 旧基线（本字段引入前落的）没有 golden 段 → 也按「无法确认」处理，必须重落一次。
