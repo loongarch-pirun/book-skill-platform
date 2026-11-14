@@ -1,9 +1,9 @@
 {
- "generatedAt": "2026-11-14T05:00:07.674Z",
+ "generatedAt": "2026-11-14T05:37:22.617Z",
  "topN": 4,
  "total": 80,
  "golden": {
-  "sha": "e3dd9ad411b734d8",
+  "sha": "185ec42a62ad3845",
   "files": 11
  },
  "caliberOf": {
@@ -14,21 +14,21 @@
   "dirtyRate": "perbook"
  },
  "metrics": {
-  "hitRate": 0.7125,
-  "fullRate": 0.7125,
-  "avgFirstRank": 3.95,
-  "routeAcc": 0.4375,
+  "hitRate": 0.725,
+  "fullRate": 0.725,
+  "avgFirstRank": 3.837,
+  "routeAcc": 0.45,
   "dirtyRate": 0.0031
  },
  "detail": {
-  "full": 57,
+  "full": 58,
   "partial": 0,
-  "miss": 23,
-  "hit": 57,
-  "hitRate": 0.7125,
-  "fullRate": 0.7125,
-  "avgFirstRank": 3.95,
-  "avgFirstRankHitOnly": 1.509,
+  "miss": 22,
+  "hit": 58,
+  "hitRate": 0.725,
+  "fullRate": 0.725,
+  "avgFirstRank": 3.837,
+  "avgFirstRankHitOnly": 1.5,
   "dirtyRate": 0.0031,
   "dirtyTotal": 1,
   "dirtyQ": 1,
@@ -40,16 +40,20 @@
   "legacyRate": 0.9375,
   "legacyAvgFirstRank": 1.36,
   "damageRate": 0,
-  "avgLatencyMs": 24498,
   "routeTotal": 80,
-  "routeFull": 35,
-  "routePartial": 0,
-  "routeHit": 35,
-  "routeHitRate": 0.4375,
-  "routeFullRate": 0.4375,
-  "routeAvgFirstRank": 6.275,
-  "routeAcc": 0.4375,
-  "routeAccHitOnly": 1
+  "routeFull": 36,
+  "routePartial": 1,
+  "routeHit": 37,
+  "routeHitRate": 0.4625,
+  "routeFullRate": 0.45,
+  "routeAvgFirstRank": 6.088,
+  "routeAcc": 0.45,
+  "routeAccHitOnly": 0.973
+ },
+ "latency": {
+  "kind": "informational",
+  "avgLatencyMs": 24498,
+  "note": "采集时整机 CPU 100%（同期有多个探针在跑）。此数不作性能基准。"
  },
  "seam": {
   "total": 184,
@@ -65,5 +69,17 @@
   "routeAcc": true,
   "dirtyRate": false
  },
- "source": "from-book:perbook-dirty.json"
+ "source": "from-book:C:\\Users\\JIANG XIAO HUA\\.dsh\\bot\\workspace\\前置过滤-施工\\23-质量彻底解决施工\\perbook-dirty.json",
+ "inputs": {
+  "book": {
+   "path": "C:\\Users\\JIANG XIAO HUA\\.dsh\\bot\\workspace\\前置过滤-施工\\23-质量彻底解决施工\\perbook-dirty.json",
+   "sha": "28413f088b94c5e5",
+   "bytes": 97877
+  },
+  "route": {
+   "path": "C:\\Users\\JIANG XIAO HUA\\.dsh\\bot\\workspace\\前置过滤-施工\\23-质量彻底解决施工\\gate-live.route.json",
+   "sha": "382cb6a77f47727e",
+   "bytes": 72514
+  }
+ }
 }
