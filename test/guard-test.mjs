@@ -410,6 +410,41 @@ const copyDb = (src) => {
     "静态: 具名谓词登记表与 unlessFn 分支都在（外部 JSON 仍可写正则作 unless）");
 }
 
+// ========== 8b) P0-5 三条新规则的翻转证据（page_number_only 在本库 0 命中，只能用合成块证）
+// 为什么单列这一段：copyright_line / journal_masthead_table 在真库上各能翻（pride #432、
+// Lamport #25/#82），page_number_only 在本库 13 本里命中 0（页码行早在结构化改造时被清），
+// 所以它的「能丢 / 关了就不丢」必须由合成块固定，否则这条规则等于一张没有证据的注释。
+// 翻红方式（实测过）：把 DEFAULT_RULES 里 page_number_only 的 enabled 改成 false → 下面
+// 第 1、2 条红；把它的 re 放宽成 /^\d+$/ → 第 4 条（"12345" 必须留）红。
+{
+  const drop = ["12", "- 204 -", "— 7 —", "– 13 –"];
+  const keep = ["Chapter 12", "12345", "12 apples", "In 1978, Lamport published this paper.", "Figure 3"];
+  const mk = (id, text) => ({ id, kind: "text", text });
+
+  const on = filterNoiseChunks([...drop, ...keep].map((t, i) => mk(`pg-${i}`, t)), {
+    rules: DEFAULT_RULES, source: "guard-test-synth",
+  });
+  const keptOn = new Set(on.chunks.map((c) => c.id));
+  ok(drop.every((_, i) => !keptOn.has(`pg-${i}`)),
+    "P0-5 合成块: page_number_only 开 → 孤立页码块（\"12\" / \"- 204 -\" / 长横线夹数字）全丢",
+    `kept=${[...keptOn].join(",")}`);
+  ok(keep.every((_, i) => keptOn.has(`pg-${drop.length + i}`)),
+    "P0-5 合成块: page_number_only 开 → 含数字但非页码的块（\"Chapter 12\" / \"12345\" / \"12 apples\" / 年份句 / \"Figure 3\"）一块不误杀",
+    `dropped=${on.report.dropped}`);
+  ok((on.report.byRule.page_number_only || 0) === drop.length,
+    "P0-5 合成块: 4 条丢块全部记账在 page_number_only 名下（可审计、可单独关）",
+    JSON.stringify(on.report.byRule));
+
+  // 关掉这一条 → 那 4 块必须全回来（这就是「改回旧写法就红」的那条证据的反向）
+  const off = filterNoiseChunks([...drop, ...keep].map((t, i) => mk(`pg-${i}`, t)), {
+    rules: DEFAULT_RULES.map((r) => (r.id === "page_number_only" ? { ...r, enabled: false } : r)),
+    source: "guard-test-synth-off",
+  });
+  ok(off.report.dropped === 0 && off.chunks.length === drop.length + keep.length,
+    "P0-5 合成块: page_number_only 关掉 → 页码块一块不丢（该规则的命中面完全来自它自己）",
+    JSON.stringify(off.report.byRule));
+}
+
 // ========== 9f) 换引擎留下的两处坑：建库侧引擎同源 + 升级时旧库让位 ==========
 // 翻红方式（都实测过）：
 //  ① 把 embed-book.js 的 modelKey 兜底改回 `|| "e5"` → 下面 2 条静态断言红
