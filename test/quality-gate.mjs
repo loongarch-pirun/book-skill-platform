@@ -8,6 +8,7 @@
 // 用法：
 //   node test/quality-gate.mjs                       # 现跑（双口径，约 15~25 分钟）
 //   node test/quality-gate.mjs --topN=1              # 现跑，topN 改成 1（翻转判据）
+//   node test/quality-gate.mjs --dump-rows[=<path>]                    # 逐题导出（默认 quality-gate-rows.json）
 //   node test/quality-gate.mjs --from-book=<raw> --from-route=<raw>   # 用已量好的原始数据算
 //   node test/quality-gate.mjs --from-book=<raw> --from-route=<raw> --write-baseline
 //
@@ -92,6 +93,14 @@ const FROM_ROUTE = argOf("from-route", "");
 const OUT = argOf("out", "");
 const BASELINE = path.resolve(argOf("baseline", BASELINE_FILE));
 const RERANK = argOf("rerank", "1") !== "0";
+// 逐题导出（2026-11-16）：闸门只看聚合值，红了也说不清是哪道题。
+// 裸 `--dump-rows` → 默认文件名；`--dump-rows=<path>` → 指定路径。缺省空串 = 行为零变化。
+// 注意：不能用 has("dump-rows")——它只认裸参数，`--dump-rows=path` 会漏（2026-11-16 踩过：
+// A/B 两轮各跑了 15 分钟，结果一份 dump 都没写出来，白跑一轮）。两种写法都要认。
+const DUMP_ARGV = argv.find((a) => a === "--dump-rows" || a.startsWith("--dump-rows=")) || "";
+const DUMP = DUMP_ARGV
+  ? (DUMP_ARGV === "--dump-rows" ? "quality-gate-rows.json" : DUMP_ARGV.slice("--dump-rows=".length))
+  : "";
 
 const MISS_PENALTY = 10;
 const BOOK_ALIAS = {
@@ -515,7 +524,11 @@ export function computeMetrics(rawBook, rawRoute, N, goldens = null) {
     const hit2 = v2.level === "full" || v2.level === "partial";
     const expectedId = String(it.file || "").replace(/\.db$/, "");
     const hitBook = hit2 && v2.rank > 0 && d.books ? (d.books[v2.rank - 1] || {}).bookId : null;
-    return { hit: hit2, routeOk: hit2 && hitBook === expectedId, rank: v2.rank || 0, level: v2.level };
+    return {
+      q: it.q, book: it.book || it.file || "", // 逐题对账的键（book::q），缺了就没法 diff
+      hit: hit2, routeOk: hit2 && hitBook === expectedId, rank: v2.rank || 0, level: v2.level,
+      nRes: Array.isArray(d.books) ? d.books.length : 0,
+    };
   });
   const rFull = routeRows.filter(r => r.level === "full").length;
   const rPartial = routeRows.filter(r => r.level === "partial").length;
@@ -603,6 +616,27 @@ const N = FROM_BOOK
     })())
   : TOP_N;
 const res = computeMetrics(rawBook, rawRoute, N);
+
+// 逐题导出：落在任何 exit 之前——闸门红的时候才是最需要证据的时候。
+// 必须带 libDir 与 golden.sha：这份 dump 的意义是「哪个库 + 哪份卷子下的逐题成绩」，
+// 缺任一项都无法与另一份对账（历史上就因为口径不带来源栽过一次）。
+if (DUMP) {
+  const payload = {
+    generatedAt: new Date().toISOString(),
+    libDir: path.resolve(LIB),
+    topN: N,
+    golden: { sha: GOLDEN.sha, files: GOLDEN.files },
+    source: FROM_BOOK ? `from-book:${path.resolve(FROM_BOOK)}` : "live",
+    metrics: res.metrics,
+    detail: res.detail,
+    bookRows: res.rows,
+    routeRows: res.routeRows,
+  };
+  const dumpPath = path.resolve(DUMP);
+  fs.mkdirSync(path.dirname(dumpPath), { recursive: true });
+  fs.writeFileSync(dumpPath, JSON.stringify(payload, null, 1), "utf8");
+  console.log(`逐题明细已写：${dumpPath}（book ${payload.bookRows.length} 行 / route ${payload.routeRows.length} 行）`);
+}
 
 console.log(`\n===== QUALITY GATE（topN=${N}，题数 ${res.total}）=====`);
 console.log(`口径：命中/full/名次/脏块 = 按书检索 hybridSearch（src/lib/search.mjs）｜路由准确率 = 端到端 routeAndSearch`);
