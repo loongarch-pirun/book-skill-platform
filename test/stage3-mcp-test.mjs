@@ -44,7 +44,7 @@ const LIB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "l
 // 用法：catalog 段用 withCatLib() 临时把 libDir 切到只装这两本夹具的临时目录，
 // 让 matchBook() 只能看见它们，测完立刻切回主库——主库段（检索/向量/技能）不受任何影响。
 // 照 graphrag-fuzz.mjs:79 的 PP_CAT_DB 同款双库拆分。
-const { configureSearch, currentLibDir } = await import("../src/lib/search.mjs");
+const { configureSearch } = await import("../src/lib/search.mjs");
 const ppFixture = path.join(import.meta.dirname, "fixtures", "library", "pride-and-prejudice-en.epub.db");
 const lunyuCatFixture = path.join(import.meta.dirname, "fixtures", "library", "lunyu-xueer-zh.pdf.db");
 for (const f of [ppFixture, lunyuCatFixture]) {

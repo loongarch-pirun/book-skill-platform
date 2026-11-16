@@ -411,7 +411,7 @@ const UNIT_MAX = 900;             // 与 sentenceSplit 的 900 同标尺（合�
 const GAP_CONT = 0.06;            // 续行允许的竖直间距（页面高度占比）
 const GAP_PACK = 0.12;            // 打包允许的竖直间距
 const GAP_HEADING = 0.12;         // 标题与其正文的竖直间距上限
-const SENT_END = /[.?!。！？；;:：)\]\]\}」』】”"']\s*$/;   // 视为「本段说完了」
+const SENT_END = /[.?!。！？；;:：)\]\]}」』】”"']\s*$/;   // 视为「本段说完了」
 const HEADING_TARGETS = new Set(["text", "code", "equation", "ref", "footnote", "table"]);
 
 function bboxOf(b) { return Array.isArray(b?.bbox) && b.bbox.length === 4 ? b.bbox : null; }

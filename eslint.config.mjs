@@ -19,6 +19,10 @@ export default [
       // 存档照：台账/报告/提审留痕 + 翻转验证的代码备份副本。含 .mjs 副本，
       // 不排除会被当成源码再 lint 一遍（副本本来就不是要维护的代码）。
       "存档照/**",
+      // runtime：打包期组装的便携 Python（site-packages 里有上千个 .js）+ onnx 模型。
+      // 不入库、不由我们维护；不排除的话本地 `npm run lint` 会报 2 万多条假错，
+      // 把真问题彻底淹掉（CI 没有这个目录，所以线上一直是绿的假象）。
+      "runtime/**",
     ],
   },
   js.configs.recommended,
@@ -57,6 +61,7 @@ export default [
         navigator: "readonly", // views.js 剪贴板复制用（navigator.clipboard）
         confirm: "readonly",
         CustomEvent: "readonly",
+        URL: "readonly",        // views-chat 用 new URL(baseUrl).host 判本地回环
         console: "readonly",
         setTimeout: "readonly",
         clearTimeout: "readonly",
@@ -74,6 +79,7 @@ export default [
         Buffer: "readonly",
         fetch: "readonly", // Node 18+ 全局 fetch（fetch-wikisource 用）
         AbortController: "readonly", // Node 18+ 全局（llm.mjs / probe-llm.mjs 的网络超时用）
+        AbortSignal: "readonly",     // Node 18+ 全局（mineru / mineru-runtime 的 AbortSignal.timeout）
         URL: "readonly", // Node 全局（book-view 协议 handler 解析请求）
         Request: "readonly", // Node 18+ 全局（测试里构造协议请求）
         Response: "readonly", // Node 18+ 全局（book-view 协议 handler 返回）

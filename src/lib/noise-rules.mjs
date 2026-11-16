@@ -126,11 +126,11 @@ export function isBylineBlock(text) {
 
   const names = [];
   const initials = [];
-  const re = /\b[A-Z][\p{L}'’.\-]{0,30}/gu;
+  const re = /\b[A-Z][\p{L}'’.-]{0,30}/gu;
   let m;
   while ((m = re.exec(t))) {
     const raw = m[0];
-    const bare = raw.replace(/[.'’\-]+$/, "");
+    const bare = raw.replace(/[.'’-]+$/, "");
     // "R. Stockton Gaines" 里的 "R." —— 单字母不单独当人名，但要进缩写池，
     // 否则 rsg@ 这种「首字母缩写」邮箱永远对不上（实测用例栽过一次）。
     if (normWord(bare).length === 1) {
@@ -308,7 +308,7 @@ export function compileRules(rules) {
   return rules
     .filter((r) => r.enabled !== false)
     .map((r) => {
-      let re = null;
+      let re;
       try {
         re = new RegExp(r.re, r.flags || "iu");
       } catch (e) {

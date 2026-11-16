@@ -105,13 +105,13 @@ const BOOK_ALIAS = {
 // ---- 形态脏块判据：照抄 21-切块质量\dirty-scan.mjs ----------------------------
 // 出处：dirty-scan.mjs:32-47（JUNK 7 条）+ :49-67（classify 的长度门槛）
 const JUNK = [
-  { name: "journal_masthead", re: /(communications|proceedings|transactions|journal|letters|magazine)\s*[\|,]?.*\b(19|20)\d{2}\b|\bvolume\s+\d+|\bnumber\s+\d+|\bvol\.?\s*\d+\s*,?\s*no\.?\s*\d+/i },
+  { name: "journal_masthead", re: /(communications|proceedings|transactions|journal|letters|magazine)\s*[|,]?.*\b(19|20)\d{2}\b|\bvolume\s+\d+|\bnumber\s+\d+|\bvol\.?\s*\d+\s*,?\s*no\.?\s*\d+/i },
   { name: "page_number", re: /^(page\s*)?\d{1,4}(\s*(of|\/)\s*\d{1,4})?$/i },
   { name: "copyright_line", re: /(©|\(c\)|copyright|all rights reserved|permission to make|licensed under)/i },
   { name: "toc_line", re: /\.{3,}\s*\d{1,4}\s*$|…{3,}\s*\d{1,4}\s*$/ },
-  { name: "latex_residue", re: /^(?:[\\{}_\^$\s]|\\(?:mathrm|underset|overset|frac|sum|tau|nu|kappa|xi|leq|geq|lesssim|gtrsim|cdot|times|alpha|beta|gamma|delta|sigma|lambda|infty|sqrt|left|right|text|begin|end)\b|[_^]\s*\{|[a-z]\s*_\s*\{)/i },
+  { name: "latex_residue", re: /^(?:[\\{}_^$\s]|\\(?:mathrm|underset|overset|frac|sum|tau|nu|kappa|xi|leq|geq|lesssim|gtrsim|cdot|times|alpha|beta|gamma|delta|sigma|lambda|infty|sqrt|left|right|text|begin|end)\b|[_^]\s*\{|[a-z]\s*_\s*\{)/i },
   { name: "mojibake", re: /[\uFFFD\uE000-\uF8FF]|锟斤拷|烫烫|屯屯/ },
-  { name: "separator", re: /^[\s\-=_*#~·•\.]{1,20}$/ },
+  { name: "separator", re: /^[\s\-=_*#~·•.]{1,20}$/ },
 ];
 function formDirtyOf(text) {
   const s = String(text ?? "").trim();
@@ -253,7 +253,6 @@ function dirtyOf(rs, defaultBookId) {
 //   关键词在 A 块里就算过，答案句被切开它照样放行）。
 // 任一条样本不被新尺子判 partial → 识别率 < 1 → 闸门红 exit 1。
 // 翻转证据：把 judge() 换回旧逻辑 → 识别率掉到 0 → 闸门红。
-const HARD = ".!?。！？";
 const CLOSE = "\"”’')）】」』";
 const SEAM_MIN_LEN = 40;
 const SEAM_PER_BOOK = 40;

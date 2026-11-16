@@ -11,7 +11,6 @@ import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(__dirname, "..");
 const Database = require("better-sqlite3");
 
 const { getPersonDetail, getThemeDetail, validateResult, importCatalog, linkEntities, entityAliasTerms, expandNeighborhood } = await import("../src/lib/catalog.mjs");

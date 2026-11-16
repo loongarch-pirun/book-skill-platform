@@ -184,7 +184,7 @@ async function ensureSourceTextConsent({ q, bookId, skillSlug }) {
   if (!cfg.hasKey) return false;              // 没配 key 走不到云端，不打扰
   if (cfg.sendSourceText === true) return true;
   if (cfg.sendSourceText === false) return false;
-  let host = "";
+  let host;  // try/catch 两条路都会赋值
   try { host = new URL(cfg.baseUrl).host; } catch { host = String(cfg.baseUrl || ""); }
   const local = /^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/.test(host);
   let segs = 0;

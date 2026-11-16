@@ -115,18 +115,18 @@ export function migrateStaleBundledLibrary() {
   if (!_packaged || !_resourcesDir || !_userData) return out;
   const from = path.join(_resourcesDir, "library");
   const to = path.join(_userData, "library");
-  let names = [];
+  let names;  // 初值不用给：要么读完赋值，要么 catch 直接 return
   try { names = fs.readdirSync(from).filter((f) => f.endsWith(".db")); } catch { return out; }
   if (!fs.existsSync(to)) return out;  // 目标目录都没有 → 走正常种子化，没有迁移对象
   for (const name of names) {
     const src = path.join(from, name);
     const dst = path.join(to, name);
     if (!fs.existsSync(dst)) continue;  // 目标不存在 → 走正常拷贝
-    let newModel = null, oldModel = null;
+    let newModel, oldModel;
     try { newModel = dbModel(src); oldModel = dbModel(dst); }
     catch (e) { out.skipped.push(`${name}（读不了 meta：${e.code || e.message}）`); continue; }
     if (!newModel || !oldModel || newModel === oldModel) continue;  // 同代/缺标记：不猜
-    let worked = null;
+    let worked;
     try { worked = userCatalogWork(dst); } catch { worked = "编目状态读不出来"; }
     if (worked) { out.stale.push(`${name}（${oldModel}→${newModel}，${worked}，未动）`); continue; }
     const bak = `${dst}.bak-${oldModel}`;
