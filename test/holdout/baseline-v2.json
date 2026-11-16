@@ -1,5 +1,5 @@
 {
- "note": "留出集独立基线。与 test/quality-baseline.json 严格分离，两者不得互相引用。",
+ "note": "留出集独立基线。与 test/quality-baseline.json 严格分离，两者不得互相引用；v1 与 v2 是两套不同卷子，分数口径不同、不可相减，报告里不得混用或合并平均。",
  "setId": "holdout-v2",
  "sha256": "504a1feb32d5b4c54e26549d9d03df4d1c137f709ac0f081761fa086ffab4164",
  "updatedAt": "2026-11-16T03:24:37.334Z",

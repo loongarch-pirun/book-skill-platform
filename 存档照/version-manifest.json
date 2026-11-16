@@ -1,8 +1,8 @@
 {
  "snapshotId": "r4-snapshot-20261115",
- "capturedAt": "2026-11-16T12:19:47.185Z",
+ "capturedAt": "2026-11-16T12:50:09.614Z",
  "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
- "treeSha16": "088b57a279fcfffd",
+ "treeSha16": "dd9153415b53d0f6",
  "fileCount": 267,
  "facts": {
   "golden": {
@@ -41,8 +41,8 @@
   },
   "evalBaseline": null,
   "lastCodeChange": {
-   "path": "test/guard-test.mjs",
-   "mtime": "2026-11-16T11:54:39.012Z"
+   "path": "test/holdout/baseline-v2.json",
+   "mtime": "2026-11-16T12:49:06.082Z"
   },
   "release": [
    {
@@ -302,8 +302,8 @@
   {
    "path": "docs/模型清单与包体基线.md",
    "bytes": 8564,
-   "mtime": "2026-11-16T03:24:40.898Z",
-   "sha256": "d8a7a777f9d92c5c8d0db94dc4878f3ee1df5e779efa83f7a8d778958dcffaa8"
+   "mtime": "2026-11-16T12:49:05.955Z",
+   "sha256": "d8e30edc0fb02cff0cede876fa39f78fbfe28cd8679c45c1293949c9f68692de"
   },
   {
    "path": "docs/全量复盘-2026-11-02.md",
@@ -457,9 +457,9 @@
   },
   {
    "path": "package.json",
-   "bytes": 6219,
-   "mtime": "2026-11-16T11:55:18.670Z",
-   "sha256": "b6c02f27f6d320bb5cf4f984396709b72f9c0be337cb41106771674ac53398d4"
+   "bytes": 6369,
+   "mtime": "2026-11-16T12:49:15.990Z",
+   "sha256": "c902c24b50586b59d6b57c4b9273b2fafe6faea729367150c7c5f8ec71d04c22"
   },
   {
    "path": "quality-baseline.json",
@@ -476,8 +476,8 @@
   {
    "path": "README.md",
    "bytes": 10286,
-   "mtime": "2026-11-16T04:01:52.759Z",
-   "sha256": "04c84a54a8ee727a331ed787b7eab053d40b6ec85b2255078a2effd73a6cba82"
+   "mtime": "2026-11-16T12:49:05.899Z",
+   "sha256": "56288c2506804b353e243c3bcad616544a5062a5e952bc8de643b3da5f4048b2"
   },
   {
    "path": "skills/book-intake/cheatsheet.md",
@@ -1447,15 +1447,15 @@
   },
   {
    "path": "test/holdout/baseline-v2.json",
-   "bytes": 409,
-   "mtime": "2026-11-16T03:24:37.347Z",
-   "sha256": "659ff8d2c5a5997a6808d3aa5624aa39829ad89b900a9411889ab60b586449e0"
+   "bytes": 518,
+   "mtime": "2026-11-16T12:49:06.082Z",
+   "sha256": "ec9cb84139bc3cb0af65325c9149f5d53143ae409d87148401b84930fb230a75"
   },
   {
    "path": "test/holdout/baseline.json",
-   "bytes": 402,
-   "mtime": "2026-11-15T17:13:07.101Z",
-   "sha256": "20a56bdb0b8a50a65e21a7adfcfff1e14f2ae8614f44e158c80e49bda353ca07"
+   "bytes": 511,
+   "mtime": "2026-11-16T12:49:06.029Z",
+   "sha256": "59d4a2d6b5c063d032e0e75c0b6fc3bcf3567cae5320b9145ed11f70d1f13dd4"
   },
   {
    "path": "test/holdout/frozen-v2.json",
@@ -1716,5 +1716,5 @@
    "sha256": "6ba80b3bc2ce102574ddac54641397ef9a74b3905902457fccafffaf7f3f6144"
   }
  ],
- "previousTreeSha16": "88ef16d489133a22"
+ "previousTreeSha16": "088b57a279fcfffd"
 }
