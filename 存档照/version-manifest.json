@@ -1,8 +1,8 @@
 {
  "snapshotId": "r4-snapshot-20261115",
- "capturedAt": "2026-11-16T13:02:07.356Z",
+ "capturedAt": "2026-11-16T13:28:51.100Z",
  "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
- "treeSha16": "9746abbd21151f5c",
+ "treeSha16": "3bc56b82f9933776",
  "fileCount": 267,
  "facts": {
   "golden": {
@@ -41,8 +41,8 @@
   },
   "evalBaseline": null,
   "lastCodeChange": {
-   "path": "test/holdout/baseline-v2.json",
-   "mtime": "2026-11-16T12:49:06.082Z"
+   "path": "test/neighbor-test.mjs",
+   "mtime": "2026-11-16T13:22:49.615Z"
   },
   "release": [
    {
@@ -1543,9 +1543,9 @@
   },
   {
    "path": "test/neighbor-test.mjs",
-   "bytes": 8447,
-   "mtime": "2026-11-16T10:36:01.020Z",
-   "sha256": "21b2a95ff34eca3e36b29b4a3e69c3565767f47f523c142cb4dac16e6aa3bdeb"
+   "bytes": 10544,
+   "mtime": "2026-11-16T13:22:49.615Z",
+   "sha256": "ffd01871b488c7608f05d43f96cdda467d6f1a09d24d0eef226c64019ce86aa7"
   },
   {
    "path": "test/newbook-check.mjs",
@@ -1716,5 +1716,5 @@
    "sha256": "6ba80b3bc2ce102574ddac54641397ef9a74b3905902457fccafffaf7f3f6144"
   }
  ],
- "previousTreeSha16": "dd9153415b53d0f6"
+ "previousTreeSha16": "9746abbd21151f5c"
 }

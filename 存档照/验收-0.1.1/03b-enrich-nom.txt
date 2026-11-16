@@ -1,0 +1,16 @@
+OBSERVE - 真库 enrich 数据面缺失（chunks 无 tags/questions 列）→ 真库三源断言跳过。恢复办法：跑一遍洗数据管线（enrich-book + enrich-import）给论语灌回 tags/questions；本条不是缺陷，是环境状态（2026-11-16 回灌编目只补了 catalog 层，enrich 层需重跑 LLM）。
+PASS - 真库未洗数据 → 信号静默为空（零变化前提，与环境无关，照常断言）
+PASS - 未洗数据的库 → 静默返回空（零变化前提）
+PASS - 模式 0：全池外问句结果为空（）
+PASS - 配额封顶：8 候选只提名 6（实际 6）
+PASS - 提名都带 tag 来源标
+PASS - df 过滤：只挂高频标签「廢話」的块不进提名
+PASS - 问题路提名：chunk#9 凭假设问题进窗（enr=question）
+PASS - 地板：单摘要命中 0.12 < 0.15 被无效化（chunk#11 不进）
+PASS - chunk#10 在池（字面命中）不进提名
+PASS - 加权腿：池内块涨分（0.500 → 0.596，enrW=0.32）
+PASS - 加权腿只作用于池内：池外弱信号块仍不进（chunk#11 缺席）
+PASS - 模式 0 与未设置结果一致（1,14,6,7,5,8）
+PASS - 模式 0 结果不带 enr/nom 字段
+PASS - 未洗数据的库：模式 1 与 0 结果一致（静默跳过）
+===== enrich-nom-test: 全部 PASS =====

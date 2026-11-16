@@ -1,0 +1,49 @@
+PASS - 关键词抽取: 属格剥离+实词保留（darcy,estate,called）
+PASS - 关键词抽取: who/what 类问题词全停、's 属格不单独出现
+PASS - 关键词抽取: 弯引号 ’s 归一后剥离（df=0 陷阱）
+PASS - 中文: 简转繁后切 2-gram（治理 理一 一個 個大 大國...）
+PASS - 简转繁: 国→國 恒→恆
+PASS - df过滤: 「可以说…」题的字面腿哑火不提名（实际 0）
+PASS - df过滤: 「大國」低频保留且正中烹小鮮块（id=60 score=1）
+PASS - 封顶: 50 候选取 top-12
+PASS - 封顶: 保留的是分数最高的一批
+PASS - 关键词腿激活: convs2s 题 MATCH 命中 52 块（旧短语腿是 0）
+PASS - 端到端: convs2s/bytenet 答案块进 top-20（第 14 名；旧字面腿时代根本不在池里）
+PASS - 端到端: 英文关键词腿贡献字面分（fts>0）
+PASS - 端到端: 答案块被字面腿认出（fts=0；在字面命中集合内=true，FTS_TOPK=12 封顶会截断低名次）
+PASS - 端到端: 烹小鮮块带字面分命中（fts=1.00）
+PASS - 开关: BSP_FTS_KW=0 整句短语模式字面腿全哑（命中数 0）
+PASS - 开关: 默认关键词模式字面腿激活（命中数 10）
+PASS - 短查询/纯符号返回数组不崩溃
+PASS - 质量阶梯函数边界正确（保留给实验用，当前主路径用提名封顶）
+PASS - 实体链接: P&P 英文命中 Darcy（Fitzwilliam Darcy）
+PASS - 实体链接: 简体「齐宣王」命中繁体人物（孟子/齊宣王）
+PASS - 实体链接: 同一问句同时命中「孟子」（多人物并集）
+PASS - 别名: 问「lizzy」注入全写法（en=elizabeth,lizzy）
+PASS - 别名: 简体问句注入繁体 gram（cjk=孟子 孟軻 齊宣 宣王）
+PASS - 别名: cap 8/16 + 去重（无重复词）
+PASS - 剪枝①: 多词写法只取末词（George Wickham 不带出 george——版权页 George Allen 短块污染实测；en=wickham,lydia）
+PASS - 剪枝②: 跨实体子串遮蔽（bennet⊂"Lydia Bennet" 被丢、书中单字写法 charles 保留；en=jane,charles）
+PASS - 别名: 命中后注入 match_names 全写法且 cap=8（en=8 个）
+PASS - 别名: 译名只匹配不注入（cjk 为空，书里没有的词不进 FTS）
+PASS - 安全: 无 nodes 表库返回空词（SqliteError 被吞、不崩）
+PASS - 安全: 有表无编目（llm 层空）返回空词
+PASS - 注入序: 别名排问题词前（"elizabeth" OR "lizzy" OR "think" OR "marriage"）
+PASS - 注入盘: 总词封顶 24（30 词输入只留 24）
+PASS - 开关: BSP_ENTITY_LINK 关/开两模式都正常产出
+PASS - 开关: 关/开结果序列不同（别名注入有实际作用，不是死代码）
+PASS - 端到端: 简体问句命中繁体原文块（id=154 fts=1.00）
+PASS - 缓存: clearListCache 归零 + 默认开
+PASS - 缓存: 首查重扫建缓存（2 本，miss=1）
+PASS - 缓存: 再查命中不重扫（hits=2 misses=1）
+PASS - 缓存: 新增 .db → 文件名集合变化重扫（3 本现身）
+PASS - 缓存: touch .db mtime → 指纹变化重扫（hits=2 misses=3）
+PASS - 缓存: 内容变化经 mtime 指纹刷新（无僵尸）
+PASS - 缓存: 关书即时过滤且不触发重扫（state 现读在缓存之上）
+PASS - 缓存: includeDisabled 豁免仍见全量（引用回源路径不受 H3 影响）
+PASS - 缓存: 返回值浅拷贝与缓存隔离（调用方乱改不污染）
+PASS - 缓存: BSP_LIST_CACHE=0 回退旧路径（结果正确且不触缓存计数）
+PASS - 缓存: 删掉变量恢复启用（命中缓存）
+
+===== 字面腿关键词化验收结果 =====
+全部 PASS

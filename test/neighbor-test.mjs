@@ -17,12 +17,14 @@ const assert = (cond, msg, extra = "") => {
   if (!cond) failed++;
 };
 
-// ---------- 夹具：两章 md，第一章 5 段相邻段落（P1..P5 各带唯一词）----------
+// ---------- 夹具：两章 md，数组 8 段 / 链表 6 段 ----------
+// 2026-11-16 加固：原夹具 7 段只出 4 块（数组 3 + 链表 1），链表章没有同章邻居可扩，
+// 「同章扩展」只在数组章验到 1 席。扩到 8+6 段后出 7 块（数组 4 + 链表 3），两章都有内部块。
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "nbr-"));
 const FILLER = "这里补足正文长度以免被切片器合并，讲的是数组的连续内存布局与索引寻址方式，数组下标从零开始，越界访问属于未定义行为。";
 const para = (kw) => `${kw}段落独特词在这里。${FILLER.repeat(4)}`;
-// 每段都写长：2026-11 切片器会把同章短段合并，短夹具只剩 2 块 → topN=3 已覆盖全部块，
-// 邻块扩展没有"可扩的邻居"，断言永远红（2026-11-16 定位）。加长后 7 段出 4 块，扩展才有位置。
+// 链表段不带「独特词」：压低字面分，避免链表块靠字面挤进 topN 干扰数组章断言
+const para2 = (kw) => `${kw}知识点说明。${FILLER.repeat(4)}`;
 const md = `# 数组
 
 ${para("苹果")}
@@ -33,13 +35,27 @@ ${para("樱桃")}
 
 ${para("蜜桃")}
 
+${para("苹果")}
+
+${para("香蕉")}
+
+${para("蜜桃")}
+
 ${para("柠檬")}
 
 # 链表
 
-${para("西瓜")}
+${para2("西瓜")}
 
-${para("芒果")}
+${para2("芒果")}
+
+${para2("葡萄")}
+
+${para2("荔枝")}
+
+${para2("柚子")}
+
+${para2("橙子")}
 `;
 const mdPath = path.join(TMP, "nbr.md");
 fs.writeFileSync(mdPath, md, "utf8");
@@ -71,6 +87,12 @@ const db = new Database(dbPath, { readonly: true });
 const chunks = db.prepare("SELECT id, chapter, text FROM chunks ORDER BY id").all();
 const idOf = (kw) => chunks.find(c => c.text.includes(kw))?.id;
 const textOf = (id) => chunks.find(c => c.id === id)?.text;
+// 夹具自检：两章各 ≥2 块，同章扩展才有位置（否则断言会退化成空真）
+{
+  const byCh = chunks.reduce((m, c) => (m[c.chapter] = (m[c.chapter] || 0) + 1, m), {});
+  assert(chunks.length === 7 && byCh["数组"] === 4 && byCh["链表"] === 3,
+    `夹具: 7 块 / 数组 4 + 链表 3（实际 ${chunks.length} 块：${JSON.stringify(byCh)}）`);
+}
 
 // ===== 1) 默认关：无 nbr 字段、条数不超 topN =====
 {
@@ -110,9 +132,33 @@ const textOf = (id) => chunks.find(c => c.id === id)?.text;
     // 上限：邻块总数 ≤ 默认上限 6（原硬编码 4；2026-11-16 H16 差的就是一个名额）
     assert(nbrs.length <= 6, `开: 邻块总数 ≤6（实际 ${nbrs.length}）`);
     // chapter_path 透传：nbr 行继承种子的 chapterPath
-    assert(nbrs.every(n => typeof n.chapterPath === "string" && n.chapterPath.includes("数组")),
+    // 2026-11-16 加固：原断言写死「数组」——两章都有 ≥2 块后，链表种子会扩出链表 nbr，
+    // 写死章名会随机红。改成「nbr 的 chapterPath == 其种子」，等价且更严（也覆盖链表章透传）。
+    assert(nbrs.every(n => typeof n.chapterPath === "string"
+      && n.chapterPath === seeds.find(s => s.id === n.nbrOf)?.chapterPath),
       `开: chapter_path 透传（${JSON.stringify(nbrs[0]?.chapterPath)}）`);
   } finally { delete process.env.BSP_NEIGHBOR; }
+}
+
+// ===== 2b) 同章 ≥2 席（确定性路径）=====
+// 夹具加固后樱桃块在数组章第 2 块（内部块），±1 两侧都有邻居。
+// topN=1 锁死种子唯一、BSP_SEM_GUARD=0 关掉语义保送，保证走关键词口径。
+{
+  process.env.BSP_NEIGHBOR = "1";
+  process.env.BSP_SEM_GUARD = "0";
+  try {
+    const rs = await hybridSearch(dbPath, "樱桃独特词", 1);
+    const seeds = rs.filter(r => r.nbr === undefined);
+    const nbrs = rs.filter(r => r.nbr !== undefined);
+    assert(seeds.length === 1 && seeds[0].text.includes("樱桃"),
+      `2b: 种子唯一且是樱桃块（${seeds.length} 席，${seeds[0]?.text?.slice(0, 12)}）`);
+    const s = seeds[0];
+    assert(nbrs.length === 2 && nbrs.every(n => Math.abs(n.id - s.id) === 1
+      && n.chapter === s.chapter
+      && n.chapterPath === s.chapterPath
+      && Math.abs(n.score - +((s.rerank ?? s.score) * 0.5).toFixed(4)) <= 1e-6),
+      `2b: 同章恰好 2 席（id±1 / 同章 / 衰减 ×0.5，实际 ${nbrs.length} 席）`);
+  } finally { delete process.env.BSP_NEIGHBOR; delete process.env.BSP_SEM_GUARD; }
 }
 
 // ===== 3) 变体路径：原句终排扩、变体快路不扩（不炸 + 不变式保持） =====
