@@ -1,0 +1,2273 @@
+diff --git a/test/eval-baseline.json b/test/eval-baseline.json
+deleted file mode 100644
+index 9c1c829..0000000
+--- a/test/eval-baseline.json
++++ /dev/null
+@@ -1,23 +0,0 @@
+-{
+-  "date": "2026-10-20",
+-  "model": "e5",
+-  "reranker": "onnx-community/bge-reranker-v2-m3-ONNX",
+-  "rate": 93,
+-  "hits": 116,
+-  "total": 125,
+-  "rerank": true,
+-  "rerankOffRate": 79,
+-  "avgLatencyMs": 3323,
+-  "misses": [
+-    "国家当中什么最贵重，江山和君主哪个轻",
+-    "再远的路从哪里开始",
+-    "论文里的缩放点积注意力是什么",
+-    "who writes the letters that open the novel",
+-    "怪物最后说要把自己怎么样",
+-    "what is the famous opening sentence about",
+-    "达西先生的庄园叫什么名字",
+-    "2010 年房地产调控真正为的是什么，不是降房价吗",
+-    "想了解一个片区房价，楼主说要聊几家中介公司"
+-  ],
+-  "note": "金卷扩容波次后基线（2026-10-20 下午）：考卷 102→125 题，按九本佚书新编目主题补盲区 +23 题（og-aws 4：Lambda/CloudWatch/Aurora 64TB/NLB；hello-algo 4：堆/AVL 旋转/贪心 vs DP/归并分治；d2l 4：K 折交叉验证/泛化误差/RNN encoder/softmax 输出；简爱 4：Brocklehurst/Adèle/Grace Poole/St. John；福尔摩斯 3：Spaulding/五橘核/Ryder；SDP 3：负载均衡代价/MySQL 伸缩/CDN；dynamo 1：均匀负载选型），全部按编目主题采样真实块出题、金词 instr 回库验真。**23 题全数命中，漏题 9 条与前基线完全一致（双门：93 ≥ 91 ✓ 且漏题⊆基线 ✓），检出力从 102 题扩到 125 题零成本。** 实测修订两处：①简爱管家题漏（答案块 #410 Fairfax 自述但 top4 拉不动，Fairfax 块噪声 125 处）→ 换 Adèle 探针 rank1 过；②og-aws 全英文问（AZ 题教训沿用）。eval-gate spawn 超时 10→20 分钟（124 题 × ~5.9s ≈ 12.2 分钟会撞旧线）。前史：91 基线 = kkndme 行级清洗波次（93/102，净做对购房咨询题）。"
+-}
+diff --git a/test/eval-gate.mjs b/test/eval-gate.mjs
+deleted file mode 100644
+index 439e9c9..0000000
+--- a/test/eval-gate.mjs
++++ /dev/null
+@@ -1,87 +0,0 @@
+-// eval-gate：回归门禁
+-// 跑 v2-eval.mjs（复试官开），对基线断言两条硬规矩：
+-//   1. 总分不得低于基线分（eval-baseline.json 的 rate）
+-//   2. 本轮漏题必须是基线漏题的子集（不许把做对过的题做错）
+-// 用法: node test/eval-gate.mjs
+-// 基线更新规矩：只有净提升才允许改 eval-baseline.json，且漏题清单变化要写进 commit message
+-//
+-// 2026-11-13 加了一道「可比性」前置闸：基线里记了 model，若与本轮评测的引擎不同、
+-// 或有效题数不同，两条门都失去意义（分母都变了，93 比 88 属于拿两把尺子量）。
+-// 这种情形不再静默判红，而是打「不可比」并 exit 0 —— 让换引擎这件事不被假红灯挡路，
+-// 同时一眼看得见「这份基线该重定了」。真正同引擎同卷的回归仍然照旧判死。
+-import { spawnSync } from "node:child_process";
+-import fs from "node:fs";
+-import path from "node:path";
+-
+-const ROOT = path.join(import.meta.dirname, "..");
+-const baselinePath = path.join(import.meta.dirname, "eval-baseline.json");
+-const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
+-
+-// 复试官开（默认配置）跑一轮；rerank off 的分数也顺手记录但不设门（关复试官是诊断模式）
+-// 超时随考卷规模走：124 题 × ~5.9s ≈ 12.2 分钟，给 20 分钟余量（102 题时代 10 分钟线曾贴脸）
+-const proc = spawnSync(process.execPath, ["test/v2-eval.mjs", "--rerank", "on"], {
+-  cwd: ROOT,
+-  encoding: "utf8",
+-  timeout: 20 * 60 * 1000,
+-});
+-const out = (proc.stdout || "") + (proc.stderr || "");
+-
+-// 解析 EVAL_RESULT 行和漏题行
+-let result = null;
+-const misses = [];
+-for (const line of out.split(/\r?\n/)) {
+-  const m = line.match(/^EVAL_RESULT\s+(.+)$/);
+-  if (m) result = JSON.parse(m[1]);
+-  const missLine = line.match(/^\s*漏题:\s*(.+)$/);
+-  if (missLine) misses.push(...missLine[1].split("|").map(s => s.trim()).filter(Boolean));
+-}
+-
+-if (!result) {
+-  console.error("eval-gate 失败：没解析到 EVAL_RESULT（评测没跑完或崩溃）\n---- 原始输出尾部 ----");
+-  console.error(out.slice(-2000));
+-  process.exit(1);
+-}
+-
+-console.log(`\n===== eval-gate =====`);
+-console.log(`  本轮: ${result.hits}/${result.total} = ${result.rate} 分 | 平均延迟 ${result.avgLatencyMs}ms`);
+-console.log(`  基线: ${baseline.hits}/${baseline.total} = ${baseline.rate} 分 (model=${baseline.model}, 记录于 ${baseline.date})`);
+-if (misses.length) console.log(`  本轮漏题: ${misses.join(" | ")}`);
+-else console.log(`  本轮漏题: 无`);
+-
+-// 门 0（可比性前置闸）：引擎或卷面规模一变，分母就变了，两条门都量的是两把尺子。
+-// 这种情形安静地打「不可比」，让真正同引擎同卷的回归继续判死。
+-// 判据可翻转：把 eval-baseline.json 的 model 改回本轮引擎、total 改回本轮题数，立刻恢复硬门。
+-const why = [];
+-if (baseline.model !== result.model) why.push(`引擎不同（基线 ${baseline.model} / 本轮 ${result.model}）`);
+-if (baseline.total !== result.total) why.push(`有效题数不同（基线 ${baseline.total} / 本轮 ${result.total}）`);
+-if (why.length) {
+-  console.log(`\n≓ eval-gate 不可比，本轮不判红也不判绿：${why.join("；")}。`);
+-  console.log(`  分数不可比：${result.rate} 分 ≠ ${baseline.rate} 分，分母与向量空间都变了，这组对比没有意义。`);
+-  console.log(`  这不是放行、也不是回归——是「这份基线该重定了」。`);
+-  console.log(`  重定基线：确认本轮检索无退化后，把 test/eval-baseline.json 的 model/total/hits/rate/misses`);
+-  console.log(`  改成当前实况，并在 commit message 里写明漏题变化（规矩见本文件头）。`);
+-  console.log(`  硬门会在基线对齐后的下一轮自动恢复。`);
+-  process.exit(0);
+-}
+-
+-// 门 1：分数不低于基线
+-if (result.rate < baseline.rate) {
+-  console.error(`✗ 门禁不通过：${result.rate} < 基线 ${baseline.rate}。检索层出现回归，不许提交。`);
+-  process.exit(1);
+-}
+-
+-// 门 2：漏题 ⊆ 基线漏题（做对过的题不许做错）
+-const baseMiss = new Set(baseline.misses);
+-const newMiss = misses.filter(q => !baseMiss.has(q));
+-if (newMiss.length) {
+-  console.error(`✗ 门禁不通过：新增漏题（基线里这几题原本是对的）：\n  ${newMiss.join("\n  ")}`);
+-  process.exit(1);
+-}
+-
+-// 顺带把漏题清单变化提示出来（变好：可以更新基线了）
+-const improved = [...baseMiss].filter(q => !misses.includes(q));
+-if (improved.length) {
+-  console.log(`  ↑ 相比基线新做对 ${improved.length} 题：${improved.join(" | ")}`);
+-  console.log(`  可以净更新基线了：改 test/eval-baseline.json 并在 commit message 里写明漏题变化。`);
+-}
+-console.log(`✓ eval-gate 通过（${result.rate} ≥ ${baseline.rate}，无新增漏题）`);
+diff --git a/test/ftsliteral-test.mjs b/test/ftsliteral-test.mjs
+index 6496239..9cb7429 100644
+--- a/test/ftsliteral-test.mjs
++++ b/test/ftsliteral-test.mjs
+@@ -113,7 +113,7 @@ const assert = (cond, msg, extra = "") => {
+ 
+ // ===== 7) P1 词法实体链接：别名注入字面腿（BSP_ENTITY_LINK 默认开）=====
+ // 目标：命中人物的书内真实写法（match_names）补进字面腿词盘——问一种写法搜全写法 +
+-// 简体问句链到繁体原文。只加词不改分（打分/权重/复试官零改动），eval-gate 两道门守红线。
++// 简体问句链到繁体原文。只加词不改分（打分/权重/复试官零改动），质量门防退化守红线。
+ {
+   const PP = path.join(LIB, "pride-and-prejudice-en.epub.db");
+   const MZ = path.join(LIB, "mengzi-zh.docx.db");
+diff --git a/test/golden-verify.mjs b/test/golden-verify.mjs
+index e83c6b8..ee98fb3 100644
+--- a/test/golden-verify.mjs
++++ b/test/golden-verify.mjs
+@@ -9,6 +9,7 @@
+ import fs from "node:fs";
+ import path from "node:path";
+ import { createRequire } from "node:module";
++import { resolveBookPrefix } from "./lib/book-alias.mjs";
+ const require = createRequire("C:/Users/JIANG XIAO HUA/Desktop/book-skill-platform-r3/package.json");
+ const Database = require("better-sqlite3");
+ 
+@@ -16,14 +17,7 @@ const R4 = path.resolve(import.meta.dirname, "..");
+ const LIB = path.join(R4, "library");
+ const GOLDEN_DIR = path.join(R4, "test", "golden");
+ 
+-// 与 test/v2-eval.mjs:21-27 保持一致的别名表
+-const BOOK_ALIAS = {
+-  "jane-eyre-en.epub": "pg1260-简爱.epub",
+-  "sherlock-holmes-adventures-en.epub": "pg1661-福尔摩斯冒险史.epub",
+-  "dynamo-2007-en.pdf": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+-  "lamport-1978-en.pdf": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+-  "mapreduce-2004-en.pdf": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+-};
++// 书名 → .db 前缀的唯一正本在 test/lib/book-alias.mjs（旧 eval 体系移除后收敛）。
+ 
+ const HARD = ".!?。！？";
+ const SOFT = ";：;:";
+@@ -31,7 +25,7 @@ const SOFT = ";：;:";
+ const dbCache = new Map();
+ function rowsOf(book) {
+   if (dbCache.has(book)) return dbCache.get(book);
+-  const want = BOOK_ALIAS[book] || book;
++  const want = resolveBookPrefix(book);
+   const f = fs.readdirSync(LIB).find(x => x.startsWith(want) && x.endsWith(".db"));
+   if (!f) throw new Error(`找不到库文件 ${want}*.db`);
+   const db = new Database(path.join(LIB, f), { readonly: true });
+diff --git a/test/graphrag-fuzz.mjs b/test/graphrag-fuzz.mjs
+index 5c5ef3a..12bb63b 100644
+--- a/test/graphrag-fuzz.mjs
++++ b/test/graphrag-fuzz.mjs
+@@ -567,7 +567,7 @@ console.log("\n--- W5 maxBooks 链路 ---");
+ // D1：cjk 腿把查询简转繁（为繁体书设计），对简体文档（真实工作资料）转出的繁体 gram
+ // 查不到 → 字面腿整体哑火（B2 实证：皮润作业「低压电器怎么分类」0 条）。修复=简繁双形
+ // （questionKeywords + entityAliasTerms 两处，只加词不改分：新增原形 gram 必含简形差体字，
+-// 对纯繁体书 df=0 被 keep 过滤天然丢弃——eval-gate 两道门守红线）。
++// 对纯繁体书 df=0 被 keep 过滤天然丢弃——质量门防退化守红线）。
+ console.log("\n--- W6 D1 简繁双形 ---");
+ {
+   // 单元：简体问题双形；纯繁体问题零增量
+diff --git a/test/guard-test.mjs b/test/guard-test.mjs
+index 699feec..1018d8a 100644
+--- a/test/guard-test.mjs
++++ b/test/guard-test.mjs
+@@ -3,6 +3,7 @@
+ import fs from "node:fs";
+ import os from "node:os";
+ import path from "node:path";
++import crypto from "node:crypto";
+ import { createRequire } from "node:module";
+ const require = createRequire(import.meta.url);
+ const Database = require("better-sqlite3");
+@@ -1540,6 +1541,115 @@ const copyDb = (src) => {
+     "静态: skill-validate CLI 同款 env 兜底（安装态也能跑校验）");
+ }
+ 
++// ========== 留出集：冻结完整性 + 两套卷子隔离 ==========
++// 为什么钉这一组：留出集是唯一能回答「改造有没有真的变好」的独立卷子。
++// 它一旦被悄悄改题，或者与同源 80 题混到一条管线里，判据就自己失效了——
++// 这种失效没有任何报错，只能靠静态断言守。
++{
++  const projRoot = path.join(import.meta.dirname, "..");
++  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
++  const holdDir = path.join(import.meta.dirname, "holdout");
++  const frozenP = path.join(holdDir, "frozen.json");
++  ok(fs.existsSync(frozenP), "留出集: frozen.json 存在（卷子已冻结才允许跑分）");
++
++  const fz = JSON.parse(fs.readFileSync(frozenP, "utf8"));
++  const setP = path.join(projRoot, fz.file);
++  ok(fs.existsSync(setP), `留出集: 卷子文件按 frozen.json 登记路径可寻（${fz.file}）`);
++
++  const buf = fs.readFileSync(setP);
++  const sha = crypto.createHash("sha256").update(buf).digest("hex");
++  ok(sha === fz.sha256, `留出集: 卷子 sha256 与冻结记录逐字节一致（${sha.slice(0, 12)}…）`);
++
++  const setObj = JSON.parse(buf.toString("utf8"));
++  ok(setObj.frozen === true && setObj.status === "FROZEN" && setObj.total === 30,
++    `留出集: 状态 FROZEN 且题数 30（实际 ${setObj.status}/${setObj.total}）`);
++  ok(setObj.byKind?.answerable > 0 && setObj.byKind?.refusal > 0
++    && setObj.byKind?.ambiguous > 0 && setObj.byKind?.newbook > 0,
++    `留出集: 四类题型齐全（${JSON.stringify(setObj.byKind)}）`);
++  ok(setObj.items.every(it => it.kind !== "refusal" || (Array.isArray(it.absent) && it.absent.length > 0)),
++    "留出集: 每道拒答题都带 absent 判定词（否则拒答无法自动判分）");
++
++  // 两套卷子严格隔离：同源 80 题只配当回归门禁，不许冒充效果证据
++  const gateSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "quality-gate.mjs"), "utf8"));
++  const holdSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "holdout-run.mjs"), "utf8"));
++  ok(!/holdout/i.test(gateSrc), "隔离: quality-gate 不引用 holdout（同源卷子不许碰独立卷子）");
++  ok(!/golden/i.test(holdSrc), "隔离: holdout-run 不引用 golden（独立卷子不许借同源答案）");
++
++  // 第二卷（v2）：同款冻结校验 + 与 v1 不得共用同一块原文
++  const f2P = path.join(holdDir, "frozen-v2.json");
++  ok(fs.existsSync(f2P), "留出集v2: frozen-v2.json 存在（第二卷已冻结）");
++  const f2 = JSON.parse(fs.readFileSync(f2P, "utf8"));
++  const buf2 = fs.readFileSync(path.join(projRoot, f2.file));
++  const sha2 = crypto.createHash("sha256").update(buf2).digest("hex");
++  ok(sha2 === f2.sha256, `留出集v2: 卷子 sha256 与冻结记录一致（${sha2.slice(0, 12)}…）`);
++  const set2 = JSON.parse(buf2.toString("utf8"));
++  const used1 = new Set(setObj.items.filter(x => x.chunk_id).map(x => `${x.book}#${x.chunk_id}`));
++  const reuse = set2.items.filter(x => x.chunk_id && used1.has(`${x.book}#${x.chunk_id}`));
++  ok(set2.frozen === true && set2.total === 30 && reuse.length === 0,
++    `留出集v2: 30 题 FROZEN 且不复用 v1 的任何一块原文（复用 ${reuse.length} 处）`);
++  // 每卷的基线不得互相覆盖
++  ok(/frozen-\$\{SUFFIX\}|baseline-\$\{SUFFIX\}/.test(holdSrc),
++    "隔离: 两卷各自的 frozen / baseline 文件按 setId 后缀区分，不互相覆盖");
++}
++
++// ========== 路由层静态契约（P1）==========
++// 为什么钉这一组：路由层有三个必须同时成立的东西——预筛存在、回滚开关存在、默认值没被偷改。
++// 任何一个丢了，行为都会静默变化（变慢或变不准），而普通回归测试抓不到「参数被调松」。
++{
++  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
++  const searchSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "search.mjs"), "utf8"));
++  const modelSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "models.mjs"), "utf8"));
++
++  ok(/function routeCfg\(\)/.test(searchSrc) && /const ROUTE_DEFAULTS = Object\.freeze\(/.test(searchSrc),
++    "路由: routeCfg() 与 ROUTE_DEFAULTS 存在（参数只读快照，问答内不漂移）");
++  ok(/function selectBooks\(question, books\)/.test(searchSrc),
++    "路由: selectBooks 预筛存在（瓶颈① 的唯一入口）");
++  ok(searchSrc.indexOf("function selectBooks") < searchSrc.indexOf("export async function routeAndSearch"),
++    "路由: selectBooks 定义在 routeAndSearch 之前（不能是事后补的桩）");
++  ok(/process\.env\.BSP_ROUTE !== "0"/.test(searchSrc),
++    "路由: BSP_ROUTE!==\"0\" 总闸判断存在（一键回滚到旧全库扫描）");
++
++  // 默认值逐字等于改造前的值：这是防「静默调参」的唯一硬防线
++  const want = { minLen: 60, sigTopK: 3, books: 8, keep: 10, refW: 0.5, poolCap: 48, floorRatio: 0.3 };
++  const block = (searchSrc.match(/const ROUTE_DEFAULTS = Object\.freeze\(\{([\s\S]*?)\}\)/) || [])[1] || "";
++  const got = Object.fromEntries([...block.matchAll(/(\w+):\s*([\d.]+)/g)].map((m) => [m[1], +m[2]]));
++  ok(Object.keys(want).every((k) => got[k] === want[k]),
++    `路由: ROUTE_DEFAULTS 七项默认值逐字等于改造前（${JSON.stringify(got)}）`);
++
++  // 新增的返回字段必须有断言守着：没人依赖的字段删掉不会红灯，等于没加（2026-11-16 提审 🔴）
++  {
++    const out = await routeAndSearch("《道德经》第十五章开头用哪两个词形容古之善為士者？", { libDir: LIB });
++    ok(typeof out.route_source === "string" && ["prefilter", "full", "degraded"].includes(out.route_source),
++      `路由: route_source 存在且取值受控（${out.route_source}）`);
++    ok(Array.isArray(out.route_candidates) && out.route_candidates.length >= 1
++      && out.route_candidates.every((x) => typeof x === "string"),
++      `路由: route_candidates 是非空书名字符串数组（${out.route_candidates?.length ?? 0} 本）`);
++    // 原有五个字段一个都不许少
++    ok(Array.isArray(out.routed_books) && Array.isArray(out.considered) && Array.isArray(out.results)
++      && out.considered.length === listBooks(LIB).length,
++      `路由: 原有五字段结构不变且 considered 覆盖全库（${out.considered.length} 本）`);
++  }
++
++  // assertEngine 调用点不许减少：4 处（catalog:365 / search:223 / search:529 / similar:49 改造前口径）
++  const countEngine = (src) => (src.match(/\bassertEngine\(/g) || []).length;
++  ok(countEngine(searchSrc) >= 2 && countEngine(modelSrc) >= 1,
++    `路由: assertEngine 调用点未减少（search ${countEngine(searchSrc)} 处 / models ${countEngine(modelSrc)} 处）`);
++  // 关键顺序：assertEngine 必须在 getMatrix 之前（缓存只比字符串 engine，不校验库内维度）
++  const seg = searchSrc.slice(searchSrc.indexOf("async function scanBookSem"), searchSrc.indexOf("function tightPick"));
++  ok(seg.indexOf("assertEngine(") > 0 && seg.indexOf("getMatrix(") > 0
++      && seg.indexOf("assertEngine(") < seg.indexOf("getMatrix("),
++    "缓存: scanBookSem 内 assertEngine 先于 getMatrix（引擎卫兵不能被缓存绕过）");
++  ok(/matrixScores\(mat, qv, sem\)/.test(seg) && /length\(text\) len FROM chunks WHERE emb IS NOT NULL/.test(seg),
++    "缓存: 命中分支用 matrixScores + 一条不读 BLOB 的轻量回表拿 kind/len");
++
++  // 缓存默认必须是关：不设环境变量时行为逐字节等于改造前
++  const vecSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "vec-cache.mjs"), "utf8"));
++  ok(/BSP_VEC_CACHE_MB \?\? 0/.test(vecSrc) && /cap <= 0/.test(vecSrc),
++    "缓存: 默认关闭（BSP_VEC_CACHE_MB ?? 0）且 cap<=0 早退保留（不设变量 = 旧行为）");
++  ok(/hits/.test(vecSrc) && /misses/.test(vecSrc),
++    "缓存: 命中/未命中计数存在（要不要真开缓存只能靠它判，不能靠 entries 猜）");
++}
++
+ fs.rmSync(tmp, { recursive: true, force: true });
+ console.log(`\n===== 防线包验收结果 =====`);
+ if (fail) { console.error(`${fail} 项 FAIL`); process.exit(1); }
+diff --git a/test/hallucination-fuzz.mjs b/test/hallucination-fuzz.mjs
+index 58f942c..dbe463d 100644
+--- a/test/hallucination-fuzz.mjs
++++ b/test/hallucination-fuzz.mjs
+@@ -1,7 +1,7 @@
+ // P0 幻觉爆破（终期暴力测试核心）：拿对抗弹药攻四道幻觉闸门。
+ // 门1 编目五重校验（validateResult）：假人名/子串陷阱/安错人/坏引用 → 拒；合法 → 收
+ // 门2 技能三道质检（saveSkill）：中文数字声称/引文边缘造假/假索引/穿越/超限 → 拒；合法 → 收
+-// 门3 考卷金标准反验：GOLDEN 52 题每个关键词必须回该书库原文（常驻断言，防考卷自身带幻觉）
++// 门3 考卷金标准反验：新考卷 80 题每个关键词必须回该书库原文（常驻断言，防考卷自身带幻觉）
+ // 门4 检索探针：无答案问题/篡改主语（记录型——检索是相关性排序不是事实核查，不断言）
+ // 门2 的 sources 与门3/门4 用真 library（readonly）；门1/门2 落点全部临时目录。
+ // 挂载：test:slow（门4 要加载 e5 模型）。
+@@ -10,6 +10,7 @@ import os from "node:os";
+ import path from "node:path";
+ import { fileURLToPath } from "node:url";
+ import { createRequire } from "node:module";
++import { resolveBookPrefix } from "./lib/book-alias.mjs";
+ 
+ const require = createRequire(import.meta.url);
+ const __dirname = path.dirname(fileURLToPath(import.meta.url));
+@@ -188,26 +189,29 @@ sources: { dd: daodejing-zh.docx }
+ }
+ 
+ // ================= 门3 考卷门：金标准回原文反验 =================
+-console.log("===== 门3 考卷金标准反验（GOLDEN 52 题全查） =====");
++console.log("===== 门3 考卷金标准反验（新考卷 80 题全查） =====");
+ {
+-  // v2-eval.mjs 无导出且 import 会真跑评测 → 正则提取 GOLDEN 字面量
+-  const src = fs.readFileSync(path.join(ROOT, "test/v2-eval.mjs"), "utf8")
+-    .split("\n").filter(l => !l.trim().startsWith("//")).join("\n");
++  // 新考卷 test/golden/*.json（每题 {q,a,g}）；书名从文件名取，
++  // 到 library/ 的寻址统一走 test/lib/book-alias.mjs（旧 eval 考卷已移除）。
++  const goldenDir = path.join(ROOT, "test", "golden");
+   const items = [];
+-  const re = /\{\s*book:\s*"([^"]+)"[\s\S]*?g:\s*\[([^\]]*)\]\s*\}/g;
+-  let m;
+-  while ((m = re.exec(src)) !== null) {
+-    const gs = [...m[2].matchAll(/"([^"]+)"/g)].map(x => x[1]);
+-    if (gs.length) items.push({ book: m[1], g: gs });
++  for (const f of fs.readdirSync(goldenDir).filter(x => x.endsWith(".json")).sort()) {
++    const book = f.replace(/\.json$/, "");
++    const arr = JSON.parse(fs.readFileSync(path.join(goldenDir, f), "utf8"));
++    for (const it of arr) {
++      const gs = (Array.isArray(it.g) ? it.g : []).filter(x => typeof x === "string" && x);
++      if (gs.length) items.push({ book, g: gs });
++    }
+   }
+-  ok(items.length >= 50, `门3-0 GOLDEN 提取 ${items.length} 题（≥50 才算覆盖考卷）`);
++  ok(items.length >= 50, `门3-0 新考卷提取 ${items.length} 题（≥50 才算覆盖考卷）`);
+   const cache = new Map();
+   const textOf = (book) => {
+     if (!cache.has(book)) {
+-      const p = path.join(LIB, book + ".db");
+-      // 缺库书 → null（V3 第五波书架重建中：md 五本/简爱/福尔摩斯原件已随删库清空，
+-      // 这些题等考卷重建；CANTOPEN 崩溃改跳过，语义同 eval-gate 的「丢弃」）
+-      if (!fs.existsSync(p)) { cache.set(book, null); return null; }
++      const want = resolveBookPrefix(book);
++      const f = fs.readdirSync(LIB).find(x => x.startsWith(want) && x.endsWith(".db"));
++      // 缺库书 → null（书架重建期间部分原件不在本机；缺库跳过，不判红）
++      if (!f) { cache.set(book, null); return null; }
++      const p = path.join(LIB, f);
+       try {
+         const d = new Database(p, { readonly: true });
+         cache.set(book, d.prepare("SELECT text FROM chunks").all().map(r => r.text).join("\n").toLowerCase());
+@@ -223,11 +227,11 @@ console.log("===== 门3 考卷金标准反验（GOLDEN 52 题全查） =====");
+     const text = textOf(it.book);
+     if (text == null) { skippedBooks++; continue; }
+     const hits = it.g.filter(kw => text.includes(kw.toLowerCase()));
+-    // 判分语义同 v2-eval.mjs 90 行：some（任一金标准词命中即有效题）——全不中才是考卷带幻觉
++    // 判分语义同关键词对照器 keywordOnlyJudge：some（任一金标准词命中即有效题）——全不中才是考卷带幻觉
+     if (!hits.length) bad.push(`「${it.g.join("/")}」全部不在 ${it.book}`);
+     else if (hits.length < it.g.length) redundant.push(`${it.g.filter(k => !hits.includes(k)).join("/")}@${it.book}`);
+   }
+-  ok(bad.length === 0, `门3-1 每题至少一个金标准词回原文验真（some 语义，同 v2-eval 90 行；缺库跳过 ${skippedBooks} 题）${bad.length ? "，失败: " + bad.join("; ") : ""}`);
++  ok(bad.length === 0, `门3-1 每题至少一个金标准词回原文验真（some 语义，同 keywordOnlyJudge；缺库跳过 ${skippedBooks} 题）${bad.length ? "，失败: " + bad.join("; ") : ""}`);
+   obs(`门3-2 冗余金标准词（some 语义允许的提名冗余，非幻觉）：${redundant.join("; ") || "无"}`);
+ }
+ 
+diff --git a/test/holdout-run.mjs b/test/holdout-run.mjs
+new file mode 100644
+index 0000000..79d5891
+--- /dev/null
++++ b/test/holdout-run.mjs
+@@ -0,0 +1,225 @@
++// test/holdout-run.mjs —— 留出集（独立卷子）跑分器
++//
++// 为什么单独一支：quality-gate.mjs 的 80 题是**同源**卷子（题、答案、金词都取自同一批库的
++// 已知答案），拿它证明「改造有效」等于自己批自己的卷子。留出集是独立出的 30 题，
++// 只用来回答一个问题：**改完之后到底有没有变好**。
++//
++// 与本文件的硬规矩：
++//   1. 只读 test/holdout/sets/*.json，**一个字节都不写回卷子**；
++//   2. 跑前校验 sha256 与 frozen.json 一致，卷子被人动过就当场退出；
++//   3. 不 import 任何 test/golden 相关的东西（两套基线严格隔离，guard-test 有静态断言）。
++//
++// 跑法：
++//   node test/holdout-run.mjs                 # 跑一遍，打印汇总
++//   node test/holdout-run.mjs --limit=5       # 先跑 5 题看通路
++//   node test/holdout-run.mjs --only=refusal  # 只跑某一类
++//   node test/holdout-run.mjs --out=run.json  # 落逐题明细
++//   node test/holdout-run.mjs --update-baseline   # 写 test/holdout/baseline.json
++//   node test/holdout-run.mjs --gate          # 有基线时比对，退步则 exit 1
++import fs from "node:fs";
++import path from "node:path";
++import crypto from "node:crypto";
++
++import { routeAndSearch } from "../src/lib/search.mjs";
++import { judge } from "./lib/judge.mjs";
++
++const HERE = import.meta.dirname;
++const HOLD = path.join(HERE, "holdout");
++
++const argv = process.argv.slice(2);
++const arg = (n, d = null) => {
++  const hit = argv.find((a) => a === `--${n}` || a.startsWith(`--${n}=`));
++  if (!hit) return d;
++  return hit === `--${n}` ? true : hit.slice(n.length + 3);
++};
++const flag = (n) => argv.includes(`--${n}`);
++
++// 卷子选择：默认 v1（冻结执行卷）；--set=holdout-v2 跑第二轮独立卷。
++// 两卷各有自己的 frozen 凭证与基线，互不覆盖（基线文件按 setId 后缀区分）。
++const SET_ID = String(arg("set", "holdout-v1"));
++const SUFFIX = SET_ID.replace(/^holdout-/, "");
++const FROZEN_PATH = SUFFIX === "v1" ? path.join(HOLD, "frozen.json") : path.join(HOLD, `frozen-${SUFFIX}.json`);
++const BASELINE_PATH = SUFFIX === "v1" ? path.join(HOLD, "baseline.json") : path.join(HOLD, `baseline-${SUFFIX}.json`);
++
++const LIMIT = Number(arg("limit", 0)) || 0;
++const ONLY = arg("only", null);
++const OUT = arg("out", null);
++
++// ---------- 0) 卷子完整性 ----------
++if (!fs.existsSync(FROZEN_PATH)) {
++  console.error(`缺少 ${FROZEN_PATH}：卷子还没冻结，不许跑。`);
++  process.exit(2);
++}
++const frozen = JSON.parse(fs.readFileSync(FROZEN_PATH, "utf8"));
++const SET_PATH = path.join(HERE, "..", frozen.file);
++if (!fs.existsSync(SET_PATH)) {
++  console.error(`卷子文件不存在：${SET_PATH}`);
++  process.exit(2);
++}
++const raw = fs.readFileSync(SET_PATH);
++const sha = crypto.createHash("sha256").update(raw).digest("hex");
++if (sha !== frozen.sha256) {
++  console.error("卷子被改过，拒绝跑分。");
++  console.error("  frozen.sha256 =", frozen.sha256);
++  console.error("  实际 sha256   =", sha);
++  console.error("  规矩：改题必须新开 setId，不许偷偷改这 30 题。");
++  process.exit(2);
++}
++const set = JSON.parse(raw.toString("utf8"));
++
++let items = set.items ?? [];
++if (ONLY) items = items.filter((x) => x.kind === ONLY);
++if (LIMIT > 0) items = items.slice(0, LIMIT);
++if (!items.length) {
++  console.error("没有可跑的题（--only / --limit 过滤后为空）");
++  process.exit(2);
++}
++
++// ---------- 1) 逐题跑 ----------
++console.log("===== 留出集跑分 =====");
++console.log("卷子   :", frozen.file, `(${SET_ID})`);
++console.log("sha256 :", frozen.sha256.slice(0, 16) + "…", `(${frozen.total} 题 / 冻结于 ${frozen.frozenAt})`);
++console.log("本次跑 :", items.length, "题", ONLY ? `（只跑 ${ONLY}）` : "");
++console.log("");
++
++const rows = [];
++for (const it of items) {
++  const t0 = Date.now();
++  let out = null, err = null;
++  try {
++    out = await routeAndSearch(it.q, { topN: 5, maxBooks: 4 });
++  } catch (e) {
++    err = String(e?.message || e);
++  }
++  const ms = Date.now() - t0;
++  const results = out?.results ?? [];
++  const routed = out?.routed_books ?? [];
++  const texts = results.map((r) => String(r.text ?? ""));
++
++  let pass = false, detail, bookOk = null;
++
++  if (err) {
++    detail = "检索抛错：" + err;
++  } else if (it.kind === "answerable" || it.kind === "newbook") {
++    const v = judge(results, { a: it.a, g: it.g });
++    pass = v.level !== "miss";
++    detail = `判分 ${v.level}${v.rank ? ` @${v.rank}` : ""}${v.why ? "（" + v.why + "）" : ""}`;
++    if (it.book) {
++      bookOk = routed.some((b) => b.title === it.book || b.id === it.bookId);
++      detail += bookOk ? "｜挑书命中本尊" : "｜挑书未命中本尊";
++    }
++  } else if (it.kind === "refusal") {
++    const absent = it.absent ?? [];
++    const bad = [];
++    for (const t of absent) {
++      const idx = texts.findIndex((x) => x.includes(t));
++      if (idx >= 0) bad.push(`${t}@第${idx + 1}条(${results[idx].book})`);
++    }
++    pass = bad.length === 0 && !err;
++    detail = bad.length ? "串词作答：" + bad.join(" , ") : `未出现 ${absent.join("/")}，正确拒答`;
++  } else if (it.kind === "ambiguous") {
++    pass = out?.ambiguous === true || routed.length >= 2;
++    detail = `ambiguous=${out?.ambiguous === true}｜routed=${routed.length} 本`;
++  } else {
++    detail = `未知题型 ${it.kind}`;
++  }
++
++  const row = {
++    id: it.id, kind: it.kind, lang: it.lang, q: it.q,
++    book: it.book ?? null,
++    pass, detail, ms,
++    routed: routed.map((b) => `${b.title}(${b.best_sim})`),
++    resultIds: results.map((r) => r.id),
++    resultBooks: [...new Set(results.map((r) => r.book))],
++    bookOk,
++    err,
++  };
++  rows.push(row);
++  console.log(
++    `${pass ? "PASS" : "FAIL"} - ${row.id} [${row.kind}/${row.lang}] ${ms}ms  ${row.q.slice(0, 42)}`
++  );
++  console.log(`         ${detail}`);
++}
++
++// ---------- 2) 汇总 ----------
++const byKind = {};
++for (const r of rows) {
++  byKind[r.kind] ??= { total: 0, pass: 0 };
++  byKind[r.kind].total++;
++  if (r.pass) byKind[r.kind].pass++;
++}
++for (const k of Object.keys(byKind)) {
++  byKind[k].rate = +(byKind[k].pass / byKind[k].total).toFixed(4);
++}
++
++const answerableRows = rows.filter((r) => r.kind === "answerable" || r.kind === "newbook");
++const bookHit = answerableRows.filter((r) => r.bookOk === true).length;
++const summary = {
++  setId: set.setId,
++  ranAt: new Date().toISOString(),
++  sha256: frozen.sha256,
++  total: rows.length,
++  pass: rows.filter((r) => r.pass).length,
++  passRate: +(rows.filter((r) => r.pass).length / rows.length).toFixed(4),
++  byKind,
++  bookPickHit: bookHit,
++  bookPickTotal: answerableRows.length,
++  bookPickRate: answerableRows.length ? +(bookHit / answerableRows.length).toFixed(4) : 0,
++  avgMs: +(rows.reduce((s, r) => s + r.ms, 0) / rows.length).toFixed(0),
++  missList: rows.filter((r) => !r.pass).map((r) => `${r.id}[${r.kind}] ${r.q.slice(0, 50)} → ${r.detail}`),
++};
++
++console.log("\n===== 汇总 =====");
++console.log(`总通过 : ${summary.pass}/${summary.total} = ${(summary.passRate * 100).toFixed(1)}%`);
++for (const [k, v] of Object.entries(byKind)) {
++  console.log(`  ${k.padEnd(11)} ${v.pass}/${v.total} = ${(v.rate * 100).toFixed(1)}%`);
++}
++console.log(`挑书命中 : ${summary.bookPickHit}/${summary.bookPickTotal} = ${(summary.bookPickRate * 100).toFixed(1)}%（可答题型，路由是否挑对本尊）`);
++console.log(`平均耗时 : ${summary.avgMs}ms/题`);
++if (summary.missList.length) {
++  console.log("\n未通过清单：");
++  for (const m of summary.missList) console.log("  - " + m);
++}
++
++if (OUT) {
++  fs.writeFileSync(path.resolve(String(OUT)), JSON.stringify({ summary, rows }, null, 1));
++  console.log("\n逐题明细已写：" + path.resolve(String(OUT)));
++}
++
++if (flag("update-baseline")) {
++  fs.writeFileSync(BASELINE_PATH, JSON.stringify({
++    note: "留出集独立基线。与 test/quality-baseline.json 严格分离，两者不得互相引用。",
++    setId: summary.setId,
++    sha256: summary.sha256,
++    updatedAt: summary.ranAt,
++    passRate: summary.passRate,
++    byKind: Object.fromEntries(Object.entries(byKind).map(([k, v]) => [k, v.rate])),
++    bookPickRate: summary.bookPickRate,
++    avgMs: summary.avgMs,
++  }, null, 1) + "\n");
++  console.log("基线已更新：" + BASELINE_PATH);
++}
++
++// ---------- 3) 门禁比对 ----------
++if (flag("gate")) {
++  if (LIMIT > 0 || ONLY) {
++    console.log("\n本次是抽样跑（--limit / --only），--gate 跳过：门禁只对整卷有意义");
++  } else if (!fs.existsSync(BASELINE_PATH)) {
++    console.log("\n没有基线，--gate 跳过（先跑一次 --update-baseline）");
++  } else {
++    const base = JSON.parse(fs.readFileSync(BASELINE_PATH, "utf8"));
++    const bad = [];
++    if (base.sha256 && base.sha256 !== summary.sha256) bad.push("卷子指纹与基线不一致（换卷了，要新开基线）");
++    if (summary.passRate < base.passRate) bad.push(`总通过率 ${summary.passRate} < 基线 ${base.passRate}`);
++    for (const [k, v] of Object.entries(base.byKind ?? {})) {
++      const now = byKind[k]?.rate ?? 0;
++      if (now < v) bad.push(`${k} ${now} < 基线 ${v}`);
++    }
++    if (bad.length) {
++      console.error("\n===== 门禁未通过 =====");
++      for (const b of bad) console.error("  - " + b);
++      process.exit(1);
++    }
++    console.log("\n===== 门禁通过（不低于基线）=====");
++  }
++}
+diff --git a/test/holdout/baseline-v2.json b/test/holdout/baseline-v2.json
+new file mode 100644
+index 0000000..d31a493
+--- /dev/null
++++ b/test/holdout/baseline-v2.json
+@@ -0,0 +1,15 @@
++{
++ "note": "留出集独立基线。与 test/quality-baseline.json 严格分离，两者不得互相引用。",
++ "setId": "holdout-v2",
++ "sha256": "504a1feb32d5b4c54e26549d9d03df4d1c137f709ac0f081761fa086ffab4164",
++ "updatedAt": "2026-11-16T03:24:37.334Z",
++ "passRate": 0.8667,
++ "byKind": {
++  "answerable": 0.875,
++  "newbook": 0.5,
++  "refusal": 1,
++  "ambiguous": 0.75
++ },
++ "bookPickRate": 1,
++ "avgMs": 7921
++}
+diff --git a/test/holdout/baseline.json b/test/holdout/baseline.json
+new file mode 100644
+index 0000000..50aad4b
+--- /dev/null
++++ b/test/holdout/baseline.json
+@@ -0,0 +1,15 @@
++{
++ "note": "留出集独立基线。与 test/quality-baseline.json 严格分离，两者不得互相引用。",
++ "setId": "holdout-v1",
++ "sha256": "0f532846455c67d2cdfd9dec05eb5b398f400444ff4d6a502325b91f0fa2d7c5",
++ "updatedAt": "2026-11-15T17:13:07.090Z",
++ "passRate": 0.9,
++ "byKind": {
++  "answerable": 0.8125,
++  "refusal": 1,
++  "ambiguous": 1,
++  "newbook": 1
++ },
++ "bookPickRate": 1,
++ "avgMs": 8819
++}
+diff --git a/test/holdout/frozen-v2.json b/test/holdout/frozen-v2.json
+new file mode 100644
+index 0000000..70751e0
+--- /dev/null
++++ b/test/holdout/frozen-v2.json
+@@ -0,0 +1,22 @@
++{
++ "setId": "holdout-v2",
++ "file": "test/holdout/sets/holdout-v2.json",
++ "sha256": "504a1feb32d5b4c54e26549d9d03df4d1c137f709ac0f081761fa086ffab4164",
++ "bytes": 16592,
++ "total": 30,
++ "byKind": {
++  "answerable": 16,
++  "newbook": 2,
++  "refusal": 8,
++  "ambiguous": 4
++ },
++ "byLang": {
++  "en": 4,
++  "cross": 12,
++  "zh": 14
++ },
++ "frozenAt": "2026-11-16T03:19:45.487Z",
++ "reviewedBy": "富江（出题+验真自核；v1 已由爸爸盖章，本卷按同一流程自动核）",
++ "revision": "v2.1 冻结：30 题，块复用 0、题干最高相似度 0.387、absent 词全库 0 命中",
++ "rule": "此后只许看它给多少分，不许回头改题；改题必须新开 setId"
++}
+diff --git a/test/holdout/frozen.json b/test/holdout/frozen.json
+new file mode 100644
+index 0000000..d592214
+--- /dev/null
++++ b/test/holdout/frozen.json
+@@ -0,0 +1,17 @@
++{
++ "setId": "holdout-v1",
++ "file": "test/holdout/sets/holdout-v1.json",
++ "sha256": "0f532846455c67d2cdfd9dec05eb5b398f400444ff4d6a502325b91f0fa2d7c5",
++ "bytes": 17789,
++ "total": 30,
++ "byKind": {
++  "answerable": 16,
++  "refusal": 8,
++  "ambiguous": 4,
++  "newbook": 2
++ },
++ "frozenAt": "2026-11-15T17:06:22.663Z",
++ "reviewedBy": "爸爸（2026-11-16 01:05 指令「直接开干」= 同意冻结）",
++ "revision": "v1.2 冻结：仅补拒答题 absent 判分字段；30 题题干、答案句、金词一字未改",
++ "rule": "此后只许看它给多少分，不许回头改题；改题必须新开 setId"
++}
+diff --git a/test/holdout/sets/holdout-v1.json b/test/holdout/sets/holdout-v1.json
+new file mode 100644
+index 0000000..021eeaa
+--- /dev/null
++++ b/test/holdout/sets/holdout-v1.json
+@@ -0,0 +1,505 @@
++{
++ "setId": "holdout-v1",
++ "status": "FROZEN",
++ "frozen": true,
++ "draftedAt": "2026-11-15T15:25:05.878Z",
++ "selfReviewed": true,
++ "selfReviewedAt": "2026-11-15T15:25:05.878Z",
++ "frozenAt": "2026-11-15T17:06:22.663Z",
++ "reviewedBy": "爸爸（2026-11-16 01:05 指令「直接开干」= 同意冻结）",
++ "revision": "v1.2 冻结：仅补拒答题 absent 判分字段；30 题题干、答案句、金词一字未改",
++ "total": 30,
++ "byKind": {
++  "answerable": 16,
++  "refusal": 8,
++  "ambiguous": 4,
++  "newbook": 2
++ },
++ "byLang": {
++  "en": 8,
++  "cross": 9,
++  "zh": 13
++ },
++ "sourcePolicy": "答案句逐字取自 library/*.db 的 chunks.text；起草阶段零检索调用、零分数可见",
++ "judgePolicy": {
++  "route": "全部 30 题走 routeAndSearch（全库自动挑书），不预先把书喂给系统——测的是产品真实路径",
++  "answerable": "judge() 三级尺子；full 或 partial 记为答对，miss 记为漏题",
++  "refusal": "返回结果中不得出现 absent 任一词（全库 0 命中已核）；出现即算串词作答",
++  "ambiguous": "ambiguous===true 或 routed_books.length>=2 记为通过",
++  "newbook": "同 answerable，另记「挑书是否命中本尊」"
++ },
++ "items": [
++  {
++   "id": "H01",
++   "q": "In Dynamo, what do the values of W and R affect?",
++   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "kind": "answerable",
++   "a": "The values of W and R impact object availability, durability and consistency. For instance, if W is set to 1, then the system will never reject a write request as long as there is at least one node in the system that can successfully process a write request. H",
++   "g": [
++    "W and R",
++    "availability",
++    "durability",
++    "consistency"
++   ],
++   "expect": null,
++   "lang": "en",
++   "hasTopicJson": true,
++   "chunk_id": 125
++  },
++  {
++   "id": "H02",
++   "q": "Dynamo 论文里，W 和 R 这两个参数的取值会影响什么？",
++   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "kind": "answerable",
++   "a": "The values of W and R impact object availability, durability and consistency. For instance, if W is set to 1, then the system will never reject a write request as long as there is at least one node in the system that can successfully process a write request. H",
++   "g": [
++    "W and R",
++    "availability",
++    "durability"
++   ],
++   "expect": null,
++   "lang": "cross",
++   "hasTopicJson": true,
++   "chunk_id": 125
++  },
++  {
++   "id": "H03",
++   "q": "Why does Lamport say the converse condition cannot be expected to hold?",
++   "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
++   "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
++   "kind": "answerable",
++   "a": "Note that we cannot expect the converse condition to hold as well, since that would imply that any two concurrent events must occur at the same time. In Figure 1, p _ { 2 } and p _ { 3 } are both concurrent with q _ { 3 } , so this would mean that they both mu",
++   "g": [
++    "converse condition",
++    "imply"
++   ],
++   "expect": null,
++   "lang": "en",
++   "hasTopicJson": true,
++   "chunk_id": 29
++  },
++  {
++   "id": "H04",
++   "q": "How can the input splits be processed in MapReduce?",
++   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "kind": "answerable",
++   "a": "into a set of M splits. The input splits can be processed in parallel by different machines. Reduce invocations are distributed by partitioning the intermediate key space into R pieces using a partitioning function (e.g., hash(key) mod R). The number of partit",
++   "g": [
++    "M splits",
++    "parallel",
++    "different machines"
++   ],
++   "expect": null,
++   "lang": "en",
++   "hasTopicJson": true,
++   "chunk_id": 26
++  },
++  {
++   "id": "H05",
++   "q": "MapReduce 的使用者需要自己指定什么数量？",
++   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "kind": "answerable",
++   "a": "4.1 Partitioning Function\nThe users of MapReduce specify the number of reduce tasks/output files that they desire (R). Data gets partitioned across these tasks using a partitioning function on the intermediate key. A default partitioning function is provided t",
++   "g": [
++    "reduce tasks",
++    "output files"
++   ],
++   "expect": null,
++   "lang": "cross",
++   "hasTopicJson": true,
++   "chunk_id": 51
++  },
++  {
++   "id": "H06",
++   "q": "What does multi-head attention replace?",
++   "book": "attention-is-all-you-need-en.pdf",
++   "bookId": "attention-is-all-you-need-en.pdf",
++   "kind": "answerable",
++   "a": "3.2.2 Multi-Head Attention\nInstead of performing a single attention function with d _ { \\mathrm { m o d e l } } -dimensional keys, values and queries, we found it beneficial to linearly project the queries, keys and values h times with different, learned linea",
++   "g": [
++    "Multi-Head Attention",
++    "single attention function"
++   ],
++   "expect": null,
++   "lang": "en",
++   "hasTopicJson": true,
++   "chunk_id": 29
++  },
++  {
++   "id": "H07",
++   "q": "《道德经》第十五章开头，用哪两个词形容「古之善為士者」？",
++   "book": "daodejing-zh.docx",
++   "bookId": "daodejing-zh.docx",
++   "kind": "answerable",
++   "a": "第十五章 古之善為士一作「道」者，微妙玄通一作「達」，深不可識。夫唯不可識，故強一作「彊」為之容：豫兮，若冬涉川；猶一作「猷」兮，若畏四鄰；儼兮，其若客；渙兮，其若冰之將釋；敦一作「沌」兮，其若樸；曠兮，其若谷；混兮，其若濁。濁而靜之，徐清。安以動之，徐生。保一作「葆」此道者，不欲盈。夫唯不盈，故能蔽一作「敝」不一作「而」新成。",
++   "g": [
++    "微妙玄通",
++    "深不可識"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "hasTopicJson": true,
++   "chunk_id": 15
++  },
++  {
++   "id": "H08",
++   "q": "「聖人常無心」的下一句是什么？",
++   "book": "daodejing-zh.docx",
++   "bookId": "daodejing-zh.docx",
++   "kind": "answerable",
++   "a": "第四十九章 聖人常無心，以百姓心為心。善者，吾善之；不善者，吾亦善之；德一作「得」善。信者，吾信之；不信者，吾亦信之；德一作「得」信。聖人在天下，歙歙焉，為天下渾其心，百姓皆注其耳目，聖人皆孩之。",
++   "g": [
++    "以百姓心為心"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "hasTopicJson": true,
++   "chunk_id": 49
++  },
++  {
++   "id": "H09",
++   "q": "What does the narrator say is less changeable than the accidents of life?",
++   "book": "frankenstein-en.epub",
++   "bookId": "frankenstein-en.epub",
++   "kind": "answerable",
++   "a": "The different accidents of life are not so changeable as the feelings of human\nnature.I had worked hard for nearly two years, for the sole purpose of\ninfusing life into an inanimate body.For this I had deprived myself of rest\nand health.I had desired it with a",
++   "g": [
++    "feelings of human nature",
++    "accidents of life"
++   ],
++   "expect": null,
++   "lang": "en",
++   "hasTopicJson": true,
++   "chunk_id": 145
++  },
++  {
++   "id": "H10",
++   "q": "《弗兰肯斯坦》里，巡回审判季快到时，叙述者已经在牢里待了多久？",
++   "book": "frankenstein-en.epub",
++   "bookId": "frankenstein-en.epub",
++   "kind": "answerable",
++   "a": "The season of the assizes approached. I had already been three months in\nprison, and although I was still weak and in continual danger of a relapse, I\nwas obliged to travel nearly a hundred miles to the country town where the\ncourt was held. Mr. Kirwin charged",
++   "g": [
++    "three months",
++    "assizes"
++   ],
++   "expect": null,
++   "lang": "cross",
++   "hasTopicJson": true,
++   "chunk_id": 565
++  },
++  {
++   "id": "H11",
++   "q": "子貢問「貧而無諂，富而無驕，何如」，孔子怎麼答？",
++   "book": "lunyu-xueer-zh.docx",
++   "bookId": "lunyu-xueer-zh.docx",
++   "kind": "answerable",
++   "a": "第15章 子貢曰：「貧而無諂，富而無驕，何如？」子曰：「可也。未若貧而樂，富而好禮者也」。子貢曰：「《詩》云：『如切如磋，如琢如磨。』其斯之謂與？」子曰：「賜也，始可與言《詩》已矣！吿諸往而知來者。」",
++   "g": [
++    "未若貧而樂",
++    "富而好禮"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "hasTopicJson": true,
++   "chunk_id": 15
++  },
++  {
++   "id": "H12",
++   "q": "孟子说「人皆有不忍人之心」，举了什么例子来证明？",
++   "book": "mengzi-zh.docx",
++   "bookId": "mengzi-zh.docx",
++   "kind": "answerable",
++   "a": "孟子曰：「人皆有不忍人之心。先王有不忍人之心，斯有不忍人之政矣。以不忍人之心，行不忍人之政，治天下可運之掌上。所以謂人皆有不忍人之心者，今人乍見孺子將入於井，皆有怵惕惻隱之心；非所以內交於孺子之父母也，非所以要譽於鄉黨朋友也，非惡其聲而然也。由是觀之，無惻隱之心，非人也。無羞惡之心，非人也。無辭讓之心，非人也。無是非之心，非人也。惻隱之心，仁之端也；羞惡之心，義之端也；辭讓之心，禮之端也；是非之心，智之端也。人之有是四端也，猶其有四體也。有是四端而自謂不能者，自賊者也；謂其君不能者，賊其君者也。凡有四端於我者，知皆",
++   "g": [
++    "孺子將入於井",
++    "怵惕惻隱"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "hasTopicJson": true,
++   "chunk_id": 34
++  },
++  {
++   "id": "H13",
++   "q": "What happened to John Reed at college?",
++   "book": "pg1260-简爱.epub",
++   "bookId": "pg1260-简爱.epub",
++   "kind": "answerable",
++   "a": "“Well, and what of John Reed?”\n“Oh, he is not doing so well as his mama could wish. He went to college, and he\ngot—plucked, I think they call it: and then his uncles wanted him to be a\nbarrister, and study the law: but he is such a dissipated young man, they w",
++   "g": [
++    "John Reed",
++    "college"
++   ],
++   "expect": null,
++   "lang": "en",
++   "hasTopicJson": true,
++   "chunk_id": 372
++  },
++  {
++   "id": "H14",
++   "q": "《简爱》里，除了 Mr. Rivers，这句话还跟谁打招呼？",
++   "book": "pg1260-简爱.epub",
++   "bookId": "pg1260-简爱.epub",
++   "kind": "answerable",
++   "a": "“Good evening, Mr. Rivers. And good evening, old Carlo. Your dog is quicker to\nrecognise his friends than you are, sir; he pricked his ears and wagged his\ntail when I was at the bottom of the field, and you have your back towards me\nnow.”",
++   "g": [
++    "Carlo",
++    "Mr. Rivers"
++   ],
++   "expect": null,
++   "lang": "cross",
++   "hasTopicJson": true,
++   "chunk_id": 1489
++  },
++  {
++   "id": "H15",
++   "q": "According to this passage, when was the clergyman recommended to Lady Catherine de Bourgh?",
++   "book": "pride-and-prejudice-en.epub",
++   "bookId": "pride-and-prejudice-en.epub",
++   "kind": "answerable",
++   "a": "A fortunate chance had recommended him to Lady Catherine de\nBourgh when the living of Hunsford was vacant; and the respect which he\nfelt for her high rank, and his veneration for her as his patroness,\nmingling with a very good opinion of himself, of his author",
++   "g": [
++    "Hunsford",
++    "Lady Catherine",
++    "vacant"
++   ],
++   "expect": null,
++   "lang": "en",
++   "hasTopicJson": true,
++   "chunk_id": 256
++  },
++  {
++   "id": "H16",
++   "q": "At which church was the wedding to take place?",
++   "book": "pg1661-福尔摩斯冒险史.epub",
++   "bookId": "pg1661-福尔摩斯冒险史.epub",
++   "kind": "answerable",
++   "a": "“Yes, sir, but very quietly. It was to be at St. Saviour’s, near\nKing’s Cross, and we were to have breakfast afterwards at the St. Pancras\nHotel. Hosmer came for us in a hansom, but as there were two of us he put us\nboth into it and stepped himself into a four",
++   "g": [
++    "St. Saviour",
++    "King's Cross"
++   ],
++   "expect": null,
++   "lang": "en",
++   "hasTopicJson": true,
++   "chunk_id": 211
++  },
++  {
++   "id": "H17",
++   "q": "《論語·學而》里有专门讲量子计算的章节吗？",
++   "book": "lunyu-xueer-zh.docx",
++   "bookId": "lunyu-xueer-zh.docx",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "expect": "refusal",
++   "lang": "zh",
++   "hasTopicJson": true,
++   "chunk_id": null,
++   "absent": [
++    "量子"
++   ]
++  },
++  {
++   "id": "H18",
++   "q": "Dynamo 论文给出 Kubernetes 的部署 yaml 了吗？",
++   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "expect": "refusal",
++   "lang": "cross",
++   "hasTopicJson": true,
++   "chunk_id": null,
++   "absent": [
++    "Kubernetes"
++   ]
++  },
++  {
++   "id": "H19",
++   "q": "《道德经》第六十一章提到比特币价格了吗？",
++   "book": "daodejing-zh.docx",
++   "bookId": "daodejing-zh.docx",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "expect": "refusal",
++   "lang": "zh",
++   "hasTopicJson": true,
++   "chunk_id": null,
++   "absent": [
++    "比特币"
++   ]
++  },
++  {
++   "id": "H20",
++   "q": "这份检测报告里有 5G 基站的检测数据吗？",
++   "book": "低压电器检测实训报告（带表格样例）.docx",
++   "bookId": "低压电器检测实训报告（带表格样例）.docx",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "expect": "refusal",
++   "lang": "zh",
++   "hasTopicJson": false,
++   "chunk_id": null,
++   "absent": [
++    "基站"
++   ]
++  },
++  {
++   "id": "H21",
++   "q": "《弗兰肯斯坦》里出现智能手机了吗？",
++   "book": "frankenstein-en.epub",
++   "bookId": "frankenstein-en.epub",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "expect": "refusal",
++   "lang": "cross",
++   "hasTopicJson": true,
++   "chunk_id": null,
++   "absent": [
++    "智能手机"
++   ]
++  },
++  {
++   "id": "H22",
++   "q": "MapReduce 论文规定了公司年终奖发放标准吗？",
++   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "expect": "refusal",
++   "lang": "cross",
++   "hasTopicJson": true,
++   "chunk_id": null,
++   "absent": [
++    "年终奖"
++   ]
++  },
++  {
++   "id": "H23",
++   "q": "《傲慢与偏见》里写了多少行 Python 代码？",
++   "book": "pride-and-prejudice-en.epub",
++   "bookId": "pride-and-prejudice-en.epub",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "expect": "refusal",
++   "lang": "cross",
++   "hasTopicJson": true,
++   "chunk_id": null,
++   "absent": [
++    "Python"
++   ]
++  },
++  {
++   "id": "H24",
++   "q": "Attention Is All You Need 里给出了食堂菜单吗？",
++   "book": "attention-is-all-you-need-en.pdf",
++   "bookId": "attention-is-all-you-need-en.pdf",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "expect": "refusal",
++   "lang": "cross",
++   "hasTopicJson": true,
++   "chunk_id": null,
++   "absent": [
++    "食堂"
++   ]
++  },
++  {
++   "id": "H25",
++   "q": "这本书的作者是谁？",
++   "book": null,
++   "bookId": null,
++   "kind": "ambiguous",
++   "a": null,
++   "g": [],
++   "expect": "ambiguous",
++   "lang": "zh",
++   "hasTopicJson": null,
++   "chunk_id": null
++  },
++  {
++   "id": "H26",
++   "q": "书里说的「一致性」是怎么保证的？",
++   "book": null,
++   "bookId": null,
++   "kind": "ambiguous",
++   "a": null,
++   "g": [],
++   "expect": "ambiguous",
++   "lang": "zh",
++   "hasTopicJson": null,
++   "chunk_id": null
++  },
++  {
++   "id": "H27",
++   "q": "「學而時習之」出自哪一章？",
++   "book": null,
++   "bookId": null,
++   "kind": "ambiguous",
++   "a": null,
++   "g": [],
++   "expect": "ambiguous",
++   "lang": "zh",
++   "hasTopicJson": null,
++   "chunk_id": null
++  },
++  {
++   "id": "H28",
++   "q": "第一章里出现的那个人名是谁？",
++   "book": null,
++   "bookId": null,
++   "kind": "ambiguous",
++   "a": null,
++   "g": [],
++   "expect": "ambiguous",
++   "lang": "zh",
++   "hasTopicJson": null,
++   "chunk_id": null
++  },
++  {
++   "id": "H29",
++   "q": "《論語·學而第一》开篇第一章，孔子说的第一句是什么？",
++   "book": "lunyu-xueer-zh.pdf",
++   "bookId": "lunyu-xueer-zh.pdf",
++   "kind": "newbook",
++   "a": "論語 · 學而第一（第 1 / 4 頁） 第1章 子曰:「學而時習之，不亦說乎？有朋自遠方來，不亦樂乎？人不知而不慍，不亦君子乎？」\n第2章 有子曰:「其爲人也孝弟，而好犯上者，鮮矣；不好犯上，而好作亂者，未之有也。君子務本，本立而道生；孝弟也者，其爲仁之本與？」\n第3章 子曰:「巧言令色，鮮矣仁。」\n第4章 曾子曰:「吾日三省吾身:爲人謀而不忠乎？與朋友交而不信乎？傳不習乎？」",
++   "g": [
++    "學而時習之",
++    "不亦說乎"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "hasTopicJson": true,
++   "chunk_id": 1
++  },
++  {
++   "id": "H30",
++   "q": "介电强度试验里那台不合格样品，是在多少电压下击穿的？",
++   "book": "低压电器检测实训报告（带表格样例）.docx",
++   "bookId": "低压电器检测实训报告（带表格样例）.docx",
++   "kind": "newbook",
++   "a": "介电强度试验中出现 1 台不合格：施压部位为相与外壳之间，击穿发生在 1.8 kV，低于 2.0 kV 的规定值。初步判断为外壳绝缘件存在气泡缺陷，建议对同批次绝缘件加做抽样切片检查。\n操作循环寿命不合格 2 台：均在第 8500 次左右出现触头熔焊，占位编号分别为 C-07 与 C-19。熔焊原因指向触头压力弹簧的批次热处理偏差，已反馈供应商按 8D 流程整改。",
++   "g": [
++    "1.8 kV",
++    "2.0 kV"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "hasTopicJson": false,
++   "chunk_id": 4
++  }
++ ]
++}
+diff --git a/test/holdout/sets/holdout-v2.json b/test/holdout/sets/holdout-v2.json
+new file mode 100644
+index 0000000..73ec9f5
+--- /dev/null
++++ b/test/holdout/sets/holdout-v2.json
+@@ -0,0 +1,468 @@
++{
++ "setId": "holdout-v2",
++ "status": "FROZEN",
++ "frozen": true,
++ "draftedAt": "2026-11-16T03:19:30.065Z",
++ "selfReviewed": true,
++ "selfReviewedAt": "2026-11-16T03:19:45.487Z",
++ "frozenAt": "2026-11-16T03:19:45.487Z",
++ "reviewedBy": "富江（出题+验真自核；v1 已由爸爸盖章，本卷按同一流程自动核）",
++ "revision": "v2.1 冻结：30 题，块复用 0、题干最高相似度 0.387、absent 词全库 0 命中",
++ "total": 30,
++ "byKind": {
++  "answerable": 16,
++  "newbook": 2,
++  "refusal": 8,
++  "ambiguous": 4
++ },
++ "byLang": {
++  "en": 4,
++  "cross": 12,
++  "zh": 14
++ },
++ "sourcePolicy": "答案句按「起始标记」从 chunks.text 自动切 260 字，保证逐字一致；起草阶段零检索调用",
++ "designNote": "出题时已知 v1 的三道漏题（H05/H06/H16）——本题库只有 13 本，知识点天然重叠，只能保证「不复用同一块原文、不复用同一句题干」，无法保证「不知道 v1 的错在哪」。此风险已如实登记。",
++ "items": [
++  {
++   "id": "V01",
++   "q": "In Dynamo, what does the partitioning scheme rely on to distribute load across storage hosts?",
++   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "kind": "answerable",
++   "a": "partitioning scheme relies on consistent hashing to distribute the load across multiple storage hosts. In consistent hashing [10], the output range of a hash function is treated as a fixed circular space or “ring” (i.e. the largest hash value wraps around to t",
++   "g": [
++    "consistent hashing",
++    "ring"
++   ],
++   "expect": null,
++   "lang": "en",
++   "chunk_id": 60
++  },
++  {
++   "id": "V02",
++   "q": "Dynamo 遇到同一对象的版本分歧时，用什么办法决定哪一版算数？",
++   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "kind": "answerable",
++   "a": "timestamp based reconciliation logic of “last write wins”; i.e., the object with the largest physical timestamp value is chosen as the correct version. The service that maintains customer’s session information is a good example of a service that uses this mode",
++   "g": [
++    "last write wins",
++    "timestamp"
++   ],
++   "expect": null,
++   "lang": "cross",
++   "chunk_id": 122
++  },
++  {
++   "id": "V03",
++   "q": "Lamport 说当两个事件拿到同一个时钟值时，靠什么打破平局？",
++   "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
++   "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
++   "kind": "answerable",
++   "a": "we use any arbitrary total ordering < of the processes. More precisely, we define a relation ⇒ as follows: if a is an event in process \\mathbf { P } _ { i } and b is an event in process \\mathbf { P } _ { j } , then a \\Rightarrow b if and only if either (i) \\ma",
++   "g": [
++    "arbitrary total ordering",
++    "processes"
++   ],
++   "expect": null,
++   "lang": "cross",
++   "chunk_id": 37
++  },
++  {
++   "id": "V04",
++   "q": "机器故障之后，已经完成的 reduce 任务为什么不需要重跑？",
++   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "kind": "answerable",
++   "a": "Completed reduce tasks do not need to be re-executed since their output is stored in a global file system. When a map task is executed first by worker A and then later executed by worker B (because A failed), all OSDI ’04: 6th Symposium on Operating Systems De",
++   "g": [
++    "global file system"
++   ],
++   "expect": null,
++   "lang": "cross",
++   "chunk_id": 35
++  },
++  {
++   "id": "V05",
++   "q": "MapReduce 里哪一类计数值是库自己维护的？",
++   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "kind": "answerable",
++   "a": "Some counter values are automatically maintained by the MapReduce library, such as the number of input key/value pairs processed and the number of output key/value pairs produced. Users have found the counter facility useful for sanity checking the behavior of",
++   "g": [
++    "counter",
++    "key/value pairs"
++   ],
++   "expect": null,
++   "lang": "cross",
++   "chunk_id": 68
++  },
++  {
++   "id": "V06",
++   "q": "Why are the dot products scaled by one over the square root of d_k?",
++   "book": "attention-is-all-you-need-en.pdf",
++   "bookId": "attention-is-all-you-need-en.pdf",
++   "kind": "answerable",
++   "a": "We suspect that for large values of d _ { k } , the dot products grow large in magnitude, pushing the softmax function into regions where it has extremely small gradients 4. To counteract this effect, we scale the dot products by \\frac { 1 } { \\sqrt { d _ { k ",
++   "g": [
++    "softmax",
++    "gradients"
++   ],
++   "expect": null,
++   "lang": "en",
++   "chunk_id": 28
++  },
++  {
++   "id": "V07",
++   "q": "「人法地，地法天」后面接着说什么？",
++   "book": "daodejing-zh.docx",
++   "bookId": "daodejing-zh.docx",
++   "kind": "answerable",
++   "a": "人法地，地法天，天法道，道法自然。",
++   "g": [
++    "天法道",
++    "道法自然"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "chunk_id": 25
++  },
++  {
++   "id": "V08",
++   "q": "第五十章说「善攝生者」走路不会遇到什么、入军不会被什么伤到？",
++   "book": "daodejing-zh.docx",
++   "bookId": "daodejing-zh.docx",
++   "kind": "answerable",
++   "a": "善攝生者，路行不遇兕虎，入軍不被甲兵；兕無所投其角，虎無所用其爪，兵無所容其刃。夫何故？以其無死地。",
++   "g": [
++    "兕虎",
++    "甲兵"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "chunk_id": 50
++  },
++  {
++   "id": "V09",
++   "q": "维克多和伊丽莎白走进牢房时，贾斯汀坐在什么上面？",
++   "book": "frankenstein-en.epub",
++   "bookId": "frankenstein-en.epub",
++   "kind": "answerable",
++   "a": "We entered the gloomy prison chamber and beheld Justine sitting on some straw at the farther end; her hands were manacled, and her head rested on her knees. She rose on seeing us enter, and when we were left alone with her, she threw herself at the feet of Eli",
++   "g": [
++    "straw",
++    "manacled"
++   ],
++   "expect": null,
++   "lang": "cross",
++   "chunk_id": 243
++  },
++  {
++   "id": "V10",
++   "q": "曾子每天拿哪三件事反省自己？",
++   "book": "lunyu-xueer-zh.docx",
++   "bookId": "lunyu-xueer-zh.docx",
++   "kind": "answerable",
++   "a": "吾日三省吾身：爲人謀而不忠乎？與朋友交而不信乎？傳不習乎？」",
++   "g": [
++    "爲人謀",
++    "與朋友交",
++    "傳不習"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "chunk_id": 4
++  },
++  {
++   "id": "V11",
++   "q": "孟子认为解说《诗》的正确做法是什么？",
++   "book": "mengzi-zh.docx",
++   "bookId": "mengzi-zh.docx",
++   "kind": "answerable",
++   "a": "故說詩者，不以文害辭，不以辭害志；以意逆志，是為得之。如以辭而已矣。《雲漢》之詩曰：『周餘黎民，靡有孑遺。』信斯言也，是周無遺民也。孝子之至，莫大乎尊親；尊親之至，莫大乎以天下養。為天子父，尊之至也；以天下養，養之至也。《詩》曰：『永言孝思，孝思惟則』，此之謂也。《書》曰：『祗載見瞽瞍，夔夔齋栗，瞽瞍亦允若』，是為父不得而子也？」",
++   "g": [
++    "以意逆志",
++    "不以文害辭"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "chunk_id": 138
++  },
++  {
++   "id": "V12",
++   "q": "罗切斯特追问时，简爱说自己把房门怎么处理了？",
++   "book": "pg1260-简爱.epub",
++   "bookId": "pg1260-简爱.epub",
++   "kind": "answerable",
++   "a": "I bolted my door.” “Then you are not in the habit of bolting your door every night before you get into bed?” “Fiend! she wants to know my habits, that she may lay her plans accordingly!” Indignation again prevailed over prudence: I replied sharply, “Hitherto I",
++   "g": [
++    "bolted my door"
++   ],
++   "expect": null,
++   "lang": "cross",
++   "chunk_id": 628
++  },
++  {
++   "id": "V13",
++   "q": "How is Miss Darcy described in comparison with Elizabeth?",
++   "book": "pride-and-prejudice-en.epub",
++   "bookId": "pride-and-prejudice-en.epub",
++   "kind": "answerable",
++   "a": "Miss Darcy was tall, and on a larger scale than Elizabeth; and, though little more than sixteen, her figure was formed, and her appearance womanly and graceful. She was less handsome than her brother, but there was sense and good-humour in her face, and her ma",
++   "g": [
++    "tall",
++    "sixteen"
++   ],
++   "expect": null,
++   "lang": "en",
++   "chunk_id": 858
++  },
++  {
++   "id": "V14",
++   "q": "《工程师拇指案》里那位访客的职业是什么？",
++   "book": "pg1661-福尔摩斯冒险史.epub",
++   "bookId": "pg1661-福尔摩斯冒险史.epub",
++   "kind": "answerable",
++   "a": "By profession I am a hydraulic engineer, and I have had considerable experience of my work during the seven years that I was apprenticed to Venner & Matheson, the well-known firm, of Greenwich. Two years ago, having served my time, and having also come into a ",
++   "g": [
++    "hydraulic engineer"
++   ],
++   "expect": null,
++   "lang": "cross",
++   "chunk_id": 693
++  },
++  {
++   "id": "V15",
++   "q": "Why is the Strong Clock Condition not in general satisfied by logical clocks?",
++   "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
++   "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
++   "kind": "answerable",
++   "a": "This is stronger than the ordinary Clock Condition because → is a stronger relation than →. It is not in general satisfied by our logical clocks. Let us identify S with some set of “real\" events in physical space-time, and let → be the partial ordering of even",
++   "g": [
++    "stronger relation",
++    "logical clocks"
++   ],
++   "expect": null,
++   "lang": "en",
++   "chunk_id": 63
++  },
++  {
++   "id": "V16",
++   "q": "子贡问孔子「夫子聖矣乎」，孔子自己怎么回答？",
++   "book": "mengzi-zh.docx",
++   "bookId": "mengzi-zh.docx",
++   "kind": "answerable",
++   "a": "我學不厭而教不倦也。』子貢曰：『學不厭，智也；教不倦，仁也。仁且智，夫子既聖矣。』夫聖，孔子不居，是何言也？」 「昔者竊聞之：子夏、子游、子張皆有聖人之一體，冉牛、閔子、顏淵則具體而微，敢問所安？」 曰：「姑舍是。」 曰：「伯夷、伊尹何如？」 曰：「不同道。非其君不事，非其民不使，治則進，亂則退，伯夷也。何事非君？何使非民？治亦進，亂亦進，伊尹也。可以仕則仕，可以止則止，可以久則久，可以速則速，孔子也。皆古聖人也。吾未能有行焉，乃所愿，則學孔子也。」 「伯夷、伊尹於孔子，若是班乎？」 曰：「否，自有生民以來，未有孔",
++   "g": [
++    "學不厭",
++    "教不倦"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "chunk_id": 30
++  },
++  {
++   "id": "V17",
++   "q": "这批 36 台样本的总体合格率是多少？",
++   "book": "低压电器检测实训报告（带表格样例）.docx",
++   "bookId": "低压电器检测实训报告（带表格样例）.docx",
++   "kind": "newbook",
++   "a": "总体合格率 91.7%。两项不合格均属批次性工艺偏差，不涉及设计缺陷。建议：一是对绝缘件供应商启动来料加严检验；二是对触头压力弹簧的批次热处理记录做全量追溯；三是四月中旬复检一次以闭环。 本报告为带表格样例文档，专用于验证知识库管线的表格提取能力——若导入后表格内容缺失，即命中已知缺陷，待 V3 第二波修复后复测。",
++   "g": [
++    "91.7%"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "chunk_id": 7
++  },
++  {
++   "id": "V18",
++   "q": "曾子说「愼終追遠」会带来什么结果？",
++   "book": "lunyu-xueer-zh.pdf",
++   "bookId": "lunyu-xueer-zh.pdf",
++   "kind": "newbook",
++   "a": "愼終追遠，民德歸厚矣。」 第10章 子禽問於子貢曰:「夫子至於是邦也，必聞其政，求之與？抑與之與？」子貢曰:「夫子溫、良、恭、儉、讓以得之。夫子之求之也，其諸異乎人之求之與？」 第11章 子曰:「父在觀其志，父沒觀其行。三年無改於父之道，可謂孝矣。」 第12章 有子曰:「禮之用，和爲貴；先王之道，斯爲美；小大由之。有所不行，知和而和，不以禮節之，亦不可行也。」",
++   "g": [
++    "民德歸厚"
++   ],
++   "expect": null,
++   "lang": "zh",
++   "chunk_id": 3
++  },
++  {
++   "id": "V19",
++   "q": "《論語·學而》里有讲怎么配置 Docker 容器吗？",
++   "book": "lunyu-xueer-zh.docx",
++   "bookId": "lunyu-xueer-zh.docx",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "absent": [
++    "Docker"
++   ],
++   "expect": "refusal",
++   "lang": "zh",
++   "chunk_id": null
++  },
++  {
++   "id": "V20",
++   "q": "Dynamo 论文里给出了 Blender 三维渲染的参数吗？",
++   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "absent": [
++    "Blender"
++   ],
++   "expect": "refusal",
++   "lang": "cross",
++   "chunk_id": null
++  },
++  {
++   "id": "V21",
++   "q": "《道德经》里有讲怎么调试 JavaScript 代码吗？",
++   "book": "daodejing-zh.docx",
++   "bookId": "daodejing-zh.docx",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "absent": [
++    "JavaScript"
++   ],
++   "expect": "refusal",
++   "lang": "zh",
++   "chunk_id": null
++  },
++  {
++   "id": "V22",
++   "q": "《弗兰肯斯坦》里提到过 Wi-Fi 吗？",
++   "book": "frankenstein-en.epub",
++   "bookId": "frankenstein-en.epub",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "absent": [
++    "Wi-Fi"
++   ],
++   "expect": "refusal",
++   "lang": "cross",
++   "chunk_id": null
++  },
++  {
++   "id": "V23",
++   "q": "MapReduce 论文规定了员工年假天数吗？",
++   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "absent": [
++    "年假"
++   ],
++   "expect": "refusal",
++   "lang": "cross",
++   "chunk_id": null
++  },
++  {
++   "id": "V24",
++   "q": "《傲慢与偏见》里出现了信用卡账单吗？",
++   "book": "pride-and-prejudice-en.epub",
++   "bookId": "pride-and-prejudice-en.epub",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "absent": [
++    "信用卡"
++   ],
++   "expect": "refusal",
++   "lang": "cross",
++   "chunk_id": null
++  },
++  {
++   "id": "V25",
++   "q": "Attention 这篇论文给出了显卡超频设置吗？",
++   "book": "attention-is-all-you-need-en.pdf",
++   "bookId": "attention-is-all-you-need-en.pdf",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "absent": [
++    "超频"
++   ],
++   "expect": "refusal",
++   "lang": "cross",
++   "chunk_id": null
++  },
++  {
++   "id": "V26",
++   "q": "这份检测报告里有电动汽车充电桩的试验数据吗？",
++   "book": "低压电器检测实训报告（带表格样例）.docx",
++   "bookId": "低压电器检测实训报告（带表格样例）.docx",
++   "kind": "refusal",
++   "a": null,
++   "g": [],
++   "absent": [
++    "充电桩"
++   ],
++   "expect": "refusal",
++   "lang": "zh",
++   "chunk_id": null
++  },
++  {
++   "id": "V27",
++   "q": "刚才提到的那段话，是哪本书里写的？",
++   "book": null,
++   "bookId": null,
++   "kind": "ambiguous",
++   "a": null,
++   "g": [],
++   "expect": "ambiguous",
++   "lang": "zh",
++   "chunk_id": null
++  },
++  {
++   "id": "V28",
++   "q": "「道」到底是什么意思？",
++   "book": null,
++   "bookId": null,
++   "kind": "ambiguous",
++   "a": null,
++   "g": [],
++   "expect": "ambiguous",
++   "lang": "zh",
++   "chunk_id": null
++  },
++  {
++   "id": "V29",
++   "q": "作者当初为什么要写这本书？",
++   "book": null,
++   "bookId": null,
++   "kind": "ambiguous",
++   "a": null,
++   "g": [],
++   "expect": "ambiguous",
++   "lang": "zh",
++   "chunk_id": null
++  },
++  {
++   "id": "V30",
++   "q": "里面那个实验具体是怎么做的？",
++   "book": null,
++   "bookId": null,
++   "kind": "ambiguous",
++   "a": null,
++   "g": [],
++   "expect": "ambiguous",
++   "lang": "zh",
++   "chunk_id": null
++  }
++ ],
++ "judgePolicy": {
++  "route": "全部 30 题走 routeAndSearch（全库自动挑书），与 v1 同一判分口径",
++  "answerable": "judge() 三级尺子；full 或 partial 记为答对",
++  "refusal": "返回结果中不得出现 absent 任一词（全库 0 命中已核）",
++  "ambiguous": "ambiguous===true 或 routed_books.length>=2 记为通过",
++  "newbook": "同 answerable，另记「挑书是否命中本尊」"
++ }
++}
+diff --git a/test/ipc-test.mjs b/test/ipc-test.mjs
+index d5951b5..d19807b 100644
+--- a/test/ipc-test.mjs
++++ b/test/ipc-test.mjs
+@@ -1,6 +1,6 @@
+ // IPC 通道层测试：假 ipcMain 捕获 handler，对关键通道子集逐个断言注册与行为
+ // 测的是生产同一份注册代码（ipc.mjs）——不需要 Electron 进程。
+-// ask:query 要加载模型（重），留给 desktop-smoke（真机）与 eval-gate；这里只测不碰模型的通道。
++// ask:query 要加载模型（重），留给 desktop-smoke（真机）与质量门；这里只测不碰模型的通道。
+ import fs from "node:fs";
+ import path from "node:path";
+ import { registerIpc } from "../src/desktop/ipc.mjs";
+diff --git a/test/judge-test.mjs b/test/judge-test.mjs
+index 5ad7cb2..527229b 100644
+--- a/test/judge-test.mjs
++++ b/test/judge-test.mjs
+@@ -7,13 +7,13 @@
+ //            id=88 开头 "the new vector clock) to the N highest-ranked reachable nodes."
+ //   attention id=48 结尾 "...self-attention layers are faster than recurrent layers when the sequence"
+ //            id=49 开头 "length n is smaller than the representation dimensionality d, ..."
+-// 这两处的答案句确实被切在接缝两侧，关键词却都在块里 —— 旧尺子必然判 hit。
++// 这两处的答案句确实被切在接缝两侧，关键词却都在块里 —— 关键词对照器必然判 hit。
+ //
+-// 翻转可复现：把 test/lib/judge.mjs 的 judge() 换成 legacyJudge()，本文件必红。
++// 翻转可复现：把 test/lib/judge.mjs 的 judge() 换成 keywordOnlyJudge()，本文件必红。
+ import fs from "node:fs";
+ import path from "node:path";
+ import Database from "better-sqlite3";
+-import { judge, legacyJudge, judgeAll, normText } from "./lib/judge.mjs";
++import { judge, keywordOnlyJudge, judgeAll, normText } from "./lib/judge.mjs";
+ 
+ const LIB = path.join(import.meta.dirname, "..", "library");
+ const file = (prefix) => {
+@@ -50,7 +50,7 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
+   check("a 不完整落在 id=88", !normText(a88.text).includes(normText(a)));
+ 
+   const both = [a87, a88];
+-  const oldV = legacyJudge(both, golden.g);
++  const oldV = keywordOnlyJudge(both, golden.g);
+   const newV = judge(both, golden);
+   console.log(`    旧尺子: hit=${oldV.hit} rank=${oldV.rank ?? "-"} (依据关键词 "${oldV.golden}")`);
+   console.log(`    新尺子: level=${newV.level} rank=${newV.rank ?? "-"} —— ${newV.why}`);
+@@ -62,7 +62,7 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
+   const onlyFirst = judge([a87], golden);
+   console.log(`    只检回 id=87 时新尺子: level=${onlyFirst.level} —— ${onlyFirst.why}`);
+   check("只检回一块时新尺子仍判 partial（不是 full）", onlyFirst.level === "partial");
+-  check("只检回一块时旧尺子仍判 hit", legacyJudge([a87], golden.g).hit === true);
++  check("只检回一块时旧尺子仍判 hit", keywordOnlyJudge([a87], golden.g).hit === true);
+   console.log();
+ }
+ 
+@@ -78,7 +78,7 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
+   check("a 不完整落在任一块", !normText(a48.text).includes(normText(a)) && !normText(a49.text).includes(normText(a)));
+ 
+   const both = [a48, a49];
+-  const oldV = legacyJudge(both, golden.g);
++  const oldV = keywordOnlyJudge(both, golden.g);
+   const newV = judge(both, golden);
+   console.log(`    旧尺子: hit=${oldV.hit} rank=${oldV.rank ?? "-"}`);
+   console.log(`    新尺子: level=${newV.level} rank=${newV.rank ?? "-"} —— ${newV.why}`);
+@@ -105,8 +105,8 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
+   console.log(`    新尺子: level=${v.level} prefixLen=${v.prefixLen ?? "-"} —— ${v.why}`);
+   check("块内只有 a 的前半截（无邻块可拼）→ 判 partial", v.level === "partial");
+   check(`前缀长度 ${v.prefixLen} 达到门槛 ${required} 且不足全句 ${a.length}`, v.prefixLen >= required && v.prefixLen < a.length);
+-  check("旧尺子对同一块判 hit（关键词都在）", legacyJudge(cut, golden.g).hit === true);
+-  check("新旧结论不同（规则③ 也是真翻转）", (legacyJudge(cut, golden.g).hit === true) !== (v.level === "full"));
++  check("旧尺子对同一块判 hit（关键词都在）", keywordOnlyJudge(cut, golden.g).hit === true);
++  check("新旧结论不同（规则③ 也是真翻转）", (keywordOnlyJudge(cut, golden.g).hit === true) !== (v.level === "full"));
+ 
+   // 门槛下沿：前缀不足一半 → 按设计判 miss（不能把「沾边几个字」当命中）
+   const under = [{ id: 87, text: a.slice(0, required - 1) }];
+@@ -125,7 +125,7 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
+   const v = judge([p42], golden);
+   console.log(`    新尺子: level=${v.level} —— ${v.why}`);
+   check("完整句判 full", v.level === "full");
+-  check("旧尺子也判 hit（完整句时两尺一致）", legacyJudge([p42], golden.g).hit === true);
++  check("旧尺子也判 hit（完整句时两尺一致）", keywordOnlyJudge([p42], golden.g).hit === true);
+   console.log();
+ }
+ 
+@@ -136,7 +136,7 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
+   const v = judge([{ id: 1, text: "some unrelated chunk text" }], golden);
+   console.log(`    新尺子: level=${v.level} —— ${v.why}`);
+   check("判 miss", v.level === "miss");
+-  check("旧尺子也 miss（这点两尺一致）", legacyJudge([{ text: "some unrelated chunk text" }], golden.g).hit === false);
++  check("旧尺子也 miss（这点两尺一致）", keywordOnlyJudge([{ text: "some unrelated chunk text" }], golden.g).hit === false);
+   console.log();
+ }
+ 
+diff --git a/test/lib/book-alias.mjs b/test/lib/book-alias.mjs
+new file mode 100644
+index 0000000..2a0c075
+--- /dev/null
++++ b/test/lib/book-alias.mjs
+@@ -0,0 +1,20 @@
++// 考卷书名 → 书架上 .db 文件前缀的唯一正本。
++//
++// 背景：旧 eval 体系（test/v2-eval.mjs / eval-gate.mjs / eval-baseline.json）已于
++// 2026-11-15 移除，原本散落在 v2-eval.mjs 与 golden-verify.mjs 里的两份别名表副本
++// 收敛到这里，避免「改一处漏一处」。
++//
++// 这不是评测体系，只是「考卷里写的书名」到「实际库文件名」的寻址表。
++// 新体系（test/golden/*.json + test/quality-gate.mjs）与校验器共用它。
++export const BOOK_ALIAS = {
++  "jane-eyre-en.epub": "pg1260-简爱.epub",
++  "sherlock-holmes-adventures-en.epub": "pg1661-福尔摩斯冒险史.epub",
++  "dynamo-2007-en.pdf": "Dynamo-亚马逊高可用键值存储-2007.pdf",
++  "lamport-1978-en.pdf": "Lamport-时间时钟与分布式系统排序-1978.pdf",
++  "mapreduce-2004-en.pdf": "MapReduce-谷歌大规模分布式处理-2004.pdf",
++};
++
++/** 返回该书在 library/ 里的 .db 文件名前缀；未登记的书返回原名。 */
++export function resolveBookPrefix(book) {
++  return BOOK_ALIAS[book] || book;
++}
+diff --git a/test/lib/judge.mjs b/test/lib/judge.mjs
+index cede414..6275068 100644
+--- a/test/lib/judge.mjs
++++ b/test/lib/judge.mjs
+@@ -1,8 +1,10 @@
+ // test/lib/judge.mjs —— 判分尺子（三级：full / partial / miss）
+ //
+-// 为什么换尺子：旧尺子（test/v2-eval.mjs:235-242 的 judge）只看「命中块里有没有关键词」。
++// 为什么换尺子：旧的「关键词命中即算中」判法只看命中块里有没有关键词。
+ // 关键词在书里到处都是，切块把答案句切成两半也照样判过——它测不出切块损伤，
+ // 只能测出「词出现过」。这把尺子换掉之后，「切块损伤」才第一次能被量化。
++// （旧 eval 体系 test/v2-eval.mjs 已于 2026-11-15 移除；本文件保留的
++//  「关键词对照器」不是那套评测体系，而是新闸门自己的自检基准。）
+ //
+ // 三级定义（判据见规划 P0-2）：
+ //   full    —— 标准答案句 a 完整落在某一个命中块里（逐字包含）
+@@ -11,8 +13,10 @@
+ //              (b) 命中块里只有 a 的前半截，后半截掉在块外（块尾在句中被切断）
+ //   miss    —— a 既不完整也不成段地出现在命中结果里
+ //
+-// 附带导出 legacyJudge：旧尺子原样保留（仅关键词包含），
+-// 用来在同一份考卷上跑「旧尺子 vs 新尺子」，量出旧尺子到底松了多少。
++// 附带导出 keywordOnlyJudge：关键词对照器（仅关键词包含）。
++// 它是新闸门 quality-gate.mjs 的对照基准：接缝自测要求它对切伤样本判 hit，
++// 防放水断言用它卡 full 上限。删掉它，闸门 import 就会报错。
++// legacyJudge 仅为兼容 quality-baseline.json 里 legacy* 字段名保留的别名。
+ //
+ // 不接任何大模型，纯确定性字符串判定。
+ 
+@@ -37,10 +41,10 @@ export function isTerminator(text, i) {
+ }
+ 
+ /**
+- * 旧尺子（原样照抄 test/v2-eval.mjs:235-242 的语义）：
+- * 只要命中块里出现任一关键词就算 hit。goldens 是关键词数组。
++ * 关键词对照器：只要命中块里出现任一关键词就算 hit。
++ * 归属：新闸门的自检基准，不属于已移除的旧 eval 体系。
+  */
+-export function legacyJudge(results, goldens) {
++export function keywordOnlyJudge(results, goldens) {
+   const low = (results ?? []).map(r => String(r?.text ?? "").toLowerCase());
+   const gs = (goldens ?? []).map(g => String(g).toLowerCase());
+   for (let i = 0; i < low.length; i++) {
+@@ -50,6 +54,9 @@ export function legacyJudge(results, goldens) {
+   return { hit: false };
+ }
+ 
++// 兼容别名：baseline 字段名 legacyHit / legacyRate 沿用，勿把它当评测入口。
++export const legacyJudge = keywordOnlyJudge;
++
+ /** 最长公共前缀长度：a 的前 k 个字符整体出现在 text 里，取最大 k */
+ function longestPrefixIn(text, a, minK = 0) {
+   const maxK = Math.min(a.length, text.length);
+@@ -69,12 +76,12 @@ export function judge(results, golden) {
+   // 翻转验证开关：把新尺子临时换成旧逻辑（只看关键词），
+   // 用来证明闸门的接缝识别率断言真的能红。默认关闭。
+   if (process.env.BSP_LEGACY_JUDGE === "1") {
+-    const lg0 = legacyJudge(results, golden?.g ?? []);
++    const lg0 = keywordOnlyJudge(results, golden?.g ?? []);
+     return { level: lg0.hit ? "full" : "miss", rank: lg0.rank || 0, legacy: lg0, why: "旧逻辑（翻转验证用）" };
+   }
+   const a = normText(golden?.a);
+   const g = (golden?.g ?? []).map(x => String(x).toLowerCase());
+-  const legacy = legacyJudge(results, g);
++  const legacy = keywordOnlyJudge(results, g);
+   const texts = (results ?? []).map(r => normText(r?.text ?? ""));
+ 
+   if (!a) {
+@@ -150,7 +157,7 @@ export function judgeAll(resultsByQuestion, goldens) {
+     hitRate: n ? +(hit / n).toFixed(4) : 0,
+     damageRate: hit ? +(partial / hit).toFixed(4) : 0,   // 切块损伤率 = partial ÷ hit
+     avgFirstRank: ranks.length ? +(ranks.reduce((s, x) => s + x, 0) / ranks.length).toFixed(2) : 0,
+-    legacyHit,                                            // 旧尺子命中数（同一份考卷）
++    legacyHit,                                            // 关键词对照器命中数（字段名沿用 baseline 的 legacy*）
+     legacyRate: n ? +(legacyHit / n).toFixed(4) : 0,
+   };
+ }
+diff --git a/test/quality-gate.mjs b/test/quality-gate.mjs
+index 8854e44..a777f08 100644
+--- a/test/quality-gate.mjs
++++ b/test/quality-gate.mjs
+@@ -20,8 +20,8 @@
+ // （实测 80/80，见 23-质量彻底解决施工\probe-subset.mjs）⇒ 窗口里的脏块只会变少。
+ // 而按书检索 hybridSearch 的候选池随 topN 变（src/lib/search.mjs:360
+ // RECALL = min(max(topN*4,12),20)）：topN=1 是真把检索面缩小了，脏块挤占率会上升。
+-// 所以：命中/full/名次/脏块走按书口径（与 test/v2-eval.mjs:250 同一条路径，
+-// 虾虾核过的旧尺子基线 75/80=94 也是这条路径算的，新旧尺子必须同一条路径才算同一份考卷），
++// 所以：命中/full/名次/脏块走按书口径（src/lib/search.mjs 的 hybridSearch），
++// 关键词对照器基线 75/80=94 也是这条路径算的，新尺子与对照器必须同一条路径才算同一份考卷），
+ // 路由准确率走端到端口径。两份原始数据都落盘，口径写在基线文件里。
+ //
+ // ── 口径说明（每条都写清楚，避免"数字对不上"）────────────────────────────
+@@ -53,7 +53,7 @@
+ //   · 现扫全库 13 个库，把「一句答案被切在相邻两块接缝上」的真实句子挖出来当样本
+ //     （几何判定，不靠尺子，所以尺子坏了样本还在）；
+ //   · 新尺子 judge() 必须对每一条判 partial（认得出切伤）；
+-//   · 旧尺子 legacyJudge() 必须对每一条判 hit（认不出——只看关键词还在就算过，
++//   · 关键词对照器 keywordOnlyJudge() 必须对每一条判 hit（认不出——只看关键词还在就算过，
+ //     这正是 P0-2 要治的病）；
+ //   · 任一条不成立 → 闸门红 exit 1。
+ // 翻转：把 judge() 换回旧逻辑 → 接缝识别率掉到 0 → 闸门红。
+@@ -76,7 +76,7 @@ try {
+   Database = createRequire("C:/Users/JIANG XIAO HUA/Desktop/book-skill-platform-r3/package.json")("better-sqlite3");
+ }
+ 
+-const { judge, legacyJudge, normText, isTerminator } = await import("./lib/judge.mjs");
++const { judge, keywordOnlyJudge, normText, isTerminator } = await import("./lib/judge.mjs");
+ const { filterNoiseChunks, loadRules } = await import("../src/lib/noise-rules.mjs");
+ 
+ // ---- 参数 ------------------------------------------------------------------
+@@ -249,7 +249,7 @@ function dirtyOf(rs, defaultBookId) {
+ //   几何扫描全库，找出「一句答案被切在相邻两块接缝上」的真实句子当样本
+ //   （判定只看几何：句首在 A 块内且 A 块里句首前是句读、句尾落在 B 块，不看尺子）；
+ //   要求新尺子 judge() 对这些样本全部判 partial（能认出切块损伤）；
+-//   同时记下旧尺子 legacyJudge() 对同批样本的虚命中数（旧尺子只看关键词，
++//   同时记下关键词对照器 keywordOnlyJudge() 对同批样本的虚命中数（对照器只看关键词，
+ //   关键词在 A 块里就算过，答案句被切开它照样放行）。
+ // 任一条样本不被新尺子判 partial → 识别率 < 1 → 闸门红 exit 1。
+ // 翻转证据：把 judge() 换回旧逻辑 → 识别率掉到 0 → 闸门红。
+@@ -328,7 +328,7 @@ function runSeamAssertion() {
+     else fails.push({ book: s.book, aId: s.aId, bId: s.bId, level: v.level });
+     if (kw) {
+       legacyCnt++;
+-      if (legacyJudge(rs, [kw]).hit) legacyHit++;
++      if (keywordOnlyJudge(rs, [kw]).hit) legacyHit++;
+     }
+   }
+   return {
+@@ -343,7 +343,7 @@ function runSeamAssertion() {
+ }
+ 
+ // ---- 现跑（慢路径）----------------------------------------------------------
+-// 按书口径：hybridSearch(dbPath, q, topN) —— 与 test/v2-eval.mjs:250 同一条路径
++// 按书口径：hybridSearch(dbPath, q, topN) —— src/lib/search.mjs 的同一条路径
+ async function runBook(items) {
+   const { hybridSearch } = await import("../src/lib/search.mjs");
+   const raw = { items: [], meta: { n: items.length, topN: TOP_N, caliber: "perbook", rerank: RERANK } };
+@@ -470,7 +470,7 @@ function judgeOf(rawItem, d, goldens, where) {
+     throw new Error(`${where}找不到题目「${rawItem.q}」（${rawItem.book}）在当前考卷里的条目`
+       + ` —— 这份 raw 与当前考卷不是同一份题单，请用当前卷重跑，或核对 --from-book 指的哪份`);
+   }
+-  return { v: judge(rs, g), lg: legacyJudge(rs, g.g || []), rs };
++  return { v: judge(rs, g), lg: keywordOnlyJudge(rs, g.g || []), rs };
+ }
+ 
+ export function computeMetrics(rawBook, rawRoute, N, goldens = null) {
+@@ -606,7 +606,7 @@ const N = FROM_BOOK
+ const res = computeMetrics(rawBook, rawRoute, N);
+ 
+ console.log(`\n===== QUALITY GATE（topN=${N}，题数 ${res.total}）=====`);
+-console.log(`口径：命中/full/名次/脏块 = 按书检索 hybridSearch（与 v2-eval 同路径）｜路由准确率 = 端到端 routeAndSearch`);
++console.log(`口径：命中/full/名次/脏块 = 按书检索 hybridSearch（src/lib/search.mjs）｜路由准确率 = 端到端 routeAndSearch`);
+ console.log(`指标                本次      基线      方向   结论`);
+ let regress = [];
+ let base = null;
+@@ -649,7 +649,7 @@ for (const k of Object.keys(DIRECTION)) {
+   );
+ }
+ console.log(`\n明细（按书口径）：full ${res.detail.full} / partial ${res.detail.partial} / miss ${res.detail.miss}`
+-  + ` | 旧尺子命中 ${res.detail.legacyHit}/${res.total}(${res.detail.legacyRate})`
++  + ` | 关键词对照器命中 ${res.detail.legacyHit}/${res.total}(${res.detail.legacyRate})`
+   + ` | 切块损伤率 partial÷hit ${res.detail.damageRate}`
+   + ` | 平均延迟 ${res.detail.avgLatencyMs}ms`
+   + ` | 形态脏块 ${res.detail.dirtyTotal}/${res.detail.returnedTotal}（涉 ${res.detail.dirtyQ} 题）`
+@@ -663,7 +663,7 @@ console.log(`明细（端到端口径）：full ${res.detail.routeFull} / partia
+ const seam = runSeamAssertion();
+ console.log(`接缝自测断言：样本 ${seam.total} 条（几何扫库现扫）`
+   + ` | 新尺子认出 partial ${seam.newPartial} 条，识别率 ${seam.rate}`
+-  + ` | 旧尺子对同批样本虚命中 ${seam.legacyHit}/${seam.legacyTotal}(${seam.legacyRate})`
++  + ` | 关键词对照器对同批样本虚命中 ${seam.legacyHit}/${seam.legacyTotal}(${seam.legacyRate})`
+   + ` | 断言：识别率必须 = 1，缺一条即红`);
+ if (seam.fails.length) {
+   for (const f of seam.fails.slice(0, 5)) {
+@@ -730,9 +730,9 @@ if (seam.total > 0 && seam.rate < 1) {
+ // 天然比新尺子松（实测 full 59 / 旧尺子命中 75，旧的多出 16 条正是虚命中）。
+ // 所以「新尺子的 full 数 > 旧尺子命中数」在因果上说不通：更严的判据不可能比更松的判出更多
+ // 完整命中。一旦出现，说明有人把新尺子放松了（或旧尺子收紧到失真），必须红。
+-// 这条不是恒真项：正常数据下 full(59) < legacyHit(75)，恒为绿；只有放水才翻红。
++// 这条不是恒真项：正常数据下 full(59) < 对照器命中(75)，恒为绿；只有放水才翻红。
+ if (res.detail.full > res.detail.legacyHit) {
+-  console.log(`\n✗ 判分尺子疑似放水：新尺子 full ${res.detail.full} > 旧尺子命中 ${res.detail.legacyHit}`
++  console.log(`\n✗ 判分尺子疑似放水：新尺子 full ${res.detail.full} > 关键词对照器命中 ${res.detail.legacyHit}`
+     + ` —— 更严的判据不可能判出更多完整命中，请检查 test/lib/judge.mjs`);
+   process.exit(1);
+ }
+diff --git a/test/v2-eval.mjs b/test/v2-eval.mjs
+deleted file mode 100644
+index d7f8dd1..0000000
+--- a/test/v2-eval.mjs
++++ /dev/null
+@@ -1,266 +0,0 @@
+-// v2 金标准评测（考卷）：跨语言问答题 × 自动判分
+-// 用法: node test/v2-eval.mjs [--rerank off|on|both]
+-// 判分规则：top4 结果里出现金标准关键词（任一）算命中
+-// 引擎一致性：库内 meta.model 必须和当前 BSP_EMBED_MODEL 一致，否则拒绝跑
+-import fs from "node:fs";
+-import path from "node:path";
+-import { createRequire } from "node:module";
+-const require = createRequire(import.meta.url);
+-const Database = require("better-sqlite3");
+-import { hybridSearch } from "../src/lib/search.mjs";
+-import { getEmbedder, DEFAULT_EMBED } from "../src/lib/models.mjs";
+-
+-// BSP_EVAL_LIB：影子库评测覆盖（P3-⑤ 渐进重建对照用——新切片影子库先跑考卷，
+-// 与基线对账后才替换正式库；不设=正式库，门语义不变）
+-const LIB = process.env.BSP_EVAL_LIB || path.join(import.meta.dirname, "..", "library");
+-
+-// 书架改名映射：考卷按「建库时的书名」写题，但架上的库文件后来换了中文名/英文名。
+-// 以前靠 startsWith 硬匹配，名字一对不上就整本按「佚书」丢弃——那不是题不会，是记错账。
+-// 这张表只做「考卷书名 → 架上库文件前缀」的对应，不改任何判分口径。
+-// 2026-11-13 实测：17 本考卷书里 5 本属此情况，修完有效题数从 52 回到 80。
+-const BOOK_ALIAS = {
+-  "jane-eyre-en.epub": "pg1260-简爱.epub",
+-  "sherlock-holmes-adventures-en.epub": "pg1661-福尔摩斯冒险史.epub",
+-  "dynamo-2007-en.pdf": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+-  "lamport-1978-en.pdf": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+-  "mapreduce-2004-en.pdf": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+-};
+-
+-const GOLDEN = [  // 名册说明（2026-10-19 考卷重建时盘点）：
+-  //   · 在架书（library/ 有库）正常计分：论语×2 版/孟子/道德经/P&P/Frankenstein/attention/凤凰/kkndme；
+-  //   · 【佚书】标记的条目（d2l/og-aws/SDP/hello-algo/简爱/福尔摩斯/三篇论文）——书曾建库编目，
+-  //     但库不在本机（V3 第二波~第三波-3 的历史资产，catalog JSON 仍在 git），跑时自动丢弃不计分；
+-  //     原料多在本机 books/_work/，哪天真重入库（第二波重入库波次），这些题自动复活。
+-  // ===== 论语·学（繁体版原文，金标准用书中原字） =====
+-  { book: "lunyu-xueer-zh.docx", q: "学了之后经常温习会怎么样", g: ["不亦說乎"] },
+-  { book: "lunyu-xueer-zh.docx", q: "别人不了解我我也不生气，算怎样的人", g: ["不亦君子乎"] },
+-  { book: "lunyu-xueer-zh.docx", q: "君子专心做人的根本，根本立住了会怎样", g: ["本立而道生"] },
+-  { book: "lunyu-xueer-zh.docx", q: "曾子每天反省自己的哪几件事", g: ["吾日三省", "三省"] },
+-  { book: "lunyu-xueer-zh.docx", q: "治理一个大国要怎么做", g: ["使民以時"] },
+-  { book: "lunyu-xueer-zh.docx", q: "年轻人怎么对待父母兄长和朋友", g: ["汎愛眾", "愛眾", "弟子入則孝"] },
+-  { book: "lunyu-xueer-zh.docx", q: "礼的运用以什么为贵", g: ["禮之用"] },
+-  { book: "lunyu-xueer-zh.docx", q: "不担心别人不了解自己，该担心什么", g: ["患不知人"] },
+-  { book: "lunyu-xueer-zh.docx", q: "贫穷不谄媚富贵不骄傲，更好的境界是什么", g: ["貧而樂", "貧而無諂"] },
+-  // ===== 孟子（维基文库繁体原文，2026-10-13 新书冷接入；金标准逐一回原文验真） =====
+-  // 编目注：本版作「天將降大任於是人也」（是人非斯人，校勘差异已核）
+-  { book: "mengzi-zh.docx", q: "上天要降大任给一个人之前会怎么考验他", g: ["苦其心志"] },
+-  { book: "mengzi-zh.docx", q: "鱼和熊掌不能同时得到该怎么选", g: ["舍魚而取熊掌"] },
+-  { book: "mengzi-zh.docx", q: "打仗的时候天时和地利哪个更重要", g: ["天時不如地利"] },
+-  { book: "mengzi-zh.docx", q: "国家当中什么最贵重，江山和君主哪个轻", g: ["民為貴", "君為輕"] },
+-  { book: "mengzi-zh.docx", q: "不得志的时候修养自身，得志的时候要怎么样", g: ["兼善天下"] },
+-  { book: "mengzi-zh.docx", q: "富贵贫穷威武什么样的考验都不能动摇一个人", g: ["富貴不能淫"] },
+-  { book: "mengzi-zh.docx", q: "不用学就会的能力不用想就懂的见识叫什么", g: ["良知", "良能"] },
+-  { book: "mengzi-zh.docx", q: "看见小孩子快要掉进井里为什么会心跳", g: ["惻隱之心"] },
+-  { book: "mengzi-zh.docx", q: "有人嫌禾苗不长就往高里拔，苗最后怎样了", g: ["苗則槁矣", "槁矣"] },
+-  // ===== 道德经（繁体校勘版原文，金标准用书中原字） =====
+-  { book: "daodejing-zh.docx", q: "可以说出来的道就不是永恒的道吗", g: ["非常道", "非恆道"] },
+-  { book: "daodejing-zh.docx", q: "最高的善像什么", g: ["水善利萬", "上善若水"] },
+-  { book: "daodejing-zh.docx", q: "了解别人叫聪明，了解自己叫什么", g: ["自知者明"] },
+-  { book: "daodejing-zh.docx", q: "再远的路从哪里开始", g: ["始於足下"] },
+-  { book: "daodejing-zh.docx", q: "天下最柔弱的东西是什么", g: ["莫柔弱於水"] },
+-  { book: "daodejing-zh.docx", q: "治理大国像做什么菜", g: ["烹小鮮"] },
+-  { book: "daodejing-zh.docx", q: "功业成就之后怎么办才符合天道", g: ["功遂身退"] },
+-  { book: "daodejing-zh.docx", q: "杯子装满了不如怎样", g: ["不如其已"] },
+-  { book: "daodejing-zh.docx", q: "缤纷的颜色动听的音乐厚味让人怎样", g: ["目盲", "耳聾", "口爽"] },
+-  // ===== Attention 论文 =====
+-  { book: "attention-is-all-you-need-en.pdf", q: "what kind of model does the paper propose that uses only attention", g: ["transformer"] },
+-  { book: "attention-is-all-you-need-en.pdf", q: "how many GPUs were used for training the big model", g: ["p100"] },
+-  { book: "attention-is-all-you-need-en.pdf", q: "which translation benchmark is used for english to german", g: ["wmt 2014", "wmt"] },
+-  { book: "attention-is-all-you-need-en.pdf", q: "what BLEU score did the big model get on english to german", g: ["28.4"] },
+-  { book: "attention-is-all-you-need-en.pdf", q: "what functions encode token positions", g: ["sine", "cosine"] },
+-  { book: "attention-is-all-you-need-en.pdf", q: "how long does one training step take on the big model", g: ["0.4"] },
+-  { book: "attention-is-all-you-need-en.pdf", q: "which convolutional sequence models are cited as prior work", g: ["convs2s", "bytenet"] },
+-  { book: "attention-is-all-you-need-en.pdf", q: "论文里的缩放点积注意力是什么", g: ["dot-product", "scaled"] },
+-  { book: "attention-is-all-you-need-en.pdf", q: "这篇论文用了几张显卡训练", g: ["p100"] },
+-  // ===== Frankenstein =====
+-  { book: "frankenstein-en.epub", q: "who writes the letters that open the novel", g: ["walton"] },
+-  { book: "frankenstein-en.epub", q: "who is falsely accused of william's murder", g: ["justine"] },
+-  { book: "frankenstein-en.epub", q: "who teaches the creature language in the cottage", g: ["felix"] },
+-  { book: "frankenstein-en.epub", q: "what does the creature ask victor to create for him", g: ["companion", "female"] },
+-  { book: "frankenstein-en.epub", q: "which university does victor attend", g: ["ingolstadt"] },
+-  { book: "frankenstein-en.epub", q: "which outdated philosopher's work first inspires victor", g: ["agrippa"] },
+-  { book: "frankenstein-en.epub", q: "怪物最后说要把自己怎么样", g: ["flames", "pyre"] },
+-  { book: "frankenstein-en.epub", q: "弗兰肯斯坦在哪个城市读大学", g: ["ingolstadt"] },
+-  // ===== 傲慢与偏见 =====
+-  { book: "pride-and-prejudice-en.epub", q: "what is the famous opening sentence about", g: ["truth universally acknowledged"] },
+-  { book: "pride-and-prejudice-en.epub", q: "how many daughters does the bennet family have", g: ["five"] },
+-  { book: "pride-and-prejudice-en.epub", q: "whom does mr collins marry after being rejected", g: ["charlotte"] },
+-  { book: "pride-and-prejudice-en.epub", q: "who finds lydia and wickham in london", g: ["gardiner"] },
+-  { book: "pride-and-prejudice-en.epub", q: "what is mr darcy's estate called", g: ["pemberley"] },
+-  // 判分注：Caroline Bingley 在书中多以 "Miss Bingley" 出现（同一人两种原文写法），
+-  // 最佳答案块（如第11章"Miss Bingley's civility"）不含字面 caroline → 判卷接受两种表面形式
+-  { book: "pride-and-prejudice-en.epub", q: "who tries to separate jane and bingley", g: ["caroline", "miss bingley"] },
+-  { book: "pride-and-prejudice-en.epub", q: "达西先生的庄园叫什么名字", g: ["pemberley"] },
+-  { book: "pride-and-prejudice-en.epub", q: "what legal arrangement means the estate passes to collins", g: ["entail"] },
+-  // ===== V3 第二波新语料（2026-10-16，md 书 5 本冷接入；每题金词逐一回原文验真后进卷）=====
+-  // 【佚书】og-aws/SDP/hello-algo/d2l 四本库不在本机（凤凰已回架，见下）；条目保留，重入库自动复活
+-  // og-aws（英文工程手册；中英混问测跨语言——AZ 题实测中文问句跨不过去，与既有「文言边界」同理登记）
+-  { book: "og-aws-en.md", q: "S3 的数据持久性官方数字是多少", g: ["99.999999999"] },
+-  { book: "og-aws-en.md", q: "在 S3 里刚创建的对象做列表操作能保证马上出现吗", g: ["eventual consistency"] },
+-  { book: "og-aws-en.md", q: "what do AWS regions contain", g: ["availability zones"] },
+-  { book: "og-aws-en.md", q: "IAM 角色最好按什么维度来分配", g: ["realm"] },
+-  // 金卷扩容（2026-10-20；按编目主题补盲区 t2 网络/t4 Lambda/t6 Aurora/t9 CloudWatch。og-aws 必须英文问——AZ 题教训）
+-  { book: "og-aws-en.md", q: "what is AWS' serverless compute offering for defining functions invoked via triggers", g: ["Lambda"] },
+-  { book: "og-aws-en.md", q: "which AWS service monitors resources and applications, captures logs, and sends events", g: ["CloudWatch"] },
+-  { book: "og-aws-en.md", q: "how large can aurora storage auto-scale per instance", g: ["64TB"] },
+-  { book: "og-aws-en.md", q: "which load balancer supports tcp layer 4 load balancing", g: ["NLB"] },
+-  // System Design Primer（英文；库里混排 ja/zh 翻译篇——跨语噪声也是真实分布）
+-  { book: "system-design-primer-en.md", q: "what does the CAP theorem say you can only support in a distributed system", g: ["two of the following"] },
+-  { book: "system-design-primer-en.md", q: "what is another name for the cache-aside strategy", g: ["lazy loading"] },
+-  { book: "system-design-primer-en.md", q: "which caches are mentioned for storing user sessions", g: ["redis", "memcached"] },
+-  { book: "system-design-primer-en.md", q: "what does horizontal scaling require of servers", g: ["stateless"] },
+-  // 金卷扩容（2026-10-20；补盲区 t5 负载均衡/t8 MySQL 伸缩/t6 CDN。t5/t8 目标块是中文翻译篇，中文问同语近邻）
+-  { book: "system-design-primer-en.md", q: "引入负载均衡器消除单点故障的代价是什么", g: ["额外的复杂性"] },
+-  { book: "system-design-primer-en.md", q: "在把频繁访问的内容放进内存缓存之前，先尝试配置什么来缓解 MySQL 瓶颈", g: ["MySQL 数据库"] },
+-  { book: "system-design-primer-en.md", q: "what is a content delivery network composed of, serving content from locations closer to the user", g: ["proxy servers"] },
+-  // Hello 算法（中文；图表+代码混排，代码围栏已去，正文是算法讲解）
+-  { book: "hello-algo-zh.md", q: "栈是一种遵循什么原则的数据结构", g: ["先入后出"] },
+-  { book: "hello-algo-zh.md", q: "队列遵循什么原则", g: ["先入先出"] },
+-  { book: "hello-algo-zh.md", q: "解决哈希冲突的链式方案叫什么名字", g: ["链式地址"] },
+-  { book: "hello-algo-zh.md", q: "栈的数组实现扩容时单次入栈的时间复杂度会劣化到多少", g: ["O(n)", "劣化至"] },
+-  // 金卷扩容（2026-10-20；补盲区 t4 二叉树/t8 堆/t9 AVL/t7 分治/t11 DP×贪心对比）
+-  { book: "hello-algo-zh.md", q: "堆是一棵什么树，按成立条件分为大顶堆和小顶堆", g: ["完全二叉树"] },
+-  { book: "hello-algo-zh.md", q: "AVL 树靠什么操作在插入删除节点后保持平衡", g: ["旋转"] },
+-  { book: "hello-algo-zh.md", q: "零钱兑换用贪心找不到最优解时，更适合用什么算法", g: ["动态规划"] },
+-  { book: "hello-algo-zh.md", q: "归并排序是哪种算法策略的典型应用", g: ["分治"] },
+-  // 凤凰架构（中文；分布式架构教材。2026-10-19 订正：库名 awesome-fenix-zh.md → fenix-architecture.md，
+-  //  改名后这 4 题曾被静默丢弃——金词已在新库复核仍在（x21/x9/x2/x4））
+-  { book: "fenix-architecture.md", q: "微服务中的服务降级熔断异常注入等链路治理需要在几层负载均衡里做", g: ["七层"] },
+-  { book: "fenix-architecture.md", q: "Paxos Raft ZAB 这类分布式共识协议被称为什么协议", g: ["强一致性"] },
+-  { book: "fenix-architecture.md", q: "Redis 集群从数据一致性角度属于哪种类型", g: ["AP 式"] },
+-  { book: "fenix-architecture.md", q: "狭义的刚性 ACID 事务在分布式系统中为什么会矛盾", g: ["CAP 不可兼得"] },
+-  // 动手学深度学习（中英混排；d2l-zh 中英双语篇交替）
+-  { book: "d2l-zh.md", q: "Fashion-MNIST 的训练集有多少张图像", g: ["60000"] },
+-  { book: "d2l-zh.md", q: "Fashion-MNIST 每张图像的高度和宽度是多少", g: ["28像素"] },
+-  { book: "d2l-zh.md", q: "用什么方法可以减轻过拟合，比如随机水平翻转图像", g: ["图像增广"] },
+-  { book: "d2l-zh.md", q: "在注意力机制中，自主性提示被称为什么", g: ["（query）", "被称为*查询*"] },
+-  // 金卷扩容（2026-10-20；补盲区 t17 Kaggle/t15 优化/t11 RNN/t5 softmax。英文篇用英文问——英文书教训同理）
+-  { book: "d2l-zh.md", q: "训练数据太少凑不齐验证集时，用什么交叉验证方法", g: ["折交叉验证"] },
+-  { book: "d2l-zh.md", q: "why does minimizing training error not guarantee the best parameters", g: ["generalization error"] },
+-  { book: "d2l-zh.md", q: "what does the rnn encoder transform a variable-length sequence into", g: ["fixed-shape hidden state"] },
+-  { book: "d2l-zh.md", q: "after training softmax regression, which class is used as the output prediction", g: ["highest predicted probability"] },
+-  // ===== V3 第三波-3 epub 两本（2026-10-16 冷接入；每题金词回原文验真+候选题探针实跑才入卷）=====
+-  // 【佚书】两本库不在本机（原料在 books/_work/epub/）；条目保留，重入库自动复活
+-  // 简·爱（Gutenberg pg1260；判分注：金词 "no possibility of taking a walk" 全书仅 1 处=开篇名句，
+-  //   top4 命中依赖复试官——与既有 og-aws AZ 题同理登记「英文文学细节题需复试官价值区」）
+-  { book: "jane-eyre-en.epub", q: "what was impossible to do on the day the novel opens", g: ["no possibility of taking a walk"] },
+-  { book: "jane-eyre-en.epub", q: "what is the name of mr rochester's country estate", g: ["Thornfield"] },
+-  { book: "jane-eyre-en.epub", q: "who is rochester's first wife hidden in the attic at thornfield", g: ["Bertha"] },
+-  { book: "jane-eyre-en.epub", q: "简爱离开盖茨黑德之后就读的学校叫什么", g: ["Lowood"] },
+-  // 金卷扩容（2026-10-20；补盲区 t3 Lowood 人物/t4 Thornfield 人物/t7 Grace Poole/t10 Rivers 家线。
+-  //  实测修订：管家题（「housekeeper」问法）答案块 #410 在 top4 拉不动——Fairfax 块噪声 125 处；
+-  //  换 Adèle（t4 的另一位人物，探针 rank1 过），Grace Poole 题（t7）探针 rank1 过
+-  { book: "jane-eyre-en.epub", q: "who is the clergyman who runs lowood school and humiliates jane in public", g: ["Brocklehurst"] },
+-  { book: "jane-eyre-en.epub", q: "who is the little french girl that jane works for as governess at thornfield", g: ["Adèle"] },
+-  { book: "jane-eyre-en.epub", q: "whose laugh does jane keep hearing from the third storey of thornfield", g: ["Grace Poole"] },
+-  { book: "jane-eyre-en.epub", q: "who proposes marriage to jane while she is living with the rivers family", g: ["St. John", "St.John"] },
+-  // 福尔摩斯冒险史（Gutenberg pg1661；12 短篇集）
+-  { book: "sherlock-holmes-adventures-en.epub", q: "who is the woman who outwits sherlock holmes in a scandal in bohemia", g: ["Irene Adler"] },
+-  { book: "sherlock-holmes-adventures-en.epub", q: "what is the address of sherlock holmes's london lodgings", g: ["Baker Street", "221B"] },
+-  { book: "sherlock-holmes-adventures-en.epub", q: "what kind of snake is the deadly serpent in the speckled band", g: ["swamp adder"] },
+-  { book: "sherlock-holmes-adventures-en.epub", q: "who is the friend and colleague who helps sherlock holmes and narrates the cases", g: ["Watson"] },
+-  // 金卷扩容（2026-10-20；补盲区 t4 红发会/t7 五橘核/t9 蓝宝石——短篇集人名线）
+-  { book: "sherlock-holmes-adventures-en.epub", q: "who brought jabez wilson the newspaper advertisement about the red-headed league", g: ["Spaulding"] },
+-  { book: "sherlock-holmes-adventures-en.epub", q: "what did john openshaw's relatives receive from london before dying, marked with K.K.K.", g: ["orange pips"] },
+-  { book: "sherlock-holmes-adventures-en.epub", q: "who did holmes confront and release for the theft of the blue carbuncle", g: ["Ryder"] },
+-  // ===== V3 第三波-3 论文三篇（2026-10-16 PDF 冷接入；双栏列感知解析后，金词回原文验真+探针实跑才入卷）=====
+-  // 【佚书】三本库不在本机（原料在 books/_work/论文/）；条目保留，重入库自动复活
+-  // Dynamo（SOSP 2007；Amazon 高可用键值存储）
+-  { book: "dynamo-2007-en.pdf", q: "what partitioning technique does dynamo use to spread its keys across nodes", g: ["consistent hashing"] },
+-  { book: "dynamo-2007-en.pdf", q: "what mechanism does dynamo use to capture causality between different versions of the same object", g: ["vector clock"] },
+-  { book: "dynamo-2007-en.pdf", q: "what quorum-like technique keeps writes available when some replicas are temporarily down", g: ["sloppy quorum", "hinted handoff"] },
+-  { book: "dynamo-2007-en.pdf", q: "what structure is used in anti-entropy to synchronize divergent replicas", g: ["merkle"] },
+-  // 金卷扩容（2026-10-20；补盲区 t4 性能评估——负载均匀分配的选型）
+-  { book: "dynamo-2007-en.pdf", q: "what load distribution did dynamo choose for uniform performance across nodes", g: ["uniform load", "uniform"] },
+-  // Lamport（1978；时间、时钟与事件排序，老式排版零星空格丢失属原料特征）
+-  { book: "lamport-1978-en.pdf", q: "what relation does lamport define to order events in a distributed system", g: ["happened before"] },
+-  { book: "lamport-1978-en.pdf", q: "what does lamport introduce into the system to assign numbers to events", g: ["logical clock"] },
+-  { book: "lamport-1978-en.pdf", q: "what must the system of clocks satisfy so events can be ordered by their timestamps", g: ["clock condition"] },
+-  { book: "lamport-1978-en.pdf", q: "how are ties broken when two events happen to get the same clock value", g: ["total ordering", "break ties"] },
+-  // MapReduce（OSDI 2004；Google 大规模分布式处理）
+-  { book: "mapreduce-2004-en.pdf", q: "which functional language inspired the map and reduce primitives", g: ["lisp"] },
+-  { book: "mapreduce-2004-en.pdf", q: "what is the primary mechanism mapreduce uses for fault tolerance", g: ["re-execut"] },
+-  { book: "mapreduce-2004-en.pdf", q: "what does the master launch to handle straggler machines that slow down completion", g: ["backup task"] },
+-  { book: "mapreduce-2004-en.pdf", q: "why does mapreduce schedule map tasks close to the data they process", g: ["locality", "network bandwidth"] },
+-  // ===== V3R7 考卷重建（2026-10-19；kkndme 正式收录。每题金词已回库 instr 验真）=====
+-  // 房地产主线（白话问、原文答；论坛体「作者：xxx的回复」噪声是检索难点，故 6 题里 4 题走主线）
+-  { book: "kkndme-zh.pdf", q: "2010 年房地产调控真正为的是什么，不是降房价吗", g: ["维稳"] },
+-  { book: "kkndme-zh.pdf", q: "楼主说通货膨胀对延缓灭亡来说是什么药", g: ["良药"] },
+-  { book: "kkndme-zh.pdf", q: "公租房推出来之后市场上的房租会整体怎么走", g: ["房租整体上涨"] },
+-  { book: "kkndme-zh.pdf", q: "人民币外升内贬的现象是怎么造成的", g: ["外升内贬"] },
+-  { book: "kkndme-zh.pdf", q: "想了解一个片区房价，楼主说要聊几家中介公司", g: ["3个中介"] },
+-  { book: "kkndme-zh.pdf", q: "读者问全款买房还是贷款买房更划算，楼主给了什么思路", g: ["贷款划算", "毋庸置疑"] },
+-  // 以史喻今副线（同一本书的历史段落——考跨主题检索：房产书里问历史）
+-  { book: "kkndme-zh.pdf", q: "楼主形容朱元璋发家前是个什么样的人", g: ["要饭吃的和尚"] },
+-  { book: "kkndme-zh.pdf", q: "崇祯皇帝最后会上吊，楼主认为根子在哪", g: ["性格缺陷"] },
+-  { book: "kkndme-zh.pdf", q: "宋史把贾似道写进了哪一部传", g: ["奸臣传"] },
+-  { book: "kkndme-zh.pdf", q: "楼主说读史读的不是故事，那读的是什么", g: ["历史规律"] },
+-];
+-
+-const args = process.argv.slice(2);
+-const ri = args.indexOf("--rerank");
+-const mode = ri >= 0 ? args[ri + 1] : "both";
+-const TOPN = 4;
+-
+-// 1) 校验金标准真的在书里（防止我记错原文导致误判）
+-const valid = [];
+-for (const e of GOLDEN) {
+-  const want = BOOK_ALIAS[e.book] || e.book;
+-  const f = fs.readdirSync(LIB).find(x => x.startsWith(want) && x.endsWith(".db"));
+-  if (!f) { console.log(`[丢弃] ${e.book}: 找不到库文件`); continue; }
+-  const db = new Database(path.join(LIB, f), { readonly: true });
+-  const ok = e.g.some(g => db.prepare("SELECT COUNT(*) n FROM chunks WHERE instr(lower(text), lower(?)) > 0").get(g).n > 0);
+-  db.close();
+-  if (ok) valid.push({ ...e, file: f });
+-  else console.log(`[丢弃] 「${e.q}」金标准 ${e.g.join("/")} 不在书里（我记错原文了）`);
+-}
+-console.log(`有效题数: ${valid.length}/${GOLDEN.length}（引擎: ${DEFAULT_EMBED}）\n`);
+-
+-// 2) 引擎一致性检查
+-const activeKey = (await getEmbedder()).key;
+-const dbModels = [...new Set(valid.map(e => {
+-  const db = new Database(path.join(LIB, e.file), { readonly: true });
+-  const m = db.prepare("SELECT value FROM meta WHERE key='model'").get()?.value || "(无)";
+-  db.close();
+-  return m;
+-}))];
+-// 旧库（v1 时代）没写模型名，历史事实是全部用 zh-small 灌的
+-const legacyOk = dbModels.every(m => m === activeKey || (m === "(无)" && activeKey === "zh-small"));
+-if (!legacyOk) {
+-  console.error(`引擎不一致！库里是 [${dbModels.join(",")}]，当前查询用 ${activeKey}。先用 embed-book.js 把库灌成 ${activeKey} 再跑评测。`);
+-  process.exit(1);
+-}
+-
+-// 3) 跑卷子
+-const judge = (results, goldens) => {
+-  const low = results.map(r => r.text.toLowerCase());
+-  for (let i = 0; i < low.length; i++) {
+-    const g = goldens.find(x => low[i].includes(x.toLowerCase()));
+-    if (g) return { hit: true, rank: i + 1, golden: g };
+-  }
+-  return { hit: false };
+-};
+-
+-for (const rr of mode === "both" ? [false, true] : [mode === "on"]) {
+-  let hits = 0, latSum = 0, rankSum = 0, latMax = 0;
+-  const perBook = new Map();
+-  const misses = [];
+-  for (const e of valid) {
+-    const t0 = Date.now();
+-    const rs = await hybridSearch(path.join(LIB, e.file), e.q, TOPN, { rerank: rr });
+-    const lat = Date.now() - t0;
+-    latSum += lat; latMax = Math.max(latMax, lat);
+-    const { hit, rank } = judge(rs, e.g);
+-    if (hit) { hits++; rankSum += rank; } else misses.push(e.q);
+-    const b = perBook.get(e.book) || { n: 0, hit: 0 };
+-    b.n++; if (hit) b.hit++;
+-    perBook.set(e.book, b);
+-  }
+-  const rate = (100 * hits / valid.length).toFixed(0);
+-  console.log(`===== 复试官${rr ? "开" : "关"} =====`);
+-  for (const [b, s] of perBook) console.log(`  ${b.padEnd(34)} ${s.hit}/${s.n}`);
+-  console.log(`  总分: ${hits}/${valid.length} = ${rate} 分 | 首次命中平均第 ${(rankSum / Math.max(hits, 1)).toFixed(1)} 名 | 平均延迟 ${(latSum / valid.length).toFixed(0)}ms (最慢 ${latMax}ms)`);
+-  if (misses.length) console.log(`  漏题: ${misses.join(" | ")}`);
+-  console.log(`EVAL_RESULT ${JSON.stringify({ model: activeKey, rerank: rr, total: valid.length, hits, rate: +rate, avgLatencyMs: Math.round(latSum / valid.length) })}`);
+-  console.log("");
+-}

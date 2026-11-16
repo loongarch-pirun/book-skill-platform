@@ -1,8 +1,8 @@
 {
  "snapshotId": "r4-snapshot-20261115",
- "capturedAt": "2026-11-16T04:34:54.381Z",
+ "capturedAt": "2026-11-16T04:49:51.838Z",
  "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
- "treeSha16": "b10a6015fc183e9d",
+ "treeSha16": "274252a67996e637",
  "fileCount": 261,
  "facts": {
   "golden": {
@@ -41,8 +41,8 @@
   },
   "evalBaseline": null,
   "lastCodeChange": {
-   "path": "src/lib/search.mjs",
-   "mtime": "2026-11-16T04:10:34.146Z"
+   "path": "src/lib/vec-cache.mjs",
+   "mtime": "2026-11-16T04:43:38.070Z"
   },
   "release": [
    {
@@ -1027,9 +1027,9 @@
   },
   {
    "path": "src/lib/search.mjs",
-   "bytes": 52688,
-   "mtime": "2026-11-16T04:10:34.146Z",
-   "sha256": "6ca830fe4ebe9429978db7b62e8f130e90ebb4f0db39e149b258de13ea5f10b3"
+   "bytes": 54130,
+   "mtime": "2026-11-16T04:43:26.190Z",
+   "sha256": "1319cf4d5cf85969a2f05ef945a0e752ffe45211e04a3a5d05f1e1fbd649b375"
   },
   {
    "path": "src/lib/semantic-chunk.mjs",
@@ -1087,9 +1087,9 @@
   },
   {
    "path": "src/lib/vec-cache.mjs",
-   "bytes": 3905,
-   "mtime": "2026-11-16T03:54:17.212Z",
-   "sha256": "a3809b6f2e2be091b034f2dfbc45b1fc98ee5391cd6cbdf91e3292035dac7deb"
+   "bytes": 3901,
+   "mtime": "2026-11-16T04:43:38.070Z",
+   "sha256": "d94e9ac3943fc41a10fd0ba6cc27515c61eaed392934eedee597a41da83ea7d2"
   },
   {
    "path": "src/main.js",
@@ -1405,9 +1405,9 @@
   },
   {
    "path": "test/guard-test.mjs",
-   "bytes": 117937,
-   "mtime": "2026-11-16T04:09:31.503Z",
-   "sha256": "2ee70841e97069147b9fb8a528f95a7f5e76f525bb3bfa18606ae3e1cd123c2b"
+   "bytes": 118758,
+   "mtime": "2026-11-16T04:43:38.063Z",
+   "sha256": "1a104375c01dbc2d1032063004e96c26abf32b478daa5bf33d262e6580769f06"
   },
   {
    "path": "test/hallucination-fuzz.mjs",
@@ -1417,9 +1417,9 @@
   },
   {
    "path": "test/holdout-run.mjs",
-   "bytes": 9326,
-   "mtime": "2026-11-16T03:20:04.155Z",
-   "sha256": "80e15311f3ea15c2d5f48c00b0da73d6f71bfd8383085ebb2a9c7a901bb93f27"
+   "bytes": 10854,
+   "mtime": "2026-11-16T04:43:09.755Z",
+   "sha256": "416677a9480f7d76ccae42bc2dc81c56ed16c5a7eb5bfcd387f646c20a9b6f3f"
   },
   {
    "path": "test/holdout/baseline-v2.json",
@@ -1680,5 +1680,5 @@
    "sha256": "6ba80b3bc2ce102574ddac54641397ef9a74b3905902457fccafffaf7f3f6144"
   }
  ],
- "previousTreeSha16": "1538b1f834df8dc3"
+ "previousTreeSha16": "274252a67996e637"
 }

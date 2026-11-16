@@ -1,0 +1,747 @@
+{
+  "schema_version": "1",
+  "mode": "range",
+  "repository": "C:/Users/JIANG XIAO HUA/Desktop/book-skill-platform-r4",
+  "from": "main",
+  "to": "feat/quality-gate",
+  "merge_base": "aa5e12332e92da283160d4b0005e831d07d88f9a",
+  "total_files": 110,
+  "reviewable_count": 40,
+  "excluded_count": 70,
+  "total_insertions": 60802,
+  "total_deletions": 130,
+  "reviewable_files": [
+    {
+      "path": "eslint.config.mjs",
+      "status": "modified",
+      "insertions": 7,
+      "deletions": 3
+    },
+    {
+      "path": "package.json",
+      "status": "modified",
+      "insertions": 3,
+      "deletions": 2
+    },
+    {
+      "path": "src/feedback-export.mjs",
+      "status": "modified",
+      "insertions": 3,
+      "deletions": 3
+    },
+    {
+      "path": "src/lib/models.mjs",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 1
+    },
+    {
+      "path": "src/lib/search.mjs",
+      "status": "modified",
+      "insertions": 158,
+      "deletions": 43
+    },
+    {
+      "path": "src/lib/vec-cache.mjs",
+      "status": "modified",
+      "insertions": 10,
+      "deletions": 3
+    },
+    {
+      "path": "src/renderer/app.js",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "test/ftsliteral-test.mjs",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "test/golden-verify.mjs",
+      "status": "modified",
+      "insertions": 3,
+      "deletions": 9
+    },
+    {
+      "path": "test/graphrag-fuzz.mjs",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "test/guard-test.mjs",
+      "status": "modified",
+      "insertions": 110,
+      "deletions": 0
+    },
+    {
+      "path": "test/hallucination-fuzz.mjs",
+      "status": "modified",
+      "insertions": 21,
+      "deletions": 17
+    },
+    {
+      "path": "test/holdout-run.mjs",
+      "status": "added",
+      "insertions": 225,
+      "deletions": 0
+    },
+    {
+      "path": "test/holdout/baseline-v2.json",
+      "status": "added",
+      "insertions": 15,
+      "deletions": 0
+    },
+    {
+      "path": "test/holdout/baseline.json",
+      "status": "added",
+      "insertions": 15,
+      "deletions": 0
+    },
+    {
+      "path": "test/holdout/frozen-v2.json",
+      "status": "added",
+      "insertions": 22,
+      "deletions": 0
+    },
+    {
+      "path": "test/holdout/frozen.json",
+      "status": "added",
+      "insertions": 17,
+      "deletions": 0
+    },
+    {
+      "path": "test/holdout/sets/holdout-v1.json",
+      "status": "added",
+      "insertions": 505,
+      "deletions": 0
+    },
+    {
+      "path": "test/holdout/sets/holdout-v2.json",
+      "status": "added",
+      "insertions": 468,
+      "deletions": 0
+    },
+    {
+      "path": "test/ipc-test.mjs",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "test/judge-test.mjs",
+      "status": "modified",
+      "insertions": 10,
+      "deletions": 10
+    },
+    {
+      "path": "test/lib/book-alias.mjs",
+      "status": "added",
+      "insertions": 20,
+      "deletions": 0
+    },
+    {
+      "path": "test/lib/judge.mjs",
+      "status": "modified",
+      "insertions": 16,
+      "deletions": 9
+    },
+    {
+      "path": "test/quality-gate.mjs",
+      "status": "modified",
+      "insertions": 13,
+      "deletions": 13
+    },
+    {
+      "path": "tools/review-packet.mjs",
+      "status": "added",
+      "insertions": 156,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/对照脚本草稿/_probe.mjs",
+      "status": "added",
+      "insertions": 11,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/对照脚本草稿/_三题复查.mjs",
+      "status": "added",
+      "insertions": 20,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/对照脚本草稿/route-equiv-compare.cjs",
+      "status": "added",
+      "insertions": 331,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/对照脚本草稿/对比raw.cjs",
+      "status": "added",
+      "insertions": 62,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/核对一致性.cjs",
+      "status": "added",
+      "insertions": 145,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/生成清单.cjs",
+      "status": "added",
+      "insertions": 176,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/留出集草稿/冻结v2.cjs",
+      "status": "added",
+      "insertions": 64,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/留出集草稿/冻结脚本.cjs",
+      "status": "added",
+      "insertions": 99,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/留出集草稿/出题素材v2.cjs",
+      "status": "added",
+      "insertions": 49,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/留出集草稿/回源验真.cjs",
+      "status": "added",
+      "insertions": 47,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/留出集草稿/导出试卷v2.cjs",
+      "status": "added",
+      "insertions": 144,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/留出集草稿/自答复核.cjs",
+      "status": "added",
+      "insertions": 87,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/留出集草稿/起草v2.cjs",
+      "status": "added",
+      "insertions": 199,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/留出集草稿/起草脚本.cjs",
+      "status": "added",
+      "insertions": 113,
+      "deletions": 0
+    },
+    {
+      "path": "存档照/留出集草稿/验真v2.cjs",
+      "status": "added",
+      "insertions": 108,
+      "deletions": 0
+    }
+  ],
+  "excluded_files": [
+    {
+      "path": "README.md",
+      "status": "modified",
+      "insertions": 23,
+      "deletions": 10,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "docs/交接文档-2026-10-21.md",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 2,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "docs/代码审查标准与流程.md",
+      "status": "added",
+      "insertions": 161,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "docs/审查模板-改动说明.md",
+      "status": "added",
+      "insertions": 54,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "docs/收官打包与交接规划-2026-10-21.md",
+      "status": "modified",
+      "insertions": 3,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "docs/旧eval体系归档说明.md",
+      "status": "added",
+      "insertions": 54,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "docs/模型清单与包体基线.md",
+      "status": "added",
+      "insertions": 176,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "docs/真机验收勾选单.md",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "size-budget.json",
+      "status": "added",
+      "insertions": 96,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/lint-8-明细.txt",
+      "status": "added",
+      "insertions": 17,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/p1对照/raw-A-route-2026-11-15T18-09-40-915Z.json",
+      "status": "added",
+      "insertions": 8482,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/p1对照/raw-B-route-2026-11-15T18-09-40-915Z.json",
+      "status": "added",
+      "insertions": 8492,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/p2对照/raw-A-cache-2026-11-16T03-02-14-818Z.json",
+      "status": "added",
+      "insertions": 8482,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/p2对照/raw-B-cache-2026-11-16T03-02-14-818Z.json",
+      "status": "added",
+      "insertions": 8482,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/package.json.snapshot",
+      "status": "added",
+      "insertions": 143,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/quality-baseline.json",
+      "status": "added",
+      "insertions": 85,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/raw-golden80/raw-route-2026-11-15T17-36-09-795Z.json",
+      "status": "added",
+      "insertions": 8492,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/routeCfg-纸面定稿.md",
+      "status": "added",
+      "insertions": 192,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/version-manifest.json.snapshot",
+      "status": "added",
+      "insertions": 1624,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/参数快照.md",
+      "status": "added",
+      "insertions": 107,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/改动台账.md.snapshot",
+      "status": "added",
+      "insertions": 308,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/M0-改造前留档/留档说明.md",
+      "status": "added",
+      "insertions": 73,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/P1实施说明与接口契约-2026-11-16.md",
+      "status": "added",
+      "insertions": 264,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/P1路由层改造报告-2026-11-16.md",
+      "status": "added",
+      "insertions": 131,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/P2缓存接线-实施与验收-2026-11-16.md",
+      "status": "added",
+      "insertions": 250,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/lint-存量基线.md",
+      "status": "added",
+      "insertions": 81,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/version-manifest.json",
+      "status": "added",
+      "insertions": 1684,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/一致性核对结果.txt",
+      "status": "added",
+      "insertions": 44,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/今日开工计划-2026-11-15.md",
+      "status": "added",
+      "insertions": 111,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/全量回归报告-2026-11-16.md",
+      "status": "added",
+      "insertions": 88,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/冻结与首次跑分报告-2026-11-16.md",
+      "status": "added",
+      "insertions": 127,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/剩余工作项清单-2026-11-16.md",
+      "status": "added",
+      "insertions": 103,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/回归-2026-11-16/fast-rest.txt",
+      "status": "added",
+      "insertions": 1,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/回归-2026-11-16/基线对照备份/search.mjs.P1P2版",
+      "status": "added",
+      "insertions": 836,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/回归-2026-11-16/基线对照备份/vec-cache.mjs.P1P2版",
+      "status": "added",
+      "insertions": 80,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/存档照-2026-11-15.md",
+      "status": "added",
+      "insertions": 154,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/00-提审包.txt",
+      "status": "added",
+      "insertions": 63,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/commit-msgs/01.txt",
+      "status": "added",
+      "insertions": 13,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/commit-msgs/02.txt",
+      "status": "added",
+      "insertions": 16,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/commit-msgs/03.txt",
+      "status": "added",
+      "insertions": 15,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/commit-msgs/04.txt",
+      "status": "added",
+      "insertions": 13,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/commit-msgs/05.txt",
+      "status": "added",
+      "insertions": 4,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/commit-msgs/06.txt",
+      "status": "added",
+      "insertions": 11,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/commit-msgs/07.txt",
+      "status": "added",
+      "insertions": 1,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/commit-msgs/08.txt",
+      "status": "added",
+      "insertions": 1,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/提审记录-2026-11-16.md",
+      "status": "added",
+      "insertions": 162,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/改动说明-本批.md",
+      "status": "added",
+      "insertions": 70,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/提审-2026-11-16/翻转验证备份/search.mjs.正常",
+      "status": "added",
+      "insertions": 836,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/改动台账.md",
+      "status": "added",
+      "insertions": 729,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/方案A执行报告.md",
+      "status": "added",
+      "insertions": 118,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/方案复核报告.md",
+      "status": "added",
+      "insertions": 146,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/旧eval归档/eval-baseline.json",
+      "status": "renamed",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/旧eval归档/eval-gate.mjs",
+      "status": "renamed",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/旧eval归档/v2-eval.mjs",
+      "status": "renamed",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/模型配置核实报告-2026-11-16.md",
+      "status": "added",
+      "insertions": 130,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/留出集草稿/P1后跑分-2026-11-16.json",
+      "status": "added",
+      "insertions": 811,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/留出集草稿/holdout-DRAFT.json",
+      "status": "added",
+      "insertions": 655,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/留出集草稿/holdout-v2-DRAFT.json",
+      "status": "added",
+      "insertions": 461,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/留出集草稿/v2跑分-对照组旧行为-2026-11-16.json",
+      "status": "added",
+      "insertions": 804,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/留出集草稿/v2跑分-现行代码-2026-11-16.json",
+      "status": "added",
+      "insertions": 800,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/留出集草稿/出题说明.md",
+      "status": "added",
+      "insertions": 96,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/留出集草稿/回源验真结果.txt",
+      "status": "added",
+      "insertions": 36,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/留出集草稿/复核清单.md",
+      "status": "added",
+      "insertions": 55,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/留出集草稿/素材抽取记录.json",
+      "status": "added",
+      "insertions": 296,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/留出集草稿/自答复核-原文上下文.txt",
+      "status": "added",
+      "insertions": 107,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/留出集草稿/自答复核-扫描结果.txt",
+      "status": "added",
+      "insertions": 21,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/留出集草稿/自答复核报告.md",
+      "status": "added",
+      "insertions": 116,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/留出集草稿/首次跑分-2026-11-16.json",
+      "status": "added",
+      "insertions": 820,
+      "deletions": 0,
+      "exclude_reason": "user_exclude"
+    },
+    {
+      "path": "存档照/试卷-v2-2026-11-16.md",
+      "status": "added",
+      "insertions": 321,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "存档照/验收与评审优先级决策单.md",
+      "status": "added",
+      "insertions": 114,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    }
+  ]
+}

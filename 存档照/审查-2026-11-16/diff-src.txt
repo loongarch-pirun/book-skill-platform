@@ -1,0 +1,426 @@
+diff --git a/eslint.config.mjs b/eslint.config.mjs
+index db5aaf5..1dd72aa 100644
+--- a/eslint.config.mjs
++++ b/eslint.config.mjs
+@@ -16,6 +16,9 @@ export default [
+       "skills/**",
+       "catalog-results/**",
+       "catalog-tasks/**",
++      // 存档照：台账/报告/提审留痕 + 翻转验证的代码备份副本。含 .mjs 副本，
++      // 不排除会被当成源码再 lint 一遍（副本本来就不是要维护的代码）。
++      "存档照/**",
+     ],
+   },
+   js.configs.recommended,
+@@ -109,9 +112,10 @@ export default [
+     },
+   },
+   {
+-    // 测试文件：Node ESM（.mjs），靠 console 输出 PASS/FAIL 计数；
+-    // 此前 test/ 不在任何作用域内 → node globals 全 no-undef 的假阳性，纳管修掉
+-    files: ["test/**/*.mjs"],
++    // 测试与工具脚本：Node ESM（.mjs），靠 console 输出 PASS/FAIL 计数；
++    // 此前 test/ 不在任何作用域内 → node globals 全 no-undef 的假阳性，纳管修掉。
++    // tools/ 同款（review-packet.mjs 是提审前的提醒工具，同样靠 console 输出）。
++    files: ["test/**/*.mjs", "tools/**/*.mjs"],
+     languageOptions: {
+       sourceType: "module",
+       globals: {
+diff --git a/package.json b/package.json
+index 19efb69..1b8cac7 100644
+--- a/package.json
++++ b/package.json
+@@ -11,11 +11,12 @@
+     "lint": "eslint .",
+     "test:ci": "node test/stage0-format-test.mjs && node test/renderer-graph-test.mjs && node test/parser-fuzz.mjs && node test/paths-test.mjs && node test/skill-store-test.mjs && node test/skill-health-test.mjs && node test/llm-test.mjs && node test/llm-fuzz.mjs && node test/chat-archive-test.mjs && node test/feedback-pool-test.mjs && node test/archive-config-fuzz.mjs && node test/catalog-fuzz.mjs && node test/enrich-adversarial-fuzz.mjs && node test/derived-test.mjs && node test/shelf-assets-test.mjs && node test/book-view-test.mjs && node test/structurize-test.mjs && node test/entry-adversarial-fuzz.mjs",
+     "test:fast": "node test/paths-test.mjs && node test/guard-test.mjs && node test/stage0-format-test.mjs && node test/stage1-chunk-test.mjs && node test/parser-v3-test.mjs && node test/semantic-chunk-test.mjs && node test/enrich-fuzz.mjs && node test/enrich-import-test.mjs && node test/enrich-job-test.mjs && node test/enrich-adversarial-fuzz.mjs && node test/ftsliteral-test.mjs && node test/enrich-nom-test.mjs && node test/catalog-test.mjs && node test/skill-store-test.mjs && node test/skill-health-test.mjs && node test/renderer-graph-test.mjs && node test/parser-fuzz.mjs && node test/ipc-test.mjs && node test/llm-test.mjs && node test/llm-fuzz.mjs && node test/chat-archive-test.mjs && node test/feedback-pool-test.mjs && node test/derived-test.mjs && node test/shelf-assets-test.mjs && node test/book-view-test.mjs && node test/structurize-test.mjs && node test/archive-config-fuzz.mjs && node test/catalog-fuzz.mjs && node test/graphrag-fuzz.mjs && node test/browse-test.mjs && node test/query-rewrite-test.mjs && node test/entry-adversarial-fuzz.mjs  &&  node test/neighbor-test.mjs && node test/clean-test.mjs && node test/outline-test.mjs && node test/cite-check-test.mjs && node test/inline-clean-test.mjs && node test/theme-test.mjs && node test/usage-gate-test.mjs && node test/skill-validate-test.mjs && node test/judge-test.mjs",
+-    "test:slow": "node test/stage2-test.mjs && node test/stage3-mcp-test.mjs && node test/jobs-test.mjs && node test/perf-test.mjs && node test/soak-test.mjs && node test/jobs-fuzz.mjs && node test/hallucination-fuzz.mjs && node test/similar-fuzz.mjs && node test/chat-fuzz.mjs && node test/kk-clean-slow-test.mjs && node test/eval-gate.mjs",
++    "test:slow": "node test/stage2-test.mjs && node test/stage3-mcp-test.mjs && node test/jobs-test.mjs && node test/perf-test.mjs && node test/soak-test.mjs && node test/jobs-fuzz.mjs && node test/hallucination-fuzz.mjs && node test/similar-fuzz.mjs && node test/chat-fuzz.mjs && node test/kk-clean-slow-test.mjs",
+     "test": "npm run test:fast && npm run test:slow",
+     "test:judge": "node test/judge-test.mjs",
+     "test:gate": "node test/quality-gate.mjs",
+-    "eval": "node test/v2-eval.mjs --rerank both",
++    "eval": "node test/quality-gate.mjs",
++    "holdout": "node test/holdout-run.mjs",
+     "ingest": "node src/embed-all.js",
+     "mcp": "node src/mcp-server.mjs",
+     "backup": "node src/backup.mjs",
+diff --git a/src/feedback-export.mjs b/src/feedback-export.mjs
+index f938ac4..2c5ae3e 100644
+--- a/src/feedback-export.mjs
++++ b/src/feedback-export.mjs
+@@ -1,6 +1,6 @@
+ // 反馈样本池导出（V3 第三波-③）：pool.jsonl → markdown 草稿（按失败类型分组）。
+-// 升格流程：人工从草稿里挑题 → 金词回原文验真 → 候选题探针实跑（v2-eval 同款 judge）
+-// → 入考卷 test/v2-eval.mjs。本工具只读池子，不改任何数据。
++// 升格流程：人工从草稿里挑题 → 金词回原文验真 → 候选题探针实跑（关键词对照器同款判定）
++// → 入考卷 test/golden/<书名>.json。本工具只读池子，不改任何数据。
+ //
+ // 用法: node src/feedback-export.mjs [--lib DIR] [--out FILE] [--kind KIND] [--limit N]
+ //   --lib   书库目录（默认 resolveDirs：env BSP_LIB_DIR > 配置 > ./library）
+@@ -51,7 +51,7 @@ const lines = [];
+ lines.push("# 反馈样本池导出");
+ lines.push("");
+ lines.push(`> 池文件：${path.join(libDir, "feedback", "pool.jsonl")}（共 ${total} 条，本次导出 ${items.length} 条）`);
+-lines.push("> 升格流程：人工挑题 → 金词回原文验真 → 候选题探针实跑 → 入考卷（test/v2-eval.mjs）");
++lines.push("> 升格流程：人工挑题 → 金词回原文验真 → 候选题探针实跑 → 入考卷（test/golden/）");
+ lines.push("");
+ if (!items.length) lines.push("（池为空——还没有失败样本，或者都已处理）");
+ for (const k of kind ? [kind] : KINDS) {
+diff --git a/src/lib/models.mjs b/src/lib/models.mjs
+index c9bffe5..770a373 100644
+--- a/src/lib/models.mjs
++++ b/src/lib/models.mjs
+@@ -38,7 +38,8 @@ export const EMBED_MODELS = {
+ // 代价只有建库侧：批量编码 m3 是 86.2ms/块、e5 是 11.2ms/块（7.7 倍），
+ //   但查询侧只编码 1 条问题：m3 21.8ms、e5 6.8ms，差 15ms，用户感知不到。
+ //   模型体积 m3 542.1MB vs e5 112.6MB —— 这是唯一真金白银的代价，已计入本地模型总账。
+-// 回退：BSP_EMBED_MODEL=e5（旧库在 library.bak-e5/，拷回来即可）。
++// 回退：BSP_EMBED_MODEL=e5 —— 只能退引擎，退不回旧库：library.bak-e5/ 已不存在，
++// e5 是 384 维，与现有 13 本 m3/1024 维库不兼容（assertEngine 会逐本拒），真要回退需自己重灌向量。
+ export const DEFAULT_EMBED = process.env.BSP_EMBED_MODEL || "m3";
+ 
+ let _tf = null, _pipe = null, _pipeKey = null, _rerank = null;
+diff --git a/src/lib/search.mjs b/src/lib/search.mjs
+index bab3a7d..530236b 100644
+--- a/src/lib/search.mjs
++++ b/src/lib/search.mjs
+@@ -399,7 +399,7 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
+       // 所以只做最小干预：池内 sem 最高的块若不在重排后的 topN 内，替换掉末位。
+       // 不扩池（池子大小不变，被挤下的末位与它换位，进池不进 topN）——扩池会稀释
+       // 提示词、并让下游（邻块扩展/展示层）看到预算外的块。
+-      // 翻转判据：BSP_SEM_GUARD=0 → v2-eval rerank on 掉回 74/80=93，且漏题清单
++      // 翻转判据：BSP_SEM_GUARD=0 → 关键词口径的 80 题考卷掉回 74/80=93，且漏题清单
+       // 重新出现 what is the famous opening sentence about；默认开 → 75/80=94。
+       if (process.env.BSP_SEM_GUARD !== "0" && ranked.length > topN) {
+         let best = ranked[0];
+@@ -504,17 +504,38 @@ export async function multiVariantSearch(dbPath, questions, topN = 6) {
+ // 单调递减，去均值后 log(长度) 与余弦 Pearson r=-0.18），不设门槛时 top10 可能全被 13 字的
+ // 标题碎片占满。门槛只作用在「挑书信号」和「深召回头」上；合格块不足 K 条时按真实余弦补位
+ //（不硬塞 0 分——那样补位块在重排时反而会凭真分数挤掉答案，是统计口径作弊）。
+-const ROUTE_MIN_LEN = Math.max(0, +(process.env.BSP_ROUTE_MINLEN ?? 60)); // 碎片门槛（字数）
+-const ROUTE_SIG_TOPK = 3;      // 书级信号 = 该书合格块里前 3 条余弦的均值
+-const ROUTE_BOOKS = Math.max(1, +(process.env.BSP_ROUTE_BOOKS ?? 8));  // 深召回几本书
+-const ROUTE_KEEP = Math.max(2, +(process.env.BSP_ROUTE_K ?? 10));      // 每本深召回几条
++// 路由参数单一常量区。改成**只读快照函数**：routeAndSearch 入口取一次，一次问答内不漂移。
++// 为什么不在模块顶层读 env：桌面端进程长驻，顶层 const 让 BSP_ROUTE_* 变成假开关（改 env 必须重启）。
++// 默认值逐字等于改造前的值，不设任何 BSP_* 时行为与旧版逐字节一致。
++const ROUTE_DEFAULTS = Object.freeze({
++  minLen: 60, sigTopK: 3, books: 8, keep: 10, refW: 0.5, poolCap: 48, floorRatio: 0.3,
++});
++const _num = (v, fb, lo, hi) => {
++  const x = +(v ?? fb);
++  return Number.isFinite(x) ? Math.min(hi, Math.max(lo, x)) : fb;
++};
++function routeCfg() {
++  const d = ROUTE_DEFAULTS;
++  const poolEnv = process.env.BSP_ROUTE_POOL;   // "auto" | 数字 | 未设（未设 = 48，逐字节旧行为）
++  return Object.freeze({
++    enabled: process.env.BSP_ROUTE !== "0",     // 总闸：0 = 旧三段式全库扫描
++    minLen: _num(process.env.BSP_ROUTE_MINLEN, d.minLen, 0, 100000),
++    sigTopK: d.sigTopK,                          // 无开关，保持硬编码
++    books: _num(process.env.BSP_ROUTE_BOOKS, d.books, 1, 64),
++    keep: _num(process.env.BSP_ROUTE_K, d.keep, 2, 64),
++    refW: _num(process.env.BSP_ROUTE_REFW, d.refW, 0, 1),
++    poolCapMode: poolEnv === "auto" ? "auto" : "fixed",
++    poolCapFixed: poolEnv === "auto" ? d.poolCap : _num(poolEnv, d.poolCap, 1, d.poolCap),
++    poolCapHardMax: d.poolCap,                   // 48 硬上界，绝不突破（串行重排线性延迟）
++    floorRatio: d.floorRatio,                    // 0.3 默认不变
++    rerankBudgetMs: _num(process.env.BSP_RERANK_BUDGET_MS, 6000, 1000, 60000),
++    rerankCostMs: 128,                           // 无观测回退值（models.mjs 串行逐条实测 ~128ms）
++  });
++}
+ // 参考文献条（kind=ref）在路由结果里只降权不剔除：它们几乎从不是用户要的答案，却因为
+ // 词面高度重合而抢位（实测问 Lamport 事件序，Dynamo 参考文献里那行
+ // "[12] Lamport, L. Time, clocks, and the ordering of events..." 拿 0.554 挤到第 2）。
+ // 降权而不是剔掉：真有用户问「这篇论文引了谁」时它们还得能出来。
+-const ROUTE_REF_W = Math.min(1, Math.max(0, +(process.env.BSP_ROUTE_REFW ?? 0.5)));
+-const ROUTE_POOL_CAP = 48;     // 池子上限（重排逐条 128ms，48 条≈6s 是预算上限）
+-const ROUTE_FLOOR_RATIO = 0.3; // 书分 < 首名×0.3 视为不相关，不入选（避免每问都硬凑满 maxBooks）
+ // 「这篇/这本书/this paper」这类没点名的问句：任何排序器都猜不到用户指哪本（实测 probe-route5/6/10）。
+ // 与其赌一本答错，不如把候选书交给用户选。只在多本入选时提示，单本命中照常回答。
+ const VAGUE_REF_RE = /(?:这|那|该|此|本)\s*(?:本|篇|个)?\s*(?:书|論文|论文|文章|文檔|文档|教材|報告|报告)|this\s+(?:paper|book|article|document|story|novel)|the\s+(?:paper|book|article)|these\s+notes/i;
+@@ -529,31 +550,90 @@ async function scanBookSem(dbPath, embedKey, getQv) {
+     assertEngine(db, embedKey);  // 引擎/维度不一致 → 抛出，调用方记 skipped_books
+     const qv = await getQv();
+     const rows = [];
+-    for (const r of db.prepare("SELECT id, kind, length(text) len, emb FROM chunks WHERE emb IS NOT NULL").all()) {
+-      const v = new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4);
+-      // kind 只用来识别参考文献条（见 ROUTE_REF_W）：正文块与它同尺比较，ref 条在入池时降权
+-      rows.push({ id: r.id, kind: r.kind || "", len: r.len || 0, sem: cosine(qv, v) });
++    // 向量矩阵缓存（BSP_VEC_CACHE_MB=0 默认关）：命中则纯点积 + 一条**不读 BLOB**的轻量回表
++    // 拿 kind/len（tightPick 要 len、ref 降权要 kind）。未命中走原逐行 BLOB 分支，逐字节保留。
++    // 顺序铁律：assertEngine 必须在 getMatrix 之前——缓存只比字符串 engine，
++    // 不校验库内 meta.model 与维度（guard-test 段 9 / 9b 钉着）。
++    const mat = getMatrix(db, dbPath, embedKey);
++    if (mat) {
++      const sem = new Map();
++      matrixScores(mat, qv, sem);
++      for (const r of db.prepare("SELECT id, kind, length(text) len FROM chunks WHERE emb IS NOT NULL").all())
++        rows.push({ id: r.id, kind: r.kind || "", len: r.len || 0, sem: sem.get(r.id) ?? 0 });
++    } else {
++      for (const r of db.prepare("SELECT id, kind, length(text) len, emb FROM chunks WHERE emb IS NOT NULL").all()) {
++        const v = new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4);
++        // kind 只用来识别参考文献条（见 ROUTE_REF_W）：正文块与它同尺比较，ref 条在入池时降权
++        rows.push({ id: r.id, kind: r.kind || "", len: r.len || 0, sem: cosine(qv, v) });
++      }
+     }
+     rows.sort((a, b) => b.sem - a.sem);
+     return { hasSem: rows.length > 0, rows };
+   } finally { try { db.close(); } catch { /* 关失败无从补救，继续 */ } }
+ }
+ 
+-// 在已按余弦降序的行里取前 n 条：合格块（≥ROUTE_MIN_LEN）优先，不足 n 条时用短块按**真实余弦**
++// 在已按余弦降序的行里取前 n 条：合格块（≥cfg.minLen）优先，不足 n 条时用短块按**真实余弦**
+ // 补位（绝不塞 0 分——那样补位块在重排时会凭真分数挤掉答案，是统计口径作弊）。
+-function tightPick(rows, n) {
++function tightPick(rows, n, cfg) {
+   const out = [];
+-  for (const r of rows) if (r.len >= ROUTE_MIN_LEN) { out.push(r); if (out.length >= n) return out; }
+-  for (const r of rows) if (r.len < ROUTE_MIN_LEN) { out.push(r); if (out.length >= n) break; }
++  for (const r of rows) if (r.len >= cfg.minLen) { out.push(r); if (out.length >= n) return out; }
++  for (const r of rows) if (r.len < cfg.minLen) { out.push(r); if (out.length >= n) break; }
+   return out;
+ }
+ 
+-// 书级信号：合格块前 ROUTE_SIG_TOPK 条余弦的均值（不用 max——max 偏袒块多和块碎的书）
+-function bookSignal(rows) {
+-  const pick = tightPick(rows, ROUTE_SIG_TOPK);
++// 书级信号：合格块前 cfg.sigTopK 条余弦的均值（不用 max——max 偏袒块多和块碎的书）
++function bookSignal(rows, cfg) {
++  const pick = tightPick(rows, cfg.sigTopK, cfg);
+   return pick.length ? pick.reduce((s, r) => s + r.sem, 0) / pick.length : 0;
+ }
+ 
++// ---------- 候选书预筛（瓶颈①：不再逐本全扫） ----------
++// 信号只有一种：**问句里点了书名**（原名 / 美化名 / 锚点 / 别名）。
++// 为什么只做这一种：这是零模型、零向量、零开库的纯字面判断，不引入任何新的猜错风险。
++// 没有信号就不猜——直接退回全库扫描并标 route_source:"full"。宁可慢，不许因为猜错书
++// 把正确答案整本漏掉（这是本轮唯一的性能换质量风险点，用保守策略压到最小）。
++const BOOK_ALIAS = [
++  [/daodejing|dao-de-jing/i, ["道德经", "道德經", "老子"]],
++  [/lunyu/i, ["论语", "論語"]],
++  [/mengzi/i, ["孟子"]],
++  [/pg1260|jane-?eyre|简爱/i, ["简爱", "簡愛", "jane eyre"]],
++  [/pg1661|sherlock|福尔摩斯/i, ["福尔摩斯", "sherlock", "holmes"]],
++  [/pride-and-prejudice/i, ["傲慢与偏见", "傲慢與偏見", "pride and prejudice"]],
++  [/frankenstein/i, ["弗兰肯斯坦", "科学怪人", "科學怪人", "frankenstein"]],
++  [/dynamo/i, ["dynamo"]],
++  [/lamport/i, ["lamport", "时间时钟", "時間時鐘"]],
++  [/mapreduce/i, ["mapreduce"]],
++  [/attention/i, ["attention", "transformer"]],
++  [/低压电器/i, ["低压电器", "检测报告", "檢測報告", "实训报告"]],
++];
++const SELECT_MIN = 1;  // 命中 1 本即生效：问句点了书名就是最硬的信号
++
++function bookNameSignals(b) {
++  const out = new Set();
++  const add = (s) => { const t = String(s || "").trim().toLowerCase(); if (t.length >= 3) out.add(t); };
++  add(b.title);
++  add(prettyTitle(b.title));
++  for (const a of anchorsOf(prettyTitle(b.title))) add(a);
++  const raw = String(b.title || "");
++  for (const [re, alts] of BOOK_ALIAS) if (re.test(raw)) for (const a of alts) add(a);
++  return [...out];
++}
++
++// 返回 { target:[书], source:"prefilter"|"full"|"degraded", cands:[标题] }
++function selectBooks(question, books) {
++  const q = String(question || "").toLowerCase();
++  if (!q || books.length <= SELECT_MIN) return { target: books, source: "full", cands: [] };
++  const hit = [];
++  for (const b of books) {
++    if (bookNameSignals(b).some((s) => q.includes(s))) hit.push(b);
++  }
++  if (hit.length < SELECT_MIN) {
++    // 命中太少：要么问句没点书名，要么只点到一本却可能点偏——都退回全库
++    return { target: books, source: hit.length ? "degraded" : "full", cands: hit.map((b) => b.title) };
++  }
++  return { target: hit, source: "prefilter", cands: hit.map((b) => b.title) };
++}
++
+ // 截断之后才查正文与定位：只查进池的那几十条，不把整库正文读进来
+ function attachChunks(rows) {
+   const byBook = new Map();
+@@ -590,36 +670,67 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir
+   let qv = null;  // 问题向量全书库只编码一次
+   const getQv = async () => { if (!qv) { [qv] = await embed.embedQueries([q]); } return qv; };
+ 
+-  // ---------- 第一段：逐本全块语义扫描（原始余弦，跨书同尺） ----------
++  // ---------- 第一段：语义扫描（默认只扫预筛出来的候选书，BSP_ROUTE=0 时扫全库） ----------
++  const cfg = routeCfg();
++  // 总闸关 → 不调用 selectBooks（连标题分词都不做），逐字节回到旧的全库扫描
++  const sel = cfg.enabled ? selectBooks(q, books) : { target: books, source: "full", cands: [] };
++  const targetBooks = sel.target;
++
+   const considered = [];
+   const scanned = [];  // { b, rows, sig }；rows 已按原始余弦降序
+-  for (const b of books) {
+-    // D3 修复（标准轮段 2）：逐本隔离——better-sqlite3 的 open 是惰性的（只开句柄），
+-    // 坏文件头/坏页/坏向量都在首条查询才炸，所以整段拦。一本坏库跳过并记账，不挂掉全库问答
+-    //（对齐 listBooks 过滤语义）。scanBookSem 内部带 assertEngine 卫兵与 finally close。
+-    let res;
+-    try {
+-      res = await scanBookSem(b.db, embed.key, getQv);
+-    } catch (e) {
+-      skipped.push({ title: b.title, reason: `召回失败（${e.message}）` });
+-      continue;
++  const scanList = async (list) => {
++    for (const b of list) {
++      // D3 修复（标准轮段 2）：逐本隔离——better-sqlite3 的 open 是惰性的（只开句柄），
++      // 坏文件头/坏页/坏向量都在首条查询才炸，所以整段拦。一本坏库跳过并记账，不挂掉全库问答
++      //（对齐 listBooks 过滤语义）。scanBookSem 内部带 assertEngine 卫兵与 finally close。
++      let res;
++      try {
++        res = await scanBookSem(b.db, embed.key, getQv);
++      } catch (e) {
++        skipped.push({ title: b.title, reason: `召回失败（${e.message}）` });
++        continue;
++      }
++      // 未灌向量的库（build-only / embed 中断）记 0 分且不入池——graphrag-fuzz:112 钉着这条
++      //（considered[0].best_sim===0 且 routed 为空）；负余弦按 0 报，界面不该看到负数相似度。
++      if (!res.hasSem) { considered.push({ title: b.title, best_sim: 0, n: 0 }); continue; }
++      const sig = bookSignal(res.rows, cfg);
++      considered.push({ title: b.title, best_sim: +Math.max(0, sig).toFixed(3), n: res.rows.length });
++      scanned.push({ b, rows: res.rows, sig });
+     }
+-    // 未灌向量的库（build-only / embed 中断）记 0 分且不入池——graphrag-fuzz:112 钉着这条
+-    //（considered[0].best_sim===0 且 routed 为空）；负余弦按 0 报，界面不该看到负数相似度。
+-    if (!res.hasSem) { considered.push({ title: b.title, best_sim: 0, n: 0 }); continue; }
+-    const sig = bookSignal(res.rows);
+-    considered.push({ title: b.title, best_sim: +Math.max(0, sig).toFixed(3), n: res.rows.length });
+-    scanned.push({ b, rows: res.rows, sig });
++  };
++  await scanList(targetBooks);
++
++  // 兜底：预筛出来的书一本都没扫成（全坏库 / 全 build-only）时退回全库再扫一遍。
++  // 这一遍只在预筛彻底失败时才付代价，正常路径零成本。
++  if (cfg.enabled && sel.source === "prefilter" && scanned.length === 0 && targetBooks.length < books.length) {
++    considered.length = 0; skipped.length = 0;
++    await scanList(books);
++    sel.source = "degraded";
++  }
++
++  // 未扫描的书补同形状占位（零 DB 成本）：considered 是「翻了哪些书」的全量清单，
++  // graphrag-fuzz:117/:556 与 stage3-mcp-test:131 都钉着 length 必须等于书数。
++  // 必须在任何 considered.sort 之前补完，否则返回顺序与旧版不同。
++  if (considered.length < books.length) {
++    const seenT = new Set(considered.map((c) => c.title));
++    for (const b of books) if (!seenT.has(b.title)) considered.push({ title: b.title, best_sim: 0, n: 0 });
+   }
+ 
+-  // ---------- 第二段：只翻最像的 ROUTE_BOOKS 本，每本深召回 ROUTE_KEEP 条 ----------
++  // ---------- 第二段：只翻最像的 cfg.books 本，每本深召回 cfg.keep 条 ----------
+   scanned.sort((a, b) => b.sig - a.sig);
+   const pool = [];
+-  for (const { b, rows } of scanned.slice(0, ROUTE_BOOKS))
+-    for (const r of tightPick(rows, ROUTE_KEEP))
++  for (const { b, rows } of scanned.slice(0, cfg.books))
++    for (const r of tightPick(rows, cfg.keep, cfg))
+       pool.push({ id: r.id, sem: r.sem, db: b.db, book: b.title, bookId: b.id });
+ 
+-  // 去重后按原始余弦截到池子上限（重排逐条 ~128ms，ROUTE_POOL_CAP 就是耗时预算）
++  // 去重后按原始余弦截到池子上限（重排逐条 ~128ms，池子就是耗时预算）。
++  // 默认 poolCapFixed=48 → cap 恒 48，逐字节等于旧行为；BSP_ROUTE_POOL=auto 才启动态配额。
++  // 动态配额只用入池前已知量：候选书数 × 每本条数、重排预算、单条耗时。每本保底 2 条。
++  const scannedN = Math.min(scanned.length, cfg.books);
++  const candBlocks = scannedN * cfg.keep;
++  const autoCap = Math.min(cfg.poolCapHardMax,
++    Math.max(scannedN * 2, Math.round(cfg.rerankBudgetMs / cfg.rerankCostMs)));
++  const poolCap = cfg.poolCapMode === "auto" ? Math.min(candBlocks, autoCap) : cfg.poolCapFixed;
+   const seen = new Set();
+   const merged = [];
+   for (const c of pool.sort((a, b) => b.sem - a.sem)) {
+@@ -627,7 +738,7 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir
+     if (seen.has(k)) continue;
+     seen.add(k);
+     merged.push(c);
+-    if (merged.length >= ROUTE_POOL_CAP) break;
++    if (merged.length >= poolCap) break;
+   }
+   attachChunks(merged);
+   for (let i = merged.length - 1; i >= 0; i--) if (!merged[i].text) merged.splice(i, 1);  // 空正文进重排只会占预算
+@@ -652,7 +763,7 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir
+   // 但用户真问「这篇引了谁」时它还在榜上。
+   for (const r of merged) {
+     const base = r.rerank ?? r.score ?? 0;
+-    r.rank = base * (r.kind === "ref" ? ROUTE_REF_W : 1);
++    r.rank = base * (r.kind === "ref" ? cfg.refW : 1);
+   }
+ 
+   // ---------- 按书聚分：0.5×该书最好那条的有效分 + 0.5×(书级信号/池内首名信号) ----------
+@@ -682,7 +793,7 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir
+   // 向量/空库），必须排除（graphrag-fuzz:112 钉着 considered[0].best_sim===0 且 routed 为空）。
+   // maxBooks=0 直通空（graphrag-fuzz:551 钉着 lib 层这个语义，工具层用 clampMaxBooks 归一）
+   const bestMax = Math.max(0, ...[...byBook.values()].map(v => v.best));
+-  const floor = bestMax > 0 ? bestMax * ROUTE_FLOOR_RATIO : Infinity;
++  const floor = bestMax > 0 ? bestMax * cfg.floorRatio : Infinity;
+   const picked = maxBooks > 0 ? ranked.filter(b => b.best > 0 && b.best >= floor).slice(0, maxBooks) : [];
+ 
+   // ---------- 结果：先按入选书的书分次序，书内再按有效分排 ----------
+@@ -706,6 +817,10 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir
+     routed_books: picked.map(b => ({ id: b.bookId, title: b.book, best_sim: +Number(Math.min(1, b.bookScore)).toFixed(3) })),
+     considered: considered.sort((a, b) => b.best_sim - a.best_sim),
+     results,
++    // 诊断（纯加法，不改上面五个原有结构）：这次到底扫了哪些书、为什么这么扫。
++    // "prefilter" = 按书名预筛；"full" = 问句没点书名，扫全库（旧行为）；"degraded" = 命中太少退回全库。
++    route_source: sel.source,
++    route_candidates: targetBooks.map((b) => b.title),
+   };
+   // 没点名的问句（「这篇论文/这本书/this paper」）在「问全库」里天然没有指代对象——
+   // 用户没先选书，任何排序器都只能猜。实测（probe-route5/6/10、probe-ambiguous）：
+diff --git a/src/lib/vec-cache.mjs b/src/lib/vec-cache.mjs
+index ff1539f..0532c99 100644
+--- a/src/lib/vec-cache.mjs
++++ b/src/lib/vec-cache.mjs
+@@ -16,21 +16,26 @@ import fs from "node:fs";
+ 
+ const cache = new Map();   // dbPath -> { ids, matrix, dim, n, engine, mtimeMs, size, bytes, atime, centroid }
+ let totalBytes = 0;
++// 极轻观测（纯计数，不参与任何判断）：命中率是判断「要不要真开缓存」的唯一依据，
++// 不能只看 entries/mb 猜。字段加进 vecCacheStats，老调用方读 entries/mb 不受影响。
++let hits = 0, misses = 0, disabled = 0;
+ 
+ const maxBytes = () => (+(process.env.BSP_VEC_CACHE_MB ?? 0)) * 1048576;
+ 
+ // 取矩阵（自动失效/建缓存）；返回 null = 缓存关闭或库无向量，调用方走旧逐行路径
+ export function getMatrix(db, dbPath, embedKey) {
+   const cap = maxBytes();
+-  if (cap <= 0) { cache.clear(); totalBytes = 0; return null; }
++  if (cap <= 0) { cache.clear(); totalBytes = 0; disabled++; return null; }
+   let st;
+   try { st = fs.statSync(dbPath); } catch { return null; }
+   const ent = cache.get(dbPath);
+   if (ent && ent.engine === embedKey && ent.mtimeMs === st.mtimeMs && ent.size === st.size) {
+     ent.atime = Date.now();
++    hits++;
+     return ent;
+   }
+   if (ent) { totalBytes -= ent.bytes; cache.delete(dbPath); }
++  misses++;
+ 
+   const rows = db.prepare("SELECT id, emb FROM chunks WHERE emb IS NOT NULL").all();
+   if (!rows.length) return null;
+@@ -69,5 +74,7 @@ export function matrixScores(mat, qv, scores) {
+   }
+ }
+ 
+-export function clearVecCache() { cache.clear(); totalBytes = 0; }
+-export function vecCacheStats() { return { entries: cache.size, mb: +(totalBytes / 1048576).toFixed(1) }; }
++export function clearVecCache() { cache.clear(); totalBytes = 0; hits = 0; misses = 0; disabled = 0; }
++export function vecCacheStats() {
++  return { entries: cache.size, mb: +(totalBytes / 1048576).toFixed(1), hits, misses, disabled };
++}
+diff --git a/src/renderer/app.js b/src/renderer/app.js
+index b711154..2b39c18 100644
+--- a/src/renderer/app.js
++++ b/src/renderer/app.js
+@@ -82,7 +82,7 @@ async function maybeWizard(cfg) {
+       <p>· <b>从空白开始</b>：以后往书架里拖书就行</p>
+       <div class="wizard-note alpha"><b>Alpha 测试版</b>：这是早期版本，请勿当成品使用；功能、界面与数据格式都可能调整，遇到问题属正常。</div>
+       <div class="wizard-note backup"><b>先备份再开始</b>：建议先把你的书库文件夹（含 .db 与 books/ 原件）复制一份留底，再导入或加工书；加工与删除不可撤销。</div>
+-      <p style="font-size:12px">模型（约 700MB）已随安装包内置，不用下载。</p>
++      <p style="font-size:12px">模型（约 1.24GB）已随安装包内置，不用下载。</p>
+       <div class="wizard-btns">
+         ${seedBtn}
+         <button class="ghost" id="wzPick">选择现有书库文件夹</button>

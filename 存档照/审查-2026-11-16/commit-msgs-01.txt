@@ -1,0 +1,29 @@
+fix(route): 按审查结论修 6 处 + 守卫补 4 条断言
+
+审查来源：存档照/审查-2026-11-16/审查报告-2026-11-16.md（range main..feat/quality-gate）
+
+High（判据可被洗白）
+- holdout-run: --update-baseline 与 --gate 互斥，命中即 exit 2，且拦在开跑前。
+  原先两者同用会先写基线再比对，门禁必然通过，且毫无提示
+- holdout-run: 拒答判定统一 lowercase。判定词是英文专名（Docker/Python/Wi-Fi），
+  返回块写成小写时 includes 为 false → 漏判成「正确拒答」，判尺朝放宽方向错
+
+Medium（静默偏差）
+- search: 删掉 selectBooks 里不可达的 "degraded" 分支（SELECT_MIN=1 时只能等于 0 命中）；
+  "degraded" 改由兜底重扫唯一产生
+- search: route_candidates 改用 visited（实际进入扫描的书名）。degraded 时以前报预筛小名单、
+  实际扫了全库——诊断字段撒谎比没有更坏
+- search: 缓存命中分支先比 sem.size === light.length，不一致退回逐行 BLOB 并打一次性告警；
+  原先缺 id 静默记 0 分参与排序（WAL 未 checkpoint / 并发重建时会发生）
+- search: BOOK_ALIAS 删掉 transformer 词条，attention 只留多词短语。
+  通用英文词当书名信号会把「讲 transformer 的其他书」整本排除
+
+Low
+- vec-cache: disabled → skipped（语义是「因关闭而跳过的调用次数」，不是「坏了几次」）
+- guard: 隔离断言拆成两条（原来用 | 或匹配，删一半也能过）
+
+新增守卫（+4 → 347 项）：互斥开关存在、route_candidates 用 visited、缓存行数校验、
+v2 两卷各自的文件名模板各一条。
+
+验证：guard 347 全 PASS；holdout v1 27/30 门禁通过；perf 全 PASS（开/关逐位一致，
+2 万块 10ms vs 64ms）；graphrag 46/0；stage3 全 PASS；eslint 0 新增。
