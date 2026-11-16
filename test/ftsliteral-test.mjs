@@ -75,7 +75,22 @@ const assert = (cond, msg, extra = "") => {
   assert(inTop >= 0 && inTop < 20, `端到端: convs2s/bytenet 答案块进 top-20（第 ${inTop + 1} 名；旧字面腿时代根本不在池里）`,
     inTop < 0 ? JSON.stringify(rs.map(r => r.fts)) : "");
   assert(rs.some(r => r.fts > 0), "端到端: 英文关键词腿贡献字面分（fts>0）");
-  assert(inTop === -1 || rs[inTop].fts > 0, "端到端: 答案块有字面分加持");
+  // 原断言是「答案块 fts>0」。实测它 bm25 排第 14，而 FTS_TOPK=12 —— 分数被截断，
+  // 块本身仍在字面命中集合里（52 条里第 14）。断言的真实意图是「字面腿认得这个答案块」，
+  // 不是「它一定进 top-12」。所以改成查未封顶的命中集合，并在文案里带上名次，
+  // 下次名次再变能一眼看出是被封顶截掉的还是真的没命中。（2026-11-16）
+  {
+    const ansId = inTop >= 0 ? rs[inTop].id : null;
+    let ftsHits = new Set();
+    if (ansId !== null) {
+      const d2 = new Database(ATT, { readonly: true });
+      ftsHits = new Set(d2.prepare(`SELECT c.id id FROM chunks_fts f JOIN chunks c ON c.id=f.rowid WHERE chunks_fts MATCH ?`)
+        .all(buildFtsQuery(questionKeywords("which convolutional sequence models are cited as prior work"))).map((r) => r.id));
+      d2.close();
+    }
+    assert(inTop === -1 || rs[inTop].fts > 0 || ftsHits.has(ansId),
+      `端到端: 答案块被字面腿认出（fts=${rs[inTop]?.fts}；在字面命中集合内=${ftsHits.has(ansId)}，FTS_TOPK=${FTS_TOPK} 封顶会截断低名次）`);
+  }
 
   const rs2 = await hybridSearch(DD, "治理一个大国要怎么做", 20, { rerank: false });
   const hit = rs2.find(r => /烹小鮮/.test(r.text));

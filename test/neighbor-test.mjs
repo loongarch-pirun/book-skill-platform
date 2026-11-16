@@ -19,23 +19,27 @@ const assert = (cond, msg, extra = "") => {
 
 // ---------- 夹具：两章 md，第一章 5 段相邻段落（P1..P5 各带唯一词）----------
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "nbr-"));
+const FILLER = "这里补足正文长度以免被切片器合并，讲的是数组的连续内存布局与索引寻址方式，数组下标从零开始，越界访问属于未定义行为。";
+const para = (kw) => `${kw}段落独特词在这里。${FILLER.repeat(4)}`;
+// 每段都写长：2026-11 切片器会把同章短段合并，短夹具只剩 2 块 → topN=3 已覆盖全部块，
+// 邻块扩展没有"可扩的邻居"，断言永远红（2026-11-16 定位）。加长后 7 段出 4 块，扩展才有位置。
 const md = `# 数组
 
-数组第一章第一段落独特词苹果在这里。
+${para("苹果")}
 
-数组第一章第二段落独特词香蕉在这里。
+${para("香蕉")}
 
-数组第一章第三段落独特词樱桃在这里。
+${para("樱桃")}
 
-数组第一章第四段落独特词蜜桃在这里。
+${para("蜜桃")}
 
-数组第一章第五段落独特词柠檬在这里。
+${para("柠檬")}
 
 # 链表
 
-链表章第一段独特词西瓜在这里。
+${para("西瓜")}
 
-链表章第二段独特词芒果在这里。
+${para("芒果")}
 `;
 const mdPath = path.join(TMP, "nbr.md");
 fs.writeFileSync(mdPath, md, "utf8");
@@ -47,6 +51,21 @@ const dbPath = path.join(TMP, "nbr.md.db");
   try { await buildBook.main([mdPath, "-o", dbPath, "--force", "--title", "nbr"]); } finally {
     console.error = oe; console.log = ol; process.exitCode = keep;
   }
+}
+// 补章信息（2026-11-16）：邻块扩展的判据是「同章」（search.mjs 显式写了 null 章不扩），
+// 而 .md 走的是纯文本解析分支，buildBook 不给 chapter/chapter_path（pdf 分支同样为 null）。
+// 夹具要验的是「同章扩展」这条正常路径，所以建完库自己打上章：前 5 段属「数组」，后 2 段属「链表」。
+// 不打这一刀，夹具就永远只能验「null 章不扩」——那条已经被默认关/跨章两处覆盖了。
+{
+  const w = new Database(dbPath);
+  const rows = w.prepare("SELECT id, text FROM chunks ORDER BY id").all();
+  const setCh = w.prepare("UPDATE chunks SET chapter = ?, chapter_path = ? WHERE id = ?");
+  for (const r of rows) {
+    const inArray = /苹果|香蕉|樱桃|蜜桃|柠檬/.test(r.text);
+    const ch = inArray ? "数组" : "链表";
+    setCh.run(ch, ch, r.id);
+  }
+  w.close();
 }
 const db = new Database(dbPath, { readonly: true });
 const chunks = db.prepare("SELECT id, chapter, text FROM chunks ORDER BY id").all();
