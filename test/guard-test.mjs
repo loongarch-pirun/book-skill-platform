@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import crypto from "node:crypto";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
@@ -1538,6 +1539,115 @@ const copyDb = (src) => {
   const svSrc = stripComments(readSrc("src", "skill-validate.mjs"));
   ok(/BSP_SKILLS_DIR/.test(svSrc),
     "静态: skill-validate CLI 同款 env 兜底（安装态也能跑校验）");
+}
+
+// ========== 留出集：冻结完整性 + 两套卷子隔离 ==========
+// 为什么钉这一组：留出集是唯一能回答「改造有没有真的变好」的独立卷子。
+// 它一旦被悄悄改题，或者与同源 80 题混到一条管线里，判据就自己失效了——
+// 这种失效没有任何报错，只能靠静态断言守。
+{
+  const projRoot = path.join(import.meta.dirname, "..");
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+  const holdDir = path.join(import.meta.dirname, "holdout");
+  const frozenP = path.join(holdDir, "frozen.json");
+  ok(fs.existsSync(frozenP), "留出集: frozen.json 存在（卷子已冻结才允许跑分）");
+
+  const fz = JSON.parse(fs.readFileSync(frozenP, "utf8"));
+  const setP = path.join(projRoot, fz.file);
+  ok(fs.existsSync(setP), `留出集: 卷子文件按 frozen.json 登记路径可寻（${fz.file}）`);
+
+  const buf = fs.readFileSync(setP);
+  const sha = crypto.createHash("sha256").update(buf).digest("hex");
+  ok(sha === fz.sha256, `留出集: 卷子 sha256 与冻结记录逐字节一致（${sha.slice(0, 12)}…）`);
+
+  const setObj = JSON.parse(buf.toString("utf8"));
+  ok(setObj.frozen === true && setObj.status === "FROZEN" && setObj.total === 30,
+    `留出集: 状态 FROZEN 且题数 30（实际 ${setObj.status}/${setObj.total}）`);
+  ok(setObj.byKind?.answerable > 0 && setObj.byKind?.refusal > 0
+    && setObj.byKind?.ambiguous > 0 && setObj.byKind?.newbook > 0,
+    `留出集: 四类题型齐全（${JSON.stringify(setObj.byKind)}）`);
+  ok(setObj.items.every(it => it.kind !== "refusal" || (Array.isArray(it.absent) && it.absent.length > 0)),
+    "留出集: 每道拒答题都带 absent 判定词（否则拒答无法自动判分）");
+
+  // 两套卷子严格隔离：同源 80 题只配当回归门禁，不许冒充效果证据
+  const gateSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "quality-gate.mjs"), "utf8"));
+  const holdSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "holdout-run.mjs"), "utf8"));
+  ok(!/holdout/i.test(gateSrc), "隔离: quality-gate 不引用 holdout（同源卷子不许碰独立卷子）");
+  ok(!/golden/i.test(holdSrc), "隔离: holdout-run 不引用 golden（独立卷子不许借同源答案）");
+
+  // 第二卷（v2）：同款冻结校验 + 与 v1 不得共用同一块原文
+  const f2P = path.join(holdDir, "frozen-v2.json");
+  ok(fs.existsSync(f2P), "留出集v2: frozen-v2.json 存在（第二卷已冻结）");
+  const f2 = JSON.parse(fs.readFileSync(f2P, "utf8"));
+  const buf2 = fs.readFileSync(path.join(projRoot, f2.file));
+  const sha2 = crypto.createHash("sha256").update(buf2).digest("hex");
+  ok(sha2 === f2.sha256, `留出集v2: 卷子 sha256 与冻结记录一致（${sha2.slice(0, 12)}…）`);
+  const set2 = JSON.parse(buf2.toString("utf8"));
+  const used1 = new Set(setObj.items.filter(x => x.chunk_id).map(x => `${x.book}#${x.chunk_id}`));
+  const reuse = set2.items.filter(x => x.chunk_id && used1.has(`${x.book}#${x.chunk_id}`));
+  ok(set2.frozen === true && set2.total === 30 && reuse.length === 0,
+    `留出集v2: 30 题 FROZEN 且不复用 v1 的任何一块原文（复用 ${reuse.length} 处）`);
+  // 每卷的基线不得互相覆盖
+  ok(/frozen-\$\{SUFFIX\}|baseline-\$\{SUFFIX\}/.test(holdSrc),
+    "隔离: 两卷各自的 frozen / baseline 文件按 setId 后缀区分，不互相覆盖");
+}
+
+// ========== 路由层静态契约（P1）==========
+// 为什么钉这一组：路由层有三个必须同时成立的东西——预筛存在、回滚开关存在、默认值没被偷改。
+// 任何一个丢了，行为都会静默变化（变慢或变不准），而普通回归测试抓不到「参数被调松」。
+{
+  const stripComments = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+  const searchSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "search.mjs"), "utf8"));
+  const modelSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "models.mjs"), "utf8"));
+
+  ok(/function routeCfg\(\)/.test(searchSrc) && /const ROUTE_DEFAULTS = Object\.freeze\(/.test(searchSrc),
+    "路由: routeCfg() 与 ROUTE_DEFAULTS 存在（参数只读快照，问答内不漂移）");
+  ok(/function selectBooks\(question, books\)/.test(searchSrc),
+    "路由: selectBooks 预筛存在（瓶颈① 的唯一入口）");
+  ok(searchSrc.indexOf("function selectBooks") < searchSrc.indexOf("export async function routeAndSearch"),
+    "路由: selectBooks 定义在 routeAndSearch 之前（不能是事后补的桩）");
+  ok(/process\.env\.BSP_ROUTE !== "0"/.test(searchSrc),
+    "路由: BSP_ROUTE!==\"0\" 总闸判断存在（一键回滚到旧全库扫描）");
+
+  // 默认值逐字等于改造前的值：这是防「静默调参」的唯一硬防线
+  const want = { minLen: 60, sigTopK: 3, books: 8, keep: 10, refW: 0.5, poolCap: 48, floorRatio: 0.3 };
+  const block = (searchSrc.match(/const ROUTE_DEFAULTS = Object\.freeze\(\{([\s\S]*?)\}\)/) || [])[1] || "";
+  const got = Object.fromEntries([...block.matchAll(/(\w+):\s*([\d.]+)/g)].map((m) => [m[1], +m[2]]));
+  ok(Object.keys(want).every((k) => got[k] === want[k]),
+    `路由: ROUTE_DEFAULTS 七项默认值逐字等于改造前（${JSON.stringify(got)}）`);
+
+  // 新增的返回字段必须有断言守着：没人依赖的字段删掉不会红灯，等于没加（2026-11-16 提审 🔴）
+  {
+    const out = await routeAndSearch("《道德经》第十五章开头用哪两个词形容古之善為士者？", { libDir: LIB });
+    ok(typeof out.route_source === "string" && ["prefilter", "full", "degraded"].includes(out.route_source),
+      `路由: route_source 存在且取值受控（${out.route_source}）`);
+    ok(Array.isArray(out.route_candidates) && out.route_candidates.length >= 1
+      && out.route_candidates.every((x) => typeof x === "string"),
+      `路由: route_candidates 是非空书名字符串数组（${out.route_candidates?.length ?? 0} 本）`);
+    // 原有五个字段一个都不许少
+    ok(Array.isArray(out.routed_books) && Array.isArray(out.considered) && Array.isArray(out.results)
+      && out.considered.length === listBooks(LIB).length,
+      `路由: 原有五字段结构不变且 considered 覆盖全库（${out.considered.length} 本）`);
+  }
+
+  // assertEngine 调用点不许减少：4 处（catalog:365 / search:223 / search:529 / similar:49 改造前口径）
+  const countEngine = (src) => (src.match(/\bassertEngine\(/g) || []).length;
+  ok(countEngine(searchSrc) >= 2 && countEngine(modelSrc) >= 1,
+    `路由: assertEngine 调用点未减少（search ${countEngine(searchSrc)} 处 / models ${countEngine(modelSrc)} 处）`);
+  // 关键顺序：assertEngine 必须在 getMatrix 之前（缓存只比字符串 engine，不校验库内维度）
+  const seg = searchSrc.slice(searchSrc.indexOf("async function scanBookSem"), searchSrc.indexOf("function tightPick"));
+  ok(seg.indexOf("assertEngine(") > 0 && seg.indexOf("getMatrix(") > 0
+      && seg.indexOf("assertEngine(") < seg.indexOf("getMatrix("),
+    "缓存: scanBookSem 内 assertEngine 先于 getMatrix（引擎卫兵不能被缓存绕过）");
+  ok(/matrixScores\(mat, qv, sem\)/.test(seg) && /length\(text\) len FROM chunks WHERE emb IS NOT NULL/.test(seg),
+    "缓存: 命中分支用 matrixScores + 一条不读 BLOB 的轻量回表拿 kind/len");
+
+  // 缓存默认必须是关：不设环境变量时行为逐字节等于改造前
+  const vecSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "vec-cache.mjs"), "utf8"));
+  ok(/BSP_VEC_CACHE_MB \?\? 0/.test(vecSrc) && /cap <= 0/.test(vecSrc),
+    "缓存: 默认关闭（BSP_VEC_CACHE_MB ?? 0）且 cap<=0 早退保留（不设变量 = 旧行为）");
+  ok(/hits/.test(vecSrc) && /misses/.test(vecSrc),
+    "缓存: 命中/未命中计数存在（要不要真开缓存只能靠它判，不能靠 entries 猜）");
 }
 
 fs.rmSync(tmp, { recursive: true, force: true });

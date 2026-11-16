@@ -38,7 +38,8 @@ export const EMBED_MODELS = {
 // 代价只有建库侧：批量编码 m3 是 86.2ms/块、e5 是 11.2ms/块（7.7 倍），
 //   但查询侧只编码 1 条问题：m3 21.8ms、e5 6.8ms，差 15ms，用户感知不到。
 //   模型体积 m3 542.1MB vs e5 112.6MB —— 这是唯一真金白银的代价，已计入本地模型总账。
-// 回退：BSP_EMBED_MODEL=e5（旧库在 library.bak-e5/，拷回来即可）。
+// 回退：BSP_EMBED_MODEL=e5 —— 只能退引擎，退不回旧库：library.bak-e5/ 已不存在，
+// e5 是 384 维，与现有 13 本 m3/1024 维库不兼容（assertEngine 会逐本拒），真要回退需自己重灌向量。
 export const DEFAULT_EMBED = process.env.BSP_EMBED_MODEL || "m3";
 
 let _tf = null, _pipe = null, _pipeKey = null, _rerank = null;

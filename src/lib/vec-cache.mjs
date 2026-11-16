@@ -16,21 +16,26 @@ import fs from "node:fs";
 
 const cache = new Map();   // dbPath -> { ids, matrix, dim, n, engine, mtimeMs, size, bytes, atime, centroid }
 let totalBytes = 0;
+// 极轻观测（纯计数，不参与任何判断）：命中率是判断「要不要真开缓存」的唯一依据，
+// 不能只看 entries/mb 猜。字段加进 vecCacheStats，老调用方读 entries/mb 不受影响。
+let hits = 0, misses = 0, disabled = 0;
 
 const maxBytes = () => (+(process.env.BSP_VEC_CACHE_MB ?? 0)) * 1048576;
 
 // 取矩阵（自动失效/建缓存）；返回 null = 缓存关闭或库无向量，调用方走旧逐行路径
 export function getMatrix(db, dbPath, embedKey) {
   const cap = maxBytes();
-  if (cap <= 0) { cache.clear(); totalBytes = 0; return null; }
+  if (cap <= 0) { cache.clear(); totalBytes = 0; disabled++; return null; }
   let st;
   try { st = fs.statSync(dbPath); } catch { return null; }
   const ent = cache.get(dbPath);
   if (ent && ent.engine === embedKey && ent.mtimeMs === st.mtimeMs && ent.size === st.size) {
     ent.atime = Date.now();
+    hits++;
     return ent;
   }
   if (ent) { totalBytes -= ent.bytes; cache.delete(dbPath); }
+  misses++;
 
   const rows = db.prepare("SELECT id, emb FROM chunks WHERE emb IS NOT NULL").all();
   if (!rows.length) return null;
@@ -69,5 +74,7 @@ export function matrixScores(mat, qv, scores) {
   }
 }
 
-export function clearVecCache() { cache.clear(); totalBytes = 0; }
-export function vecCacheStats() { return { entries: cache.size, mb: +(totalBytes / 1048576).toFixed(1) }; }
+export function clearVecCache() { cache.clear(); totalBytes = 0; hits = 0; misses = 0; disabled = 0; }
+export function vecCacheStats() {
+  return { entries: cache.size, mb: +(totalBytes / 1048576).toFixed(1), hits, misses, disabled };
+}
