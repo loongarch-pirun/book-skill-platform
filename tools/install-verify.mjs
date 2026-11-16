@@ -133,17 +133,20 @@ const uninstallerSize = uninstaller ? fs.statSync(path.join(INSTDIR, uninstaller
 assert(!!uninstaller && uninstallerSize > 50 * 1024,
   `④ 卸载器：${uninstaller || "缺失"}（${uninstallerSize} B）`);
 
-// ⑤ 注册表
-let regOk, regVersion = "", regUninst = "";
+// ⑤ 注册表（2026-11-16：沙箱把 reg.exe 拉黑，改用 PowerShell 读，避免误判「无项」）
+let regOk, regVersion, regUninst;
 try {
-  const out = execFileSync("reg", ["query", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall", "/s", "/f", "BookSkill"],
-    { encoding: "latin1", stdio: ["ignore", "pipe", "ignore"] });
-  regVersion = (out.match(/DisplayVersion\s+REG_SZ\s+(\S+)/) || [])[1] || "";
-  regUninst = (out.match(/UninstallString\s+REG_SZ\s+(.+)/) || [])[1]?.trim() || "";
+  const raw = execFileSync("powershell", ["-NoProfile", "-Command",
+    "(Get-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*' -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like '*BookSkill*' } | Select-Object -First 1 DisplayVersion,UninstallString) | ConvertTo-Json -Compress"],
+    { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  const j = raw ? JSON.parse(raw) : null;
+  regVersion = (j && j.DisplayVersion) || "";
+  regUninst = (j && j.UninstallString) || "";
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
   regOk = regVersion === pkg.version && regUninst.toLowerCase().includes(INSTDIR.toLowerCase());
 } catch {
   regOk = false;
+  regVersion = "(查询失败：powershell 不可用)";
 }
 assert(regOk, `⑤ 注册表：displayVersion=${regVersion || "无"}，uninstall=${regUninst || "无"}`);
 
