@@ -1,0 +1,11 @@
+{
+ "version": "0.1.1",
+ "gitHead": "f76b7d4",
+ "gitHeadFull": "f76b7d4be62778f81becb8e297f6f12988e3ef32",
+ "builtAt": "2026-11-16T13:55:54.560Z",
+ "exe": "release/BookSkillPlatform Setup 0.1.1.exe",
+ "bytes": 1937243680,
+ "sha256": "6d3cae85d2fcc612f4d373df22778f71bf084212f46f82fdfd97fdff41059643",
+ "tests": "test:fast=43/43; ftsliteral=46/46; enrich-nom=OBSERVE; neighbor=15/15; packaged-verify=PASS",
+ "gate": "release-check 四项全过"
+}

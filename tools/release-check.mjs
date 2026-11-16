@@ -26,7 +26,14 @@ import { pathToFileURL } from "node:url";
 const ROOT = path.join(import.meta.dirname, "..");
 const WANT_JSON = process.argv.includes("--json");
 const WANT_RECORD = process.argv.includes("--record");
-const TESTS = (process.argv.find((a) => a.startsWith("--tests=")) || "").slice("--tests=".length);
+// --tests=xxx 与 --tests xxx 两种写法都认（2026-11-16 第一次 --record 踩过：空格写法被吞成空串）
+let TESTS = "";
+{
+  const eq = process.argv.find((a) => a.startsWith("--tests="));
+  const at = process.argv.indexOf("--tests");
+  if (eq) TESTS = eq.slice("--tests=".length);
+  else if (at >= 0 && process.argv[at + 1]) TESTS = process.argv[at + 1];
+}
 
 const problems = [];
 const warnings = [];
