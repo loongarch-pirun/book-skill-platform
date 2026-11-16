@@ -1,0 +1,17 @@
+PASS - asar(unpacked) 里有 better-sqlite3 的 win32-x64 预编译绑定
+PASS - asar(unpacked) 里有 onnxruntime-node win32/x64 binding
+PASS - asar 里有 src 三件套（main/engine/renderer）
+PASS - onnxruntime-web 已剔除（141MB wasm，node 版 transformers 不 require 它）
+PASS - onnxruntime-node 的 darwin/linux 二进制已剔除
+PASS - onnxruntime-node win32/arm64 已剔除
+PASS - better-sqlite3 非 win32-x64 prebuilds 已剔除
+PASS - @napi-rs/canvas 已剔除（pdfjs 可选依赖，我们只做文本提取不渲染页面——下面有真解 PDF 背书）
+  体积：app.asar 90MB + app.asar.unpacked 95MB = 185MB（过滤前约 470MB）
+PASS - 瘦身生效：合计 185MB < 190MB
+PASS - 过滤后的树真跑 embedding：输出 1×384（e5 384 维——onnxruntime 加载链没被砍断）
+PASS - 过滤后的树真解 PDF（4 页）+ docx（16 章）——pdfjs 无 canvas 降级正常，导入链没断
+PASS - 打包 exe STONE3 自检通过（sqlite 3.53.4 + fts5 trigram 在 Electron ABI 下 OK）
+
+========== 打包验收结果 ==========
+全部 PASS：asar 清单对账 + 过滤后树真跑模型 + 打包 exe 自检
+PV_EXIT=0

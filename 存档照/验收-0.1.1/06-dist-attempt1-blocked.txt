@@ -1,0 +1,28 @@
+
+> book-skill-platform@0.1.1 dist
+> node tools/release-check.mjs && electron-builder --win nsis
+
+========== 交付核对闸（打包前） ==========
+仓库：C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r4
+版本：0.1.1 HEAD：d5f5873 远端 main：d5f5873
+书库：13 个 .db 默认引擎：m3（1024 维）
+
+PASS · ① 提交号一致
+FAIL · ② 工作区干净
+   - 工作区有 1 项未提交/未跟踪：
+   -   ?? "\345\255\230\346\241\243\347\205\247/\351\252\214\346\224\266-0.1.1/06-dist.txt"
+PASS · ③ 文档数字对账
+PASS · ④ 冻结卷版本
+
+警告（不阻断）：7 条
+   · docs/收官打包与交接规划-2026-10-21.md:19 残留旧数字「700MB」（历史归档，仅警告）：| 上个安装包 | `release/BookSkillPlatform Setup 0.1.0.exe` = 156MB，**纯代码**。
+   · docs/收官打包与交接规划-2026-10-21.md:40 残留旧数字「700MB」（历史归档，仅警告）：| `onnx-community/bge-reranker-v2-m3-ONNX/onnx/model_int8.onnx` + toke
+   · docs/收官打包与交接规划-2026-10-21.md:93 残留旧数字「700MB」（历史归档，仅警告）：- **向导改版**（app.js）：三个选项——①「使用内置书库（推荐，18 本书 + 7 个技能 + 模型已就绪）」②「选择现有书库文件
+   · docs/收官打包与交接规划-2026-10-21.md:208 残留旧数字「700MB」（历史归档，仅警告）：| 3 | 模型文案有三处，规划只提了向导一处 | 还有 app.js:105 `$("#sideFoot").textContent="模
+   · docs/全量复盘-2026-11-02.md:329 残留旧数字「701MB」（历史归档，仅警告）：| 发布 | 源码 | GitHub Release | **701MB 安装包 + 首启向导 + 种子化** |
+   · docs/暴力测试计划-V2融合轮.md:99 残留旧数字「700MB」（历史归档，仅警告）：**登记（13 项）**：V2-D16 citations 非可迭代 TypeError（一行防御，归入 D02 批顺手修）／D17 cla
+   · docs/代码审查标准与流程.md:18 残留旧数字「fp32」（历史归档，仅警告）：| 文档写 reranker 是 fp32，代码是 int8、磁盘上也没有 fp32 权重 | 一致性：三处说法不同步 | 关 1 |
+
+结论：3 项通过 / 1 项失败 —— 禁止打包。
+修完再跑：node tools/release-check.mjs
+DIST_EXIT=1

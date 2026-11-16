@@ -2,11 +2,11 @@
   "$comment": "包体与本地化门禁配置。数字为 2026-11-16 实测，口径以 docs/模型清单与包体基线.md 为准；改本文件必须同步改该文档。",
   "measuredAt": "2026-11-16",
   "installer": {
-    "path": "release/BookSkillPlatform Setup 0.1.0.exe",
-    "bytes": 1936705243,
+    "path": "release/BookSkillPlatform Setup 0.1.1.exe",
+    "bytes": 1937243680,
     "gib": 1.8,
     "gb": 1.94,
-    "builtAt": "2026-11-15T11:48:00+08:00",
+    "builtAt": "2026-11-16T21:38:00+08:00",
     "compressionRatio": 1.57
   },
   "budget": {

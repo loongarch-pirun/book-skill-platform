@@ -1,0 +1,59 @@
+
+> book-skill-platform@0.1.1 dist
+> node tools/release-check.mjs && electron-builder --win nsis
+
+========== 交付核对闸（打包前） ==========
+仓库：C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r4
+版本：0.1.1 HEAD：d5f5873 远端 main：d5f5873
+书库：13 个 .db 默认引擎：m3（1024 维）
+
+PASS · ① 提交号一致
+PASS · ② 工作区干净
+PASS · ③ 文档数字对账
+PASS · ④ 冻结卷版本
+
+警告（不阻断）：7 条
+   · docs/收官打包与交接规划-2026-10-21.md:19 残留旧数字「700MB」（历史归档，仅警告）：| 上个安装包 | `release/BookSkillPlatform Setup 0.1.0.exe` = 156MB，**纯代码**。
+   · docs/收官打包与交接规划-2026-10-21.md:40 残留旧数字「700MB」（历史归档，仅警告）：| `onnx-community/bge-reranker-v2-m3-ONNX/onnx/model_int8.onnx` + toke
+   · docs/收官打包与交接规划-2026-10-21.md:93 残留旧数字「700MB」（历史归档，仅警告）：- **向导改版**（app.js）：三个选项——①「使用内置书库（推荐，18 本书 + 7 个技能 + 模型已就绪）」②「选择现有书库文件
+   · docs/收官打包与交接规划-2026-10-21.md:208 残留旧数字「700MB」（历史归档，仅警告）：| 3 | 模型文案有三处，规划只提了向导一处 | 还有 app.js:105 `$("#sideFoot").textContent="模
+   · docs/全量复盘-2026-11-02.md:329 残留旧数字「701MB」（历史归档，仅警告）：| 发布 | 源码 | GitHub Release | **701MB 安装包 + 首启向导 + 种子化** |
+   · docs/暴力测试计划-V2融合轮.md:99 残留旧数字「700MB」（历史归档，仅警告）：**登记（13 项）**：V2-D16 citations 非可迭代 TypeError（一行防御，归入 D02 批顺手修）／D17 cla
+   · docs/代码审查标准与流程.md:18 残留旧数字「fp32」（历史归档，仅警告）：| 文档写 reranker 是 fp32，代码是 int8、磁盘上也没有 fp32 权重 | 一致性：三处说法不同步 | 关 1 |
+
+结论：4 项全过 —— 可以打包（HEAD d5f5873）。
+  • electron-builder  version=26.15.3 os=10.0.19044
+  • loaded configuration  file=package.json ("build" field)
+  • skipped dependencies rebuild  reason=npmRebuild is set to false
+  • packaging       platform=win32 arch=x64 electron=44.7.0 appOutDir=release\win-unpacked
+  • downloaded      label=electron progress=100%
+  • downloaded electron zip extracted successfully  output=C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r4\release\win-unpacked
+  • searching for node modules  pm=npm searchDir=C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r4
+  • duplicate dependency references  dependencies=["@emnapi/runtime@1.11.3","ajv@8.20.0","express@5.3.0","mime-types@3.0.2","debug@4.4.3","http-errors@2.0.1","iconv-lite@0.7.3","on-finished@2.4.1","qs@6.16.0","raw-body@3.0.2","type-is@2.1.0","debug@4.4.3","debug@4.4.3","on-finished@2.4.1","get-intrinsic@1.3.0","call-bind-apply-helpers@1.0.2","call-bind-apply-helpers@1.0.2","es-object-atoms@1.1.2","call-bound@1.0.4","get-intrinsic@1.3.0","side-channel-map@1.0.1","debug@4.4.3","debug@4.4.3","http-errors@2.0.1","mime-types@3.0.2","on-finished@2.4.1","send@1.2.1","mime-types@3.0.2","http-errors@2.0.1"]
+  • updating asar integrity executable resource  executablePath=release\win-unpacked\BookSkillPlatform.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\python.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\pythonw.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\venv\scripts\nt\python.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\venv\scripts\nt\pythonw.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\setuptools\cli-32.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\setuptools\cli-64.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\setuptools\cli-arm64.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\setuptools\cli.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\setuptools\gui-32.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\setuptools\gui-64.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\setuptools\gui-arm64.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\setuptools\gui.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\pip\_vendor\distlib\t32.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\pip\_vendor\distlib\t64-arm.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\pip\_vendor\distlib\t64.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\pip\_vendor\distlib\w32.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\pip\_vendor\distlib\w64-arm.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\pip\_vendor\distlib\w64.exe
+  • signing with signtool.exe  path=release\win-unpacked\resources\runtime\mineru-python\Lib\site-packages\mineru_llama_cpp\bin\llama-server.exe
+  • signing with signtool.exe  path=release\win-unpacked\BookSkillPlatform.exe
+  • building        target=nsis file=release\BookSkillPlatform Setup 0.1.1.exe archs=x64 oneClick=true perMachine=false
+  • signing with signtool.exe  path=release\win-unpacked\resources\elevate.exe
+  • signing with signtool.exe  path=release\BookSkillPlatform Setup 0.1.1.__uninstaller.exe
+  • signing with signtool.exe  path=release\BookSkillPlatform Setup 0.1.1.exe
+  • building block map  blockMapFile=release\BookSkillPlatform Setup 0.1.1.exe.blockmap
+DIST_EXIT=0

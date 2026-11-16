@@ -1,8 +1,8 @@
 {
  "snapshotId": "r4-snapshot-20261115",
- "capturedAt": "2026-11-16T13:28:51.100Z",
+ "capturedAt": "2026-11-16T13:42:04.564Z",
  "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
- "treeSha16": "3bc56b82f9933776",
+ "treeSha16": "cc5b078afa236af7",
  "fileCount": 267,
  "facts": {
   "golden": {
@@ -46,19 +46,19 @@
   },
   "release": [
    {
-    "name": "BookSkillPlatform Setup 0.1.0.exe",
-    "bytes": 1936705243,
-    "mtime": "2026-11-15T03:48:26.951Z"
+    "name": "BookSkillPlatform Setup 0.1.1.exe",
+    "bytes": 1937243680,
+    "mtime": "2026-11-16T13:38:39.470Z"
    },
    {
-    "name": "BookSkillPlatform Setup 0.1.0.exe.blockmap",
-    "bytes": 2015457,
-    "mtime": "2026-11-15T03:49:26.226Z"
+    "name": "BookSkillPlatform Setup 0.1.1.exe.blockmap",
+    "bytes": 2015305,
+    "mtime": "2026-11-16T13:39:38.823Z"
    },
    {
     "name": "builder-debug.yml",
     "bytes": 9978,
-    "mtime": "2026-11-15T03:49:26.259Z"
+    "mtime": "2026-11-16T13:39:38.859Z"
    }
   ],
   "logs": [
@@ -302,8 +302,8 @@
   {
    "path": "docs/模型清单与包体基线.md",
    "bytes": 8564,
-   "mtime": "2026-11-16T12:49:05.955Z",
-   "sha256": "d8e30edc0fb02cff0cede876fa39f78fbfe28cd8679c45c1293949c9f68692de"
+   "mtime": "2026-11-16T13:41:24.330Z",
+   "sha256": "280c95aab0ab8c471617fa70f85ef12e0ae05862e87772a3c21791f984a0c7ff"
   },
   {
    "path": "docs/全量复盘-2026-11-02.md",
@@ -476,8 +476,8 @@
   {
    "path": "README.md",
    "bytes": 10286,
-   "mtime": "2026-11-16T12:49:05.899Z",
-   "sha256": "56288c2506804b353e243c3bcad616544a5062a5e952bc8de643b3da5f4048b2"
+   "mtime": "2026-11-16T13:41:24.270Z",
+   "sha256": "1e7ee2dbd1bdb62a7583292515a220bbfd602666ca79365c8a5b7087cab94f1e"
   },
   {
    "path": "skills/book-intake/cheatsheet.md",
@@ -1716,5 +1716,5 @@
    "sha256": "6ba80b3bc2ce102574ddac54641397ef9a74b3905902457fccafffaf7f3f6144"
   }
  ],
- "previousTreeSha16": "9746abbd21151f5c"
+ "previousTreeSha16": "cc5b078afa236af7"
 }
