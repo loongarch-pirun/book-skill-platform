@@ -1,0 +1,26 @@
+feat(mcp): list_books 带书籍简介 —— 智能体自己看简介选书，系统不再替它猜
+
+为什么做：现在 list_books 只给「标题/格式/块数/token量」，模型只能凭书名猜该翻哪本。
+加一句「这本书讲什么」，模型自己就能判断，而且能多轮追问——把「猜」从系统的向量相似度
+转到模型擅长的语义判断上，且不改任何检索逻辑。
+
+为什么不用现成的 88 条 theme note 拼：实测它们是**标签不是简介**——
+福尔摩斯 16 个 theme 平均 6 字，全是篇名（「红发会」「身份案」）；论语是繁体；
+低压电器 0 个 theme。拼出来是一张目录，模型看了仍不知道书讲什么。
+
+- src/lib/book-summaries.json（新增）：13 本各一条 87–169 字简介，键 = 库 id
+  （title 会重名：lunyu 的 docx 与 pdf 同 title，不能用 title 当键）
+- src/backfill-summary.mjs（新增）：把 JSON 写进各库 meta.book_summary，
+  幂等 upsert + --check 盘点。照 src/backfill-meta.mjs 的形状。
+  注意 build-book 整库重建会删库，重建后要重跑本脚本。
+- src/lib/search.mjs（scanBooks）：返回体加 summary 字段（无简介为 null）
+- src/lib/register-tools.mjs：list_books 描述明确写「按 summary 判断哪本书可能回答，
+  不要只凭书名猜；拿不准再调 list_catalog 或 query_library」——不改这句，字段加了也白加
+- library/*.db 13 本写入 meta.book_summary（库不入 git，回补脚本可复现）
+
+成本：JSON 5924→7792 字符（+31%）。list_books 是 metadata 档，gateCall 直接短路、
+estimateDeepReadChars 返回 0，**不存在预算闸门**，不会撞限；代价只在模型上下文。
+
+验收：guard 357→**361 项全 PASS**（新增 4 条：字段必在、≥80% 非空、≤200 字、描述要求用 summary）；
+`test:fast` 42→**43 套全绿**；80 题 gate 五项**逐位不变**（0.725/0.725/3.837/0.55/0.0031）；
+holdout v1 **30/30**、v2 **27/30** 均未被影响。
