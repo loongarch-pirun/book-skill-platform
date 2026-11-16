@@ -142,6 +142,9 @@ export function prettyTitle(raw) {
   let s = String(raw || "").replace(/\.(pdf|epub|docx|md|txt)$/i, "");
   s = s.replace(/^pg\d+[-_]/i, "");                    // Gutenberg 编号：pg1260-简爱 → 简爱
   s = s.replace(/[-_](en|zh|cn|ja|de|fr)$/i, "");      // 语言后缀：pride-and-prejudice-en
+  // 故意的：判据就是「整串是否都在 ASCII 区」，控制字符范围是判据本身不是笔误；
+  // 改成 codePoint 循环只会更难读。
+  // eslint-disable-next-line no-control-regex
   if (/^[\x00-\x7F]+$/.test(s)) {                      // 纯 ASCII 才还原连字符与首字母
     s = s.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
     s = s.replace(/\b[a-z]/g, (m) => m.toUpperCase());
@@ -159,7 +162,7 @@ export function anchorsOf(title) {
   out.add(t);
   const noYear = t.replace(/[-_\s]*\d{4}$/, "").trim();
   if (noYear) out.add(noYear);
-  const head = t.split(/[:：—–\-]/)[0].trim();
+  const head = t.split(/[:：—–-]/)[0].trim();
   if (head) out.add(head);
   const ascii = (t.match(/[A-Za-z][A-Za-z0-9]{2,}/g) || []).sort((a, b) => b.length - a.length)[0];
   if (ascii) out.add(ascii);
@@ -179,7 +182,7 @@ function anchorGate(db, dbPath, title) {
   let hit = null;
   for (const a of anchorsOf(title)) {
     const esc = a.replace(/[\\%_]/g, "\\$&");  // % _ \ 当字面量：书名里出现它们不许当通配符
-    let n = 0;
+    let n;  // catch 分支会赋 0，初值多余（与 engine.mjs 同款）
     try { n = db.prepare("SELECT count(*) c FROM chunks WHERE text LIKE ? ESCAPE '\\'").get(`%${esc}%`).c; }
     catch { n = 0; }
     if (n > 0) { hit = { anchor: a, hits: n }; break; }
@@ -625,7 +628,14 @@ const SELECT_MIN = 1;  // 命中 1 本即生效：问句点了书名就是最硬
 
 function bookNameSignals(b) {
   const out = new Set();
-  const add = (s) => { const t = String(s || "").trim().toLowerCase(); if (t.length >= 3) out.add(t); };
+  // 门槛按语种分：ASCII 至少 3 字符（防 "a" 之类噪声）；汉字至少 2 字——
+  // 两个字的书名是常态（简爱／论语／孟子／老子），按 3 字卡会把中文别名整批作废
+  //（2026-11-16 单测实测：问「简爱在桑菲尔德遇到了谁」预筛完全没命中，退回全扫）。
+  const add = (s) => {
+    const t = String(s || "").trim().toLowerCase();
+    const minLen = /[\u4e00-\u9fff]/.test(t) ? 2 : 3;
+    if (t.length >= minLen) out.add(t);
+  };
   add(b.title);
   add(prettyTitle(b.title));
   for (const a of anchorsOf(prettyTitle(b.title))) add(a);
@@ -634,8 +644,10 @@ function bookNameSignals(b) {
   return [...out];
 }
 
-// 返回 { target:[书], source:"prefilter"|"full"|"degraded", cands:[标题] }
-function selectBooks(question, books) {
+// 返回 { target:[书], source:"prefilter"|"full", cands:[标题] }
+// 注："degraded" 不由这里产生——它只由 routeAndSearch 的兜底重扫设置。
+// 导出仅为单测可及（test/selectbooks-test.mjs 三分支），运行路径不变。
+export function selectBooks(question, books) {
   const q = String(question || "").toLowerCase();
   if (!q || books.length <= SELECT_MIN) return { target: books, source: "full", cands: [] };
   const hit = [];
