@@ -1,8 +1,8 @@
 {
  "snapshotId": "r4-snapshot-20261115",
- "capturedAt": "2026-11-16T04:29:40.167Z",
+ "capturedAt": "2026-11-16T04:34:54.381Z",
  "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
- "treeSha16": "1538b1f834df8dc3",
+ "treeSha16": "b10a6015fc183e9d",
  "fileCount": 261,
  "facts": {
   "golden": {
@@ -283,9 +283,9 @@
   },
   {
    "path": "docs/旧eval体系归档说明.md",
-   "bytes": 3625,
-   "mtime": "2026-11-15T13:10:32.557Z",
-   "sha256": "3972be773f2d67ce2342138b20dffa86be84493f9dd7336a7cd31b917152a4f2"
+   "bytes": 3669,
+   "mtime": "2026-11-16T04:34:35.529Z",
+   "sha256": "a775a0b3b99ebd2bc053dd0d3e5211b50645cf969e52f7753c9a8331505dbf3a"
   },
   {
    "path": "docs/可行性分析-通用个人知识库平台.md",
@@ -1680,5 +1680,5 @@
    "sha256": "6ba80b3bc2ce102574ddac54641397ef9a74b3905902457fccafffaf7f3f6144"
   }
  ],
- "previousTreeSha16": "daff46b5064c3a81"
+ "previousTreeSha16": "1538b1f834df8dc3"
 }

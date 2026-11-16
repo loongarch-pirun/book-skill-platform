@@ -10,7 +10,7 @@
 | `test/eval-gate.mjs` | 与 `eval-baseline.json` 比分数、比漏题的双门回归门禁 | `存档照/旧eval归档/eval-gate.mjs` |
 | `test/eval-baseline.json` | 2026-10-20 基线（e5 / 125 题 / 93 分 / rerankOff 79） | `存档照/旧eval归档/eval-baseline.json` |
 
-三份原件完整保留在工作区 `D:\新建文件夹\2026-11-15-18-22-57\存档照\旧eval归档\`，可随时回滚。项目目录内已无这三个文件。
+三份原件完整保留在仓库内 `存档照/旧eval归档/`（2026-11-16 起随存档照一起纳入版本管理，原先在工作区），可随时回滚。项目源码目录内已无这三个文件。
 
 `package.json` 同步：`test:slow` 摘掉 `eval-gate.mjs`；`npm run eval` 与 `npm run test:gate` 现在都指向 `test/quality-gate.mjs`（同一处入口）。CI 本来就不跑 eval，无需改动。
 

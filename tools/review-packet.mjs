@@ -113,8 +113,8 @@ for (const f of files) {
 }
 
 // ---------- 5) 留痕检查 ----------
-const manifest = path.join(ROOT, "..", "存档照", "version-manifest.json");
-const hasManifest = fs.existsSync(path.join("D:/新建文件夹/2026-11-15-18-22-57/存档照", "version-manifest.json"));
+// 存档照 2026-11-16 起就在仓库根目录下（原先在工作区），所以按 ROOT 相对取，不写死绝对路径
+const hasManifest = fs.existsSync(path.join(ROOT, "存档照", "version-manifest.json"));
 
 // ---------- 6) 输出 ----------
 const LV = { A: "A 轻（文档/注释）", B: "B 中（测试/脚本）", C: "C 重（生产码/配置/尺子/卷子）" };
@@ -139,8 +139,10 @@ if (redline.length) {
 }
 
 console.log("\n--- 留痕提醒 ---");
-console.log("  台账：在 存档照/改动台账.md（不在本仓库，git 看不见）——手动确认补了一行八列");
-console.log(`  存档照：${hasManifest ? "存在。改完跑 node 存档照/生成清单.cjs <r4> 重拍并记新指纹" : "⚠ 找不到 存档照/version-manifest.json"}`);
+// 存档照 2026-11-16 起入库，台账就在本仓库里，git 能直接看见
+const ledgerTouched = files.some((f) => /存档照\/改动台账\.md$/.test(f.path));
+console.log(`  台账：${ledgerTouched ? "已在本批改动里" : "⚠ 记得在 存档照/改动台账.md 补一行八列（改代码必填）"}`);
+console.log(`  存档照：${hasManifest ? "存在。改完跑 node 存档照/生成清单.cjs . 重拍并记新指纹" : "⚠ 找不到 存档照/version-manifest.json"}`);
 
 if (level === "C") {
   console.log("\n--- 人工审查重点（关 3）---");
@@ -152,4 +154,3 @@ if (level === "C") {
   }
 }
 console.log("\n提醒：本工具只列清单，不代替判断。标准见 docs/代码审查标准与流程.md");
-void manifest;
