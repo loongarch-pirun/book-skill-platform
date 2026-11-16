@@ -1652,6 +1652,17 @@ const copyDb = (src) => {
   ok(/sem\.size === light\.length/.test(seg),
     "缓存: 命中分支校验矩阵与库行数一致（不一致退回逐行，不静默记 0）");
 
+  // 编目信号默认只记账不参与排序（2026-11-16）：实测 80 题 cat 全开 0.7125 vs 全关 0.725，
+  // 净 -1 题、0 题获益。三条默认值必须一起守——少守一条就能被悄悄改回"参与排序"。
+  ok(/BSP_CATALOG_POOL === "1"/.test(searchSrc) && /if \(POOL_W\) p\.score \+= CATALOG_W \* sig\.w/.test(searchSrc),
+    "编目: 池内加权默认关（BSP_CATALOG_POOL===\"1\" 才加，且加成受该开关控制）");
+  ok(/BSP_CATALOG_NOM === "1"/.test(searchSrc) && /if \(NOM_ON && cat\.hit\.size\)/.test(searchSrc),
+    "编目: 池外提名默认关（BSP_CATALOG_NOM===\"1\" 才提名，不许无条件塞门槛块）");
+  ok(/NOM_ACTIVE \? 8 : 0/.test(searchSrc),
+    "编目: 复试窗只在提名真开启时 +8（原来按 cat.hit.size 判，提名关了仍撑宽候选集）");
+  ok(/\(POOL_W \|\| NOM_ON\)\)\s*\?/.test(searchSrc) && /BSP_CATALOG_TIE \|\| 0\.02\) : 0/.test(searchSrc),
+    "编目: 终排 tie-break 默认 0（reranker 分差仅 0.0004~0.03，0.02 会主导而非裁决）");
+
   // 缓存默认必须是关：不设环境变量时行为逐字节等于改造前
   const vecSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "vec-cache.mjs"), "utf8"));
   ok(/BSP_VEC_CACHE_MB \?\? 0/.test(vecSrc) && /cap <= 0/.test(vecSrc),

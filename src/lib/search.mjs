@@ -316,10 +316,21 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
   for (const id of new Set([...nf.keys(), ...ns.keys()]))
     pool.set(id, { id, score: ftsW * (nf.get(id) || 0) + (1 - ftsW) * (ns.get(id) || 0), fts: nf.get(id) || 0, sem: ns.get(id) || 0 });
 
-  // 池内命中：加权（低频人物/强主题信号权重高，高频名字几乎不加权）
+  // 池内命中：默认只**记录**信号、不参与池内排序（BSP_CATALOG_POOL=1 恢复旧行为）
+  // 为什么默认不加：池内加分会改写「凭字面/语义实力进窗」的顺序，而这个信号容易误伤——
+  // frankenstein「creature ask victor to create for him」的答案块把怪物写作 "The being"，
+  // mention 边没连上它（cat 信号为空），而一堆闲聊提 Victor 的块各拿 w=1.0，
+  // 0.3×1 的加成直接把答案块从池内第 2 挤到 20 席之外 → 从 full@2 变 miss。
+  // 信号本身仍有价值（提名 + 终排 tie-break），故不废除，只把它从「改序」降为「近并列裁决」。
+  // 开关：BSP_CATALOG_POOL=1 恢复「池内加权」旧行为；默认关。
+  // 实测依据（2026-11-16，80 题同源闸门）：
+  //   cat 全开 0.7125 / 全关 0.725 —— 池内加权 + 提名 + 扩窗整条路净 -1 题、0 题获益。
+  //   唯一变化题 frankenstein「creature ask victor to create for him」：答案块写 "The being"，
+  //   没被 mention 边连上（cat 为空），而提 Victor 的闲聊块各拿 w=1.0 → 被顶出复试窗。
+  const POOL_W = process.env.BSP_CATALOG_POOL === "1";
   for (const [cid, sig] of cat.hit) {
     const p = pool.get(+cid);
-    if (p) { p.score += CATALOG_W * sig.w; p.cat = sig.tag; p.catW = sig.w; }
+    if (p) { if (POOL_W) p.score += CATALOG_W * sig.w; p.cat = sig.tag; p.catW = sig.w; }
   }
   // 池内命中（模式 2 加权腿）：洗数据信号加权（镜像编目池内逻辑）
   if (ENRICH_MODE === 2) for (const [cid, sig] of enr.hit) {
@@ -332,7 +343,13 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
   // 提名门槛：信号太弱的块不配提名——高频人物（如 352 块都提"达西"）的命中是噪声，
   // 乱提名会挤掉真正凭实力进窗的答案块（实测把 pemberley 英文题从过打到漏）
   const nominations = [];
-  if (cat.hit.size) {
+  // 开关：BSP_CATALOG_NOM=1 恢复「池外提名」旧行为；默认关。
+  // 理由同上（实测净 -1），且这条**还会扩窗**：提名把复试窗从 20 撑到 28——
+  //   复试官（bge-reranker int8）在这批英文块上的分差只有 0.0004~0.03，
+  //   候选从 20 变 28 等于重掷骰子，答案块 #436 从第 2 名掉到 20 名外。
+  //   即「多给门票」本身就有代价，不只是门票内容的问题。
+  const NOM_ON = process.env.BSP_CATALOG_NOM === "1";
+  if (NOM_ON && cat.hit.size) {
     const W_FLOOR = { person: 0.2, theme: 0.3 };
     const out = [...cat.hit.entries()].map(([id, s]) => ({ id: +id, w: s.w, tag: s.tag }))
       .filter(x => !pool.has(x.id));
@@ -360,10 +377,24 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
   // 初筛：混合分取宽（topN×4 封顶 20），交给复试官精选
   // 编目/洗数据信号命中时窗口扩 8 席（封顶 28）：证据块常排在 20 名开外，
   // 它们的字面/语义分不高但独立证据硬——多给 8 张复试门票，由复试官终审裁决
-  const RECALL = Math.min(Math.max(topN * 4, 12), 20) + ((cat.hit.size || enr.hit.size) ? 8 : 0);
+  const RECALL_BASE = Math.min(Math.max(topN * 4, 12), 20);
+  // 扩窗的唯一理由 = 真的有提名机制要往里塞块。原来按 cat.hit.size 判（信号非空就 +8），
+  // 而实测那条路提名 0 个、只把池内窗口从 20 撑到 28——候选变宽本身就是代价
+  // （复试官分差 0.0004~0.03，多 8 个候选等于重掷骰子）。判据跟着开关走：
+  // 提名关 → 不扩窗（与关编目的基线口径逐位一致）；提名开 → 恢复旧行为。
+  const NOM_ACTIVE = (NOM_ON && cat.hit.size > 0) || (ENRICH_MODE === 1 && enr.hit.size > 0);
+  const RECALL = RECALL_BASE + (NOM_ACTIVE ? 8 : 0);
+  // 池内席位不许被提名挤占（2026-11-16 修）：原来是 RECALL - nominations.length，
+  // 编目命中时提名最多 12 个 → 28-12=16，池内席位反而从 20 **缩到 16**。
+  // 注释承诺的是「多给 8 张复试门票」，实现却「既多给票又没收座位」——凭实力进窗的
+  // 块被提名顶掉，与扩窗意图正好相反。实测代价：frankenstein「creature ask victor to
+  // create for him」的答案块 #436（fts=0 / sem=0.827 / 无 cat 信号，池内原本第 2）
+  // 掉出 16 席 → 从 full@2 变 miss，同源 80 题 0.725→0.7125。
+  // 修法：池内保底 RECALL_BASE 席，提名作为额外门票叠加（总窗最多 20+12=32）。
+  // 不动 CATALOG_W / 不改任何打分公式——只把「席位分配」改回注释本来写的意思。
   const regular = [...pool.values()].filter(p => !p.nom)
     .sort((a, b) => b.score - a.score)
-    .slice(0, Math.max(RECALL - nominations.length, 4));
+    .slice(0, Math.max(RECALL - nominations.length, RECALL_BASE));
   const merged = [...regular, ...nominations].sort((a, b) => b.score - a.score);
 
   // P3-② chapter_path 渐进采用：列随重建出现（老库无列），探测后再取——
@@ -382,7 +413,12 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
     const rerankFn = await getReranker();
     if (rerankFn) {
       const scores = await rerankFn(q, final.map(r => r.text));
-      const TIE = CATALOG_ON ? +(process.env.BSP_CATALOG_TIE || 0.02) : 0;
+      // 终排 tie-break：默认 0（与池内加权/提名同属「cat 不参与排序」）。
+      // 为什么 0.02 也不是"近并列裁决"：bge-reranker int8 在英文块上的分差实测只有
+      // 0.0004~0.03，0.02 的加成足以翻转真实排序——没有 catW 的答案块（如 #436 写
+      // "The being"，mention 边没连上）会被一批 w=1.0 的闲聊块集体压下去。
+      // 要开：BSP_CATALOG_TIE=0.02（配合 BSP_CATALOG_POOL/NOM 一起，才是一个完整回滚单元）。
+      const TIE = (CATALOG_ON && (POOL_W || NOM_ON)) ? +(process.env.BSP_CATALOG_TIE || 0.02) : 0;
       let ranked = final.map((r, i) => ({ ...r, rerank: +scores[i].toFixed(4) }))
         .sort((a, b) => (b.rerank + TIE * ((b.catW || 0) + (b.enrW || 0))) - (a.rerank + TIE * ((a.catW || 0) + (a.enrW || 0))));
 
