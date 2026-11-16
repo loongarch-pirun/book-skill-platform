@@ -45,6 +45,18 @@ const LIMIT = Number(arg("limit", 0)) || 0;
 const ONLY = arg("only", null);
 const OUT = arg("out", null);
 
+// ---------- 0) 互斥检查：更新基线与开门禁不许同时用 ----------
+// 为什么必须拦住：写基线的代码在门禁之前，两者同时给出时门禁读的就是刚写的新基线，
+// 于是「怎么退步都通过」——判据被一条命令洗白，且没有任何提示。
+// 拦在跑之前而不是写盘之前：一次整卷要 4 分钟，没必要先跑完再拒。（2026-11-16 审查 High-1）
+if (flag("update-baseline") && flag("gate")) {
+  console.error("✗ --update-baseline 与 --gate 不能同时用：");
+  console.error("    前者会先把基线改成本轮分数，后者再拿新基线比，结论必然是「通过」。");
+  console.error("  正确用法：先 node test/holdout-run.mjs --update-baseline（确认无退化后），");
+  console.error("            再单独 node test/holdout-run.mjs --gate。");
+  process.exit(2);
+}
+
 // ---------- 0) 卷子完整性 ----------
 if (!fs.existsSync(FROZEN_PATH)) {
   console.error(`缺少 ${FROZEN_PATH}：卷子还没冻结，不许跑。`);
@@ -111,8 +123,12 @@ for (const it of items) {
   } else if (it.kind === "refusal") {
     const absent = it.absent ?? [];
     const bad = [];
+    // 大小写归一：判定词都是英文专名（Docker/Python/Wi-Fi/Kubernetes），
+    // 返回块里写成小写是常态。两边都 lowercase 再比，否则会漏判成「正确拒答」——
+    // 判分尺子朝放宽方向错，是这份卷子最不能出的一种错。（2026-11-16 审查 High-2）
+    const lowTexts = texts.map((x) => x.toLowerCase());
     for (const t of absent) {
-      const idx = texts.findIndex((x) => x.includes(t));
+      const idx = lowTexts.findIndex((x) => x.includes(String(t).toLowerCase()));
       if (idx >= 0) bad.push(`${t}@第${idx + 1}条(${results[idx].book})`);
     }
     pass = bad.length === 0 && !err;

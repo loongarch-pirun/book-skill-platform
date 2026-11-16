@@ -1587,9 +1587,14 @@ const copyDb = (src) => {
   const reuse = set2.items.filter(x => x.chunk_id && used1.has(`${x.book}#${x.chunk_id}`));
   ok(set2.frozen === true && set2.total === 30 && reuse.length === 0,
     `留出集v2: 30 题 FROZEN 且不复用 v1 的任何一块原文（复用 ${reuse.length} 处）`);
-  // 每卷的基线不得互相覆盖
-  ok(/frozen-\$\{SUFFIX\}|baseline-\$\{SUFFIX\}/.test(holdSrc),
-    "隔离: 两卷各自的 frozen / baseline 文件按 setId 后缀区分，不互相覆盖");
+  // 每卷的基线不得互相覆盖：拆成两条，别用 | 或匹配（删一半也能过 = 假守）
+  ok(/frozen-\$\{SUFFIX\}/.test(holdSrc),
+    "隔离: v2 卷凭证按 frozen-${SUFFIX}.json 取");
+  ok(/baseline-\$\{SUFFIX\}/.test(holdSrc),
+    "隔离: v2 基线按 baseline-${SUFFIX}.json 取（不与 v1 共用）");
+  // 更新基线与开门禁必须互斥，否则门禁拿刚写的基线比，结论必然通过
+  ok(/flag\("update-baseline"\)\s*&&\s*flag\("gate"\)/.test(holdSrc) && /process\.exit\(2\)/.test(holdSrc),
+    "隔离: --update-baseline 与 --gate 互斥（禁止一条命令把判据洗白）");
 }
 
 // ========== 路由层静态契约（P1）==========
@@ -1641,6 +1646,11 @@ const copyDb = (src) => {
     "缓存: scanBookSem 内 assertEngine 先于 getMatrix（引擎卫兵不能被缓存绕过）");
   ok(/matrixScores\(mat, qv, sem\)/.test(seg) && /length\(text\) len FROM chunks WHERE emb IS NOT NULL/.test(seg),
     "缓存: 命中分支用 matrixScores + 一条不读 BLOB 的轻量回表拿 kind/len");
+  ok(/route_candidates: visited/.test(searchSrc),
+    "路由: route_candidates 取实际扫描清单（degraded 时是全库，不许报预筛小名单）");
+  // 缓存行集不一致必须退回逐行 BLOB，不许静默给 0 分
+  ok(/sem\.size === light\.length/.test(seg),
+    "缓存: 命中分支校验矩阵与库行数一致（不一致退回逐行，不静默记 0）");
 
   // 缓存默认必须是关：不设环境变量时行为逐字节等于改造前
   const vecSrc = stripComments(fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "vec-cache.mjs"), "utf8"));

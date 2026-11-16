@@ -540,6 +540,9 @@ function routeCfg() {
 // 与其赌一本答错，不如把候选书交给用户选。只在多本入选时提示，单本命中照常回答。
 const VAGUE_REF_RE = /(?:这|那|该|此|本)\s*(?:本|篇|个)?\s*(?:书|論文|论文|文章|文檔|文档|教材|報告|报告)|this\s+(?:paper|book|article|document|story|novel)|the\s+(?:paper|book|article)|these\s+notes/i;
 
+// 缓存一致性告警只打一次（每次建库/重建都可能触发，刷屏等于没告警）
+let _matMismatchWarned = false;
+
 // 全块语义扫描：**不做每书 min-max 归一化**，返回的 sem 是原始余弦，跨书同尺可比。
 // 坏库/坏向量/引擎不一致一律往上抛，由 routeAndSearch 逐本记账（一本坏库不许挂掉全库问答）。
 async function scanBookSem(dbPath, embedKey, getQv) {
@@ -555,12 +558,22 @@ async function scanBookSem(dbPath, embedKey, getQv) {
     // 顺序铁律：assertEngine 必须在 getMatrix 之前——缓存只比字符串 engine，
     // 不校验库内 meta.model 与维度（guard-test 段 9 / 9b 钉着）。
     const mat = getMatrix(db, dbPath, embedKey);
+    // 命中分支与回表必须**行集一致**：矩阵是缓存快照，chunks 是当前库。库在缓存建立后被
+    // 改过（WAL 未 checkpoint、并发重建）时，缺 id 会静默拿 0 分参与排序——那是最难查的一种
+    // 错（分数对不上但没有任何报错）。所以先点数，不一致就退回逐行 BLOB。（2026-11-16 审查 M-3）
     if (mat) {
       const sem = new Map();
       matrixScores(mat, qv, sem);
-      for (const r of db.prepare("SELECT id, kind, length(text) len FROM chunks WHERE emb IS NOT NULL").all())
-        rows.push({ id: r.id, kind: r.kind || "", len: r.len || 0, sem: sem.get(r.id) ?? 0 });
-    } else {
+      const light = db.prepare("SELECT id, kind, length(text) len FROM chunks WHERE emb IS NOT NULL").all();
+      if (sem.size === light.length) {
+        for (const r of light)
+          rows.push({ id: r.id, kind: r.kind || "", len: r.len || 0, sem: sem.get(r.id) ?? 0 });
+      } else if (!_matMismatchWarned) {
+        _matMismatchWarned = true;
+        console.warn(`[vec-cache] 矩阵与库行数不一致（${sem.size} vs ${light.length}）：本次退回逐行 BLOB，建议检查是否有未 checkpoint 的写入`);
+      }
+    }
+    if (!rows.length) {
       for (const r of db.prepare("SELECT id, kind, length(text) len, emb FROM chunks WHERE emb IS NOT NULL").all()) {
         const v = new Float32Array(r.emb.buffer, r.emb.byteOffset, r.emb.byteLength / 4);
         // kind 只用来识别参考文献条（见 ROUTE_REF_W）：正文块与它同尺比较，ref 条在入池时降权
@@ -603,7 +616,9 @@ const BOOK_ALIAS = [
   [/dynamo/i, ["dynamo"]],
   [/lamport/i, ["lamport", "时间时钟", "時間時鐘"]],
   [/mapreduce/i, ["mapreduce"]],
-  [/attention/i, ["attention", "transformer"]],
+  // 只留多词短语：attention / transformer 是通用英文词，单词命中会把"讲 transformer 的
+  // 其他书"整本排除。问句点了具体短语才认为真在指这本书。（2026-11-16 审查 M-4）
+  [/attention/i, ["multi-head attention", "attention is all you need", "自注意力"]],
   [/低压电器/i, ["低压电器", "检测报告", "檢測報告", "实训报告"]],
 ];
 const SELECT_MIN = 1;  // 命中 1 本即生效：问句点了书名就是最硬的信号
@@ -627,10 +642,9 @@ function selectBooks(question, books) {
   for (const b of books) {
     if (bookNameSignals(b).some((s) => q.includes(s))) hit.push(b);
   }
-  if (hit.length < SELECT_MIN) {
-    // 命中太少：要么问句没点书名，要么只点到一本却可能点偏——都退回全库
-    return { target: books, source: hit.length ? "degraded" : "full", cands: hit.map((b) => b.title) };
-  }
+  // 没命中书名 → 不猜，退回全库（source:"full" = 旧行为）。
+  // 注："degraded" 不在这里产生——它只由 routeAndSearch 的兜底重扫设置（预筛的书一本都没扫成）。
+  if (hit.length < SELECT_MIN) return { target: books, source: "full", cands: [] };
   return { target: hit, source: "prefilter", cands: hit.map((b) => b.title) };
 }
 
@@ -678,8 +692,10 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
 
   const considered = [];
   const scanned = [];  // { b, rows, sig }；rows 已按原始余弦降序
+  const visited = [];  // 实际进入扫描的书名（route_candidates 用它，不用预筛名单）
   const scanList = async (list) => {
     for (const b of list) {
+      visited.push(b.title);
       // D3 修复（标准轮段 2）：逐本隔离——better-sqlite3 的 open 是惰性的（只开句柄），
       // 坏文件头/坏页/坏向量都在首条查询才炸，所以整段拦。一本坏库跳过并记账，不挂掉全库问答
       //（对齐 listBooks 过滤语义）。scanBookSem 内部带 assertEngine 卫兵与 finally close。
@@ -703,7 +719,7 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
   // 兜底：预筛出来的书一本都没扫成（全坏库 / 全 build-only）时退回全库再扫一遍。
   // 这一遍只在预筛彻底失败时才付代价，正常路径零成本。
   if (cfg.enabled && sel.source === "prefilter" && scanned.length === 0 && targetBooks.length < books.length) {
-    considered.length = 0; skipped.length = 0;
+    considered.length = 0; skipped.length = 0; visited.length = 0;
     await scanList(books);
     sel.source = "degraded";
   }
@@ -820,7 +836,8 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
     // 诊断（纯加法，不改上面五个原有结构）：这次到底扫了哪些书、为什么这么扫。
     // "prefilter" = 按书名预筛；"full" = 问句没点书名，扫全库（旧行为）；"degraded" = 命中太少退回全库。
     route_source: sel.source,
-    route_candidates: targetBooks.map((b) => b.title),
+    // 实际扫过的书（degraded 时是全库，不是预筛那份小名单）——诊断字段必须与事实一致
+    route_candidates: visited,
   };
   // 没点名的问句（「这篇论文/这本书/this paper」）在「问全库」里天然没有指代对象——
   // 用户没先选书，任何排序器都只能猜。实测（probe-route5/6/10、probe-ambiguous）：
