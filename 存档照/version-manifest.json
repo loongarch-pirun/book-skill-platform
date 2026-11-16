@@ -1,6 +1,6 @@
 {
  "snapshotId": "r4-snapshot-20261115",
- "capturedAt": "2026-11-16T13:42:04.564Z",
+ "capturedAt": "2026-11-16T14:48:05.989Z",
  "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
  "treeSha16": "cc5b078afa236af7",
  "fileCount": 267,
