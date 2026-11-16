@@ -1,9 +1,9 @@
 {
  "snapshotId": "r4-snapshot-20261115",
- "capturedAt": "2026-11-16T05:54:16.217Z",
+ "capturedAt": "2026-11-16T06:24:38.919Z",
  "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
- "treeSha16": "791853c092fe2958",
- "fileCount": 262,
+ "treeSha16": "458d276f98fcb04d",
+ "fileCount": 265,
  "facts": {
   "golden": {
    "files": 11,
@@ -42,7 +42,7 @@
   "evalBaseline": null,
   "lastCodeChange": {
    "path": "test/quality-gate.mjs",
-   "mtime": "2026-11-16T05:14:07.718Z"
+   "mtime": "2026-11-16T06:22:49.257Z"
   },
   "release": [
    {
@@ -91,6 +91,18 @@
     "bytes": 2824,
     "mtime": "2026-11-14T06:17:08.475Z",
     "sha16": "2815b6233583c9a1"
+   },
+   {
+    "name": "A.json.log",
+    "bytes": 12688,
+    "mtime": "2026-11-16T06:09:23.205Z",
+    "sha16": "a532a219785ae631"
+   },
+   {
+    "name": "B.json.log",
+    "bytes": 12688,
+    "mtime": "2026-11-16T06:22:32.058Z",
+    "sha16": "5a09af81f264de9f"
    },
    {
     "name": "gate-live.log",
@@ -154,6 +166,18 @@
    "bytes": 2303,
    "mtime": "2026-11-13T14:23:56.962Z",
    "sha256": "d526918d6b9d029904800895cbda3fbb9d03f85372b9c0a2013859d602befc2b"
+  },
+  {
+   "path": "A.json.log",
+   "bytes": 12688,
+   "mtime": "2026-11-16T06:09:23.205Z",
+   "sha256": "a532a219785ae631c3ce7e9c2d70b48524a5e3568173a44c617bf19fe1488817"
+  },
+  {
+   "path": "B.json.log",
+   "bytes": 12688,
+   "mtime": "2026-11-16T06:22:32.058Z",
+   "sha256": "5a09af81f264de9f6523c0fe17beb8f4801fcb5a19bfb25115c5077c037f3cab"
   },
   {
    "path": "build/installer.nsh",
@@ -1320,6 +1344,12 @@
    "sha256": "c75951fcee8bbb3b2e1716c89f7e0b951d174ea49051f945baaac034bf9bcbe0"
   },
   {
+   "path": "test/gate-diff.mjs",
+   "bytes": 3903,
+   "mtime": "2026-11-16T05:56:10.374Z",
+   "sha256": "26e4015b0091af504950bb2e4fc2991fe2b858e62bb58cf3b0e92675a05ce1c1"
+  },
+  {
    "path": "test/gen-chinese-samples.js",
    "bytes": 3144,
    "mtime": "2026-11-13T14:23:57.220Z",
@@ -1567,9 +1597,9 @@
   },
   {
    "path": "test/quality-gate.mjs",
-   "bytes": 40597,
-   "mtime": "2026-11-16T05:14:07.718Z",
-   "sha256": "d54da4e6365e4f73dbb9430dfc7653025acf9acd6eed59c4f8717ca655c714e1"
+   "bytes": 42566,
+   "mtime": "2026-11-16T06:22:49.257Z",
+   "sha256": "9562236cc3d08ed766f8ee2b8a23ec3f62b870593ac572464c70b953927d7942"
   },
   {
    "path": "test/query-rewrite-test.mjs",
@@ -1686,5 +1716,5 @@
    "sha256": "6ba80b3bc2ce102574ddac54641397ef9a74b3905902457fccafffaf7f3f6144"
   }
  ],
- "previousTreeSha16": "5026adef8b1baf62"
+ "previousTreeSha16": "791853c092fe2958"
 }
