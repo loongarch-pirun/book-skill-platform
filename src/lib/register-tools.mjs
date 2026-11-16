@@ -137,7 +137,7 @@ export function registerServerTools(server, { gate = true, deps = {} } = {}) {
   };
   reg("list_books", {
     title: "书架清单",
-    description: "列出知识库里所有的书（标题/格式/切片数/≈token 总量/章节质量）。回答前先调用它了解有哪些书可查，并按 total_tokens 决定读法：≤10K 用 read_full_book 全文直读，更大用 get_outline 看地图再翻章。",
+    description: "列出知识库里所有的书：标题、**summary（这本书讲什么，一两句话）**、格式、切片数、≈token 总量、章节质量。回答前**先调用它**，按 summary 判断哪本书可能回答用户的问题，**不要只凭书名猜**；拿不准就再调 list_catalog 看该书的主题与人物，或直接用 query_library 跨书检索。再按 total_tokens 决定读法：≤10K 用 read_full_book 全文直读，更大用 get_outline 看地图再翻章。summary 为 null 表示这本书还没有简介，只能按书名判断。",
     inputSchema: {},
   }, async () => {
     const books = listBooks();

@@ -88,7 +88,10 @@ function scanBooks(libDir) {
         } catch { lang = null; } // 坏库/空表：保持 null，调用方按未知处理
       }
       db.close();
-      return { id: f.replace(/\.db$/, ""), db: dbPath, title: meta.title || f, format: meta.format, model: meta.model || null, chunks: +meta.chunk_count, chars: +meta.total_chars, pages: meta.num_pages || null, chapters: meta.num_chapters || null, total_tokens: totalTokens, chapter_quality: chapterQuality, lang };
+      // summary：这本书讲什么（meta.book_summary，由 src/backfill-summary.mjs 从
+      // src/lib/book-summaries.json 写入）。list_books 靠它让智能体自己判断该翻哪本，
+      // 而不是只凭书名猜。没有简介的库返回 null，调用方必须容忍缺失（老库/新书）。
+      return { id: f.replace(/\.db$/, ""), db: dbPath, title: meta.title || f, summary: meta.book_summary || null, format: meta.format, model: meta.model || null, chunks: +meta.chunk_count, chars: +meta.total_chars, pages: meta.num_pages || null, chapters: meta.num_chapters || null, total_tokens: totalTokens, chapter_quality: chapterQuality, lang };
     } catch {
       // 坏库过滤：句柄必须先 close——Windows 上泄漏会让删库/清理临时目录报 EBUSY
       try { db?.close(); } catch { /* close 失败无从补救，继续过滤 */ }
