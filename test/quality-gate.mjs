@@ -419,7 +419,9 @@ async function runRoute(items) {
 }
 
 // ---- 日志（后台跑时看进度用）----------------------------------------------
-const LOG = OUT ? path.basename(OUT) + ".log" : "quality-gate-run.log";
+// 日志必须跟 --out 同目录（原来用 basename，--out=release/x/A.json 会把 A.json.log
+// 甩在仓库根目录 —— 2026-11-16 实测攒了 4 个，污染 git status 与一致性核对）
+const LOG = OUT ? OUT.replace(/\.json$/, "") + ".log" : "quality-gate-run.log";
 function logLine(tag, s) {
   fs.appendFileSync(LOG, `[${tag}] ${s}\n`, "utf8");
 }
