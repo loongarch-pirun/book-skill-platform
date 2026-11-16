@@ -1,0 +1,2646 @@
+
+> book-skill-platform@0.1.0 test:fast
+> node test/paths-test.mjs && node test/guard-test.mjs && node test/stage0-format-test.mjs && node test/stage1-chunk-test.mjs && node test/parser-v3-test.mjs && node test/semantic-chunk-test.mjs && node test/enrich-fuzz.mjs && node test/enrich-import-test.mjs && node test/enrich-job-test.mjs && node test/enrich-adversarial-fuzz.mjs && node test/ftsliteral-test.mjs && node test/enrich-nom-test.mjs && node test/catalog-test.mjs && node test/skill-store-test.mjs && node test/skill-health-test.mjs && node test/renderer-graph-test.mjs && node test/parser-fuzz.mjs && node test/ipc-test.mjs && node test/llm-test.mjs && node test/llm-fuzz.mjs && node test/chat-archive-test.mjs && node test/feedback-pool-test.mjs && node test/derived-test.mjs && node test/shelf-assets-test.mjs && node test/book-view-test.mjs && node test/structurize-test.mjs && node test/archive-config-fuzz.mjs && node test/catalog-fuzz.mjs && node test/graphrag-fuzz.mjs && node test/browse-test.mjs && node test/query-rewrite-test.mjs && node test/entry-adversarial-fuzz.mjs  &&  node test/neighbor-test.mjs && node test/clean-test.mjs && node test/outline-test.mjs && node test/cite-check-test.mjs && node test/inline-clean-test.mjs && node test/theme-test.mjs && node test/usage-gate-test.mjs && node test/skill-validate-test.mjs && node test/judge-test.mjs && node test/route-quota-test.mjs && node test/book-summary-test.mjs
+
+PASS - 未打包: libDir=项目根/library
+PASS - 未打包: skillsDir=项目根/skills
+PASS - 未打包: modelsDir=项目根/.models
+PASS - 打包态: libDir=userData/library
+PASS - 打包态: skillsDir=userData/skills
+PASS - 打包态: modelsDir=userData/.models
+PASS - 内置资源优先: resources/models 存在 → modelsDir 指它
+PASS - 内置资源优先只动 modelsDir: libDir 仍走 userData 默认层（要可写，走种子化）
+PASS - resourcesDir 透传进 dirs（engine 种子化指着它）
+PASS - resources 无 models → 回退 userData/.models（缺件不炸）
+PASS - dev 态忽略 resourcesDir（modelsDir 仍项目根/.models——npm test 逐字节不变）
+PASS - 配置层 modelsDir 压过内置资源（用户显式指定优先）
+PASS - 环境变量 BSP_MODELS_DIR 压过内置资源（CLI 覆盖最高）
+PASS - 配置层: libraryDir 覆盖默认
+PASS - 配置层: skillsDir 覆盖默认
+PASS - 配置层: 未配的 modelsDir 仍走默认
+PASS - 环境变量层: BSP_LIB_DIR 压过配置层
+PASS - skill-state: 无状态文件时全返回（stage3 六本断言不受伤）
+PASS - skill-state: 关掉的书被 listBooks 过滤（H3 桌面/MCP 路径）
+PASS - skill-state: includeDisabled:true 豁免（引用回源验证路径）
+PASS - skill-state: 重开=删记录，文件精简
+PASS - configureSearch: 注入后 currentLibDir 生效
+PASS - configureSearch: 空注入不清空（防呆）
+PASS - writeConfig: 缺 userData 抛错（未打包态没有配置层）
+PASS - main.js: loadFile 按 __dirname 定位（防打包态白屏 D-12）
+PASS - main.js: 无裸相对路径 loadFile("index.html")
+PASS - main.js: 页面加载失败有 did-fail-load 兜底弹窗（不静默）
+PASS - main.js: 未调用 app.getPath() 不支持的名单外名字（含 []）
+PASS - main.js: resourcesDir 用 process.resourcesPath（防安装版引擎 boot 失败 P0）
+PASS - main.js: 无 app.getPath("resources") 残留（Electron 无此路径，必抛）
+===== paths-test: 30 PASS / 0 FAIL =====
+PASS - 卫兵: meta.model 标记不匹配被拒
+PASS - 卫兵: 报错信息带修复路径
+PASS - 卫兵: 无标记旧库按维度放行（384 维匹配）
+PASS - 卫兵: 无标记旧库维度不符被拒
+PASS - 卫兵: hybridSearch 对引擎不匹配的库拒跑
+PASS - 卫兵: 拒跑后 db 已在 finally 关闭（写模式能立即打开）
+PASS - LIKE转义: 纯通配符查询字面腿贡献 0（5 块全来自语义腿，fts 全 0,0,0,0,0）
+PASS - LIKE转义: 混合通配符问题不崩溃（数组返回）
+PASS - topN: zod 拒收 999
+PASS - topN: zod 拒收 0
+PASS - topN: zod 放行 7
+PASS - topN: 夹取函数边界（999→20 -3→1 undefined→4 "abc"→4）
+PASS - topN: 处理器端到端 999 被夹取（实际返回 20 条）
+PASS - topN: 夹取后检索质量不劣化（28.4 仍在首位）
+PASS - 卫兵: importCatalog 引擎不匹配在入库前拦截
+PASS - 路由: 混引擎书库只选中未跳过的好书
+PASS - 路由: 坏书被跳过且带原因声明
+PASS - 路由: 好书结果正常返回
+PASS - 路由: 坏库不穿层（D3；正常返回）
+PASS - 路由: 坏库进 skipped_books 记账
+PASS - 路由: 坏库旁边的照常好书结果正常返回
+PASS - 路由: 只路由到好书（坏库 0 分被挡不冒充）
+PASS - 回填: 指代问句落到首页署名区（闸门开才生效）
+PASS - 回填: 闸门关时问句零改动（与原句逐块同 id 同分）
+PASS - 静态: 回填接入 hybridSearch 且作废预编码向量（否则两腿问的不是同一件事）
+PASS - 运行时就绪: 空的 doclib 目录不再被当成可用（配置在 ≠ 服务活）
+PASS - 运行时就绪: 没配过 MinerU 的机器两道判据都 false（回落 legacy 而不是抛栈）
+PASS - 运行时就绪: 服务已死时报不可用且在超时预算内返回
+PASS - 静态: parsePdf 用「配置在 && 真探活」两道判据（防假阳性复活）
+PASS - 静态: main.js 有随包 MinerU 就绪步骤且只在打包态启用（dev 不抢本机 ~/.mineru 正本）
+PASS - 静态: main.js 注入 BSP_MINERU_*（否则 mineruConfig 仍指向 ~/.mineru）
+PASS - 静态: MinerU 就绪先于 engine.init（解析层读 env 决定走哪条路，反了就白起）
+PASS - 静态: 就绪失败不阻断启动（回落 legacy，比白屏好）
+PASS - 静态: mineru-runtime.mjs 导出 runtimePaths/mineruRuntimeReady/prepareMineru
+PASS - 静态: 先设 managed_tier=basic 再设 mode=managed（反序会因 GGUF 缺失被拒）
+PASS - 静态: doclib 用独立 cwd mineru-run（避免与别处抢 .mineru-service.lock）
+PASS - 静态: MINERU_HOME 建目录即收紧 DACL 且早于写 config（不收紧则 doclib 被 PermissionError 拒启）
+PASS - 静态: doclib 的 stderr 落文件并附进超时报错（不 ignore）
+PASS - 卸载: build/installer.nsh 在位（electron-builder 自动拾取）
+PASS - 卸载: customUnInstall 删 mineru-home 与 mineru-run
+PASS - 卸载: 不碰 userData 下的 library/books（用户数据留在原地）
+PASS - 卸载: stop-mineru.ps1 经 extraFiles 落进安装目录（NSIS 要按 $INSTDIR 调它）
+PASS - 卸载: 兜底按随包 python 的 exe 路径前缀筛（不按进程名一刀切误杀用户自己的 doclib）
+PASS - 卸载: 先按 endpoint.json 的 pid 停整棵进程树（含 managed parse-server 子进程）
+PASS - 邮箱判据: 署名行放行 —— Attention Is All You Need Ashish Vaswani∗ 
+PASS - 邮箱判据: 署名行放行 —— Noam Shazeer∗ Google Brain noam@google.com
+PASS - 邮箱判据: 署名行放行 —— Niki Parmar∗ Google Research nikip@google.
+PASS - 邮箱判据: 署名行放行 —— Jakob Uszkoreit∗ Google Research usz@googl
+PASS - 邮箱判据: 署名行放行 —— Aidan N. Gomez∗ † University of Toronto ai
+PASS - 邮箱判据: 署名行放行 —— Łukasz Kaiser∗ Google Brain lukaszkaiser@g
+PASS - 邮箱判据: 署名行放行 —— MapReduce: Simplified Data Processing on L
+PASS - 邮箱判据: 署名行放行 —— Leslie Lamport leslie@research.digital.com
+PASS - 邮箱判据: 署名行放行 —— R. Stockton Gaines rsg@acm.org
+PASS - 邮箱判据: 署名行放行 —— Jeffrey Dean jeff@google.com
+PASS - 邮箱判据: 署名行放行 —— Ashish Vaswani, Noam Shazeer avaswani@goog
+PASS - 邮箱判据: 署名行放行 —— Aidan N. Gomez aidan@cs.toronto.edu
+PASS - 邮箱判据: 署名行放行 —— Jane Doe, John Smith {jdoe, jsmith}@cs.sta
+PASS - 邮箱判据: 联系行不认作署名 —— contact: support@example.com for more info
+PASS - 邮箱判据: 联系行不认作署名 —— Email us at info@spam.org now
+PASS - 邮箱判据: 联系行不认作署名 —— University of Toronto contact@cs.toronto.e
+PASS - 邮箱判据: 联系行不认作署名 —— jeff@google.com, sanjay@google.com
+PASS - 邮箱判据: 联系行不认作署名 —— Google Brain google-brain@google.com
+PASS - 邮箱判据: 联系行不认作署名 —— For more information, please contact the e
+PASS - 邮箱判据: 联系行不认作署名 —— Correspondence should be addressed to: adm
+PASS - 邮箱判据: 联系行不认作署名 —— Send comments to webmaster@site.com
+PASS - 邮箱判据: 联系行不认作署名 —— Department of Computer Science, Some Unive
+PASS - 邮箱判据: 联系行不认作署名 —— Please email us at help@support.com with a
+PASS - 邮箱判据: 联系行不认作署名 —— Editorial Office, Journal of Machine Learn
+PASS - 邮箱判据: 联系行不认作署名 —— Questions? Write to the Secretariat at sec
+PASS - 邮箱判据: 联系行不认作署名 —— Copyright 2020 Association for Computing M
+PASS - 邮箱判据: 联系行不认作署名 —— Manuscripts should be sent to submissions@
+PASS - 邮箱判据: 联系行不认作署名 —— No part may be reproduced without written 
+PASS - 邮箱判据: 端到端 7 条真署名块全部保留（filterNoiseChunks 不误杀）
+PASS - 邮箱判据: 端到端 15 条联系行全部被判为噪声丢弃
+PASS - 邮箱判据: 15 条丢块全部记账在 author_email 名下（可审计、可单独关闭）
+PASS - 静态: author_email 的 unless 引用具名谓词 byline
+PASS - 静态: 大写词对判据（PERSON_PAIR）已移除，不许退回黑名单式
+PASS - 静态: 具名谓词登记表与 unlessFn 分支都在（外部 JSON 仍可写正则作 unless）
+PASS - P0-5 合成块: page_number_only 开 → 孤立页码块（"12" / "- 204 -" / 长横线夹数字）全丢
+PASS - P0-5 合成块: page_number_only 开 → 含数字但非页码的块（"Chapter 12" / "12345" / "12 apples" / 年份句 / "Figure 3"）一块不误杀
+PASS - P0-5 合成块: 4 条丢块全部记账在 page_number_only 名下（可审计、可单独关）
+PASS - P0-5 合成块: page_number_only 关掉 → 页码块一块不丢（该规则的命中面完全来自它自己）
+PASS - 静态: embed-book.js 的模型优先级是「命令行 > 环境变量 > null」
+PASS - 静态: embed-book.js 的兜底是与查询侧同源的 DEFAULT_EMBED（不许再硬编码具体引擎名）
+PASS - 静态: embed-book.js 没有把引擎名写死成兜底值（实际 0 处）
+PASS - 静态: engine.mjs 暴露 migrateStaleBundledLibrary（升级换代入口）
+PASS - 静态: 换代判据用到 dbModel（读库内引擎标记）与 userCatalogWork（有没有用户成果）
+PASS - 静态: 旧库让位是 rename 成 .bak-<旧引擎>（可回滚、不原地覆盖）
+PASS - 静态: 换代要同时读随包库与用户库的引擎标记（缺一边就无法判断是真换代还是猜）
+PASS - 静态: 换代前必须查 userCatalogWork（有用户成果的库不许动）
+PASS - 静态: 有用户成果的库进 stale 记账，不静默（用户看得见哪本没迁）
+PASS - 静态: scanTree 的幂等铁律仍在（换代不许顺手把「已存在即跳过」删掉）
+PASS - 静态: main.js 的升级迁移在 engine.init 之后调用（要等 _resourcesDir/_userData 就位）
+PASS - 静态: 升级迁移包在 try/catch 里（迁移失败不许挡住启动）
+PASS - 静态: jobs.mjs 每处 spawn 都带 nodeEnv()（防 G-01 复活；实际 4 处：4/4）
+PASS - 静态: 渲染层无 File.path 直读（防 G-02 复活）
+PASS - 静态: 渲染层拖拽经 study.filePathOf 取路径
+PASS - 静态: preload 暴露 webUtils.getPathForFile
+PASS - 静态: 引用徽标走 renderCite 单点（ask/chat 无裸 data-cid 拼装，C30 防回退）
+PASS - 静态: views-reader 的 data-bid/id 前缀都过 esc（C30 同族自查扩面）
+PASS - 静态: 高亮定位走 getElementById（不解析选择器，id 含特殊字符不崩——F7-O4）
+PASS - 静态: 渲染层 data-cid/data-bid/id 前缀插值必须 esc 开头（转义纪律通用红线）
+PASS - 静态: 拖拽监听在 document 级（防 G-03 复活）
+PASS - 静态: preload 暴露 jobsScanPending（G-04）
+PASS - 静态: main.js 启动扫待编目在 createWindow 之后（G-04 时序）
+PASS - 静态: 渲染层无直连 fetch（防绕过 IPC 调外部 API；命中: 无）
+PASS - 静态: chat.mjs 复用 ask() + askCloud（检索路径唯一）
+PASS - 静态: main.js 注入 safeStorage（key 加密链）
+PASS - 静态: 渲染层 topN 统一走 RETRIEVE_TOPN（B1，两页同段数）
+PASS - 静态: chat.mjs 接线存档（appendArchive + purgeBook）
+PASS - 静态: ipc.mjs 注册存档通道 + books:delete 删书联动（P4）
+PASS - 静态: 配置卡单一实现（C5：对话页复用 ask 页 cloudBarHtml，无第二份）
+PASS - 静态: 顶栏云端 chip 接线（C4：bind + boot 后 paint）
+PASS - 静态: index.html 带 cloudChip 节点（C4）
+PASS - 静态: register-tools 注册 get_person/get_theme/similar_chunks/expand/lookup（MCP 7→12）
+PASS - 静态: skill-store 白名单放行 catalog.json（P-A 皮骨同包）
+PASS - 静态: 骨架生成器/相似查询不碰检索算法（检索层零改动红线）
+PASS - 静态: 骨架章节表从 chunks 实查 + 锚点封顶（永不吹牛）
+PASS - 静态: ipc.mjs 注册 enrich 四通道（#140）
+PASS - 静态: preload 暴露 enrich 五口（四调用 + 进度订阅）
+PASS - 静态: main.js 转发 enrich:progress 事件（#140）
+PASS - 静态: enrich-job 不碰检索算法（检索层零改动）
+PASS - 静态: enrich-job 只经 importEnrich 写库（不直接 SQL 碰 chunks）
+PASS - 静态: enrich-job 后台失败落 failed 态不穿层
+PASS - 静态: 书架洗数据按钮经 IPC（views 按钮 + ask 页 enrichStart/enrichretry）
+PASS - 静态: app.js 汇流 enrich 进度 + boot 恢复任务态（#140）
+PASS - 静态: booksList 挂 enrich 摘要（#140 书架徽标）
+PASS - 静态: chunkFingerprint 存在且任务书带 chunk_fp/eligible（P4 结构判据）
+PASS - 静态: loadEnrichCache 读 meta.chunk_fp，不符 → staleReason=STRUCT
+PASS - 静态: A7 修复——无 chunk_fp 的缓存按结构不可判 stale（fpStale 含 out.fp == null）
+PASS - 静态: 无指纹缓存的 STALE 消息分叉说人话（不渲染 null → fp）
+PASS - 静态: evaluateEnrichGate 在 ensureEnrichSchema/事务之前（block 才可能一个字符都不写）
+PASS - 静态: STALE_STRUCT 拒收码与 meta.enrich_gate 落账点俱在
+PASS - 静态: 脏库前门体检（detectGarbled→DIRTY→BSP_ENRICH_DIRTY 逃生）
+PASS - 静态: 脏库体检在任何批次组织之前（云端调用之前拒洗）
+PASS - 静态: enrich-job 分流 GATE/DIRTY（标签分开，病因不混）
+PASS - 静态: engine 书架摘要读 meta.enrich_gate（warn 徽标数据源）
+PASS - 静态: warn 徽标有样式且 views 认这个态（P4 书架可见性）
+PASS - 静态: ipc.mjs 注册 book 两通道（#166）
+PASS - 静态: preload 暴露 book 两口（#166）
+PASS - 静态: main.js 注册 book:// 协议（#166）
+PASS - 静态: registerIpc 注入 shell（#166 系统打开）
+PASS - 静态: book-view 走 safeBookId+resolveAsset（不自己拼路径）
+PASS - 静态: book-view 不 import electron（handler 可在 node 下单测）
+PASS - 静态: views-reader 原书视图三动作接线（#166）
+PASS - 静态: 原书视图走 IPC 取元信息 + iframe 加载 book://（不 fetch，守渲染层无直连红线）
+PASS - 静态: raw 书（无块）fallback 原书视图（#166）
+PASS - 静态: jobs.mjs 导出 startImport + startProcessing 两段（#167）
+PASS - 静态: startImport 只复制登记（不碰切片/向量化/编目/txt转换——#167 第一段边界）
+PASS - 静态: startProcessing 承接四步管线（切片/向量化/编目都在第二段）
+PASS - 静态: startProcessing 经 safeBookId + resolveAsset（防穿越 + 资产层定位）
+PASS - 静态: ipc.mjs 注册 jobs:start → startProcessing（#167）
+PASS - 静态: preload 暴露 jobsStart（#167）
+PASS - 静态: 书架 raw 卡片带「开始加工」按钮（#167，洗数据按钮 raw 不显示）
+PASS - 静态: views-ask 接线 process 动作 + 两段式重试（#167）
+PASS - 静态: engine 导出 deleteBook + purgeBook 两档（#168）
+PASS - 静态: purgeBook 删 books/ 原件（resolveAsset 定位 + rmSync(asset.path)，一体全删）
+PASS - 静态: deleteBook 不删 books/ 原件（第一档=删库留原件，书架回 raw 可重建）
+PASS - 静态: 两档删除都先 wal/shm 后主库（顺序契约，命中 2 处）
+PASS - 静态: ipc.mjs 注册 books:purge → purgeBook（#168）
+PASS - 静态: preload 暴露 purgeBook（#168）
+PASS - 静态: raw 卡仅彻底删除 / processed 卡移出+彻底两档（#168 按钮分流，V4 收进 ⋯ 菜单）
+PASS - 静态: 彻底删除动作拨通 purgeBook（#168）
+PASS - 静态: 彻底删除确认清单先行（books/ 原件在不在按 asset.exists 说实情）
+PASS - 静态: ipc-test EXPECTED 含 books:purge（#168 通道对账）
+PASS - 静态: purgeBook 调 purgeDerived 清派生（参数=libDir + 归一后的 id 变量）
+PASS - 静态: deleteBook 不调 purgeDerived（移出书架不清派生——重建可复用，省一次云端洗数据）
+PASS - 静态: derived.mjs 过 safeBookId 闸门、不 glob 不扫目录（精确拼接，防前缀误伤）
+PASS - 静态: derived.mjs 不递归删除（只删单个普通文件，目录/链接跳过）
+PASS - 静态: 六落点「目录↔后缀」成对且恰好 6 条（实测 6 条；互换或增删都会红）
+PASS - 静态: jobs.mjs 落盘命名 <id>.json / <id>.prompt.md 与 derived 候选一致（防漂移）
+PASS - 静态: enrich.mjs 产物命名 <id>.json / <id>.jsonl 与 derived 候选一致（防漂移）
+PASS - 静态: structurize.mjs 导出 detectGarbled（P2 五件套）
+PASS - 静态: structurize.mjs 导出 repairMojibake（P2 五件套）
+PASS - 静态: structurize.mjs 导出 structurizeChunks（P2 五件套）
+PASS - 静态: structurize.mjs 导出 assessCleaned（P2 五件套）
+PASS - 静态: structurize.mjs 导出 structChanged（P2 五件套）
+PASS - 静态: build-book 先结构化改造后语义分块（P2 流程顺序：结构化改造→切片→洗数据）
+PASS - 静态: BSP_STRUCT=0 逃生开关在（归一化后精确比较，语义由 F4 行为矩阵锁）
+PASS - 静态: assessCleaned 硬闸门拦在切片前（exitCode=1 + return，不烧算力不建库）
+PASS - 静态: assessCleaned 收清洗前原文（乱码书报乱码而非「内容太少」，F9）
+PASS - 静态: 乱码判据只改报因不改放行（原文乱码超线仍须残局不足才拦，否则能修的书被误拦）
+PASS - 静态: 段落打包遇到纯符号/数字段先 flush 再单独成块（F8：垃圾块不被并进正文）
+PASS - 静态: 清洗账写 meta.struct_report（可审计）
+PASS - 静态: onStage 两段回调 structurize → slice（P2 横幅分格）
+PASS - 静态: main 返回 struct（jobs 横幅清洗账源头）
+PASS - 静态: jobs 横幅「结构化改造中」一格（P2 阶段可见）
+PASS - 静态: onStage slice → 横幅转「切片中」（结构化改造/切片两格分明；emit/emitG 两写法兼容）
+PASS - 静态: 真洗了东西横幅才刷账（干净的书零刷屏——存量行为零变化）
+PASS - 静态: package.json test:fast 含 structurize-test（P2 验收挂载）
+PASS - 静态: entry-adversarial-fuzz.mjs 落盘（头部声明 57 发 / 索引实计 57 条，双向对账）
+PASS - 静态: package.json test:fast 含 entry-adversarial-fuzz（对抗套件挂 fast）
+PASS - 静态: package.json test:ci 含 entry-adversarial-fuzz（对抗套件挂 ci）
+PASS - 静态: packTable/mergeTableRows 落盘（P3-① 表格整表成块）
+PASS - 静态: docx/md 两路整表块都跳过 sentenceSplit（行内句号不切表）
+PASS - 静态: BSP_TABLE=0 逃生走零宽剥离+NFKC 归一化（P2-04 同款）
+PASS - 静态: 合并在 promote 之后调用序保留（防「下一段更长」误触发回归）
+PASS - 静态: chapterPathOf 建路径 + 建库 chunks 表带 chapter_path 列
+PASS - 静态: 建库 INSERT 写 chapter_path + 契约 v3 的 7 个描述列（共 11 列）
+PASS - 静态: search 探测列再取 chapter_path（老库无列回退，不做写迁移）
+PASS - 静态: 引用构造搭载 chapterPath（additive）
+PASS - 静态: renderCite 有路径优先展示（老库回退 loc）
+PASS - 静态: 邻块 BSP_NEIGHBOR=1 开且只跟终排（变体快路 rerank:false 不扩）
+PASS - 静态: 邻块衰减 ×0.5 计分 + 总数受 NBR_CAP 控制（默认 6，提示词增量可控）
+PASS - 静态: 邻块同章判据（跨章/空章不扩）
+PASS - 静态: package.json test:fast 含 neighbor-test（P3-③ 挂载）
+PASS - 静态: clean.mjs 导出 runClean/applyGuards/matchVerdicts/isSubstantiveShort（跑批+护栏链路）
+PASS - 静态: clean-import.mjs 导出 importClean/rebuildFts/restoreClean/auditClean（落库+恢复链路）
+PASS - 静态: clean 四件零沾染检索路径（不 import search.mjs/vec-cache/hybridSearch）
+PASS - 静态: clean lib 零 throw new（错误码返回制）
+PASS - 静态: clean.mjs CANCELLED 穿层在位（取消必须穿层，兜底 catch 不许吞）
+PASS - 静态: FTS rebuild 命令在位（external content 表 DELETE 不同步索引）
+PASS - 静态: quarantine.text NOT NULL（隔离账必须留原文，恢复才有得插）
+PASS - 静态: clean-book CLI 含 BSP_LLM_* 解析/--no-import/--force-gate
+PASS - 静态: clean-restore CLI 薄壳调 restoreClean（--ids/--dry-run 在位）
+PASS - 静态: jobs clean 段 spawn 带 nodeEnv()（G-01 ELECTRON_RUN_AS_NODE 锁）
+PASS - 静态: jobs 主进程解 key 走 env（enc 加密 key 子进程解不了）
+PASS - 静态: jobs 无配置跳过文案 + GATE 放行指引（--force --force-gate）在位
+PASS - 静态: jobs inline 段 spawn 带 nodeEnv()（G-01 ELECTRON_RUN_AS_NODE 锁）
+PASS - 静态: 管线位次 clean → inline-clean → embed（块内净化必须在向量化前）
+PASS - 静态: jobs 读 inline_report 拼横幅（净化明细可见）
+PASS - 静态: package.json test:fast 含 clean-test（挂载对账）
+PASS - 静态: inline-clean.mjs 导出 buildInlinePlan/planBlock/strip*/split*/checkInlineGate + INLINE_VERSION=1
+PASS - 静态: inline-import.mjs 导出 importInline/restoreInline/auditInline（落库+恢复链路）
+PASS - 静态: 楼层号行级整行匹配（禁子串删）
+PASS - 静态: 护栏阈值常量在位（I1 剩余字数/I2 跟帖与主帖下限）
+PASS - 静态: inline lib 零 throw new（错误码返回制）
+PASS - 静态: inline-import FTS rebuild + 作废下游（emb 置 NULL + 删 catalog meta）
+PASS - 静态: 隔离账记 split_json + 恢复删切出的新块（2a 切不删可逆）
+PASS - 静态: inline-clean CLI 含 --dry-run/--force-gate/--restore
+PASS - 静态: package.json test:fast 含 inline-clean-test（挂载对账）
+PASS - 静态: token 系数校准锁（P&P 710,791 字符 × 0.25 = 177.7K 实测账）
+PASS - 静态: build-book 写 total_tokens/chapter_quality meta（数据层契约在位）
+PASS - 静态: build-book walkMd 拦 _private 路径段（作者简历类污染入口拦截）
+PASS - 静态: register-tools.mjs 注册 get_outline（MCP 契约在位）
+PASS - 静态: package.json test:fast 含 outline-test（挂载对账）
+PASS - get_outline 工具已注册（处理器在位）
+PASS - get_outline 真库通（论语 16 章 / 16 块，带 token 账）
+PASS - get_outline 书名未命中给书目清单
+PASS - list_books 每本带 total_tokens（新库 meta 或旧库现场估算，13 本）
+PASS - list_books 每本带 chapter_quality（none/messy/reliable 三态）
+PASS - list_books 每本带 summary 字段（无简介时为 null，不许整个字段消失）
+PASS - list_books 至少 80% 的书有非空简介（13/13）——缺了跑 node src/backfill-summary.mjs
+PASS - 简介全部 ≤200 字（最长 169）——list_books 是常驻调用
+PASS - list_books 描述里明确要求按 summary 判断该翻哪本（不只凭书名猜）
+PASS - 静态: FULL_READ_TOKEN_CAP=10000 / CHAPTER_TOKEN_CAP=8000 字面量在位（闸门可回退可断言）
+PASS - 静态: browse token 闸走 estimateTokens（系数不散落硬编码）
+PASS - read_full_book 工具已注册
+PASS - read_full_book 小书全文（论语 16 块 ≈547 token）
+PASS - read_full_book 大书拒喂并指路（P&P 177279 token）
+PASS - 静态: register-tools.mjs 注册 cite_check（MCP 契约在位）
+PASS - 静态: package.json test:fast 含 cite-check-test（挂载对账）
+PASS - 静态: engine.readerChapters 委托 lib getOutline（桌面/MCP 单一数据源）
+PASS - 静态: readerChapters no-chapters 保底一桶「未分章」（PDF 类不丢「能翻」能力）
+PASS - 静态: readerChapters 带 quality 三态 + totalTokens 账（对称字段）
+PASS - 静态: views-reader 目录章条渲染 token 账（fmtK K 记法）
+PASS - 静态: views-reader 章节质量徽标（messy/none 两态人话）
+PASS - 静态: views-reader 透传 outline hint 与 notes（no-chapters 指路 + 覆盖率提示）
+PASS - 静态: docs/外部智能体接入文档.md 存在（联动最后一公里）
+PASS - 静态: register-tools 注册 18 个工具（≥17）
+PASS - 静态: 接入文档覆盖全部 18 个工具
+PASS - 静态: 接入文档含启动入口与库目录环境变量（30 秒接入的两要素）
+PASS - 静态: 接入文档含防幻觉铁律三件套（回验/明说/照抄）
+PASS - 静态: usage-policy.mjs 导出 load/save/serviceStatus/checkBudget/recordUsage（配置层契约）
+PASS - 静态: 配置落 usage-policy.json + 审计落 usage-log.jsonl（与 skill-state 同目录同模式）
+PASS - 静态: register-tools 带 TOOL_TIERS 分级 + gateCall 闸机
+PASS - 静态: 三级映射正确（元数据常开/检索受控/深读预算；cite_check 恒开不被拦）
+PASS - static: 闸机内嵌记账与审计（放行扣预算、拒收也落日志）
+PASS - 静态: engine 暴露 usagePolicyGet/Set（桌面与 MCP 共享同一份配置）
+PASS - 静态: ipc.mjs 注册 usage:get/usage:set 通道
+PASS - 静态: preload 暴露 usageGet/usageSet 给渲染层
+PASS - 静态: 书架页渲染用量面板 + usagetoggle 开关动作
+PASS - 静态: 渲染态持 usage + boot 加载
+PASS - 静态: app.css 含用量面板样式
+PASS - 静态: package.json test:fast 含 usage-gate-test（挂载对账）
+PASS - 静态: 接入文档说明用量治理（usage-policy/对外服务开关）
+PASS - 静态: skill-validate.mjs 导出 validateSkillDir/validateSkillsRoot（校验器契约）
+PASS - 静态: 校验覆盖负面触发/正文行数/链接完整性（开放标准硬规则）
+PASS - 静态: CLI 有 error 时退出码 1（可进 CI）
+PASS - 静态: package.json 有 skill:validate 脚本（一键校验入口）
+PASS - 静态: package.json test:fast 含 skill-validate-test（挂载对账）
+PASS - 静态: saveSkill 白名单含 references/ 且不含 scripts/（B5/CP3：技能包不收可执行脚本）
+PASS - 静态: skills/ 真目录校验 0 error（book-intake,citation-check,engineering-research,humanities-reading,kb-research,opinion-archaeology,skill-authoring）
+PASS - 静态: 书架主操作三态机（未加工 process / 未编目 catprompt / 未洗 enrich）
+PASS - 静态: 卡片操作收进 ⋯ 菜单（普通项/危险项用 sep 分隔）
+PASS - 静态: ⋯ 菜单事件在位（点击切换 + 点外收起）
+PASS - 静态: 深蓝灰主题 tokens 在位（--bg/--bg-card/--accent）
+PASS - 静态: ⋯ 菜单样式（kebab/menu/danger 三件）在位
+PASS - 静态: 深色主题零 box-shadow（层次靠 1px 边线与底色差，不靠阴影）
+PASS - 静态: 侧栏 5 项均为图标+文字常驻（实测 5 项带图标）
+PASS - 静态: 书名规范——无「未起名」库（title===id：无）
+PASS - 静态: theme.js 预设主题 5 套（≥5）
+PASS - 静态: 主题存档 key 与 localStorage 持久化在位
+PASS - 静态: 自动模式跟随系统深浅（matchMedia + 变化监听）
+PASS - 静态: 强调色按亮度自适应字色（浅底配深字/深底配白字）
+PASS - 静态: boot 应用主题 + 主题面板接线（initTheme/bindThemePanel/painter）
+PASS - 静态: 顶栏调色入口与面板容器在位
+PASS - 静态: 主题面板样式三件套在位
+PASS - 静态: 强调色字色变量化（主题可换，无残留硬编码）
+PASS - cite_check 真库原文照抄命中（chunk#1 level=exact）
+PASS - cite_check 捏造引文拒收并指路
+PASS - 静态: extraResources 6 件在位（实际 6）
+PASS - 静态: 四件 from/to 映射正确（.models→models，其余同名）
+PASS - 静态: MinerU 运行时两件在位（python 运行时 + 模型目录），实际 to=library,skills,books,models,runtime/mineru-python,runtime/mineru-models
+PASS - 静态: models 含 bge-m3（默认引擎），实际 ["Xenova/bge-m3/**","Xenova/multilingual-e5-small/**","Xenova/bge-small-zh-v1.5/**","onnx-community/bge-reranker-v2-m3-ONNX/**","!onnx-community/bge-reranker-v2-m3-ONNX/onnx/model_q4.onnx"]
+PASS - 静态: models 保留 e5/bge-small/reranker-int8 兜底档且排除 model_q4（实测否决件不进包）
+PASS - 静态: library 排除隐私数据与 SQLite 运行时碎文件（老板个人数据不出厂）
+PASS - 静态: books 排除 _work 临时目录
+PASS - 静态: paths.mjs modelsDir 内置资源优先（resources/models 先于 userData 默认层）
+PASS - 静态: resolveDirs 收 resourcesDir 入口（dev/test 不传不受影响）
+PASS - 静态: engine 暴露 seedBundledData/hasBundledData（种子化 + 向导按钮判据）
+PASS - 静态: 种子化幂等（目标存在即跳过，用户数据不被覆盖）
+PASS - 静态: ipc 注册 seed:start + config:get 带 bundled 判据
+PASS - 静态: preload 暴露 seedStart/onSeedProgress 给渲染层
+PASS - 静态: main.js init 传 resources 路径（打包态内置资源入口）
+PASS - 静态: main.js 不得用 app.getPath("resources")（Electron 无此路径，安装版必崩）
+PASS - 静态: 首启向导三选项（内置书库/选现有/空白）
+PASS - 静态: 「使用内置书库」按钮受 cfg.bundled 门控（无内置资源的包不给必失败按钮）
+PASS - 静态: 模型文案两处改「已内置」（不再宣称首次 700MB 下载）
+PASS - 静态: 向导按钮组 flex-wrap（三按钮不溢出 460px 卡片）
+PASS - 静态: skill-store currentSkillsDir 认 BSP_SKILLS_DIR（安装态 MCP 技能目录生命线）
+PASS - 静态: skill-validate CLI 同款 env 兜底（安装态也能跑校验）
+PASS - 留出集: frozen.json 存在（卷子已冻结才允许跑分）
+PASS - 留出集: 卷子文件按 frozen.json 登记路径可寻（test/holdout/sets/holdout-v1.json）
+PASS - 留出集: 卷子 sha256 与冻结记录逐字节一致（0f532846455c…）
+PASS - 留出集: 状态 FROZEN 且题数 30（实际 FROZEN/30）
+PASS - 留出集: 四类题型齐全（{"answerable":16,"refusal":8,"ambiguous":4,"newbook":2}）
+PASS - 留出集: 每道拒答题都带 absent 判定词（否则拒答无法自动判分）
+PASS - 隔离: quality-gate 不引用 holdout（同源卷子不许碰独立卷子）
+PASS - 隔离: holdout-run 不引用 golden（独立卷子不许借同源答案）
+PASS - 留出集v2: frozen-v2.json 存在（第二卷已冻结）
+PASS - 留出集v2: 卷子 sha256 与冻结记录一致（504a1feb32d5…）
+PASS - 留出集v2: 30 题 FROZEN 且不复用 v1 的任何一块原文（复用 0 处）
+PASS - 隔离: v2 卷凭证按 frozen-${SUFFIX}.json 取
+PASS - 隔离: v2 基线按 baseline-${SUFFIX}.json 取（不与 v1 共用）
+PASS - 隔离: --update-baseline 与 --gate 互斥（禁止一条命令把判据洗白）
+PASS - 路由: routeCfg() 与 ROUTE_DEFAULTS 存在（参数只读快照，问答内不漂移）
+PASS - 路由: selectBooks 预筛存在（瓶颈① 的唯一入口）
+PASS - 路由: selectBooks 定义在 routeAndSearch 之前（不能是事后补的桩）
+PASS - 路由: BSP_ROUTE!=="0" 总闸判断存在（一键回滚到旧全库扫描）
+PASS - 路由: ROUTE_DEFAULTS 七项默认值逐字等于改造前（{"minLen":60,"sigTopK":3,"books":8,"keep":18,"refW":0.5,"poolCap":48,"floorRatio":0.3}）
+PASS - 路由: route_source 存在且取值受控（prefilter）
+PASS - 路由: 每书轮转配额默认开（BSP_ROUTE_QUOTA=0 可关；单书仍退化）
+PASS - 路由: 配额与邻块都受总闸约束（BSP_ROUTE=0 必须逐字节回旧行为）
+PASS - 邻块: 上限参数化默认 6（原硬编码 4；BSP_NEIGHBOR 自身的默认值仍为关）
+PASS - 邻块: 同段落判据 chapter 优先、page Δ≤1 兜底（5 本 PDF 的 chapter 全为 null）
+PASS - 邻块: 候选必须 kind==="text"（不把脚注/图片说明扩进答案上下文）
+PASS - 邻块: nbr/nbrOf 只在有值时透出（老行一个字段都不多）
+PASS - 路由: route_candidates 是非空书名字符串数组（1 本）
+PASS - 路由: 原有五字段结构不变且 considered 覆盖全库（13 本）
+PASS - 路由: assertEngine 调用点未减少（search 2 处 / models 1 处）
+PASS - 缓存: scanBookSem 内 assertEngine 先于 getMatrix（引擎卫兵不能被缓存绕过）
+PASS - 缓存: 命中分支用 matrixScores + 一条不读 BLOB 的轻量回表拿 kind/len
+PASS - 路由: route_candidates 取实际扫描清单（degraded 时是全库，不许报预筛小名单）
+PASS - 缓存: 命中分支校验矩阵与库行数一致（不一致退回逐行，不静默记 0）
+PASS - 编目: 池内加权默认关（BSP_CATALOG_POOL==="1" 才加，且加成受该开关控制）
+PASS - 编目: 池外提名默认关（BSP_CATALOG_NOM==="1" 才提名，不许无条件塞门槛块）
+PASS - 编目: 复试窗只在提名真开启时 +8（原来按 cat.hit.size 判，提名关了仍撑宽候选集）
+PASS - 编目: 终排 tie-break 默认 0（reranker 分差仅 0.0004~0.03，0.02 会主导而非裁决）
+PASS - 缓存: 默认关闭（BSP_VEC_CACHE_MB ?? 0）且 cap<=0 早退保留（不设变量 = 旧行为）
+PASS - 缓存: 命中/未命中计数存在（要不要真开缓存只能靠它判，不能靠 entries 猜）
+
+===== 防线包验收结果 =====
+全部 PASS：引擎卫兵/维度兜底/LIKE转义/topN上限/错误路径关库/混引擎路由/真机拖拽导入/云问答/洗数据入口/原书视图/导入两段/两档删除/结构化改造/云端清洗/get_outline数据层/read_full_book全文闸/cite_check回验/收官打包种子化 361 项全过
+PASS - 英文PDF真实管线: 15 页，format=pdf
+PASS - 英文PDF第1页含标题（块带页码定位）
+PASS - 英文PDF所有块都带页码
+PASS - 页眉页脚识别运行（去重行 2 种）
+PASS - 中文PDF真实管线: 4 页
+PASS - 中文PDF原文齐全（首尾章句在）
+PASS - 中文PDF页码定位正确（1/4 页）
+PASS - epub真实管线: 16 个章节
+PASS - epub第1章关键人物 Mr. Bennet 可定位
+PASS - epub长段落全部过 sentenceSplit（最大块 900 ≤ 900 字）
+PASS - epub所有块带章节定位
+PASS - docx真实管线: 16 章（全16章）
+PASS - docx原文首尾章句在
+PASS - docx长段落全部过 sentenceSplit（最大块 100 ≤ 900 字）
+PASS - sentenceSplit 封顶 900（2 段，最长 900）
+PASS - sentenceSplit 拼回 == 原文（保真不丢字）
+PASS - 短文本单块直出
+PASS - D08：2051 字无标点硬切兜底（3 块，最长 900，拼回一致）
+PASS - D08：1501 字单句硬切兜底（2 块，最长 900）
+PASS - 损坏 epub 被 parseEpub 抛错拒收
+PASS - 损坏 docx 被 parseDocx 抛错拒收
+⚠ 书名「lunyu-xueer-zh」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Prejudice）"）
+建库完成: lunyu-xueer-zh.docx.db
+  格式: docx | 切片: 16 块 | 原文: 729 字符 ≈ 1K token
+  章节: 16
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 16 块 / en 0 块 / 公式 0 块）
+PASS - 重灌保护: 首次建库正常落盘
+PASS - 重灌保护: content_hash 已写入 meta（不再是只写不读的死数据）
+⚠ 书名「lunyu-xueer-zh」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Prejudice）"）
+跳过：lunyu-xueer-zh.docx.db 已由同一内容建过（hash 95a6ebb46a8fb593，源 C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r4\books\lunyu-xueer-zh.docx）。要强制重建加 --force。
+PASS - 重灌保护: 同源同内容 → 跳过（幂等）
+⚠ 书名「lunyu-xueer-zh」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Prejudice）"）
+拒绝：源文件内容已变（旧 hash deadbeefdeadbeef ≠ 新 95a6ebb46a8fb593）。
+重建会改变切片编号、作废这本书的编目数据（人物/主题/关系全清）。确认要重建就加 --force。
+PASS - 重灌保护: 同源不同内容 → 拒绝（提示 --force）
+⚠ 书名「daodejing-zh」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Prejudice）"）
+拒绝：C:\Users\JIANGX~1\AppData\Local\Temp\bsp-stage0-qAdCxm\lunyu-xueer-zh.docx.db 已存在，且内容与「C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r4\books\lunyu-xueer-zh.docx」的库不同（hash 不同）。换 -o 输出路径，或 --force 覆盖。
+PASS - 重灌保护: 换源覆盖 → 拒绝（提示 -o 或 --force）
+⚠ 书名「daodejing-zh」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Prejudice）"）
+建库完成: lunyu-xueer-zh.docx.db
+  格式: docx | 切片: 81 块 | 原文: 7486 字符 ≈ 6K token
+  章节: 81
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 81 块 / en 0 块 / 公式 0 块）
+PASS - 重灌保护: --force 明确放行重建
+
+========== 试金石 2 结果 ==========
+全部 PASS：三条真实解析管线 + sentenceSplit 保真 + 损坏文件拒收 + 重灌保护三态
+PASS - 中文PDF meta: 4页/4块
+PASS - 抽查"不患人之不己知"→第4页（预期4）
+PASS - 抽查"學而時習之"→第1页（预期1）
+PASS - 16个章句全部在库中（找到16个章标）
+PASS - DOCX 16块/16章（实际16）
+PASS - 抽查"吾日三省吾身"→第4章（预期第4章）
+PASS - 抽查"如切如磋"→第15章（预期第15章）
+PASS - DOCX 16章原文与源文件逐字比对：16句全部一致
+PASS - 英文抽查"multi-head attention"命中 7 块
+PASS - 标题在第1页 ✓
+PASS - 英文PDF切片量合理：121 块
+PASS - epub meta: 16章/1277块/709117字符
+PASS - 英文epub抽查"Mr. Bennet"→章节「PRIDE. and PREJUDICE」
+PASS - 英文epub抽查"Pemberley"命中 50 块（可跨章检索）
+PASS - epub meta: 30章/704块/417029字符
+PASS - 英文epub抽查"Ingolstadt"→章节「Chapter 3」
+PASS - 英文epub抽查"the creature"命中 4 块
+
+===== 阶段1 验收结果 =====
+全部 PASS：四库抽查定位准、原文逐字一致、全库 FTS 可检索
+===== 1) docx 表格提取 =====
+PASS - 建库成功且块数账实相符（4）
+PASS - 整表成块（P3-①：3 行合成 1 块，实际 1）
+PASS - 表头行逐格保序（整表块首行）
+PASS - 数据行 1 保序入块
+PASS - 数据行 2（含不合格单元格）保序入块
+PASS - 表格行归属正确章节（二、检测项目汇总表）
+PASS - table_stats 记账（rows=3→blocks=1，实际 {"rows":3,"blocks":1}）
+PASS - BSP_TABLE=0 逃生：逐行旧行为（3 块，实际 3）
+PASS - 字符账平（JS 225 = meta 225）
+PASS - 900 字上限仍在
+===== 2) 中文序号/短行标题启发式 =====
+PASS - 纯段落 docx 建库成功（5 块）
+PASS - 中文序号行提升为章节（["前言","一、低压电器概述","（一）按用途分类","1. 熔断器","四、总结"]）
+PASS - 短序号标题行（1. 熔断器）提升为章节
+PASS - 图注/HTML 残留/页码不误升为章节
+PASS - L1 去噪：页码行与整行 HTML 标签已丢
+PASS - 带序号的长句子句留作正文不升章节
+PASS - 章数账实相符：4 个标题 + 默认「前言」桶（meta=4，distinct=5）
+===== 3) md 单文件解析 =====
+PASS - format=md（md）
+PASS - md 标题 → 章节（["数组","数组常用操作","访问元素"]）
+PASS - 代码围栏整段去（含围栏内 # 注释）
+PASS - md 表格整表成块（P3-①，表头随数据行一组："语言 | 初始化写法\nPython | `[0] * 5`\nJava | `new int[5]`"）
+PASS - 链接留文字去地址
+PASS - 图片行已去
+PASS - 正文保真（<u> 标签剥掉、文字保留）
+PASS - md 字符账平
+===== 4) md 目录解析 =====
+PASS - md_files=3 篇（3）
+PASS - 目录书章节（["第一章 入门","notitle","进阶主题"]）
+PASS - 默认书名取目录名/上级目录（bsp-parserv3-qRCG4O）
+⚠ 书名「bsp-parserv3-qRCG4O」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Prejudice）"）
+跳过：mdbook.db 已由同一内容建过（hash 2fab02a16098ed4c，源 C:\Users\JIANGX~1\AppData\Local\Temp\bsp-parserv3-qRCG4O\mdbook）。要强制重建加 --force。
+PASS - 目录书同内容二次构建 → skipped
+===== 5) 存量四书零变化 =====
+PASS - lunyu pdf [legacy]：块数锁定 4（实际 4）
+Warning: UnknownErrorException: Ensure that the `standardFontDataUrl` API parameter is provided.
+PASS - attention pdf [legacy]：块数锁定 51（实际 51）
+PASS - lunyu docx：块数锁定 16（实际 16）
+PASS - p&p epub：块数锁定 1282（实际 1282）
+SKIP - attention pdf [结构化 126 块]：本机 doclib 不可达（configured=true / reachable=false），结构化口径无处可验；legacy 口径已在上面钉死。装了 MinerU 的机器上这条会自动变回 ASSERT。
+
+===== V3 解析器验收：全部 PASS（1 SKIP） =====
+PASS - minLen 门：短块原样透传（同一引用）
+PASS - 水果→数据库突变处下刀（6 块）
+PASS - 章节/页码原样带
+PASS - 拼回与原文逐字一致（只切不增删）
+PASS - minPiece 生效（无薄片）
+PASS - 同话题长块：相似度高于阈值 → 不切
+PASS - maxCuts=2 → 最多 3 块（实际 3）
+PASS - 多刀之后拼回仍逐字保真
+PASS - threshold 拉到 0.9999 → 切得更碎（3 → 9，参数真的在起作用）
+PASS - minPiece 大于全文 → 一刀都不切（宁可不切不切薄片）
+PASS - 4 个句子跨度（实际 4）
+PASS - 跨度切片拼回 == 原文（空白也保真）
+PASS - 首跨度的尾随空白归前句
+PASS - pickCuts：唯一切点两片 200/200 都 < minPiece=250 → 放弃
+PASS - pickCuts D13：minPiece=150 时 200/200 合法可切（旧代码误弃）
+PASS - pickCuts：minPiece=50 时同一点可切
+PASS - pickCuts D13：前片含句 i（切点 0 成立）、后片薄片弃点（切点 1 弃）（实际 [0]）
+PASS - split：embed 少返向量 → 人话抛错（embed 返回 1 个向量，与 18 个句子对不上——拒绝静默错切…）
+PASS - merge：embed 少返向量 → 人话抛错（embed 返回 1 个向量，与 2 个边界句对不上——拒绝静默合并…）
+PASS - split：embed 空返 → 人话抛错（embed 返回 0 个向量，与 18 个句子对不上——拒绝静默错切…）
+PASS - 缺 embed 函数 → 人话抛错（semanticSplitChunks 需要 embed(texts) => 向…）
+PASS - 空 chunks → 空结果（不炸）
+PASS - 同话题 15 块并成 1 块（实际 1）
+PASS - 并块文本 == 原序列以 \n 相接（逐字保真）
+PASS - 合并块带首块的章节/页码
+PASS - 入参不被改动
+PASS - target=100 → 每块一到目标即收（4 块，最大 114 字符）
+PASS - 目标尺寸分块后拼回仍保真
+PASS - maxLen=120 封顶（最大 114）
+PASS - 跨话题边界（余弦≈0.06 < 0.72）不并
+PASS - 跨章不并（章节是更强的语义边界）
+PASS - 跨页不并（PDF 页码归属不能糊）
+PASS - 空块自成一块（不产出前导 \n）
+PASS - 有空块时拼回仍保真
+PASS - 无相邻对 → 不调 embed、原样返回
+PASS - 缺 embed 函数 → 人话抛错（semanticMergeChunks 需要 embed(texts) => 向…）
+PASS - maxLen < target → 人话抛错（semanticMergeChunks 参数不合法：target=400 max…）
+PASS - split 默认参数锁定（{"minLen":400,"minPiece":150,"threshold":0.72,"maxCuts":8}）
+PASS - merge 默认参数锁定（{"target":400,"maxLen":800,"threshold":0.72}）
+
+===== 语义切分验收：全部 PASS =====
+PASS - buildEnrichTasks：8 块全 eligible（skipped=0）
+PASS - 任务书带 content_hash 与书名
+PASS - makeBatches 分批正确
+PASS - estimateEnrich 自洽（calls=5）
+PASS - minChars 门：短块跳过并计数
+PASS - 正常批：2 条目
+PASS - tags 截到 3（实际 3）
+PASS - questions 截到 3 且每条 ≤80 字
+PASS - prefix/summary 长度上限生效
+PASS - 自造/不命中标签被丢弃并计数（dropped=3）
+PASS - 留下的标签全部回源命中
+PASS - Latin 大小写不敏感命中（Docker ↔ docker）
+PASS - 标点空白不敏感命中（B+ 树 ↔ B树）
+PASS - 单词标签被丢（归一化后 <2 字符）
+PASS - 不命中标签计数（X）
+PASS - tags 超 5 个截断并计数（tags=5, capped=1）
+PASS - 重号 → 拒收
+PASS - 缺号（条数不符）→ 拒收
+PASS - 越界 idx → 拒收
+PASS - 混带（部分有 idx）→ 拒收
+PASS - 全无 idx 且条数相等 → 位置兜底
+PASS - 整批错位 → ok:false MISALIGN（一个字符都不信）
+PASS - 围栏 json 解析
+PASS - 前后夹带文字 → 对称截断
+PASS - 双数组连写 → 拒收
+PASS - 无数组 → null
+PASS - 坏 JSON → BADRESP（不抛异常穿层）
+PASS - 第一批失败 → PARTIAL（failed=1）
+PASS - 失败的批不阻断后续批（共 2 次调用）
+PASS - JSONL 缓存落盘
+PASS - 续跑只补失败批（pending=1，调用 1 次）
+PASS - usage 累计（100）
+PASS - 压成的 JSON 产物 8 条 + hash 登记
+PASS - 跑批后原文逐字未改（enrich 不写库）
+PASS - content_hash 变 → STALE 拒续跑
+PASS - 同 hash 但块结构变 → STALE_STRUCT 拒续跑（P4）
+PASS - A7：旧版缓存（无 chunk_fp）→ 结构不可判 STALE_STRUCT 拒收
+PASS - A7：拒收发生在任何云端调用之前（零花费）
+PASS - A7：STALE 不写缓存（无 meta 补写、无 entries 追加）
+PASS - run2 首跑收尾（fp 相符基线）
+PASS - fp 相符 → 不 stale，续跑零调用（全命中）
+PASS - 越界旧条目被清（块已不存在，孤儿清理路径仍在）
+PASS - 3 章各得摘要（实际 3）
+PASS - 章摘要 300 字上限
+PASS - 书摘要产出且 ≤500 字
+PASS - 章批 1 次 + 书 1 次（实际 2）
+PASS - 章名错位 → 该批作废、书摘要跳过
+PASS - 块批全成 → ok（摘要失败不阻断跑批）
+PASS - D11：章摘要失败数进 stats（summariesFailed=1）
+PASS - D11：artifact.stats 同步带 summariesFailed（失败机器可验）
+PASS - 调用数=块2+章2+书1（实际 5）
+PASS - D11：usage 逐次累加（in=500 out=250）
+PASS - 任务书：instructions/batches/hash 齐全
+PASS - 任务书带 chunk_fp/eligible（P4：外部智能体通道也能带指纹回去）
+PASS - 任务书批次带全局 idx 与原文
+PASS - 外部合法结果 → 全量验真通过
+PASS - 重复 idx → 计 dup 按首条入账
+PASS - 越界 idx → 计 orphan 忽略
+PASS - hash 不符 → 拒收
+PASS - 外部结果同样过标签回源验真
+PASS - 缺 key → CONFIG 人话返回（不抛异常）
+PASS - 库不存在 → NOBOOK
+PASS - 全短块 → 0 调用直接收尾
+PASS - chunkFingerprint：16 位十六进制（7e48fcd98424efcc）
+PASS - chunkFingerprint：同输入同值（稳定）
+PASS - chunkFingerprint：换一字即变
+PASS - chunkFingerprint：顺序敏感（逐块序列化）
+PASS - chunkFingerprint：idx 进指纹（同文本不同编号=不同结构）
+PASS - chunkFingerprint：idx/id 两种形状同值（任务书与库行两处调用）
+PASS - chunkFingerprint：空数组/非数组有确定值不抛
+PASS - buildEnrichTasks：book.chunk_fp/eligible 随任务书出海
+PASS - loadEnrichCache：chunk_fp 不符 → stale + STRUCT
+PASS - loadEnrichCache：chunk_fp 相符 → 不 stale
+PASS - loadEnrichCache：hash 不符优先报 HASH（先内容后结构）
+PASS - loadEnrichCache：两参旧调用不判结构（兼容）
+PASS - loadEnrichCache：meta 无 chunk_fp + 三参 → stale STRUCT（A7）
+PASS - loadEnrichCache：两参旧调用对无 fp 缓存照样不判（compactEnrichArtifact 重读路径）
+PASS - 默认参数锁定（{"b":5,"t":5,"q":3}）
+PASS - 提示词带全局 idx 与铁律
+PASS - loadEnrichCache 读回 8 条且 hash 相符
+PASS - compactEnrichArtifact 可重复压出同一产物
+
+===== 洗数据跑批验收：全部 PASS =====
+PASS - schema: chunks 加 ctx/tags/questions 三列
+PASS - schema: summaries/chunk_tags 两表就位
+PASS - schema: chunk_tags 带 chunk_id 索引（倒排反查）
+PASS - 导入: 合成产物全链 OK
+PASS - 导入: 6 条全入、0 未覆盖、0 标签丢弃
+PASS - 导入: 倒排写入 16 个标签
+PASS - 导入: 章摘要 2 篇（孤儿章名跳过）+ 书摘要 1 篇
+PASS - 导入: 孤儿章名给提醒
+PASS - 导入: ctx/tags/questions 三列落值正确（tags 存 JSON 数组）
+PASS - 导入: chunk_tags 倒排行与标签一一对应
+PASS - 导入: summaries 三级计数 6/2/1
+PASS - 导入: 块摘要按 chunk id 入库
+PASS - 导入: meta 打 enrich 三印记
+PASS - 导入: 原文逐字节不变（前后快照比对）
+PASS - 真机: 学而库 9 条目全入、复验 0 丢弃（跑批时已验过的产物复验清白）
+PASS - 真机: 合格 9 / 跳过短块 7（与任务书一致）
+PASS - 真机: 繁体保真（ctx/标签都是書中原字）
+PASS - 真机: 块 1 原文与真库逐字节一致
+PASS - 真机: 库侧复查回源 0 失败、覆盖率 100%
+PASS - 真机: 摘要三级 9/9/1
+PASS - 真机: meta 印记可查（enrich_entries=9）
+PASS - 拒收: content_hash 不符 → STALE（书重建过）
+PASS - 拒收: STALE 后连 schema 都没建（一个字符都不写）
+PASS - 拒收: 产物是 null → BADFILE
+PASS - 拒收: 手写坏 JSON → BADFILE
+PASS - 拒收: 文件不存在 → NOFILE
+PASS - 拒收: 缺 entries → BADFILE
+PASS - 拒收: 书库不存在 → NOBOOK（产物在位）
+PASS - 容忍: 重复 idx 按首条、越界 idx 忽略
+PASS - 容忍: 自造标签「自造词并不存在」被丢并计数
+PASS - 容忍: 块 2 只落回源成功的标签
+PASS - 容忍: 重复条目按首条落库（后来的不覆盖）
+PASS - 缺号: 4 覆盖 / 2 未覆盖
+PASS - 缺号: 报出未覆盖块号 5,6
+PASS - 缺号: 未覆盖块 ctx 留 NULL（不猜）
+PASS - 幂等: 重复导入倒排行数不变（先删后插）
+PASS - 幂等: summaries 不翻倍（upsert）
+PASS - 增量: 2/6=33% 覆盖率 → GATE 硬线拒收（P4）
+PASS - 增量: 被拦后库里还是原 4 条（事务前判定，一个字符都没写）
+PASS - 增量: 被拦不抹掉上次入库的闸门印记（还是 warn）
+PASS - 增量: 全量产物入库 → pass 且覆盖补齐到 6（真实续跑口径）
+PASS - 增量: 闸门印记升 pass
+PASS - 复查: 没洗过的库 → NOSCHEMA 不炸
+PASS - 复查: 库不存在 → NOBOOK
+PASS - 复查: 标签 16 条全回源、覆盖率 100%
+PASS - 复查: 原文指纹 16 位可对外比对
+PASS - CLI: 正常入库退出 0 且打指纹
+PASS - CLI: --audit 退出 0
+入库被拒（NOFILE）：找不到产物文件 C:\Users\JIANGX~1\AppData\Local\Temp\bsp-enrich-import-3CLfWj\no-such-file.json
+PASS - CLI: 坏产物路径退出 1 给人话
+入库被拒（STALE）：产物 content_hash ffffffffffffffff ≠ 书库 abc123——书被重建过，请重跑洗数据再入库
+PASS - CLI: STALE 拒收退出 1
+用法: node src/enrich-import.mjs <book.db> [artifact.json] [--audit] [--min-chars N]
+  artifact.json 缺省取 enrich-results/<库名>.json
+PASS - CLI: 无参数给用法
+PASS - CLI: --min-chars 40 位置参数解析不互相污染
+PASS - STALE_STRUCT: 老产物（无指纹）块数 99≠10 → 拒收
+PASS - STALE_STRUCT: 连 schema 都没建（一个字符都不写）
+PASS - buildEnrichTasks 带 16 位块结构指纹
+PASS - STALE_STRUCT: 指纹 0123456789abcdef ≠ 库指纹 → 拒收
+PASS - 兼容: 无指纹老产物（块数相符）照常入库且判 pass
+PASS - 兼容: meta.enrich_gate 落 pass+coverage
+PASS - GATE: 30% 覆盖率 → block 拒收
+PASS - GATE: reasons 点明硬线
+PASS - GATE block: ctx/tags/questions 三列都没建（事务前判定）
+PASS - GATE block: meta 无 enrich 三印记（没写成已完成）
+PASS - GATE block: summaries/chunk_tags 两表都没建
+PASS - GATE: 90% 覆盖率 → warn 但照常入库
+PASS - GATE: warn 入库 9 条、报 1 个未覆盖块
+PASS - GATE: meta.enrich_gate 落 warn（书架徽标读它）
+PASS - GATE: 全量产物 → pass
+PASS - env 覆盖: BSP_GATE_COVERAGE_HARD=1.5 → 全量产物也被拦（阈值可调）
+PASS - env 复原: 同一产物放行（env 真在起作用，不是缓存）
+PASS - 纯函数: 满分 pass
+PASS - 纯函数: 覆盖率 59% → block
+PASS - 纯函数: 覆盖率 60% → warn（硬线是 <60%）
+PASS - 纯函数: 覆盖率 94% → warn
+PASS - 纯函数: 覆盖率 95% → pass（黄线是 <95%）
+PASS - 纯函数: 丢弃率 50% → warn（硬线是 >50%，压线不过）
+PASS - 纯函数: 丢弃率 51% → block
+PASS - 纯函数: 丢弃率 11% → warn
+PASS - 纯函数: 丢弃率 10% → pass（黄线是 >10%）
+PASS - 纯函数: 章摘要缺口 40% → warn
+PASS - 纯函数: 章摘要缺口 60% → block（>50%）
+PASS - 纯函数: 未开摘要不参与判定（chapterTotal=0）
+PASS - 纯函数: 0 合格块不误杀（全短块书）
+PASS - 纯函数: 空输入不炸
+PASS - 纯函数: dropRate = 丢弃/(丢弃+保留)
+PASS - 任务书: eligible/chunk_count/chunk_fp 三字段齐
+PASS - 任务书指纹与 chunkFingerprint 直算一致（同一函数两处调用）
+PASS - 短块进 chunk_count 不进 eligible，且改变指纹（结构敏感）
+PASS - 静态: 无任何 UPDATE chunks SET ...text=（原文不许被写）
+PASS - 静态: 不对 chunks 行本身增删
+PASS - 静态: 三列迁移清单锁定 ctx/tags/questions（判断标准①代码级盯防）
+PASS - 静态: 导入事务内复核原文指纹，不一致整单回滚（判断标准①运行时保险）
+PASS - 静态: 四个导出俱在
+PASS - 收尾: 默认产物路径 enrich-results/<库名>.json
+
+===== 洗数据入库验收：93 PASS / 0 FAIL =====
+PASS - enrich 四通道注册（4/4）
+PASS - 无 key 抛人话错误并指路问一问（还没配云端 AI——去「问一问」页填 API key 就能一…）
+PASS - 无 key 不落任务态（点了也只是提示）
+PASS - 启动即返回 + 成本预估（约 4 次云端调用）
+PASS - 跑批入库完成进 done 态（detail: 覆盖 6/6（100%） · 标签 6 · 摘要 2 章+全书）
+PASS - 入库统计（imported=6 tags=6）
+PASS - chunks ctx/tags/questions 三列落值
+PASS - chunk_tags 倒排表（6 块 × 1 标签）
+PASS - 块摘要 6 条（实际 6）
+PASS - 章摘要 2 条（两章）
+PASS - 书摘要 1 条
+PASS - 产物 JSON + JSONL 缓存在 <书库上级>/enrich-results
+PASS - 原文一字不改（group_concat 前后一致）
+PASS - audit 复查（bad=0 pct=100）
+PASS - 书架摘要（pct=100 tags=6）
+PASS - enrichStatus 出海可序列化（无函数/循环引用）
+PASS - 取消后落 cancelled 态（不是 failed）
+PASS - 闸门生效：只发了 2 次云端请求（第二批后全拦）
+PASS - 已洗好的批在 JSONL 缓存里（重跑接着来）
+PASS - cancelled 从注册表撤掉（不留完成态残影）
+PASS - STALE 拒洗且消息带修复指引（缓存与当前书库内容不一致（content_hash 不同）——书被重建过，请先移…）
+PASS - BSP_SUMMARY=0 仍能洗完块
+PASS - 产物无章/书摘要（开关生效）
+PASS - 库内只有块摘要 6 条
+PASS - 全覆盖续跑零云端调用（实际 0 次）
+PASS - 重复入库幂等（倒排不翻倍）
+PASS - 坏书名抛人话错误
+PASS - 无任务取消返回说明（不炸）
+PASS - audit 坏书抛人话错误（IPC 包装成 {ok:false}，UI toast）
+PASS - IPC 层错误包装 {ok:false,error}（M3）
+PASS - warn 不拦入库——照样 done（detail: 覆盖 6/6（100%） · 标签 6 · 摘要 2 章+全书 · 闸门标记：覆盖 100%（部分覆盖））
+PASS - warn 的 gate 随终态出海
+PASS - warn 进 done detail（用户看得见）
+PASS - meta.enrich_gate 落 warn
+PASS - 书架摘要带 enrichGate=warn（徽标数据源）
+PASS - GATE block 落 failed 态（code=GATE）
+PASS - GATE 单给标签「入库被拦（质量闸门）」
+PASS - GATE 错误消息是人话且带补救
+PASS - block 后 meta 无 enrich_gate（没写成已完成）
+PASS - block 后 ctx 列都没建（事务前判定）
+PASS - block 后书架显示未洗（无半成品印记）
+PASS - DIRTY 落 failed 态（code=DIRTY）
+PASS - DIRTY 单给标签「洗数据被拒（书太脏）」
+PASS - DIRTY 消息带补救（结构化改造）
+PASS - DIRTY 零云端请求（体检在调用前）
+PASS - DIRTY 连缓存都没建
+PASS - DIRTY 后库里连 ctx 列都没建（体检在写任何东西之前）
+
+===== enrich-job-test: 47 PASS / 0 FAIL =====
+===== W0 CLI 契约（V3R-D01/D02/D03/D04/D05/D06/D07）=====
+PASS - W0-1 带值 flag 解析（--batch 5 不当书路径）
+PASS - W0-2 --base/--key/--model 值不被当书路径
+PASS - W0-3 缺 chunks 表库走人话拒绝
+PASS - W0-4 垃圾文件库走人话拒绝
+PASS - W0-5 入库 CLI 坏路径人话
+PASS - W0-6 --min-chars=abc 人话拒绝
+
+===== W1 JSONL 中断矩阵（V3R-D09 + 断点续跑）=====
+PASS - W1-1 半行损坏跳过+好行全收
+PASS - W1-2 形状异常行（null/entries:null/缺idxs）不抛
+PASS - W1-3 无 meta 行不误判 stale
+PASS - W1-4 双 meta 末条覆盖
+PASS - W1-5 全覆盖后续跑零调用
+OBSERVE - W1-6 kill -9 真中断后续跑不双调（首批走缓存，从 idx2 续） | alive=true cache=true ok=true calls=5 首批=2
+
+===== W2 坏产物矩阵（G1 ③④⑤）=====
+PASS - W2-1 idx 非整数被验真丢弃并警告
+PASS - W2-2 缺 content_hash 放行入库（设计行为）
+PASS - W2-3 摘要截断（章 300/书 500）
+PASS - W2-4 entries 非数组拒收
+PASS - W2-5 章摘要值为对象 String() 兜底不崩
+PASS - W2-6 PARTIAL 的 failed_batches 与 JSONL fail 对应
+
+===== W3 指纹与 DBBROKEN（V3R-D02/D04+D06）=====
+PASS - W3-1 指纹不符：不抛穿层 + 回滚后 ctx 全 NULL
+PASS - W3-2 tx 内 SqliteError 转 {ok:false} 不穿层
+PASS - W3-3 页损坏库 DBBROKEN
+PASS - W3-4 缺 chunks 表 DBBROKEN
+PASS - W3-5 runEnrich 缺 chunks 表返回 DBBROKEN
+PASS - W3-6 buildEnrichTaskFile 坏库返回 {error,hint}
+
+===== W4 桌面层守卫与取消（G3 六条）=====
+PASS - W4-1 同书并发启动被拒（人话）
+PASS - W4-2 导入中守卫静态复核（读 jobsStatus 判 stage + 人话文案）
+PASS - W4-3 进度事件序列（enrich→…→import→done）
+PASS - W4-4 未跑批取消：只发 2 次 + cancelled + 库零写入
+PASS - W4-5 audit 未洗书 NOSCHEMA
+PASS - W4-6 坏结构书落 failed 人话
+
+===== W5 chatFn 抛异常与库层容错（V3R-D02 家族）=====
+PASS - W5-1 chatFn 抛异常不穿层（落 PARTIAL/failed 可续跑）
+PASS - W5-2 失败批续跑补齐
+
+===== W6 P4 脏库拒洗与质量闸门 =====
+PASS - W6-1 脏库 → DIRTY 拒洗（不抛穿层）
+PASS - W6-1 DIRTY 消息是人话且带补救（重新加工）
+PASS - W6-1 DIRTY 在任何云端调用之前——零请求
+PASS - W6-1 DIRTY 连 JSONL 缓存都没建（先体检再落盘）
+PASS - W6-2 控制符块 → DIRTY（不只会查乱码签名）
+PASS - W6-2 BSP_ENRICH_DIRTY=0 → 放行照洗（逃生开关有效）
+PASS - W6-3 干净书零打扰（不误拦）
+PASS - W6-4 1/20=5% 恰好压线 → 放行（阈值是严格大于）
+PASS - W6-4 2/20=10% → DIRTY（阈值真在起作用）
+PASS - W6-5 跑批先成功（缓存+产物落盘）
+PASS - W6-5 GATE block：2/6=33% 覆盖率被拦（不抛）
+PASS - W6-5 GATE block：meta 零印记（没写成「已完成」）
+PASS - W6-5 GATE block：ctx 列都没建（事务前判定，一个字符都不写）
+PASS - W6-5 缓存没被毒化——重跑零调用直接出全量产物
+PASS - W6-5 全量产物再入库 → pass（闸门只拦坏产物，不拦正路）
+PASS - W6-6 首跑成功（缓存+产物落盘）
+PASS - W6-6 A7：旧格式缓存 + 同 hash 重加工 → STALE 拒收（结构不可判）
+PASS - W6-6 A7：零云端调用（拒收在发请求之前）
+PASS - W6-6 A7：缓存与产物一个字节都没改（不补写 meta、不重压产物）
+PASS - W6-6 同族：meta 行缺失的缓存照样拒收（无哈希无指纹=不可判）
+
+===== enrich-adversarial-fuzz：52 PASS / 0 FAIL / 0 OBSERVE =====
+PASS - 关键词抽取: 属格剥离+实词保留（darcy,estate,called）
+PASS - 关键词抽取: who/what 类问题词全停、's 属格不单独出现
+PASS - 关键词抽取: 弯引号 ’s 归一后剥离（df=0 陷阱）
+PASS - 中文: 简转繁后切 2-gram（治理 理一 一個 個大 大國...）
+PASS - 简转繁: 国→國 恒→恆
+PASS - df过滤: 「可以说…」题的字面腿哑火不提名（实际 0）
+PASS - df过滤: 「大國」低频保留且正中烹小鮮块（id=60 score=1）
+PASS - 封顶: 50 候选取 top-12
+PASS - 封顶: 保留的是分数最高的一批
+PASS - 关键词腿激活: convs2s 题 MATCH 命中 52 块（旧短语腿是 0）
+PASS - 端到端: convs2s/bytenet 答案块进 top-20（第 14 名；旧字面腿时代根本不在池里）
+PASS - 端到端: 英文关键词腿贡献字面分（fts>0）
+PASS - 端到端: 答案块被字面腿认出（fts=0；在字面命中集合内=true，FTS_TOPK=12 封顶会截断低名次）
+PASS - 端到端: 烹小鮮块带字面分命中（fts=1.00）
+PASS - 开关: BSP_FTS_KW=0 整句短语模式字面腿全哑（命中数 0）
+PASS - 开关: 默认关键词模式字面腿激活（命中数 10）
+PASS - 短查询/纯符号返回数组不崩溃
+PASS - 质量阶梯函数边界正确（保留给实验用，当前主路径用提名封顶）
+PASS - 实体链接: P&P 英文命中 Darcy（Fitzwilliam Darcy）
+PASS - 实体链接: 简体「齐宣王」命中繁体人物（孟子/齊宣王）
+PASS - 实体链接: 同一问句同时命中「孟子」（多人物并集）
+PASS - 别名: 问「lizzy」注入全写法（en=elizabeth,lizzy）
+PASS - 别名: 简体问句注入繁体 gram（cjk=孟子 孟軻 齊宣 宣王）
+PASS - 别名: cap 8/16 + 去重（无重复词）
+PASS - 剪枝①: 多词写法只取末词（George Wickham 不带出 george——版权页 George Allen 短块污染实测；en=wickham,lydia）
+PASS - 剪枝②: 跨实体子串遮蔽（bennet⊂"Lydia Bennet" 被丢、书中单字写法 charles 保留；en=jane,charles）
+PASS - 别名: 命中后注入 match_names 全写法且 cap=8（en=8 个）
+PASS - 别名: 译名只匹配不注入（cjk 为空，书里没有的词不进 FTS）
+PASS - 安全: 无 nodes 表库返回空词（SqliteError 被吞、不崩）
+PASS - 安全: 有表无编目（llm 层空）返回空词
+PASS - 注入序: 别名排问题词前（"elizabeth" OR "lizzy" OR "think" OR "marriage"）
+PASS - 注入盘: 总词封顶 24（30 词输入只留 24）
+PASS - 开关: BSP_ENTITY_LINK 关/开两模式都正常产出
+PASS - 开关: 关/开结果序列不同（别名注入有实际作用，不是死代码）
+PASS - 端到端: 简体问句命中繁体原文块（id=154 fts=1.00）
+PASS - 缓存: clearListCache 归零 + 默认开
+PASS - 缓存: 首查重扫建缓存（2 本，miss=1）
+PASS - 缓存: 再查命中不重扫（hits=2 misses=1）
+PASS - 缓存: 新增 .db → 文件名集合变化重扫（3 本现身）
+PASS - 缓存: touch .db mtime → 指纹变化重扫（hits=2 misses=3）
+PASS - 缓存: 内容变化经 mtime 指纹刷新（无僵尸）
+PASS - 缓存: 关书即时过滤且不触发重扫（state 现读在缓存之上）
+PASS - 缓存: includeDisabled 豁免仍见全量（引用回源路径不受 H3 影响）
+PASS - 缓存: 返回值浅拷贝与缓存隔离（调用方乱改不污染）
+PASS - 缓存: BSP_LIST_CACHE=0 回退旧路径（结果正确且不触缓存计数）
+PASS - 缓存: 删掉变量恢复启用（命中缓存）
+
+===== 字面腿关键词化验收结果 =====
+全部 PASS
+OBSERVE - 真库 enrich 数据面缺失（chunks 无 tags/questions 列）→ 真库三源断言跳过。恢复办法：跑一遍洗数据管线（enrich-book + enrich-import）给论语灌回 tags/questions；本条不是缺陷，是环境状态（2026-11-16 回灌编目只补了 catalog 层，enrich 层需重跑 LLM）。
+PASS - 真库未洗数据 → 信号静默为空（零变化前提，与环境无关，照常断言）
+PASS - 未洗数据的库 → 静默返回空（零变化前提）
+PASS - 模式 0：全池外问句结果为空（）
+PASS - 配额封顶：8 候选只提名 6（实际 6）
+PASS - 提名都带 tag 来源标
+PASS - df 过滤：只挂高频标签「廢話」的块不进提名
+PASS - 问题路提名：chunk#9 凭假设问题进窗（enr=question）
+PASS - 地板：单摘要命中 0.12 < 0.15 被无效化（chunk#11 不进）
+PASS - chunk#10 在池（字面命中）不进提名
+PASS - 加权腿：池内块涨分（0.500 → 0.596，enrW=0.32）
+PASS - 加权腿只作用于池内：池外弱信号块仍不进（chunk#11 缺席）
+PASS - 模式 0 与未设置结果一致（1,14,6,7,5,8）
+PASS - 模式 0 结果不带 enr/nom 字段
+PASS - 未洗数据的库：模式 1 与 0 结果一致（静默跳过）
+===== enrich-nom-test: 全部 PASS =====
+PASS - 迁移完整性: nodes[id,type,name,ref,source] edges[src_type,src,dst_type,dst,kind,weight,ref,source]
+PASS - 双层图谱并存: llm 节点 37(12主题+25人物) / rule 节点 29
+PASS - 编目完整性: 主题12 人物25 关系26 belongs边1011(=聚类覆盖1011) mention边2804
+PASS - 溯源 meta: catalog_model=e5 catalog_themes=12 catalog_at=2026-10-19T07:06:43.427Z
+PASS - 防幻觉负例: 假人物 Zaphod Beeblebrox 被拒（人物「Zaphod Beeblebrox」的 match_name「Zaphod Beeblebrox」在原文中不存在（防幻觉校验））
+PASS - 防幻觉负例: 真人物夹带假写法 Lizzzzy 同样被拒
+PASS - 提示词: instructions 原文透传（唯一真源，防两端规则漂移）
+PASS - 提示词: 覆盖全部 42 个 cluster id
+PASS - 提示词: 末尾带操作说明（结果存哪 + 回来点哪个按钮）
+PASS - mention 抽查: 签名块127 → [Elizabeth Bennet, Jane Bennet, Charles Bingley, Caroline Bingley, Lydia Bennet, Mrs. Bennet]
+PASS - theme_vecs: 12 行 × 384 维
+PASS - 信号命中块数 428（Jane+Bingley 的 mention 并集）
+PASS - 答案块3 信号 w=0.231（直配 Jane+Bingley 求和 0.24，扩散默认关闭）
+PASS - 引擎不一致时主题路自动跳过
+PASS - 无关问题零误伤: 命中 0 块
+PASS - 原文保真: 1250 块 / 710791 字节 == 入库基线
+PASS - 骨架: 16 章 / 1250 块 == 库里实际值（真值，不靠手写）
+PASS - 骨架 catalog.json: 12 主题 / 25 人物 / 26 关系（与库一致）
+PASS - 骨架: 章节表 16 行全从 chunks 查出（每章带真实块数）
+PASS - 骨架: 建议文件名合规（chNN-slug.md）
+PASS - 骨架: 人物 chunk 锚点封顶 50（Elizabeth Bennet 出场 594 块 → 只存 50 个锚点，防撑爆包）
+PASS - 骨架 SKILL.md: frontmatter sources 填真值
+PASS - 骨架 SKILL.md: 章节表不写 .md 文件名（否则撞 coverageCheck 的 broken-reference 校验——文件名只在 catalog.json 里）
+PASS - 骨架: 书名未命中返回错误 + 书目清单
+PASS - 人物深查: Caroline Bingley 出场 85 块 / 书中写法 Miss Bingley、Caroline
+PASS - 人物深查: 关系边可查（与 Jane Bennet：表面亲热陪简聊天，暗中与达西一同撮合把简与宾利拆开）
+PASS - 人物深查: 代表块 #65,#154,#215,#501,#1243（均匀抽样，带定位+预览）
+PASS - 人物深查: 名字未命中返回候选清单
+PASS - 主题深查: Elizabeth and Darcy 覆盖 111 块 / 章节分布 “Engaged by the river.” CHAPTER XLV.×15 “Lizzy, my dear, I want to speak to you.” CHAPTER LV.×14 delighted to see their dear friend again. CHAPTER XVII.×13 A note for Miss Bennet. CHAPTER VII.×10 “I am sure she did not listen.” CHAPTER LII.×9 “When Colonel Miller’s regiment went away.” CHAPTER XLI.×8 “On looking up.” CHAPTER XXXIII.×8 Piling up the fire. CHAPTER XI.×8
+PASS - 主题深查: 代表块带块号与预览
+PASS - 主题深查: 名字未命中返回候选清单
+PASS - 图邻域: Elizabeth Bennet 邻居 8 个（前排 Fitzwilliam Darcy×340、Jane Bennet×274、Mr. Collins×153）
+PASS - 图邻域: perNeighbor=2 每邻居代表块 ≤2（抽样 #10,#1246）
+PASS - 图邻域: 名字未命中返回候选清单
+PASS - 回滚演练: llm 37→0 / rule 保留 29 / 原文 710791 字节不动 / catalog meta 清零
+
+===== 编目功能验收结果 =====
+全部 PASS：迁移/完整性/防幻觉/mention/向量缓存/检索信号/保真/回滚 八关全过
+PASS - slug 拒收: "../evil"
+PASS - slug 拒收: "..\\evil"
+PASS - slug 拒收: "a/b"
+PASS - slug 拒收: ".git"
+PASS - slug 拒收: ""
+PASS - slug 拒收: "大写的中文"
+PASS - 穿越 slug 未在磁盘产生任何目录
+PASS - 路径白名单: ../../package.json 拒收
+PASS - 路径白名单: chapters/x.js 拒收
+PASS - 路径白名单: SKILL.txt 拒收
+PASS - B5: scripts/check.mjs 拒收且 hint 说明「不收可执行脚本」
+PASS - 结构: 缺 SKILL.md 拒收
+PASS - 结构: 缺 description 拒收
+PASS - 结构: name != slug 拒收
+PASS - frontmatter: sources 别名映射解析正确
+PASS - 别名未声明: unknown-source
+PASS - 章节造假: chapter-not-found
+PASS - 章节造假: hint 给出实际章节示例
+PASS - 引文造假: quote-not-found
+PASS - 引文造假: 错误定位到文件与行号
+PASS - 校注容忍: 剥「一作」后真实引文通过
+PASS - 正常落盘: ok:true（校验 3 条引用——B5 后 SKILL.md 引文行也计入）
+PASS - 正常落盘: 磁盘文件齐全
+PASS - 读回: SKILL.md + 章节索引
+PASS - 读回: 按需取单章
+PASS - 读回: 章节文件名白名单
+PASS - 读不存在: error + available
+PASS - 读不存在章节: error + available
+PASS - list_skills: 枚举 2 个技能
+PASS - list_skills: 字段齐全（title/description/chapters/sources）
+PASS - 幂等覆盖: 二次 save 成功
+PASS - 幂等覆盖: 整包替换（旧章节消失）
+PASS - 幂等覆盖: 旧文件不留残骸
+PASS - 原子性: 假引文整包拒收
+PASS - 原子性: 拒收后目录不存在（一个字节都没写）
+PASS - 原子性: 无临时目录残留
+PASS - 引文提取: 只认 blockquote、行号与引文正确
+PASS - V09: 引文空壳（条条切不出有效子句）→ 拒收 quote-too-short（不再 ok:true 放行）
+PASS - V09: 短引文条目 → quote-too-short 拒收（空子句不再 ok:true）
+PASS - B5: 零引文包（SKILL.md 无 > 行）→ no-quote 拒收
+PASS - V09: src/ 无任何执行 skills/*/scripts 的代码路径（只落盘不执行）
+PASS - 出厂自检: coverage 2/81 声明正确通过
+PASS - 出厂自检: 清点单 covered/total/percent 正确
+PASS - 出厂自检: 清点单带章节清单
+PASS - 出厂自检: coverage 覆盖数写错拒收
+PASS - 出厂自检: coverage 分母写错拒收
+PASS - 出厂自检: 能力声称与实际一致放行
+PASS - 出厂自检: 「81章速查」吹牛拒收（复现本案）
+PASS - 出厂自检: 书属性正确放行并提示补 coverage
+PASS - 出厂自检: 书属性写错拒收
+PASS - 出厂自检: 索引表指向不存在文件拒收
+PASS - 出厂自检: coverage 坏格式拒收
+PASS - 出厂自检: 多书技能跳过 coverage 校验不误杀
+PASS - 大小上限: 单文件 513KB 拒收
+PASS - 大小上限: 整包 1.2MB 拒收（单文件均未超）
+PASS - 大小上限: 拒收后不落任何文件
+PASS - P-A: 带 catalog.json 整包落盘通过
+PASS - P-A: read_skill 返回 catalog（机器可读索引随包走，离库分享也能用）
+PASS - P-A: list_skills 带 has_catalog=true
+PASS - P-A: 坏 catalog.json 只 warning 不拒收（先观察后收紧）
+PASS - P-A: 坏 catalog.json 读回降级为 null（不炸读流程）
+PASS - P-A: catalog book_id 与 sources 不对齐给 warning
+PASS - P-A: 旧包零影响——catalog=null / has_catalog=false
+PASS - references: 整包落盘通过（索引指向 references/ 不报 broken-reference）
+PASS - references: 章节索引带 references/ 前缀
+PASS - references: 裸文件名读回（file 字段带实际前缀）
+PASS - references: 两代目录并存落盘通过
+PASS - references: 两代目录索引合并（chapters 与 references 同列）
+PASS - references: 路径穿越拒收
+PASS - 删除前：包在磁盘上（前置）
+PASS - 删除成功：回执 ok + deleted 路径
+PASS - 删除后：整目录（含章节）没了
+PASS - 删除后：列表不再有它
+PASS - 删除不存在的包 → skill-not-found + available 清单
+PASS - 删除穿越 slug → bad-slug 拒收
+PASS - 删除连锅端：同 slug 的原子写僵尸 tmp 目录一并清掉
+PASS - 删除后可整包重建（readSkill 正常）
+PASS - 无注入无 env → 默认目录（仓库 skills/）
+PASS - env 层：BSP_SKILLS_DIR 生效（调用时读）
+PASS - 注入优先于 env（桌面 engine 注入路径）
+PASS - env 删除后仍走注入（调用时读的另一面）
+PASS - V01: checkBudget 传 estChars=90000 → single-call-too-big 拒
+PASS - V01: 漏传 estChars（默认 0）→ 恒放行（探测器：证明第三参非装饰）
+PASS - V01: estimateDeepReadChars(read_range 1..99999) > 80000（闸机前移的弹药）
+PASS - V01: gate=true 超量请求探针 handler 未执行（事前拦截）
+PASS - V01: 拒绝返回 {error, reason:single-call-too-big}
+PASS - V02: 18 个注册名全部有定档（差集为空）
+PASS - V02: save_skill 定档 search（不再走 metadata 直通绕闸机）
+PASS - V02: 未登记工具名 → assertTierCoverage 抛「未登记工具」（fail-closed）
+PASS - V02: 未登记名无法静默降级为 metadata
+PASS - V02: 服务关闭态 save_skill 探针未落盘（闸机先拦）
+PASS - V02: 关闭态返回 manual-off 人话拒绝
+PASS - V02: 开启态探针执行了一次
+PASS - V02: save_skill 过闸机后 session.calls===1（记账，不再直通漏账）
+PASS - V02: 审计 usage-log.jsonl 追加 tool=save_skill ok=true
+PASS - V02: 开启态返回注入 handler 的结果
+
+===== skill-store-test: 96 PASS / 0 FAIL =====
+PASS - S1 前置: saveSkill 接受健康包
+PASS - S1 健康包体检为绿
+PASS - S1 引文 1/1 通过
+PASS - S1 覆盖账 1/2 章
+PASS - S2 前置: saveSkill 接受源书包（书还在）
+PASS - S2 源书被删 → 红 source-missing
+PASS - S2 sources 行标记 missing
+PASS - S3 引文造假 → 红 quote-not-found
+PASS - S4 索引断链 → 红 broken-reference
+PASS - S5 声称全书3章（实2章）→ 红 book-total-lie
+PASS - S6 前置: saveSkill 接受源书包
+PASS - S6 源书被关 → 黄 source-disabled
+PASS - S6 书关了但引文照样回源（0 失败）
+PASS - S6 同一本书的健康包同步变黄（关书≠坏书）
+PASS - S7 前置: saveSkill 接受纯 SKILL.md 包
+PASS - S7 无章节文件 → 黄 no-chapters
+PASS - S8 僵尸目录不进体检计数（SLUG_RE 挡掉）
+PASS - S8 僵尸目录在 warnings 点名
+PASS - 汇总: 共 7 个包
+PASS - 汇总: 红4/黄3/绿0（实 红4/黄3/绿0）
+PASS - 汇总: 僵尸清掉后无 warnings
+PASS - skills/ 不存在 → 空报告 + 提示
+
+===== skill-health: 22 PASS / 0 FAIL =====
+PASS - 模块图导入无 TDZ/缺失导出（批 1 暗雷回归防线）
+(node:21272) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/JIANG%20XIAO%20HUA/Desktop/book-skill-platform-r4/src/renderer/app.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r4\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - boot 后渲染出书架视图
+PASS - boot 拨通 booksList/jobsScanPending/jobsStatus/skillsList/llmConfigGet（实际：configGet,booksList,jobsScanPending,jobsStatus,skillsList,usageGet,llmConfigGet）
+PASS - 书架显示书卡（booksList 数据落地）
+PASS - C4：boot 后顶栏云端 chip 显示未配置态（与 modelChip 并列）
+PASS - W1：书架页渲染对外服务面板 + 开关（boot 拨了 usageGet 才渲染得出来）
+PASS - raw 卡片渲染「未加工」态 + 「开始加工」按钮（#167 书架入口）
+PASS - raw 卡片只有「开始加工」按钮没有「洗数据」按钮（#167 按钮分流：没库可洗）
+PASS - raw 卡片只有「彻底删除」（#168：没库可移出，purge 删 books/ 原件）
+PASS - processed 卡片「移出书架」+「彻底删除」两档都在（#168）
+PASS - 首启向导三选项：内置书库（推荐）/ 选现有 / 空白
+PASS - 向导模型文案：内置不下载（对齐审查偏差 3——不再宣称首次 700MB 下载）
+PASS - sideFoot 常驻文案改为「已内置」（偏差 3 第二处）
+PASS - 种子化期间按钮禁用（防重复点）
+PASS - 种子化进度透传按钮文案（实际：「正在初始化内置书库… 50%」）
+PASS - 点「使用内置书库」→ seedStart 拨通
+PASS - 种子化成功后写配置（configSet({}) 空 patch=用种子化落点）
+PASS - 种子化失败 → 按钮恢复可再点（幂等续拷，不锁死用户）
+PASS - 失败 toast 指路（人话，不裸英文堆栈）
+PASS - 点「开始加工」→ jobsStart 拨通（#167 第二段入口）
+PASS - 点「彻底删除」→ purgeBook 拨通（#168 第二档入口）
+PASS - 点「关闭」→ usageSet 拨通（W1 开关写 usage-policy.json）
+PASS - 点「移出书架」→ deleteBook 拨通（#168 第一档入口）
+PASS - 点卡片进翻书自动拨 chapters（loadReader 接线回归——批 1 实测没接上）
+PASS - 翻书目录渲染出章节（#chapList）
+PASS - 目录章条带 token 账（get_outline 对称，fmtK K 记法）
+PASS - 章节质量徽标渲染（messy → 「章节名可疑」）
+PASS - outline notes（覆盖率提示）透传渲染
+PASS - 原文块渲染（繁体原文透传，#blockList）
+PASS - 主题筛选渲染代表块（reader:themeBlocks 接线）
+PASS - 人物筛选渲染出场块（reader:personBlocks 接线）
+PASS - 「问这段」把原文带进问一问
+PASS - C2：「带去对话」把原文带进对话输入草稿（不自动发问，给人改的机会）
+PASS - 技能面板渲染开关区
+PASS - 技能包卡片带 coverage 徽标（frontmatter coverage 字段接线）
+PASS - 技能包卡片带对外开关（W3.5：MCP 常开/常关）
+PASS - 点对外开关 → 状态翻转（togglemethod 接线 skillToggle）
+PASS - 再点一次恢复开启
+PASS - 技能包卡片带删除按钮（ghost danger）
+PASS - 点删除 → skillDelete 拨通（确认框由 global.confirm 桩放行）
+PASS - 技能面板带体检按钮（W5 第二波只读面板入口）
+PASS - 未点体检前不渲染体检结果区（懒加载，不抢眼）
+PASS - 点体检 → skillHealthCheck 拨通（engine→lib checkSkills，与 MCP check_skills / CLI 同一实现）
+PASS - 体检汇总条渲染红黄绿计数（hlchip 三盏灯）
+PASS - 非绿包 findings 逐条渲染（reason + hint，红黄绿左边线）
+PASS - 体检面板只读：引导走对话修包（read_skill→改→save_skill），不内嵌修改动作
+PASS - 体检后按钮行显示上次结果摘要（再点可重跑——书库变动后重验）
+PASS - 问一问带技能包勾选（state.skills.packages 已由 boot 预拉）
+PASS - 技能包下拉列出可选包
+PASS - 问一问带云端 AI 状态条（未配置引导）
+PASS - 配置卡展开（llmedit 接线）
+PASS - 配置卡收起（llmclose 接线）
+PASS - 问一问：保存配置后 hasKey 落地（llmsave 接线）
+PASS - C4：保存配置后顶栏云端 chip 刷为就绪态（模型名+尾号，不回显全文）
+PASS - 问一问：云端错误进内嵌条（持久可见 + 重试入口，A3）
+PASS - 对话视图渲染（P3 导航接线）
+PASS - C2：对话输入框渲染草稿（带去对话的原文，可改可直接发）
+PASS - C5：对话页内嵌云端状态条（ask 页同款 cloudBarHtml，配置入口不再要跳页）
+PASS - C5：对话页就地展开配置卡（llmedit 不跳页，bindAskEvents 处理器服务两页）
+PASS - C5：对话页配置卡收起
+PASS - 对话：发送 → user+assistant 入列（chatSummary 接线）
+PASS - 对话：消息流双气泡渲染
+PASS - 对话：AI 回答带取材 meta 行（A4）
+PASS - C2：输入委托实时同步草稿（refresh 不打回）
+PASS - 对话：云端失败 → error 消息携带本地检索结果（A1 降级通道）
+PASS - 对话：错误气泡挂本地原文折叠区（引用可跳，A1）
+PASS - 对话：清空接线
+PASS - P0-9/UI: 从没选过 → 首次发问弹了一次明确选择（confirm 5→6）
+PASS - P0-9/UI: 弹框前先本地预检索一次（为了报准「会发多少字」，检索不出网）
+PASS - P0-9/UI: 这次点「允许」→ chatSummary 立刻带 includeSourceText:true（实际 true）
+PASS - P0-9/UI: 选择写回配置记住（llmConfigSet 收到 sendSourceText:true，实际 true）
+PASS - P0-9/UI: 记住后 state 立刻是 true（不用刷新页面）
+PASS - P0-9/UI: 第二次发问不再弹框（confirm 仍是 6——「只问一次」）
+PASS - P0-9/UI: 第二次直接按记忆发原文
+PASS - P0-9/UI: 状态条显示当前选择（发送原文：允许）
+PASS - P0-9/UI: 点开关 → 立刻改成不允许并记住（用户可以反悔）
+PASS - P0-9/UI: 关掉后 chatSummary 带 includeSourceText:false（实际 false）
+PASS - P0-9/UI: 拒绝时界面明说代价并给可改入口（note：「只发书名和章号——云端 AI 看不到原文，回答只能靠书名…」）
+PASS - P0-9/UI: 已经拒绝过（false）→ 不再反复弹框打扰（三态的意义）
+PASS - 问一问：书全关时显示去开书引导（A2，可见文案=新名「设置」）
+PASS - 问一问：剥掉 title 后旧名「技能开关」不再出现在可见文案
+PASS - 对话：书全关时显示去开书引导（A2，可见文案=新名「设置」）
+PASS - 对话：剥掉 title 后旧名「技能开关」不再出现在可见文案
+PASS - B1：问一问本地检索 topN 走共享常量 RETRIEVE_TOPN（实际 6）
+PASS - B1：云端总结两页 topN 一致为 6（实际 6,6,6,6,6,6,6）
+PASS - B2：问一问输入提示统一为「回车发送」
+PASS - B6：问一问换书清技能包（技能包不跨书挂载）
+PASS - B2：对话输入提示统一为「回车发送」
+PASS - B6：对话换书同步 bookId 并清技能包
+PASS - C2：发送成功后草稿清空（draft 生命周期闭环）
+PASS - P4：对话页带存档开关（默认收起）
+PASS - P4：存档面板打开并渲染快照（问题+回答+书名+模型）
+PASS - P4：快照引用徽标可跳原文（chatArchiveList 拨通一次）
+PASS - P4：清空存档接线（chatArchiveClear + items 归零）
+PASS - P4：存档面板收起
+PASS - jobs 进度事件落进 state.jobs
+PASS - 待编目卡片带「生成提示词」按钮
+PASS - 点击后拉回提示词全文（state.prompt）
+PASS - 提示词面板渲染（只读文本框 + 复制/收起按钮）
+PASS - P4-R1: #main 四类监听器齐（实际注册：click,keydown,change,input）
+PASS - P4-R2: 发送中按钮进 loading 态（防连点的视觉面）
+PASS - P4-R2: loading 期间 Enter 不再双发（chatSummary 调用 1 次，守卫挡下第二次）
+PASS - P4-R2b: Shift+回车不发送也不 preventDefault（换行语义放行）
+PASS - P4-R2c: 唯一一次发送正常落地（user+assistant 各一条，无重复）
+PASS - P4-R3: buildHistory 窗口 6→12（V3-R6）：全量滤 error 后送出 6 条，首条「旧问题一」——行为锁定防静默漂移
+PASS - P4-R3b: 送出的历史无 error 条目、角色合法（主进程边界还有一道净化，双保险）
+PASS - P4-R3c: 同场景主进程 sanitizeHistory（12/3000）会送出 6 条（渲染层送 6 条——两侧一致）
+OBSERVE - P4-R3d buildHistory/sanitizeHistory 过滤顺序不对称登记 | 渲染层 slice(-6) 先于过滤、主进程先过滤后 slice(-6)：error 消息挤占近 6 条窗口时，渲染层把窗口外的有效历史一起误伤（少送 0 条）。上下文变少不影响正确性，轻微，登记不修
+PASS - P4-R3e: 渲染层压缩边界在位（送除最后 6 条外全部 + 成功后保留近 6 条）
+PASS - P4-R3e2: 主进程 compactHistory 全量压缩不二次切窗（旧 -4 口径丢中间 4 条，D14 修复锁定）
+PASS - P4-R4: 降级折叠区开关接线（degtoggle → .deglist.classList.toggle("hidden")，实测调用：hidden）
+PASS - P4-R5: dropped>0 → dropwarn 警告行（隐藏了几条引用必须告知用户）
+PASS - P4-R5b: 带 dropped 的回答正常渲染（警告行不挡回答本体）
+PASS - P4-R5c: dropped 用例只发一次（chatSummary 调用 1 次）
+PASS - P4-R6: 静态对账样本量正常（preload invoke 46 条 / ipc handle 46 条——0 条说明正则失效，对账形同虚设）
+PASS - P4-R6a: preload 每个 invoke 通道都有 ipc 注册（孤儿：无）
+PASS - P4-R6b: ipc 每个 handle 都被 preload 消费（孤儿：无）
+PASS - P4-R6c: studyStub 覆盖 preload 全部 API（缺：无）
+PASS - P4-R6d: 两端通道数一致（invoke 46 / handle 46——不一致说明有单向漂移）
+
+========== 结果 ==========
+全部 PASS（含 1 项 OBSERVE 登记）：渲染模块图 + boot 接线 + 四视图入口 + 技能包/任务条数据流 + P4 前端契约 R1~R6
+===== 1) zip 系：docx/epub 腐蚀弹药 =====
+PASS - docx 截断 10%：干净拒绝且有人话（解析失败（.docx）: Corrupted zip: can't find end of central directory
+文件可能损坏、加密或不是真正的 .docx 文件。 ）
+PASS - docx 截断 50%：干净拒绝且有人话（解析失败（.docx）: Corrupted zip: can't find end of central directory
+文件可能损坏、加密或不是真正的 .docx 文件。 ）
+PASS - docx 空文件：干净拒绝且有人话（拒收（unsupported）：空文件（0 字节），拒收 /   已记账：C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r）
+PASS - 纯文本伪装 .docx：干净拒绝且有人话（拒收（fake_ext）：伪装扩展名：名为 .docx 但文件头不是 zip，实际是前 8 字节 "........" /   已记账：C:\Users\JIANG XIAO HU）
+PASS - docx 缺 word/document.xml：干净拒绝且有人话（解析失败（.docx）: Could not find main document part. Are you sure this is a valid .docx file?
+文）
+PASS - docx document.xml 0 字节：干净拒绝且有人话（解析失败（.docx）: Could not find main document part. Are you sure this is a valid .docx file?
+文）
+PASS - docx document.xml 二进制垃圾：干净拒绝且有人话（解析失败（.docx）: Cannot read properties of null (reading 'tagName')
+文件可能损坏、加密或不是真正的 .docx 文件。 ）
+  脏内容过滤: 丢弃 4 块 / 保留 704 块（gutenberg_boilerplate 4）
+    · pnull [gutenberg_boilerplate] "The Project Gutenberg eBook of Frankenstein; or, the modern prometheus\nTitle: Fr"
+    · pnull [gutenberg_boilerplate] "THE FULL PROJECT GUTENBERG™ LICENSE\nThis eBook is for the use of anyone anywhere"
+    · pnull [gutenberg_boilerplate] "• You provide a full refund of any money paid by a user who notifies\nyou in writ"
+建库完成: badmime_epub.db
+  格式: epub | 切片: 704 块 | 原文: 417029 字符 ≈ 104K token
+  章节: 30
+  语种(R11 块级判定): en — 中文占字母类字符 0.0%（zh 0 块 / en 704 块 / 公式 0 块）
+OBSERVE - epub mimetype 错但结构完整 → SUCCESS（宽松放行：parseEpub 不校验 mimetype，无害但记录）
+OBSERVE - epub spine 炸弹（2000 重复 itemref）：REJECTED，耗时 138ms
+===== 2) txt 系：畸形文本经 txt2docx 全链 =====
+PASS - txt 空文件：干净拒绝且有人话（解析出 0 块：文件可能是空的、扫描图片型 PDF 或加密文档。 /   已记账：C:\Users\JIANG XIAO HUA\Desktop\book-skill-platfo）
+PASS - txt 纯空白：干净拒绝且有人话（解析出 0 块：文件可能是空的、扫描图片型 PDF 或加密文档。 /   已记账：C:\Users\JIANG XIAO HUA\Desktop\book-skill-platfo）
+PASS - txt 纯数字无文字（P2 新契约：纯符号块无检索价值 → 结构化改造拦）：干净拒绝且有人话（内容太少（全文 3 字符）：文件可能是空的、加密文档或扫描图片型 PDF。 /   已记账：C:\Users\JIANG XIAO HUA\Desktop\book-skill-p）
+建库完成: nohead_docx.db
+  格式: docx | 切片: 1 块 | 原文: 147 字符 ≈ 0K token
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 1 块 / en 0 块 / 公式 0 块）
+PASS - txt 无章节行（默认「前言」章）：成功且字符账平（块 1=1，字符 147=147）
+PASS - txt 每行都是 # 标题（无正文 → 0 块）：干净拒绝且有人话（解析出 0 块：文件可能是空的、扫描图片型 PDF 或加密文档。 /   已记账：C:\Users\JIANG XIAO HUA\Desktop\book-skill-platfo）
+建库完成: nopunct_docx.db
+  格式: docx | 切片: 112 块 | 原文: 100000 字符 ≈ 75K token
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 112 块 / en 0 块 / 公式 0 块）
+PASS - txt 单段 10 万字无标点：成功且字符账平（块 112=112，字符 100000=100000）
+PASS - nopunct 10 万字无标点：最大块 900 字 ≤ 900（D08 硬切兜底生效，共 112 块）
+建库完成: crlf_docx.db
+  格式: docx | 切片: 1 块 | 原文: 121 字符 ≈ 0K token
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 1 块 / en 0 块 / 公式 0 块）
+PASS - txt CRLF/LF 混杂：成功且字符账平（块 1=1，字符 121=121）
+建库完成: utf8bom_docx.db
+  格式: docx | 切片: 1 块 | 原文: 128 字符 ≈ 0K token
+  章节: 1
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 1 块 / en 0 块 / 公式 0 块）
+PASS - txt UTF-8 BOM（记事本常见，应剥掉不是拒）：成功且字符账平（块 1=1，字符 128=128）
+PASS - utf8bom：BOM 已剥（首块头字符 = "不"）
+建库完成: surrogate_docx.db
+  格式: docx | 切片: 1 块 | 原文: 107 字符 ≈ 0K token
+  章节: 1
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 1 块 / en 0 块 / 公式 0 块）
+PASS - txt 代理对密集（罕字 U+2AAA6）：成功且字符账平（块 1=1，字符 107=107）
+建库完成: sqli_docx.db
+  格式: docx | 切片: 1 块 | 原文: 104 字符 ≈ 0K token
+  章节: 1
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 1 块 / en 0 块 / 公式 0 块）
+PASS - txt SQL 注入串当章节名（参数化应无注入）：成功且字符账平（块 1=1，字符 104=104）
+OBSERVE - sqli 章节名原样入库（1 块 / fts 1 条，参数化绑定无注入痕迹）
+建库完成: longhead_docx.db
+  格式: docx | 切片: 1 块 | 原文: 120 字符 ≈ 0K token
+  章节: 1
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 1 块 / en 0 块 / 公式 0 块）
+PASS - txt 1 万字章节标题：成功且字符账平（块 1=1，字符 120=120）
+PASS - txt UTF-16LE BOM：txt2docx 人话拒绝（检测到 UTF-16 编码的文本（LE BOM）：utf16.txt
+UTF-16 按 UTF-8 误读会成乱码垃圾。请先用编辑器另存为 UTF-8 再导入。）
+OBSERVE - txt 纯符号：REJECTED（结构化改造后 0 块：全文都是空块/乱码块——文件可能是扫描图片、加密文档或已损坏。 /   已记账：C:\Users\JIANG XIAO）
+OBSERVE - txt null 字节混入：REJECTED（内容太少（全文 12 字符）：文件可能是空的、加密文档或扫描图片型 PDF。 /   已记账：C:\Users\JIANG XIAO HUA）
+===== 3) pdf 弹药 =====
+PASS - pdf 伪头+垃圾：干净拒绝且有人话（解析失败（.pdf）: PDF 文本层探针失败：Invalid PDF structure.
+文件可能损坏、加密或不是真正的 .pdf 文件。 /   已记账：C:\Users\J）
+PASS - pdf 截断 50%：干净拒绝且有人话（解析失败（.pdf）: PDF 文本层探针失败：Invalid PDF structure.
+文件可能损坏、加密或不是真正的 .pdf 文件。 /   已记账：C:\Users\J）
+===== 4) 既有防线回归 =====
+建库完成: lunyu_docx.db
+  格式: docx | 切片: 2 块 | 原文: 672 字符 ≈ 1K token
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 2 块 / en 0 块 / 公式 0 块）
+PASS - 老格式 txt（无 # 行）→ 全进「前言」章（行为零变化）：成功且字符账平（块 2=2，字符 672=672）
+PASS - 老格式断言：16 块归「前言」单章（实际 ["前言"]）
+建库完成: mz_docx.db
+  格式: docx | 切片: 274 块 | 原文: 45442 字符 ≈ 34K token
+  章节: 261
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 274 块 / en 0 块 / 公式 0 块）
+PASS - 新格式 txt（# 标题行）→ Heading1 → 多章识别：成功且字符账平（块 274=274，字符 45442=45442）
+PASS - 孟子 # 标题约定 → 261 章全识别（实际 261）
+PASS - 保护①：首次导入成功
+PASS - 保护②：同源同内容 → skipped（不重建）
+PASS - 保护②人话：跳过提示可读（⚠ 书名「guard」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride）
+PASS - 保护③：同源变内容 → 拒绝（⚠ 书名「guard」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Preju）
+PASS - 保护④：不同源 → 拒绝（⚠ 书名「other」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Preju）
+PASS - 保护⑤：不同路径同内容（jobs 副本场景）→ skipped（⚠ 书名「other」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride）
+
+===== P1 fuzz 汇总：33 PASS / 0 FAIL / 5 OBSERVE =====
+PASS - 关键通道全部注册（期望子集 34 条 / 实际注册 46 条）
+PASS - config:get 返回目录与 firstRun
+PASS - config:get 带 bundled 判据（dev 态未打包 → false，向导不给内置书库按钮）
+PASS - seed:start dev 态拒收（只有安装版能种子化，{ok:false,user} 不抛）
+PASS - books:list 已加工书（13）与库数（13）一致且全带编目摘要
+PASS - 书架每条带 status/asset（raw=待加工，供渲染层分流）
+PASS - books:catalog 单本编目
+PASS - reader:chapters 有目录
+PASS - reader:chapters 带 get_outline 对称字段（quality.verdict 三态 + totalTokens 账）
+PASS - reader:block 有原文块
+PASS - reader:locate 反查章节
+PASS - skills:list 含 kb-research 包
+PASS - skills:read 读到 SKILL.md
+PASS - engine:status
+PASS - llm:configGet 未注入 safeStorage 时安全默认（hasKey:false）
+PASS - llm:configSet 未注入时拒收（不落盘）
+PASS - enrich:status 返回任务快照对象
+PASS - enrich:cancel 无任务返回说明（不炸）
+PASS - enrich:audit 真书只读复查（ready=false，形状不断言数值）
+PASS - enrich:audit 坏书走错误包装（M3）
+PASS - book:original 有原件书（render=html）
+PASS - book:original 无原件 → {ok:false,user} 不崩
+PASS - book:openExternal 坏书名 → 错误包装（不真开）
+PASS - book:openExternal 有原件 → shell.openPath（假件不真启）
+PASS - jobs:start 穿越书名 → {ok:false,user}（safeBookId 闸门）
+PASS - jobs:start 无原件 → 错误包装（不凭记忆找文件）
+PASS - books:purge 坏书名 → {ok:false,user}（不抛）
+PASS - books:purge 穿越书名 → {ok:false,user}（resolveAsset safeBookId 闸门）
+PASS - skills:delete 穿越 slug → {ok:false,user}（SLUG_RE 闸门）
+PASS - skills:delete 不存在的包 → {ok:false,user}（不真删）
+PASS - skills:health 返回汇总（total=7）
+PASS - skills:health 自洽：绿2+黄0+红5=共7（三个数对不上就是判定漏了包）
+PASS - skills:health 每包字段齐（status/findings/citations/sources——渲染层红黄绿卡片的数据契约）
+PASS - skills:health 非绿包必带 findings（绿灯不许带症状）
+PASS - 坏书名走错误包装不崩（M3）
+PASS - skills:toggle 关闭写入
+PASS - 关掉后书架仍显示该书但标记已关（关掉的书要能开回来）
+PASS - 状态复位后已加工书回来（13 本，finally 保护生效）
+PASS - usage:get 返回策略 + 当日用量 + 会话记账（IPC 契约）
+PASS - P5: 13 本 processed 每本都定位出六项候选（真库只读）
+PASS - P5: 六项候选全部落在四个派生目录内（不越界、不穿到书库或更上层）
+PASS - P5: 真库 dryRun 零删除零失败，且账上确有派生（本会删 14 项）
+===== ipc-test: 42 PASS / 0 FAIL =====
+PASS - 配置校验: 全缺 → 拒收
+PASS - 配置校验: 非 http(s) → 拒收
+PASS - 配置校验: 尾部斜杠自动去掉
+PASS - 提示词: system 在首位且含铁律
+PASS - 提示词: 历史居中（system+历史2条+问题=4条）
+PASS - 提示词: 片段带编号+书名+原文
+PASS - 提示词: 技能包与问题都在
+PASS - 全链路: 正常返回 answer
+PASS - 全链路: 引用补齐 book/loc/id
+PASS - 全链路: dropped=0 且透传 usage
+PASS - 全链路: 请求带 Bearer 头
+PASS - 全链路: 请求体带模型名与 messages
+PASS - 校验: 部分捏造 → 剔 1 条留 1 条
+PASS - 校验: 引用全捏造 → 整条降级（QUOTE_FAIL）
+PASS - 校验: 引用不存在的编号 → 降级
+PASS - 校验: citations 为空 = 合法（不算降级）
+PASS - 校验: 引文含「一作」校注双侧剥离后命中
+PASS - 解析: ```json 围栏
+PASS - 解析: 前后夹带文字
+PASS - 解析: 非 JSON → null
+PASS - 解析: 缺 answer → null
+PASS - 错误: 401 → AUTH 人话
+PASS - 错误: 挂起 → TIMEOUT
+PASS - 错误: 非 JSON 回复 → BADRESP 降级
+PASS - 错误: 打不通的地址 → NETWORK
+PASS - 重试: 首次引用全假 → 自动重试后通过
+PASS - 重试: 第二次请求附带加强提醒
+PASS - 重试: 两次全假 → 仍然降级（防线强度不变）
+PASS - 重试: 开关关闭时不重试
+PASS - 存储: 缺 key → 拒收（不落半成品）
+PASS - 存储: 保存成功 + keyTail 尾4位
+PASS - 存储: 解密往返正确
+PASS - 存储: 文件里加密、无明文 key
+PASS - 存储: 只改模型不动 key
+PASS - 存储: baseUrl 尾部斜杠已归一
+PASS - P0-9/存储: 从没选过 → sendSourceText=null（不是 false，界面才知道该补问一次；实际 null）
+PASS - P0-9/存储: 从没选过 → 落盘不写该键（缺省即不发，不伪造同意）
+PASS - P0-9/存储: sendSourceText 只认布尔 → 字符串 "true" 拒收（不把看起来真的值当同意）
+PASS - P0-9/存储: sendSourceText=1 也拒收（只认 true/false）
+PASS - P0-9/存储: 允许发送原文 → 落盘 true 并回读
+PASS - P0-9/存储: true 确实写进 llm.json（重启后仍是同意状态，不用再问）
+PASS - P0-9/存储: 只改模型不动 sendSourceText（传了才改，与 apiKey 同款语义）
+PASS - P0-9/存储: 明确拒绝 → 落盘 false（≠ null，之后不再打扰）
+PASS - P0-9/存储: 拒绝是「记得住的拒绝」，不会被当成从没问过而反复弹窗
+PASS - 存储: 无加密器时降级 plain:（仍无裸 key）
+PASS - 存储: 降级时 UI 拿得到警告
+PASS - 历史净化: 非法条目被过滤（角色/空内容/非字符串）
+PASS - 历史净化: 单条截断 2000 字
+PASS - 历史净化: 非数组安全返回空
+PASS - 历史净化: 只留最近 6 条
+PASS - 历史净化: keep=0/-5/NaN 回落默认 6（不静默清零不全量放行）
+PASS - 历史净化: maxLen=-1 回落默认 2000（不反向截断丢数据）
+PASS - F-V3b: memory 5000 字进提示词前截断到 2000（防异常记忆撑爆上下文）
+PASS - V08: 非环回 http:// 明文任意主机 → 拒收
+PASS - V08: https 白名单外主机 → 拒收
+PASS - V08: https 白名单内主机 → 放行
+PASS - V08: 本机环回 http:// → 放行（本地假 API/本地模型端点，流量不出本机）
+PASS - V08/F2: 配置存储侧同源拒收 http://（两处校验收敛到 llm-hosts.mjs 单正本）
+PASS - P0-9: 未经同意（未传 includeSourceText）buildMessages 只带编号/书名/定位，不含 r.text 原文
+PASS - P0-9: 同意后（includeSourceText:true）必带库内原文——否则模型无从引用
+PASS - P0-9: 未经同意时云端请求体不含 chunks.text 原文（假 API 记 lastBody 实测）
+PASS - P0-9: 同意后云端请求体必含 chunks.text 原文（同意与否是唯一变量，其余不变）
+PASS - V08/IF-3: describeCloudMode 快照 = 云端/https/非环回/默认不带原文
+PASS - B2: chat() 直传白名单外 https://evil.example → { ok:false, code:'BAD_BASE_URL' }（不发请求）
+PASS - B2: 拒收发生在出网前（假 API lastBody 未收到该请求）
+PASS - B2: chat() 环回 http:// 假 API 放行（test:ci 本地假端点不受影响）
+PASS - P0-10: 不配 reasoningEffort → 请求体键与改造前逐字节一致（无未知字段）
+PASS - P0-10: 配 "none" → 请求体带 reasoning_effort:"none"
+PASS - P0-10: 配空串 → 不发该字段（留空 = 不配，不硬编码默认值）
+PASS - P0-10: 保存配置落盘 reasoningEffort
+PASS - P0-10: 只改模型不动 reasoningEffort（传了才改）
+PASS - P0-10: 显式传空串可清除（回到不发该字段）
+PASS - P0-10: reasoningEffort 非字符串 → 拒收（不静默忽略）
+
+=== llm-test: 73 pass / 0 fail ===
+
+--- P0-A parseAnswer ---
+PASS - P0-A1 D02: JSON 后夹带文字 → 仍解析出 answer（对称截断）
+PASS - P0-A1 D02: JSON 前夹带文字 → 解析出 answer（与尾夹带对称）
+OBSERVE - P0-A5 双 JSON 连写 → null（修后仍拒，登记：模型极少此形态，拒收安全）
+PASS - P0-A2: ```json 围栏
+PASS - P0-A2: 两个围栏只取第一个（非贪婪）
+OBSERVE - P0-A2 登记: 首块优先是确定行为，模型若把答案放第二块会丢——实测单块为常态 | 首块优先
+PASS - P0-A3: 大写 ```JSON 围栏（大小写不敏感回退 brace-slice）
+PASS - P0-A4: 围栏内容非 JSON → null
+PASS - P0-A6: answer 纯空白 → null
+PASS - P0-A6: 缺 answer → null
+PASS - P0-A6: citations=null → 补 [] 放行
+PASS - P0-A7: BOM 前缀被 trim 剥掉
+PASS - P0-A7: 空/非字符串安全 null
+
+--- P0-B verifyAnswer ---
+PASS - P0-B1: 2/3=66.7% ≥60% → 放行（该放的放）
+PASS - P0-B2: 1/2=50% <60% → 拒（该拒的拒）
+PASS - P0-B3 D03: 子句全短 → reason=quote-too-short（与幻觉剔除语义分离，不再误报 quote-not-found）
+PASS - P0-B4: 恰好 4 字子句保留在分母内并命中
+PASS - P0-B5: n='1.5'/'abc'/0/-1/null → 全部 bad-index
+PASS - P0-B5: n='2'（指向第2条配第2条quote）/1.0 → Number 强转合法放行
+OBSERVE - P0-B5 登记: n=true 被 Number 强转成 1 命中第 1 条 | 布尔当真编号，模型不会输出，仅直接调用可踩
+PASS - P0-B6: 引文前后空白 → 命中（归一化去空白）
+PASS - P0-B6: 半角逗号句号 → 命中（归一化去标点对称）
+PASS - P0-B7 D16: citations=42（非数组）→ 不抛 TypeError（入参防御）
+PASS - P0-B7: parsed=null / results 非数组 → 安全兜底不崩
+PASS - P0-B8: 空 citations = 合法放行
+PASS - P0-B9: 「一作」校注双侧剥离后命中
+
+--- P0-C sanitizeHistory ---
+OBSERVE - P0-C1 D19 登记: 过滤先于 slice(-6)，合法上下文尽量保留 | 行为确定有界（≤6），补注释说明
+PASS - P0-C2: 单条截断 2000 字
+PASS - P0-C2: 非数组/undefined 安全空
+OBSERVE - P0-C3 登记: 2000 字截断可能落在 emoji 代理对中间（无害，仅上下文边缘） | 孤立代理对不影响校验
+
+--- P0-D buildMessages ---
+PASS - P0-D1: system 首位含铁律
+PASS - P0-D1: 历史里的 system 角色被强转为 user（防御有效，不会冒充系统指令）
+PASS - P0-D3: 片段带编号+书名+原文
+OBSERVE - P0-D2 D20 登记: buildMessages 不净化历史（净化在 sanitizeHistory/调用方，chat.mjs 已守） | askCloud 红线：调用方必须先过 sanitizeHistory
+PASS - P0-D3: 空 results/空问题不崩
+PASS - P0-D3: 片段缺 book → 《?》兜底
+
+--- P0-E askCloud ---
+PASS - P0-E1: QUOTE_FAIL 自动重试一次成功（请求计数=2）
+PASS - P0-E1: 第二次请求附带加强提醒
+PASS - P0-E1: 请求带 Bearer 头（key 走 Authorization 不进 body）
+PASS - P0-E2: 两次全假 → 仍降级（防线强度不变）
+PASS - P0-E2: 重试开关关闭 → 只 1 次请求
+PASS - P0-E3: BADRESP 也自动重试一次
+PASS - P0-E4: 超时不重试（请求计数=1）
+PASS - P0-E4: 401 不重试
+PASS - P0-E5: 403 → AUTH
+PASS - P0-E5: 404 → NOTFOUND
+PASS - P0-E5: 429 → RATE
+PASS - P0-E5: 500 → SERVER
+PASS - P0-E5: 418 → HTTP
+PASS - P0-E5: content 空白 → BADRESP
+PASS - P0-E5: 缺 choices → BADRESP
+PASS - P0-E5: 非 JSON 响应体 → BADRESP
+OBSERVE - P0-E6 登记: 重试仅覆盖 QUOTE_FAIL/BADRESP，TIMEOUT 原样返回不重试 | 无总预算问题见 P0-G
+PASS - P0-E7: 配置非法 → CONFIG 且零请求
+
+--- P0-F normalizeLlmConfig ---
+PASS - P0-F1 D18: 含空白主机的地址 → 拒收（:// 后不允许空白）
+PASS - P0-F1: 正常地址照常放行
+PASS - P0-F1: 尾斜杠归一保持
+PASS - P0-F2: 双拷贝校验零漂移（normalizeLlmConfig vs saveLlmConfig 8 组配置一致）
+OBSERVE - P0-F2 登记: apiKey 传空在 saveLlmConfig 是合并语义（保持旧 key），与全量校验语义不同 | 设计使然
+PASS - P0-F2: loadLlmConfig 只回显尾 4 位，不泄露全文
+
+--- P0-G 重试耗时 ---
+OBSERVE - P0-E6 D20 登记: 重试无总预算，最坏 2×单次耗时（本次实测翻倍） | 慢响应300ms+重试，总 607ms
+
+=== llm-fuzz(P0): 52 pass / 0 fail / 9 observe ===
+PASS - 追加 3 条后列表新→旧（倒序）
+PASS - 快照带时间戳与引用片段原文（书没了也能核对当初依据）
+PASS - limit 封顶生效
+PASS - purgeBook 清掉引用 a.docx 的 2 条并返回条数
+PASS - 清剩引用 b.docx 的那条
+PASS - purgeBook 无匹配返回 0
+PASS - 无匹配时不误删（文件不重写）
+PASS - 坏行跳过不挡好数据
+PASS - purge 保守保留坏行（解析不了的不敢删，防误杀）
+PASS - clearArchive 后列表空
+PASS - 重复清空不炸
+PASS - 超上限砍最旧（实际 500 条）
+PASS - 砍的是最旧 2 条（问题1、2 出局，最新的留在顶）
+PASS - 空目录：列表空、purge 返回 0
+PASS - 空目录 purge 不创建存档文件（无匹配不写盘）
+PASS - V13: 原子替换后仍 500 条（内容完好）
+PASS - V13: 无 .tmp-* 残留（rename 成功即清）
+PASS - V13: 修剪锁用后即清（不残留 .lock）
+PASS - V13: 再触发修剪仍封顶 500
+PASS - V13: 修剪后目录干净（无 tmp/lock 残留）
+PASS - B4: 并发不触发修剪时 4 进程×25 条全落盘（340 行，实际 340）
+PASS - B4: 零吞行（缺 0 条）
+PASS - B4: 并发后无 .lock 残留
+PASS - B4: 超上限并发后封顶 500 行（实际 500）
+PASS - B4: 修剪窗口零吞行——并发追加的 100 条全部幸存（缺 0 条）
+PASS - B4: 100 条并发行（含触发修剪时刻的行）无一丢失
+PASS - B4: 并发修剪后无 tmp/lock 残留
+===== chat-archive-test: 27 PASS / 0 FAIL =====
+PASS - 追加 3 条后列表新→旧（倒序）
+PASS - 条目带时间戳 + 腿归因 + 细节（升格分析可读）
+PASS - limit 封顶生效
+PASS - kind 过滤精确
+PASS - count 全量/按 kind 计数
+PASS - purgeBook 清掉 a.docx 的 2 条并返回条数
+PASS - 清剩 b.docx 的那条
+PASS - purgeBook 无匹配返回 0
+PASS - 无匹配时不误删（文件不重写）
+PASS - 坏行跳过不挡好数据
+PASS - purge 保守保留坏行（解析不了的不敢删）
+PASS - count 不计坏行
+PASS - 半行保护：补 \n 后新旧行不粘连
+PASS - 上限砍最旧：505 → 500 条（首 批量504 / 尾 批量5）
+PASS - clearFeedback 清空
+PASS - 清空后 purge 安全返回 0
+===== feedback-pool-test: 16 pass / 0 fail =====
+
+--- §1 定位（不碰文件系统） ---
+PASS - §1 合法 id → ok:true，bookId 原样
+PASS - §1 六项候选（实测 6）
+PASS - §1 六个落点与生产写入方逐字对齐（实测 ["catalog-tasks/d2l-zh.md.json","catalog-tasks/d2l-zh.md.prompt.md","catalog-results/d2l-zh.md.json","enrich-tasks/d2l-zh.md.json","enrich-results/d2l-zh.md.json","enrich-results/d2l-zh.md.jsonl"]）
+PASS - §1 纯定位不创建目录（零副作用）
+PASS - §1 root = 书库上级（jobs.mjs 同款约定）
+
+--- §2 六项全删 ---
+PASS - §2 six 项全删（removedCount=6）
+PASS - §2 磁盘上六项均不存在
+PASS - §2 干净路径无 failed / 无 skipped
+PASS - §2 回执结构：rejected/dryRun 明确为 false
+PASS - §2 重复清除幂等（全缺=静默跳过，不算失败）
+
+--- §3 同目录诱饵零误伤 ---
+PASS - §3 只删自己六项（removedCount=6）
+PASS - §3 前缀同名的另一本书（book-ab.md）一格不动
+PASS - §3 cli1/cli2 测试残留不被前缀匹配误伤
+PASS - §3 非候选后缀（notes.txt）不删
+PASS - §3 自己的六项确实清干净
+PASS - §3 bookId="cli" 时 cli1/cli2 仍不被前缀匹配误伤（真·诱饵分支，removedCount=6）
+
+--- §4 非法 bookId 闸门 ---
+PASS - §4 非法 id 全部拒绝（18 种，含 .. / 分隔符 / NUL / 控制符 / 冒号 / 尾点 / 设备名）
+PASS - §4 非法 id 候选项为空（调用方无从删起）
+PASS - §4 非法 id 调用 purgeDerived 后文件零变化
+
+--- §5 非普通文件保守跳过 ---
+PASS - §5 目录不算候选文件（删 5 / 跳过 1，实测 5/1）
+PASS - §5 跳过原因标注 dir（实测 dir）
+PASS - §5 目录内容原封不动（未递归删除）
+PASS - §5 目录不是失败（是保守跳过）
+PASS - §5 除目录外的五项确实删了
+PASS - §5 符号链接不跟随、不删除（进 skipped）
+PASS - §5 链接与其目标都还在
+
+--- §6 缺文件不报错 ---
+PASS - §6 只有一项时只删一项，其余五项缺失静默跳过（不记 failed）
+
+--- §7 dryRun 只列不删 ---
+PASS - §7 dryRun 列出 6 项、removedCount=0（实测 6/0）
+PASS - §7 dryRun 后六项全部还在
+PASS - §7 随后真删仍然六项（dryRun 无副作用）
+
+--- §8 单个失败不中断 ---
+PASS - §8 注入点确实被命中一次
+PASS - §8 EBUSY 进 failed 并带 errno 码（实测 EBUSY）
+PASS - §8 其余五项照常删除（不因一项失败中断，removedCount=5）
+
+--- §9 bookId 契约（去 .db） ---
+PASS - §9 传 ".db" 全名不匹配任何派生文件（精确拼接，不做模糊匹配）
+PASS - §9 真书的六项未被误删（契约写进注释与回执 bookId）
+
+--- §10 空 libDir 不许 fail-open ---
+PASS - §10 空 libDir → 拒绝定位（不退化成 cwd 上级）
+PASS - §10 空 libDir 调 purge → rejected，零删除
+PASS - §10 null libDir + null opts → 不抛错、零删除
+PASS - §10 非字符串 libDir → rejected（不做隐式转字符串）
+
+--- §11 近似书名不许点到兄弟书 ---
+PASS - §11 前导空白 id → rejected（safeBookId 归一会拼到 foo.md）
+PASS - §11 隔壁 foo.md 的六项一格不动（数据丢失路径堵死）
+PASS - §11 被拒的请求零副作用（自己那六项也没删）
+
+--- §12 派生指针可观测（只读，不删） ---
+PASS - §12 六落点全部定位（items.length=6）
+PASS - §12 seed 后六项 exists=true（existingCount=6）
+PASS - §12 观测后六项原样在盘（纯读，零删除）
+PASS - §12 半量派生 → existingCount=3（精确反映落盘项）
+PASS - §12 非法 id（前导空白）→ rejected（同一闸门，零副作用）
+
+===== derived-test: 47 pass / 0 fail =====
+PASS - 合法 id 原样通过（去首尾空白）
+PASS - 拒绝非法 id：""
+PASS - 拒绝非法 id：null
+PASS - 拒绝非法 id：undefined
+PASS - 拒绝非法 id："../x"
+PASS - 拒绝非法 id："a/b"
+PASS - 拒绝非法 id："a\\b"
+PASS - 拒绝非法 id：".."
+PASS - 拒绝非法 id："a..b"
+PASS - 同后缀优先：論語.docx → books/論語.docx
+PASS - txt→docx 映射：rawbook.docx 找到 books/rawbook.txt
+PASS - 同 base 双扩展：各归各的后缀
+PASS - 防穿越：.. 与路径分隔符 → path null
+PASS - 目录不算资产：books/dir.pdf 被 isFile 闸门拦下
+PASS - 不存在 → exists false 不抛错
+PASS - booksDirOf：libDir 上级的 books/
+PASS - 书架 4 条（論語/rawbook/rawpdf/orphan）：实际 4
+PASS - processed：有库有原件，chunks/title 来自 meta
+PASS - processed：db 路径指向 library/*.db
+PASS - raw：txt 原件仅入库未加工（等「开始加工」）
+PASS - raw：pdf 原件仅入库未加工
+PASS - 无原件=CLI/旧管线建库：processed 但 asset.exists=false
+PASS - 坏 db 被 scanBooks 过滤，不进书架
+PASS - 上游中间产物 -raw.txt 不进书架（一本不变两行）
+PASS - 每条都挂 asset 定位结果（渲染层直接用）
+PASS - 目录 dir.pdf 与杂项 notes.tmp 不进书架（isFile + 扩展双闸门）
+PASS - 夹具 A 无库：4 个原件全 raw 态
+PASS - libDir 不存在 → []
+PASS - libDir 传 null → []
+PASS - base 级合并：原件与无扩展 id 库并成一条（不出现两行同一本书）
+PASS - 纯坏库书架为空
+PASS - 坏库过滤后 tmp 清理无 EBUSY（句柄已 close）
+===== shelf-assets-test: 32 pass / 0 fail =====
+PASS - utf8 无 BOM 原样读出
+PASS - utf8 BOM 被剥掉，无乱码前缀
+PASS - utf16le BOM 正确解码（不是乱码）
+PASS - 空文件 → 空串不抛
+PASS - docx（≤8MB）→ render=html + book:// URL
+PASS - describeAsset 不带绝对路径（路径不外泄渲染层）
+PASS - txt → render=text
+PASS - pdf → render=external（系统打开）
+PASS - 超大 docx → render=external（拒转）
+PASS - 无原件 → ok:false（不抛）
+PASS - describeAsset 拒非法 id：""
+PASS - describeAsset 拒非法 id："../x"
+PASS - describeAsset 拒非法 id："a/b"
+PASS - txt → 200 text/html（包壳供 iframe）
+PASS - txt 壳含原文（一字不改）
+PASS - txt 第二行完整进壳
+PASS - 协议层 BOM 文件同样干净（无乱码前缀）
+PASS - 协议层 utf16le 解码正确（无替换字符）
+PASS - docx → 200 text/html
+PASS - docx → mammoth HTML 外壳（样式 + article）
+PASS - mammoth 真转换出块级标签
+PASS - 输出无 script（mammoth 安全 HTML）
+PASS - 缓存命中：二次请求内容一致
+PASS - pdf → 415（前端 fallback 系统打开）
+PASS - 超大 docx → 413（不转，走系统打开）
+PASS - 不存在 → 404
+PASS - 协议层拒非法 id："../etc/passwd"
+PASS - 协议层拒非法 id："a/b"
+PASS - 协议层拒非法 id：""
+PASS - 非 asset 主机名 → 400
+PASS - 反斜杠穿越同样拒（safeBookId 双分隔符）
+PASS - V07: webPreferencesSnapshot contextIsolation=true
+PASS - V07: webPreferencesSnapshot nodeIntegration=false
+PASS - V07: webPreferencesSnapshot sandbox=true
+PASS - V07: 主窗口 hardened 与快照同源（不留第二套真值）
+PASS - V07: main.js webPreferences 展开唯一正本（不放第二套真值）
+PASS - V07: main.js 无 nodeIntegration:true 反写
+===== book-view-test: 37 pass / 0 fail =====
+===== 1) detectGarbled 四类乱码体检 =====
+PASS - 干净中文零乱码（bad=0）
+PASS - 控制符计数（NUL+DEL，实测 2）
+PASS - 私用区计数（实测 2）
+PASS - 替换符计数（实测 2）
+PASS - 双重编码签名计数（实测 25）
+PASS - 正常法文重音字符不是乱码（Ã 签名不误伤）
+PASS - 2 字符签名 bad=2N=20（实测 20）
+PASS - 3 字符签名 bad=3N=30（实测 30）
+PASS - cp1252 撇号乱码 â€™ 检出（签名 10，bad 30）
+PASS - E2 84/98/9C 打头的 cp1252 人身整族检出（漏：无）
+PASS - E4 打头的中文双重编码检出（签名 4，旧代码 0）
+PASS - 交叠字符两分类都计（50/50）
+PASS - bad 并集去重 = 文本长度 100、ratio 封顶 1（实测 bad=100 ratio=1）
+===== 2) repairMojibake 保守修复 =====
+PASS - 经典双重编码整块修回原文
+PASS - 混正常中文的块不修（>0xff 字符保守闸门）
+PASS - 回读不是合法 UTF-8 的不修（孤立代理对）
+PASS - 签名数 <2 不修（防误伤）
+PASS - cp1252 撇号修回真撇号 U+2019（查表还原字节，不用 latin1 硬转）
+PASS - 混真弯引号拒修（宁可留下不修，不可把好文本修坏）
+PASS - 跨度外的特俗字符（… ）拒修（F2：不把好文本修成合法垃圾）
+PASS - 25 万字符人身修复不退化（17ms < 500ms，游标摊还 O(n)；二次实现实测 5s+）
+PASS - 纯符号人身拒修（回读无字母/汉字证据）
+===== 3) structurizeChunks 清洗通道 =====
+PASS - 干净块零变化（存量铁律：report 全零）
+PASS - 干净块逐字节原样
+PASS - 乱码块修回原文
+PASS - 空块丢（实测 1）
+PASS - 纯数字符号块 + 乱码过半块丢（实测 2）
+PASS - 控制符/私用区/替换符分别清（2/1/1）
+PASS - 清完符号文字完好
+PASS - 活下来的块数对（2：修好的+清完符号的）
+===== 4) assessCleaned 硬闸门（修不动的才拦） =====
+PASS - 洗完全丢 → 拦（扫描图/加密文档）
+PASS - 内容太少 → 拦
+PASS - 修不动的纯乱码 → 拦（不进切片）
+PASS - 整份双重编码修得动——本例只是样本太短，非乱码拦（说清楚是内容少）
+PASS - 够长的双重编码文件修完放过（不清洗完还拦）
+===== 5) md 夹具真跑：乱码行被修、账进 meta =====
+PASS - 脏 md 建库成功（清洗是内部通道，不是失败）
+PASS - meta.struct_report 记了修乱码（1 块）
+PASS - 库内文本是修好的中文（不是乱码字节）
+PASS - 库内无控制符/私用区/替换符残留
+PASS - 控制台明示清洗账（不静默）
+PASS - 含篡改乱码块的文件仍建库成功（坏块丢，不是整文件拦）
+PASS - 字节被篡改的双重编码修不动（实测修了 0 块）
+PASS - 篡改乱码块按垃圾丢（1 块）
+PASS - 陪衬正文健在（丢的是乱码块，不是全文）
+===== 5b) cp1252 撇号英文书真跑：修好入库 =====
+PASS - cp1252 乱码英文书建库成功（不是硬拦）
+PASS - 库内文本是修好的英文（真撇号 U+2019）
+PASS - 库内无 â€™ 人身残留
+===== 6) BSP_STRUCT=0 开关：整段跳过，文本原样 =====
+PASS - 关开关也建库成功（排障通道）
+PASS - 关开关不写 struct_report（meta 干净）
+PASS - 关开关文本原样（双重编码字节整串穿透，不清洗）
+===== 7) 干净语料零变化：STRUCT=1 与 =0 两次建库逐字节一致 =====
+PASS - 两种开关都建库成功
+PASS - 干净语料块文本逐字节一致（开 2 块 / 关 2 块）
+PASS - 干净语料 struct_report 全零（铁律：零变化可审计）
+PASS - 拉丁混排干净书零变化（开 1 块 / 关 1 块，含 SHY 断字与特俗字符）
+PASS - 拉丁混排书 struct_report 全零（新字符域不吃干净语料）
+PASS - 拉丁混排书 detectGarbled 零签名（实测 0——G-12 的 ä+SHY 不进这本语料）
+===== 8) 硬拦：修不动的纯乱码文件进不了切片 =====
+PASS - 硬拦：不建库（修不动的不烧后续算力）
+PASS - 硬拦说人话（实测：结构化改造后 0 块：全文都是空块/乱码块——文件可能是扫描图片、加密文档或已损）
+===== 9) onStage 回调顺序：结构化改造在切片前 =====
+⚠ 书名「struct-clean」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Prejudice）"）
+PASS - 阶段顺序 structurize → slice（实测 structurize → slice——桌面横幅据此分格）
+
+===== structurize-test: 全部 PASS =====
+
+--- P1-A chat-archive ---
+PASS - P1-A1 D04: 4 子进程×25 条并发追加零丢失（期望 140，实测 140）
+PASS - P1-A2: 同进程串行 100 次追加不丢（竞态仅多进程可达，产品单主进程不可达）
+PASS - P1-A4: 并发 600 条仍 ≤500 封顶（实测 500）
+OBSERVE - P1-A4 登记: 超上限砍最旧（read-modify-write 重写）与并发追加存在交叠窗口 | 并发600条实测剩 500 条——修 D04 快路后仅超上限那一次重写仍可能互覆，上界 500 守住
+PASS - P1-A5: 半文件状态下好行与新行都不丢（半行独立成坏行被容忍，不粘连新行）
+PASS - P1-A6: limit=0 → 空
+PASS - P1-A6: limit=-1 → 空
+PASS - P1-A6: limit 缺省 → 全量（5<100）
+OBSERVE - P1-A6 登记: limit=2.5 浮点比较 → 返回 3 条 | 非整数宽松放行（可选 Math.floor）
+PASS - P1-A6: limit=NaN → 空（比较恒假）
+PASS - P1-A6: 列表新→旧（q4 在首位）
+PASS - P1-A7 D07族: purgeBook(undefined) 不动任何条目（老逻辑 c.bookId===undefined 误删无 bookId 条目）
+PASS - P1-A7: purgeBook('a.docx') 精确清 1 条
+PASS - P1-A8: purgeBook(null) → 0（D07 族修复连带挡下；畸形条目保守保留比误删安全）
+OBSERVE - P1-A8 登记: explicit bookId:null 的存档条目将永远保留（正常链路不会产出此形态）
+PASS - P1-A9: 清空后列表空，重复清空不炸
+OBSERVE - P1-A9 登记: clearArchive 只删文件留空目录（无害）
+PASS - P1-A3: 坏行跳过，好行照常列出
+PASS - P1-A3: purgeBook 坏行保守保留（解析不了的不敢删）
+
+--- P1-B llm-config ---
+PASS - P1-B1 D07: 坏 JSON → 按未配置走但带 warning（「配置坏了」不再伪装成「没配置」）
+PASS - P1-B2 D07: 顶层数组 → 按损坏处理带 warning
+PASS - P1-B3 D07: JSON null → 按损坏处理带 warning
+PASS - P1-B3b: 坏配置上重新保存 → 覆盖修复且 warning 清除
+PASS - P1-B4 D09: plain: 坏 base64 → 往返校验拒收（老逻辑解出垃圾串 hasKey:true）
+PASS - P1-B4b: 合法 plain: 往返正确（校验不误伤）
+PASS - P1-B5: enc: 解密失败 → 按无 key 处理（安全侧）
+PASS - P1-B6 D08: apiKey=123（非字符串）→ 显式拒收（老逻辑 ok:true 但 key 没存，调用方以为存了）
+PASS - P1-B6b: 拒收后旧 key 原样不动
+PASS - P1-B7: apiKey 空串 = 不改 key（防误清设计）
+PASS - P1-B7: apiKey 纯空白 = 不改 key
+PASS - P1-B8: keyTail 只回显尾 4 位
+OBSERVE - P1-B8 登记: ≤4 位的短 key 尾号即全文（真 key 不会短）
+PASS - P1-B9: 注入假加密器 → encryption=safeStorage
+PASS - P1-B10: userData 嵌套目录不存在 → 自动创建后保存成功
+
+--- P1-C chat.mjs 未初始化退化 ---
+PASS - P1-C1: 未 init 时 archiveList → []（不抛）
+PASS - P1-C2: 未 init 时 archiveClear → {cleared:true}（不抛）
+PASS - P1-C3: 未 init 时 purgeArchives → 0（不抛）
+PASS - P1-C4: 未 init 时 testConnection → UserError 人话（不抛裸栈）
+PASS - P1-C5: 未 init 时 configSet({}) → UserError 人话（不抛裸栈）
+OBSERVE - P1-C1 登记: archiveList 空列表与「真空存档」不可区分（退化安全优先） | dirs() 为 null 时静默返 []
+
+--- P1-D books:delete 联动 ---
+PASS - P1-D1: books:delete 删掉 .db 文件
+PASS - P1-D1: 删书 note 明示连 N 条存档一起清（实测 note="已移出书架——书库文件已删（这本没有 books/ 原件，重建要重新导入文件）；已连 2 条引用这本书的存档/反馈样本一起删除"）
+PASS - P1-D1: 存档只剩引用别的书的条目
+PASS - P1-D2: purge 通道被堵（chat-archive 是文件）→ 删书本体仍成功（try 兜底不挡删书）
+OBSERVE - P1-D2 登记: purge 失败时 note 不带存档条数（返回 0，不谎报）
+PASS - P1-D3 D15: 空 baseUrl 测连接 → 人话「接口地址没配」（老逻辑 fetch 相对 URL 抛 TypeError 误报 NETWORK，实测: 还没配置接口地址——先填上再测）
+PASS - P1-D4: chat:archiveList limit=2 → 透传生效（2 条）
+PASS - P1-E1: books:purge 删掉书库 + books/ 原件（一体全删）
+PASS - P1-E1: purge 回执 removedAsset + 彻底删除措辞（实测 note="《t3.docx.db》已彻底删除（书库文件 + books/ 原件）；编目/洗数据派生文件已清 6 项；已连 3 条引用这本书的存档/反馈样本一起删除"）
+PASS - P1-E1: purge note 明示连 3 条（2 存档 + 1 反馈）引用一起清
+PASS - P1-E1: 只剩引用别的书的存档（不误伤）
+PASS - P1-E1: 派生六落点全清（removedDerived=6）
+PASS - P1-E1: 前缀同名的另一本书派生一格不动（精确拼接，不做前缀匹配）
+PASS - P1-E1: note 明示清了几项（实测 "《t3.docx.db》已彻底删除（书库文件 + books/ 原件）；编目/洗数据派生文件已清 6 项；已连 3 条引用这本书的存档/反馈样本一起删除"）
+PASS - P1-E2: books:delete 只删库、books/ 原件保留（第一档=删库留原件）
+PASS - P1-E2: 移出书架不清派生（六项全在，回执无 removedDerived）
+PASS - P1-E2: 移出书架后书架显示 raw（点「开始加工」可重建，不用重新拖文件）
+PASS - P1-E3: raw 书（无库）也能彻底删除——删 books/ 原件
+PASS - P1-E3: raw-only 书（无库）照清派生六落点（removedDerived=6）
+PASS - P1-E3: 删完书架不再显示该书
+PASS - P1-E4: books:purge 坏书名 → {ok:false,user}
+PASS - P1-E4: books:delete 对 raw-only 书 → 人话指路彻底删除（实测: 书库里找不到「rawonly2.docx」——移出书架只删书库；只有原件的书请用「彻底删除」）
+PASS - P1-E4: 指路报错不动文件（原件还在）
+PASS - P1-E5: 大小写变体归一到真实 id（实测 purged=Case5.docx）
+PASS - P1-E5: 大小写变体彻底删除 → 库与原件都清（不再只删原件留库）
+PASS - P1-E5: 派生六落点跟着归一后的 id 一起清（三处口径一致）
+PASS - P1-E5b: 首尾空白 → 人话拒绝（实测 「  Space6.docx  」书名前后带空白——系统无法确认是哪一本，请先把文件改成不含首尾空格的名字再删）
+PASS - P1-E5b: 拒绝时库一格不动
+PASS - P1-E5c: 前导空格书名 → 拒绝（不猜是哪本）
+PASS - P1-E5c: 正常书 foo5.docx 的库与原件一格不动（数据丢失路径堵死）
+PASS - P1-E5c: 前导空格那本的原件也没动（拒绝=零副作用）
+PASS - P1-E6: 删库失败 → 整单报错，不谎报「已彻底删除」
+PASS - P1-E6: 库确实还在（注入点生效）
+PASS - P1-E6: 删库失败时派生六项原样——顺序契约（先库后派生）有了机器断言
+PASS - P1-E7: 无库无原件但派生还在 → 补刀清掉（实测 removedDerived=6）
+PASS - P1-E7: 残留六项确实没了
+PASS - P1-E7: note 明说清的是残留派生（不冒充删了书）
+PASS - P1-E7: 补刀完再点 → 回到「找不到」（清干净了就不谎报）
+PASS - P1-E8: k.docx 自己的原件正常删掉（它确实存在，删它是对的）
+PASS - P1-E8: K.docx 的库一格不动（字符串小写会误删它，这是风险点）
+PASS - P1-E8: 没有清掉 K 的派生（它不在候选名上）
+PASS - P1-E8b: 无原件的近似书名 → 拒绝（不折叠、不猜）
+PASS - P1-E8b: Å.docx 的库一格不动
+PASS - P1-E9: foo9.pdf 的库正常删掉
+PASS - P1-E9: 隔壁 foo9.docx 的库与原件一格不动（跨扩展兜底不许进删除路径）
+
+=== archive-config-fuzz(P1): 78 pass / 0 fail / 7 observe ===
+
+--- P2-A getPersonDetail/getThemeDetail ---
+PASS - P2-A1 D01: get_person('') → person-not-found + 候选清单（老逻辑返回第一个人 ? 完整档案=幻觉入口）
+PASS - P2-A1: get_theme('') → theme-not-found + 候选清单
+PASS - P2-A3: '   '/null/undefined → 全部 person-not-found
+PASS - P2-A3: 主题侧三名同效
+PASS - P2-A4 D14: 模糊命中（'liz'→Elizabeth Bennet）带 matched_by:'fuzzy' 标记（老逻辑无标记，智能体以为精确命中）
+PASS - P2-A4: 全小写/大写差异命中带 matched_by:'case-insensitive'
+PASS - P2-A5: 精确命中带 matched_by:'exact'（三级降级各自可辨别）
+PASS - P2-A6 D06族: 坏库 → {cataloged:false, reason:'db-broken'}（老逻辑三态同形，UI 无法区分坏文件与没编目，实测: {"cataloged":false,"reason":"db-broken"}）
+PASS - P2-A6: 无 nodes/edges 表 → reason:'no-nodes-table'（与坏库区分）
+PASS - P2-A6: 有表无 person 节点 → reason:'no-such-type'（与没编目/坏库三态可区分）
+PASS - P2-A7 D11: 异类型 belongs 边不污染主题块数（注入前 111 / 注入后 111；老逻辑虚高 +1）
+PASS - P2-A8: mention 查询的 dst_type='person' 过滤守得住（对称对照，person 侧无此缺陷）
+PASS - P2-A9: 均匀抽样公式 len=6..500 全程无重复下标（len≥6 时间距≥1.25 严格递增）
+PASS - P2-A9: P&P 实测 Elizabeth Bennet 代表块 5 个无重复（10,365,688,966,1246）
+PASS - P2-A9b: 深查数据完整（出场 594 块 / 关系 8 条 / match_names 2 个）
+PASS - P2-A9c: 代表块带 chapter/page/preview（智能体可判断该不该点进去）
+PASS - P2-A10: 自环关系边原样返回不崩（other 字段取到自身）
+PASS - P2-A11: 未编目库 → {cataloged:false, note} 人话提示
+
+--- P2-B generateSkillScaffold ---
+PASS - P2-B1 D10: 空 query → book-not-found + 候选 2 本（老逻辑 includes("") 恒真命中全部，matches[0] 不确定）
+PASS - P2-B2: 无参/null query → book-not-found
+PASS - P2-B3a D06族: 垃圾 .db → book-not-found（listBooks meta 探测抛错被静默过滤，选不中它；实测: {"error":"book-not-found","available":["a.db","b.d）
+OBSERVE - P2-B3b 坏库从书架静默消失登记 | listBooks catch 吞掉 meta 探测失败——损坏书库既不报错也不显示，用户视角是「书丢了」而非「书坏了」，轻微，登记不修
+PASS - P2-B3 D06: chunks 页损坏 → {error:'book-db-broken', hint} 人话（老逻辑裸抛 SqliteError 英文堆栈，实测: {"error":"book-db-broken","book":"corrupt","hint":）
+PASS - P2-B4 D06: 缺 chunks 表 → book-db-broken（老逻辑 SQL 裸崩）
+PASS - P2-B5 D12: 截断撞名后缀的两章 suggested_file 仍唯一（ch01-learning-methods-and-con.md / ch02-learning-methods-and-con.md / ch03-section-03.md）
+PASS - P2-B5b: 截断确实发生且后缀撞名（两章共享 24 字符 slug「learning-methods-and-con」）——chNN 序号前缀保住文件名唯一
+OBSERVE - P2-B5c D12 预判不成立登记 | 规划预判「截断撞名→互相覆盖」不成立：chNN 前缀按索引构造唯一，撞的只是后缀——同 P0-F1 偏差登记不修，避免过度设计
+PASS - P2-B6: 纯中文章节 → chNN-section-NN 兜底
+PASS - P2-B6b: SKILL.md 章节表与 catalog.json 建议文件名一致（两处 chapterSlug 调用不漂移）
+PASS - P2-B7 D13: available 含被关书（a.db,b.db,坏书,old.db,slug.db；老逻辑 listBooks 默认过滤，被关书隐身——与 matchBook 的 includeDisabled 自相矛盾）
+PASS - P2-B7b: 被关的书仍能生成骨架（本地创作工具不受 H3 开关影响，设计行为）
+OBSERVE - P2-B7c 歧义片段 matches[0] 顺序相关登记 | query「b」实测命中多书（'.db' 文件名含字母 b），matches[0] 取决于 readdir 顺序（本机 a）——与 D10 同族，轻微登记不修
+PASS - P2-B8: 未编目书照样生成骨架（章节表真值 + 「本书尚未编目」说明）
+PASS - P2-B9: 大人物 chunk 锚点封顶 50（Elizabeth Bennet 出场 594 块）
+PASS - P2-B9b: 真库骨架章节表真值（16 章 / 1250 块 / 编目 true）
+PASS - P2-B9c: 真库编目层齐全（25 人物 / 12 主题 / 关系边）
+PASS - P2-B10: 章节全空串 → 「本书无章节结构」兜底行
+
+--- P1.5 aliases_zh ---
+PASS - P1.5: aliases_zh 空串被 schema 拒收（schema: persons.0.aliases_zh.0 Too small: expected string to have >=1 characters）
+PASS - P1.5: 省略 aliases_zh → 默认空数组（旧任务书产物照常放行）
+PASS - P1.5: 合法译名放行——「伊丽莎白」书内没有不拦（软字段）
+OBSERVE - P1.5-OBS: 无 emb 列半成品库 assertEngine 裸抛 SqliteError（登记不修）
+PASS - P1.5: importCatalog 把译名写进节点 ref（["伊丽莎白"]，mention_count=1）
+PASS - P1.5: 中文译名命中人物（linkEntities 词表并入 aliases_zh）
+PASS - P1.5: 译名命中后注入 match_names 书内写法（en=elizabeth；译名自身不进 FTS）
+
+--- P2-C expandNeighborhood ---
+PASS - P2-C1: 正常展开（person=甲 matched_by=exact）
+PASS - P2-C1: 邻居按出场数降序 + 自环/悬空边剔除（乙,丙；乙50>丙5）
+PASS - P2-C1b: 多边 note 合并 " / "（同窗好友 / 多年邻居）
+PASS - P2-C1c: 代表块带 chunk/预览（默认 3 个：1,4,6）
+PASS - P2-C2: 空名/空白名 → person-not-found（D01 防幻觉守卫在 expand 上不复发）
+PASS - P2-C3: 未命中 → person-not-found + 4 个候选清单
+PASS - P2-C4: 无关系边人物 → 空邻居不崩（relation_total=0）
+PASS - P2-C5a: perNeighbor 上夹 5（99→5）
+PASS - P2-C5b: perNeighbor 0→默认3 / 负数→下限1（与 clampTopN 同款语义）
+PASS - P2-C5c: perNeighbor=1 取 1 块（原采样公式 (n-1) 除零 → 静默空数组，已修 Math.max(1,n-1)）
+PASS - P2-C6: 垃圾文件库 → db-broken（人话，不裸崩）
+PASS - P2-C7: 旧 schema（nodes 无 source 列）→ old-schema（与坏库可区分）
+PASS - P2-C8: MAX_NB=20 截断带说明（共 22 显示 20：邻居较多，只显示出场最多的 20 个（共 22 个））
+PASS - P2-C8b: 截断取"出场最多的 20 个"（首位=邻22，count=22）
+
+--- P4 lookupEntry ---
+PASS - P4-1: 精确命中（2 块、id 升序、page 透传、单命中无 note）
+PASS - P4-2: 前缀命中含歧义对（E1001/E10010）→ 已选第一个 + note：前缀匹配命中 2 个章节，已选「E1001 连接超时」（其余：E10010 连接被拒）
+PASS - P4-3: 包含命中（'安装步骤' ⊂ '3.2 安装步骤'）
+PASS - P4-4: 大小写不敏感（'e1002' → 'E1002 参数缺失'，错误码场景刚需）
+PASS - P4-5: 未命中 → not-found + 5 个候选章节（目录导航，按文档序）
+PASS - P4-6: 空白 key → not-found（D01 家族：空串 includes("") 恒真守卫在 lookup 上不复发）
+PASS - P4-7: 默认 maxBlocks=20 截断带说明（45→20：本章共 45 块，已按上限显示前 20 块）
+PASS - P4-7b: maxBlocks 上夹 40（99→40）/ 0→默认 20（与 clampTopN 同款语义）
+PASS - P4-8: chapter 全 NULL/空串 → no-chapters + hint（PDF 定位靠页码，指引改走 query_book）
+PASS - P4-9: 垃圾文件库 → db-broken（人话，不裸崩）
+PASS - P4-10: 未编目库（无 nodes/edges 表）也能寻址——lookup 只依赖 chunks（与编目解耦）
+
+=== catalog-fuzz(演进轮 P1.5/P2/P4): 65 pass / 0 fail / 4 observe ===
+
+--- W1 实体链接对抗 ---
+PASS - W1-F1a: build-only 库（无 emb）hybridSearch 不崩且字面腿照常（命中 1 条；修前裸崩 no such column: emb）
+PASS - W1-F1b: build-only 库中文路径不崩且繁体块命中（命中 1 条）
+PASS - W1-F1c: routeAndSearch 全 build-only 目录不崩、0 分书不入选（considered=[{"title":"build-only","best_sim":0,"n":0}]）
+PASS - W1-F2b: loadCatalogSignal 对无编目表库静默空（hit.size=0；修前裸崩 no such table: edges）
+PASS - W1-F2a: 缺 edges 表但 emb 在的库 hybridSearch 不崩（命中 5 条）
+PASS - W1-F2c: 缺表库 + 主题向量全路径 loadCatalogSignal 不崩（hit=0）
+PASS - W1-A1: 常规词边界命中（'eliza' → Eliza (Beth)）
+PASS - W1-A2: match_name 正则元字符已转义（'.' 不当通配：'axb'→0 命中、'a.b'→命中）
+OBSERVE - W1-A3 括号尾失配登记 | match_names 以非词字符结尾（'Fitz (Will)' 的 ')'）时 \b 词边界无位可落 → 全名不命中；真书人名无此形态，单独写法（'Eliza'）照常兜底
+PASS - W1-A4: 超长 q（24KB）不崩（无命中属正常（库内无 darcy））
+PASS - W1-A5: 空串/空白/null q → linkEntities 全空、entityAliasTerms 全空不崩（D01 家族守卫）
+PASS - W1-A6: entityAliasTerms 确定性幂等（同输入同输出，含注入 beth,eliza）
+OBSERVE - W1-B1 剪枝②代价登记 | 点名家族姓氏人物（命中 Mrs. Bennet）时 'bennet' 因 ⊂ 'Lydia Bennet' 被跨实体遮蔽，注入 0 词——检索侧仍由 mention 边信号兜底（linkEntities 命中 Mrs. Bennet）
+PASS - W1-C1: 开关对照——旧行为中文块有字面分（1 条），译名链接注入英文别名后 cjk 路被跳过（1 条）
+OBSERVE - W1-C2 混语二选一登记 | 字面腿结构为 en-MATCH 优先、命中即不再跑 cjk-LIKE ——译名链接到英文人物时中文原文块失去字面分（本轮不修：改二选一=改打分结构，触检索红线）
+OBSERVE - W1-B2 单字亚串登记 | '达尔文是谁' 经单字 match_name '达' 误链接『达人』（validateResult 放行单字；注入侧天然无泄漏——单字无 gram）；编目规范层面禁用单字可解
+OBSERVE - W1-B3 繁体问句×简体书登记 | S2T_MAP 只有简→繁单向：问题繁体「齊宣王」对书内简体 match_names 两形都不中；真库中文书均为繁体（孟子/道德经），影响面=简体自建书+繁体提问组合
+PASS - W1-D1: 真库命中 + factor=min(1,30/mention_count) 公式复算一致（Fitzwilliam Darcy factor=0.0882）
+
+--- W2 expand 对抗 ---
+PASS - W2-1: tie 按边插入序稳定 + rule 层边（戊）/悬空边（幽灵）剔除（丙,甲,乙,丁）
+PASS - W2-2: 无 mention 边邻居 → count 0 + 代表块空数组（排尾不崩）
+PASS - W2-3: perNeighbor 类型强转矩阵（"2"→2 / true→1 / null→3 / "abc"→3 / -1→1 / 99→5）
+PASS - W2-4a: 恰 20 邻居 → 无截断标记（truncated=false、无 note）
+PASS - W2-4b: 21 邻居 → 截断（邻居较多，只显示出场最多的 20 个（共 21 个））
+PASS - W2-5: 无 nodes/edges 表 → reason:'no-nodes-table'（与坏库/旧 schema 三态可区分）
+PASS - W2-6: 超长 name（8KB）/null → person-not-found（matchNode 空名短路 + fuzzy 不误中）
+
+--- W3 lookup 对抗 ---
+PASS - W3-1: 注入式 key 无效化（表完好 56 块、返回 not-found + 候选清单——参数化查询）
+PASS - W3-2: '%' 是字面量（prefix 命中 100% 可用率）
+PASS - W3-3: 'C++ 指南' 精确命中（章节名含正则元字符不参与任何正则）
+PASS - W3-4: maxBlocks 矩阵（-5→1 / "abc"→20 / 40.9→40 / "7"→7）
+OBSERVE - W3-5 同名章节合并登记 | 文档中 4 处「概述」被按块合并（total=4、按 id 序混合）——同名不同位置的章节不可区分；真书每章标题唯一，工作资料偶见
+OBSERVE - W3-6 章节名空格登记 | 章节名两侧带空格时精确/前缀级都失守、靠 includes 兜底命中（match_level=includes；原样保留 ' 3.2 安装 '）——PDF/Word 提取的章节名常带尾空格
+OBSERVE - W3-7 全角不归一登记 | 半角 key 'E1001' 不命中全角章节 'Ｅ１００１ 全角'（无 NFKC 归一）；错误码场景源文档全角混排会漏——各自自洽（半角中半角 / 全角中全角）
+PASS - W3-8: 超长 key（8KB）/null → not-found；数字 key 123 → 前缀命中（String() 容忍）
+PASS - W3-9: 候选清单封顶 30 而总数如实（30/31）
+PASS - W3-10: 空 chunks 表 → no-chapters（与 not-found 可区分）
+PASS - W3-11: text 为 NULL 的块 → 空串兜底（旧库半成品数据不崩）
+
+--- W4 清单缓存对抗 ---
+PASS - W4-1a: 分桶首查（A=2 本 / B=1 本，misses=2 dirs=2）
+PASS - W4-1b: 杂音文件全部排除（a1,a2——*.db-wal/shm 后缀不匹配、坏 .db 静默过滤）
+PASS - W4-2: 分桶互不触发（A touch → miss=3；B 查询 hit=1；0）
+PASS - W4-3: 删除 .db → 重扫（文件名集合变化，2→1 本）
+PASS - W4-4: findBook 与缓存路径一致（命中/未命中语义不变）
+PASS - W4-5: 目录不存在 → [] 且不触缓存（existsSync 早退）
+PASS - W4-6: clearListCache 计数与分桶全清
+OBSERVE - W4-7 WAL 写入窗口指纹盲区登记 | 写连接存续（-wal 有数据未 checkpoint）时主库 mtime/size 不变 → 缓存返回旧值（hit=1）；编目/嵌入进程运行中的并发读取最多看到旧 meta，窗口随连接关闭≤自愈
+PASS - W4-8: WAL 写连接关闭后自愈（close 即删 -wal=true、主库 mtime 变 → 重扫拿到新值 乙）
+
+--- W5 maxBooks 链路 ---
+PASS - W5-1: clampMaxBooks 矩阵（0→4/null→4/-5→1/99→8/5.9→5/"7"→7/true→1）
+PASS - W5-2: MAXBOOKS_SCHEMA zod 层 [1..8] 整数（8✓/undefined✓/9✗/0✗/2.5✗）
+PASS - W5-3: clamp 家族一致性（maxBooks 默认4/上限8、maxBlocks 默认20/上限40、负→1 全同款语义）
+PASS - W5-4: clampMaxBlocks 上夹=MAX_BLOCKS=40（与 MCP schema 1..40 对齐）
+OBSERVE - W5-5 直调 maxBooks=0 登记 | lib 层切片直通（slice(0,0)）→ 静默空结果不报错；工具层 clampMaxBooks 把 0 归一为 4，MCP 路径不暴露此口子（considered 2 本有分但 routed=0）
+PASS - W5-6: routeAndSearch 上界契约（maxBooks=1 → routed≤1（1）；maxBooks=8 → routed≤书数（1）；结果带 book/bookId 直通字段）
+
+--- W6 D1 简繁双形 ---
+PASS - W6-1: 简体问题双形 grams（低壓 壓電 電器 低压 压电 电器）
+PASS - W6-2: 纯繁体问题零增量（齊宣 宣王——t===raw 不补原形、无重复）
+PASS - W6-3: 简体库×简体问题字面腿命中（修复前 0 条 → 命中 1 条）
+PASS - W6-4: 别名注入原形在前（低压 压断 断路 路器 低壓 壓斷 斷路）
+PASS - W6-5: 繁体库不回归（转繁形照常命中——双形的另一半）
+
+=== graphrag-fuzz(演进轮 P1/P2/P4/P5 + F1/F2/D1): 46 pass / 0 fail / 10 observe ===
+PASS - readChapter 精确命中甲篇 4 块
+PASS - readChapter 未截断无 note
+PASS - readChapter 前缀匹配降级
+PASS - readChapter 包含匹配多命中告知其余
+PASS - readChapter 截断给续读游标（id=11 起）
+PASS - readChapter 未命中给章节清单
+PASS - readChapter 空 key 短路（D01 家族）
+PASS - readChapter maxBlocks 超上限被夹取
+PASS - clampChapterBlocks 边界夹取
+PASS - readChapter 无章节库报 no-chapters 并指路
+PASS - readRange 连续区间 2..4 正常
+PASS - readRange from>to 自动交换
+PASS - readRange 跨挖洞区间自动跳过缺失 id=5
+PASS - readRange 过宽截断给续读游标
+PASS - readRange 空区间给本书块号范围
+PASS - readRange from=0 拒收
+PASS - readRange 非数字拒收
+PASS - clampRangeBlocks 边界夹取
+PASS - readRange 坏库报 db-broken
+PASS - readChapter 坏库报 db-broken
+PASS - readChapter token 闸截断（32/45 块，8000 token ≤ 8000）
+PASS - readChapter 截断 note 带 token 闸事由与续读游标（本章共 45 块，已返回前 32 块（≈8000 token，本章约 8K token 已触 8000 token 闸）…）
+PASS - readChapter maxBlocks 小于 token 闸时块数 cap 先生效
+PASS - readRange token 闸截断（32/45 块，8000 token）
+PASS - readFullBook 小书全文端出（13 块 ≈167 token）
+PASS - readFullBook 超 10K token 拒喂并指路（11250 token > 10000）
+PASS - readFullBook 空书报 empty-book
+PASS - readFullBook 坏库报 db-broken
+
+===== browse-test：28 PASS / 0 FAIL =====
+
+--- A. rewriteQuery ---
+PASS - A1: 改写成功且原句保底在首位
+PASS - A2: 去重 + 80 字超长过滤（实际 2 条）
+PASS - A3: terms 去重
+PASS - A4: 围栏 + 夹带文字宽容解析
+PASS - A5: 非 JSON → fallback（调用方退单路）
+PASS - A6: variants 缺失 → fallback
+PASS - A7: 超时 → fallback
+PASS - A8: 空问题短路
+PASS - A11: 垃圾 history 过滤后照常走请求（连不上=NETWORK fallback，不再 TypeError）
+PASS - A9: parseRewrite 原句缺位自动补首
+PASS - A10: parseRewrite 无花括号 → null
+PASS - A12: 原句在中间位 → 强制居首（D15）
+PASS - A13: 原句在末尾 → 强制居首（D15）
+
+--- B. multiVariantSearch ---
+PASS - B1: 两路变体命中合并（ids=1,4）——甲篇一路、乙篇一路
+PASS - B2: 单路命中 hitVariants=1（共识计数不参与打分）
+PASS - B3: 变体去重（同问法不重复计路）
+PASS - B4: 空变体 → 空结果
+PASS - B5: 单变体等价 hybridSearch 快路径
+
+--- C. askWithRewrite 编排 ---
+PASS - C1: 改写成功 → 多路检索启用
+PASS - C2: 多路合并命中两路（ids=1,4）
+PASS - C3: base 带 book/bookId/mode（cloudSummary 引用补齐依赖）
+PASS - C4: 改写坏 JSON → 单路兜底照常出结果
+PASS - C5: BSP_REWRITE=0 → 完全旁路
+PASS - C6: H3 开关门在重切路径原样生效（《迷你测试书》的 skill 已关——去）
+PASS - C7: 全库模式 v1 走现状单路（跨书改写路由留两轮波次）
+
+===== query-rewrite-test：25 PASS / 0 FAIL =====
+
+----- A 段：structurize 纯文本层 -----
+PASS - A1 权重精确：15 个 3 字符签名的 100 字符块真实乱码率 45%（修复前算成 30% 放过）
+PASS - A2 西里尔 mojibake 不检出（已知限制锁定不误伤）
+PASS - A3 lone surrogate 前置剥离 + 入账（不到 sqlite 绑定）
+PASS - A4 assessCleaned 对 null 元素不抛（lib 层契约与 structurizeChunks 对称）
+PASS - A5a 无签名不修
+PASS - A5b 单签名不修（hints<2）
+PASS - A5c éé 纯重音回读无文字证据拒修（French 警戒：不可把好文本修坏）
+PASS - A5d ÿÿa 回读含 ASCII 字母可修
+PASS - A5e 混表外字符拒修（ā 不在 cp1252 表；cp1252 特俗字符本轮起在签名跨度内是允许的）
+PASS - A6 先修后评：可修双重编码修完放行（不误拦「可修」）
+PASS - A7a 孤立 Â/Ã/é/è/æ/å 不成对不误判
+PASS - A7b \t\n\r 不判控制符
+PASS - A7c BMP 私用区两头都命中
+PASS - A7d 补充平面 PUA 不命中（已知限制锁定不误伤）
+PASS - A7e 替换符 U+FFFD 命中
+PASS - A8 块级 0.5 边界：20 签名块（真实乱码率 60%）整块丢垃圾
+PASS - A9 sqlite 绑定把 lone surrogate 静默转 U+FFFD（坐实 P2-02 数据损坏面）
+PASS - A10 单签名不修（hints≥2 闸门锁定；M-01 hints<1 变异立红依据）
+PASS - A11a structChanged(null) → false（null 安全不抛）
+PASS - A11b 全零 → false（干净书零变化）
+PASS - A11c droppedEmpty=1 → true（M-07 删该项求和即立红）
+PASS - A11c droppedGarbage=1 → true（M-07 删该项求和即立红）
+PASS - A11c repairedMojibake=1 → true（M-07 删该项求和即立红）
+PASS - A11c strippedControls=1 → true（M-07 删该项求和即立红）
+PASS - A11c strippedPua=1 → true（M-07 删该项求和即立红）
+PASS - A11c strippedFffd=1 → true（M-07 删该项求和即立红）
+PASS - A11c strippedSurrogates=1 → true（M-07 删该项求和即立红）
+PASS - A12a 99 干净字符 → 拦「内容太少」（100 字硬闸门下界）
+PASS - A12b 100/101 干净字符 → 过闸（边界值恰放行）
+PASS - A13a emoji（F0 打头）的 cp1252 人身不检出（已知限制锁定，G-11）
+PASS - A13b C5 打头族（œ ł ř）的 cp1252 人身不检出（已知限制锁定，G-11）
+
+----- B 段：book-view 协议 handler -----
+PASS - B1 前置：txt 正常读 200
+PASS - B1 TOCTOU：读取失败给人话状态码（不裸抛穿层）
+PASS - B1b docx statSync 失败给人话 404（handler 层不裸抛；第二次 stat=st0）
+PASS - B2 换库后缓存不串味（key 含 libDir）
+PASS - B3 LRU 淘汰最早条目（第 9 本进缓存时砍 lru0，再访必重转）
+PASS - B4 体积闸门：60MB txt 与 9MB docx 都 413（不读不转）
+PASS - B5 坏地址全 400（主机名/编码/双分隔符穿越）
+OBSERVE - B6 并发同 docx 转换次数登记（1=已有 in-flight 去重 / 2=无去重双转） | convert 调用 1 次
+PASS - B6 并发同 docx 两请求都 200 且内容一致（正确性不依赖去重）
+PASS - B6b 不同 docx 并发各自转换（去重键不折叠不同书、内容不串）
+
+----- C 段：jobs 导入加工与资产入口 -----
+PASS - C1 取消后无复活事件（墓碑挡住 struct emit 幽灵横幅）
+PASS - C1b 取消后 jobsStatus 无残留条目（横幅重挂载数据源干净）
+PASS - C1c 取消→立即重导入 → 旧管线收尾不改写新条目（代际防线）
+PASS - C2 取消后无复活事件（墓碑挡住 failed emit 持久幽灵）
+PASS - C3 tmp 转换文件按内容区分（换源不碰撞：甲/乙两份都在；同内容重跑幂等不增）
+OBSERVE - C4 Windows 保留设备名/尾空格文件名创建行为登记（libuv \?\ 前缀实证） | aux.txt 创建=true；「尾空格 .txt」创建=true
+PASS - C4 保留名/尾空格文件在场时书架不崩、条目 id 完好
+  跳过非法任务书文件名: ..json
+PASS - C5 scanPending 只收合法挂起项（畸形文件名不逃逸、不崩、不误挂）
+PASS - C6 取消杀掉 txt2docx 子进程（转换不落地、取消后无幽灵事件）
+PASS - C7a 损坏 docx → 500 人话（协议层）
+PASS - C7b 损坏 docx 加工 → failed 态人话（不卡死不裸崩）
+PASS - C8 safeBookId 拒 NUL（修复前放行带 NUL 的 id）
+PASS - C8b win32 拒冒号（ADS 别名）/ 非 win32 放行（书名合法）
+PASS - C8c win32 拒尾点（系统剥点会撞名）/ 非 win32 放行
+PASS - C8d win32 拒保留设备名（CON/NUL/AUX/COM1/LPT1，含扩展）
+PASS - C9 startProcessing NUL id 不崩（UserError + jobs 无残留条目）
+PASS - C10 resumeCatalog 逃逸 id → UserError「书名不合法」（修复前：读库外任务书，人话不含书名）
+PASS - C11 catalogPrompt 逃逸 id → UserError「书名不合法」且 prompt.md 不落上级目录
+PASS - C12 导入 x..pdf → 人话拒（派生 id 含 ..；修复前放行出永卡条目 + 幽灵文件）
+PASS - C13 导入 ..txt → 人话拒（修复前放行 title="." 怪行 + 幽灵文件）
+PASS - C13b 隐藏文件（.hidden.txt）→ 人话拒（base 点开头不许过闸）
+PASS - C14 dest 大小写碰撞 → 人话拒且原书不动（零状态：无 failed 脏行；折叠 FS 前提探测=true）
+PASS - C14b id 级折叠 → 人话拒（library 已有仅大小写不同的库 id）
+PASS - C15 横幅「清符号」= 四类计数之和（含 strippedSurrogates，漏字段即少报）
+  结构化改造: 去空块 0 · 去垃圾块 0 · 修乱码块 0 · 清控制符 0 / 私用区 0 / 替换符 0 / 孤立代理对 1 处
+建库完成: c15b.docx.db
+  格式: docx | 切片: 1 块 | 原文: 194 字符 ≈ 0K token
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 1 块 / en 0 块 / 公式 0 块）
+PASS - C15b 真路径：build-book 剥出的孤立代理对真进了横幅「清符号 N 处」（键名接缝无漂移）
+PASS - C16 scanPending 脏文件名只 skip 不上横幅（正常书照常出）
+PASS - C16b 脏任务书跳过留痕（不静默埋排障坑）
+PASS - C17 正常书名「The Great Gatsby」可导入（空格/间隔点不误伤）
+PASS - C17 正常书名「论语 · 学而」可导入（空格/间隔点不误伤）
+PASS - C17 正常书名「Vol.2 修订版」可导入（空格/间隔点不误伤）
+PASS - C18 前置：甲版库建好
+PASS - C18 同名换内容 → 拒建且人话说清「源文件内容已变」
+PASS - C18b 老库一格不动（拒建发生在删表之前，切片与编目数据不作废）
+PASS - C18c 书架落 failed 态（不静默成功、不卡在加工中）
+
+----- D 段：engine 两档删除 -----
+PASS - D1 rmSync EBUSY → UserError 人话且零删除（不半删不裸抛）
+PASS - D1b wal 先删且被占用 → 零删除（主库/shm/wal 都在；顺序契约：主库是书还在的判定依据）
+PASS - D2 db rmSync EBUSY → UserError 人话且库文件不动（半途失败可描述，话术给出「再点一次」路径）
+  开关记录清理失败（EBUSY）——书库已删，残留记录无害
+PASS - D3 开关状态写失败不拖垮删除（书库照删，patch 命中直证不假绿）
+PASS - D4 并发双 purge 终态干净（书架无痕 + 拒绝皆 UserError）
+NOTE - D4 并发双 purge 行为登记 | 一成一拒=true 都成=false 共拒=1
+PASS - D5 humanizeError ENOENT 保真（.db 缺失→书库文件；原件缺失→保真原文）
+
+----- E 段：渲染层转义与状态 -----
+(node:11120) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/JIANG%20XIAO%20HUA/Desktop/book-skill-platform-r4/src/renderer/app.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r4\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - E1 esc 全字符转义（&<>"'）
+PASS - E2 书架书名/徽标全 esc（无裸 script、无属性穿越，恶意 id 以转义形态在场）
+PASS - E3 renderCite 三载荷（双引号/免引号/单引号）：data-cid 值逐字等于 esc(id)
+PASS - E3b ask 视图 results+cloud 两处引用徽标无裸 onmouseover（集成接线，计数恰 2）
+PASS - E4 __proto__ 键建自有属性不污染原型（spread 计算键语义锁定）
+PASS - E5 toast 走 textContent（无 HTML 注入）
+PASS - E6 chat 视图引用徽标转义（转义形态在场 + 计数 1，无裸注入）
+
+----- F 段：build-book main 全链与开关矩阵 -----
+PASS - F1 build-book 导出面含 main/parseDocx/parseMd（jobs 猴子补丁契约）
+PASS - F2a lone surrogate 前置清洗 + 入账（不到 sqlite 绑定变 FFFD）
+PASS - F2b 结构化账平：total = kept + 丢空 + 丢垃圾
+PASS - F2c 干净书账全零（structChanged=false）
+PASS - F2d 脏书账非零（structChanged=true）
+PASS - F3 干净 md 书全链零变化（report 全零 + 逐字对拍）
+PASS - F4 BSP_STRUCT 十值矩阵（尾空格/零宽/全角三种变体修复前为红）
+  横幅回调异常（不阻断建库）: boom-onstage-1
+⚠ 书名「fix」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Prejudice）"）
+建库完成: f5.db
+  格式: md | 切片: 2 块 | 原文: 260 字符 ≈ 0K token
+  章节: 2
+  md 文件: 2 篇
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 2 块 / en 0 块 / 公式 0 块）
+PASS - F5 onStage(structurize) 抛错不穿出 main（包底，继续建库且 slice 仍投递）
+  横幅回调异常（不阻断建库）: boom-onstage-2
+⚠ 书名「fix」不含中文——建议加 --title 起中文名（中文在前，原文名放括号：如 "傲慢与偏见（Pride and Prejudice）"）
+建库完成: f6.db
+  格式: md | 切片: 2 块 | 原文: 260 字符 ≈ 0K token
+  章节: 2
+  md 文件: 2 篇
+  语种(R11 块级判定): zh — 中文占字母类字符 100.0%（zh 2 块 / en 0 块 / 公式 0 块）
+PASS - F6 onStage(slice) 抛错不穿出 main（包底，两阶段都投递且建库完成）
+PASS - F7 BSP_STRUCT=0 逃生开关真关（脏文本原样入库）
+PASS - F8 默认开：替换符/私用区/控制符清掉 + 纯符号数字块丢 + 库内干净
+PASS - F9 main 全链 0.3 边界拦（P2-01 全链版：修复前隐形入库）
+SKIP - F10 BSP_SEMANTIC=1 与结构化同开（需加载嵌入模型，排 slow 套件，本轮登记不跑）
+
+===== entry-adversarial-fuzz: 98 PASS / 0 FAIL / 2 OBSERVE / 1 SKIP =====
+PASS - 默认关: 无邻块扩展（3 行全无 nbr 字段）
+PASS - 默认关: 检索本身正常（樱桃命中）
+PASS - 开: 种子（樱桃块）在终排里
+PASS - 开: 邻块被附加（1 席）
+PASS - 开: nbr 不变式全对（id±nbrOf/同章/文本一致/衰减 ×0.5）
+PASS - 开: 邻块去重（无重复、不与种子重叠）
+PASS - 开: 跨章邻居不扩（柠檬+1 属链表章，0 个 nbr 中无跨章）
+PASS - 开: 邻块总数 ≤6（实际 1）
+PASS - 开: chapter_path 透传（"数组"）
+PASS - 多变体: nbr 不变式保持（0 席 nbr / 3 行）
+PASS - 老库: chapterPath 全 null（无列回退）
+PASS - 老库: 邻块照常附加且文本一致（1 席）
+
+===== 邻块扩展验收：全部 PASS =====
+===== 1) G1 isSubstantiveShort 边界用例 =====
+PASS - G1: 文言短句「民為貴，君為輕」（实义6）保护
+PASS - G1: 楼层时间戳（实义1）不保护
+PASS - G1: 目录点线块（实义3）不保护
+PASS - G1: 「哈哈哈」（实义3）不保护
+PASS - G1: 「学习了谢谢楼主」（实义7）保护（宁误保护不误删）
+PASS - G1: ≥50 字符长块不享受 G1
+PASS - G1: 纯英文 4 字母不保护
+PASS - G1: 英文 5 字母保护
+PASS - G1: 「顶一下」（实义3）不保护
+===== 2) G2 hasQuotedOrCodeFeature =====
+PASS - G2: 书名号保护
+PASS - G2: 配对引号保护
+PASS - G2: 数学符号保护
+PASS - G2: 代码关键字保护
+PASS - G2: URL 不保护（广告常带）
+PASS - G2: 普通文本不触发
+===== 3) G3 理由合格性 + applyGuards 顺序过闸 =====
+PASS - G3: 合法 drop 理由
+PASS - G3: 理由 <4 字不合格
+PASS - G3: cat 非枚举不合格
+PASS - G3: 缺 reason 不合格
+PASS - G 闸: 文言/书名号/长实义块被拦回，纯水贴放行
+PASS - G 闸: guarded 记录 G1/G2/G1
+===== 4) matchVerdicts + parseCleanAnswer =====
+PASS - 对齐: 完整 idx 集合通过
+PASS - 对齐: 缺号整批拒收
+PASS - 对齐: 越界整批拒收
+PASS - 对齐: 重号整批拒收
+PASS - 对齐: verdict 大小写宽容
+PASS - 对齐: verdict 非法值拒收
+PASS - 解析: 围栏包裹
+PASS - 解析: 前后夹带
+PASS - 解析: 坏文本返回 null
+===== 5) cleanBatch 调用链 =====
+PASS - cleanBatch: drop 判定通过护栏放行
+PASS - cleanBatch: usage 透传
+PASS - cleanBatch: 坏输出 → BADRESP 不抛
+PASS - cleanBatch: 缺号 → MISALIGN 整批拒收
+PASS - cleanBatch: CANCELLED 唯一穿层例外
+===== 6) buildProfileMessages + parseProfile =====
+PASS - 画像: messages 结构
+PASS - 画像: 宽容解析+字段归一
+PASS - 画像: 空 summary 拒收
+PASS - 画像: 坏文本 null
+PASS - 章节树: 去重保序完整路径
+===== 7) runClean 端到端 =====
+PASS - runClean: 全部批成功
+PASS - runClean: 删 1 留 29（got drop=1 keep=29）
+PASS - runClean: 无护栏拦截（长水贴不触发 G1）
+PASS - runClean: 画像模式 profile
+PASS - 产物: 只存 drop/guarded（纯 keep 不存）
+PASS - 产物: drop 带 text_hash 16hex
+PASS - import: 落库成功删 1 块
+PASS - audit: quarantine 1 行 / chunks 29
+PASS - audit: FTS 与 chunks 对账一致（rebuild 生效）
+PASS - audit: clean_report 账实一致
+PASS - 隔离账: 原文+理由落账
+PASS - 悬空边: chunk 锚定边已清理
+PASS - meta: 五键落账（clean_profile 仅有画像时）
+PASS - runClean: 已清洗且结构未变 → skipped already
+PASS - GATE: 43% 删除整单拒收（got GATE）
+PASS - GATE: 拒收后零写入
+PASS - GATE warn: 23% 删除放行且标 warn（got true/warn）
+PASS - TAMPER: text_hash 对不上整单拒收
+PASS - TAMPER: 拒收后零写入
+===== 8) restoreClean 恢复 =====
+PASS - 恢复前置: 已删 2 块
+PASS - 恢复: dry-run 列出 2 块
+PASS - 恢复: 指定块插回
+PASS - 恢复: 原文一字不差插回原 id（id=i+1 错位，id=3=第2段）
+PASS - 恢复: quarantine 只剩未恢复的 1 条
+PASS - 恢复: FTS rebuild 后与 chunks 对账
+PASS - 恢复: restore_log 落账
+PASS - 恢复: --all 恢复剩余 1 块
+PASS - 恢复: 全部回原（chunks=20）
+===== 9) 断点续跑 + STALE =====
+PASS - 续跑: 失败批登记 PARTIAL
+PASS - 续跑: PARTIAL ok=false
+PASS - 续跑: 部分块已缓存（10/25）
+PASS - 续跑: 重跑只补失败批
+PASS - 续跑: 全量判定齐
+PASS - stale: content_hash 变 → HASH
+PASS - stale: chunk_fp 变 → STRUCT
+PASS - stale: 缓存文件不存在不判 stale
+===== 10) 降级与前门 =====
+PASS - 画像: 失败降级 title_only 不炸
+PASS - SMALL: <8 块跳过不算失败
+PASS - STALE: 重灌后缓存拒跑（指纹/哈希不符）
+===== 11) 孟子零误杀 =====
+PASS - 孟子零误杀: 真块结构恒 keep → 删 0（got 0）
+PASS - 孟子零误杀: kept=chunks
+PASS - 孟子零误杀: import 零删除路径
+===== 12) 老库无 chapter_path 列 =====
+PASS - 老库: 探测回退 chapter_path=null
+
+===== clean-test: 全部 PASS =====
+PASS - getOutline 两章 + 总块数（实际 2 章 / 13 块）
+PASS - getOutline 章按文档序 + 块数 + 起始块号正确
+PASS - getOutline 带回 chapter_path 层级
+PASS - getOutline token 账自洽（总 167 ≥ 章和）
+PASS - getOutline 质量标记 reliable（coverage 0.85，名字干净不降级）
+PASS - getOutline 覆盖率不足给完整性提示（verdict 不因此降级）
+PASS - getOutline shown/chapters_total 正确
+PASS - getOutline maxChapters=1 截断并给总数提示
+PASS - getOutline maxChapters 超上限被夹取（500）
+PASS - clampOutlineChapters 边界夹取
+PASS - getOutline 无章节库报 no-chapters 并指路 read_range
+PASS - getOutline 长章名判 messy 并警告按名翻章可能落空
+PASS - getOutline 坏库报 db-broken
+PASS - estimateTokens 纯中文按 0.75 系数
+PASS - estimateTokens 纯英文按 0.25 系数
+PASS - detectLang 中英判别
+PASS - bookTokenTotal 英文账与 P&P 实测校准值一致
+PASS - chapterQuality 覆盖率只判 none/reliable 边界（2/3 不降级，1/3 建不了地图）
+PASS - qualityFromStats 空库 none / 正常 reliable
+PASS - listBooks 扫到旧库
+PASS - listBooks 旧库现场估算 total_tokens=300（400 字 × 0.75）
+PASS - listBooks 旧库现场算 chapter_quality（{"coverage":1,"avg_name_len":3,"verdict":"reliable"}）
+PASS - B6: 旧库无 meta.lang → detectLang 现场估 lang=zh（全中文块）
+PASS - B6: meta.lang 落库后 listBooks 直接读回（编目 jobs.mjs B6 落库路径的读端）
+
+===== outline-test：24 PASS / 0 FAIL =====
+PASS - cite_check 逐字命中给块号/章节/页码（chunk#1 学而篇 第1页）
+PASS - cite_check 空白归一命中且标 normalized（不冒充逐字）
+PASS - cite_check 未命中明确告知不要采用
+PASS - cite_check 空引文拒收
+PASS - cite_check 纯空白引文拒收
+PASS - cite_check 坏库报 db-broken
+PASS - cite_check 空书未命中（不崩）
+PASS - cite_check 真库原文照抄命中（chunk#1）
+PASS - cite_check 真库捏造句子拒收
+
+===== cite-check-test：9 PASS / 0 FAIL =====
+PASS - 五类噪音各删一行（got 5: sign-bullet,floor,sign-author,sep,page）
+PASS - 两段正文都保留
+PASS - 署名/楼层/分隔线全删
+PASS - 块尾页码删掉
+PASS - 块中部孤立数字保留（可能是正文数据）
+PASS - 「楼主」开头行零误删
+PASS - 按两个边界切三段（got 3）
+PASS - 段类型 main+reply+reply
+PASS - 跟帖段 1 内容是跟帖正文
+PASS - 边界行（署名）不进跟帖段
+PASS - 主帖段在第一位
+PASS - 无边界返回 null
+PASS - 块首边界不算切点
+PASS - 干净块 keep 零改动
+PASS - keep 的 after 等于原文
+PASS - 只有噪音无跟帖 → strip
+PASS - strip 后正文保留
+PASS - strip 后署名删除
+PASS - 主帖+跟帖 → split
+PASS - 主帖段只留主帖
+PASS - 切出两个跟帖段
+PASS - 跟帖段内容正确
+PASS - 页码行删除
+PASS - I1 拒收：删行超 30% 整块 keep
+PASS - I1 护栏标记
+PASS - I1 拒收后原文原样
+PASS - I1 反向：删行 50% 但剩余正文 44 字 → 放行（行占比语义不得回归）
+PASS - I1 反向：无护栏标记
+PASS - 主帖短不切退化为 strip（got strip）
+PASS - 短跟帖「嗯」被丢弃
+PASS - 长跟帖保留
+PASS - buildInlinePlan 成功
+PASS - 两块 split
+PASS - 干净块 keep 不算 strip
+PASS - 一块 keep
+PASS - 共三块
+PASS - 切出三个跟帖新块
+PASS - 落库成功（净化 2 块（strip 0 / split 2）| 切出新块 3 | 删行 3 行 95 字（29.7%） | 已作废向量 2 条与编目 4 键（块集合变了，重跑 embed-book + catalog-import 补齐））
+PASS - 改过的两块 emb 作废
+PASS - catalog meta 作废
+PASS - 块数 3 → 6（两个 split 各切 2 跟帖 + 干净块）
+PASS - 块1 主帖段只留主帖
+PASS - 块1 主帖正文保留
+PASS - 切出的跟帖1a 存在
+PASS - 切出的跟帖1b 存在
+PASS - 切出的跟帖2 存在
+PASS - 改过的两块 emb 置 NULL
+PASS - 隔离账两条 inline 记录
+PASS - 隔离账存原文
+PASS - 隔离账记录切出的新块 id
+PASS - FTS 对齐 6
+PASS - meta chunk_count = 6
+PASS - inline_version 落账
+PASS - catalog_themes 已删
+PASS - auditInline 账实相符
+PASS - 恢复成功（恢复 2 块原文、删除 3 个切出的跟帖新块；行级净化标记已清除（重跑行级清洗会对未恢复块重新净化），这些块还没有向量，重跑「开始加工」即可补齐）
+PASS - 恢复 2 块
+PASS - 删除 3 个切出的新块
+PASS - 恢复后回到 3 块
+PASS - 块 1 原文逐字回滚
+PASS - 块 1 hash 一致
+PASS - 块 2 原文逐字回滚
+PASS - 块 2 hash 一致
+PASS - 块 3 原文逐字回滚
+PASS - 块 3 hash 一致
+PASS - 恢复后 FTS 对齐 3
+PASS - 恢复后 chunk_count 回涨 3
+PASS - 恢复后 inline_at 已清除（D2）
+PASS - 恢复后 inline_version 已清除（D2）
+PASS - 恢复后 inline_content_hash 已清除（D2）
+PASS - 恢复后 inline_chunk_fp 已清除（D2）
+PASS - 恢复后 inline_report 已清除（D2）
+PASS - 恢复历史 inline_restore_log 保留（审计不丢）
+PASS - 恢复后 auditInline 变 NOSCHEMA（不再假 ready，实报 code=NOSCHEMA）
+PASS - 返回 metaCleared=5（实报 5）
+PASS - 恢复后 emb 仍是 NULL（提示重跑加工）
+PASS - 净化率超硬线（0.5275）
+PASS - 单块删行 30% 不撞 I1（guarded=0）
+PASS - GATE 拒收
+PASS - --force-gate 放行
+PASS - TAMPER 拒收（计划 hash 被篡改）
+PASS - STALE 拒收（书被改过，got STALE_STRUCT）
+PASS - STALE_STRUCT 拒收（块数不符）
+PASS - 规则版零云端调用
+PASS - 预估带删字与切块数
+
+全部通过
+PASS - 五套预设主题（深蓝灰/暖炭灰/墨绿/纯黑/浅色奶白）
+PASS - 强调色 7 项（auto + 6 色）
+PASS - 每套主题带 id/名称/预览色
+PASS - 四深一浅（dark 标记正确）
+PASS - 主题 deep-blue 十变量齐（缺：无）
+PASS - 主题 deep-blue 强调三件套齐
+PASS - 主题 deep-blue dataset.theme 落位
+PASS - 主题 warm-coal 十变量齐（缺：无）
+PASS - 主题 warm-coal 强调三件套齐
+PASS - 主题 warm-coal dataset.theme 落位
+PASS - 主题 ink-green 十变量齐（缺：无）
+PASS - 主题 ink-green 强调三件套齐
+PASS - 主题 ink-green dataset.theme 落位
+PASS - 主题 pure-black 十变量齐（缺：无）
+PASS - 主题 pure-black 强调三件套齐
+PASS - 主题 pure-black dataset.theme 落位
+PASS - 主题 paper-light 十变量齐（缺：无）
+PASS - 主题 paper-light 强调三件套齐
+PASS - 主题 paper-light dataset.theme 落位
+PASS - 强调色覆盖为紫罗兰
+PASS - 浅底强调色配深字（亮度自适应）
+PASS - auto 跟随主题（浅色主题的深蓝）
+PASS - 深底强调色配白字（亮度自适应）
+PASS - 存档写入主题
+PASS - 存档写入强调色
+PASS - 重启后从存档恢复（暖炭 + 青绿）
+PASS - 自动模式 · 系统深色 → 深蓝灰
+PASS - 自动模式 · 系统浅色 → 浅色奶白
+PASS - 自动模式 · 系统浅色时 init 落浅色奶白
+PASS - setAuto(true) 打开跟随系统
+PASS - setAuto(true) 且系统浅色 → 立即切浅色奶白
+PASS - 自动开关写入存档
+PASS - setAuto(false) 关掉跟随系统
+PASS - 非法主题 id 回退默认
+PASS - 非法强调色回退 auto
+PASS - 存档损坏回退默认（不崩）
+PASS - 恢复默认
+PASS - 恢复默认清掉存档
+PASS - 无 localStorage/document 时不抛错（静默降级）
+PASS - app.css 定义 --accent-ink（强调色底上的字色）
+PASS - app.css 无残留硬编码主题色（#06121C 仅变量定义 1 处、旧 hover 色已清零）
+PASS - app.css 零 box-shadow（深色/浅色都不靠阴影）
+
+===== theme-test: 全部通过 =====
+PASS - 夹具: configureSearch 指向 tmp 空库目录
+PASS - 默认策略：开 + 预算 20 万字符 + 全天开放 00:00-24:00 含周末（V04/A-06 与随包 json 同源）
+PASS - V04: 无文件首启 → __source=default（正常态，不算错）
+PASS - saveUsagePolicy 写 enabled=false 落盘可读回
+PASS - 深合并：只改的字段覆盖，未改的回退默认（半截配置不伤）
+PASS - 周三 9:00 整在窗口内
+PASS - 周三 8:59 在窗口外
+PASS - 周三 18:29 在窗口内（右开区间尾）
+PASS - 周三 18:30 整出窗口（右开）
+PASS - 周六默认关（weekend=false）
+PASS - weekend=true 时周六也开
+PASS - 00:00-24:00 真全天：0 点整与 23:59 都在窗口内（不漏最后一分钟）
+PASS - 24:30 非法区间：整条不命中（哨兵纪律）
+PASS - 手动关：reason=manual-off 且 hint 说人话
+PASS - 窗口外：reason=schedule-off 且 hint 说人话
+PASS - 窗口内 + 开着 = 开放
+PASS - 预算充足：search 放行
+PASS - 字符预算尽：deepRead 拒（800+300>1000）
+PASS - 字符仍有头：800+100=900≤1000 放行
+PASS - sessionUsage 记账准确（3 次）
+PASS - 单次超限：deepReadChars=800 拦 5000
+PASS - 单次在限内：700≤800 放行
+PASS - 次数预算尽：第 4 次 search 拒（perSessionQueries=3）
+PASS - resetSessionUsage 清零
+PASS - B3: A 第 1 次放行
+PASS - B3: A 第 2 次放行
+PASS - B3: A 第 3 次拒（queries-exhausted，A 桶独立打满）
+PASS - B3: B 不受 A 打满连坐（分桶隔离）
+PASS - B3: B 打满后同样拒（A/B 各自记账）
+PASS - B3: sessionUsage 分桶读数准确（A=2 B=2 default=0 互不混账）
+PASS - B3: 单桶重置只清 A，B 桶保持打满（resetSessionUsage(id) 定点清）
+PASS - todayUsage 聚合：3 次 / 31200 字符 / 1 次拒收 / 按工具分布
+PASS - usage-log.jsonl 逐行 JSON 带 ts（追加写，旁路不阻断）
+PASS - 18 工具全注册（闸机包装后数量不变，实际 18）
+PASS - TOOL_TIERS 分级：元数据/检索/深读三档映射正确（cite_check/check_skills 恒开=安全工具不被预算拦）
+PASS - 关闭态：search 拒收且带 hint（reason=manual-off）
+PASS - 关闭态：deepRead 拒收
+PASS - 关闭态：metadata 仍常开（list_books 不受影响）
+PASS - 关闭态：cite_check 恒开（防幻觉自检不被拦）
+PASS - 定时态：窗口外拒收（reason=schedule-off，hint 指路改 schedule）
+PASS - 开启态：search 放行（空库下走到业务层错误，不是闸机错误）
+PASS - 开启态：metadata 正常返回
+PASS - 拒收落审计：manual-off 拒收记录 ≥3 条（实际 4）
+PASS - V04: 坏 JSON → __source=default-after-error
+PASS - V04: __error 带解析失败原因
+PASS - V04: 回退后生效字段可读（默认策略兜底继续服务）
+PASS - V04: console.warn 明确告警（含来源与文件路径）
+PASS - V04: serviceStatus 透出 fallback=policy-fallback（上游可观测，不阻断）
+[usage-policy] 警告：C:\Users\JIANGX~1\AppData\Local\Temp\bsp-usage-rYtKY4\usage-policy.json 无法使用（内容不是 JSON 对象），已回退内置默认策略并继续服务。生效来源=default-after-error，请修复或删除该文件后重启。
+PASS - V04: 非 JSON 对象（如 42）→ 同样判坏回退
+[usage-policy] 警告：C:\Users\JIANGX~1\AppData\Local\Temp\bsp-usage-rYtKY4\usage-policy.json 无法使用（内容不是 JSON 对象），已回退内置默认策略并继续服务。生效来源=default-after-error，请修复或删除该文件后重启。
+PASS - V04: 正常文件 → __source=disk
+PASS - V04: 正常盘无 fallback 标记
+PASS - engine.usagePolicyGet：策略 + 当日用量 + 会话记账 + open 判定
+PASS - engine.usagePolicySet：写 enabled 生效（读回一致）
+PASS - engine.usagePolicySet 深合并：改的覆盖、未改的回退默认
+
+===== usage-gate-test：54 PASS / 0 FAIL =====
+PASS - 合规技能：0 error
+PASS - 合规技能：0 warning（负面触发/标题/目录都齐）
+PASS - 不合规技能：ok=false
+PASS - slug 规则：目录名非 kebab-case 红
+PASS - fm-name 规则：name≠目录名 红
+PASS - fm-desc 规则：description 多行 红
+PASS - readme-inside 规则：目录内 README.md 红
+PASS - too-deep 规则：references 两层深 红
+PASS - broken-link 规则：指向不存在文件 红
+PASS - fm-desc-negative warning：缺负面触发
+PASS - fm-title warning：缺 title
+PASS - no-skill-md 规则：缺主文件红
+PASS - no-frontmatter 规则：缺 YAML 头红
+PASS - body-too-long 规则：正文 >500 行红
+PASS - 根目录批量：2 个技能都扫到，合规的 alpha 过
+PASS - 批量也查链接（beta 断链红）
+PASS - no-toc warning：>100 行无目录
+
+===== skill-validate-test：17 PASS / 0 FAIL =====
+===== judge 翻转测试（P0-2）=====
+
+[样例 1] Dynamo id=87/88 —— 答案句被切成两半
+  ✓ a 逐字来自原文（前半在 id=87）
+  ✓ a 的后半在 id=88
+  ✓ a 不完整落在 id=87
+  ✓ a 不完整落在 id=88
+    旧尺子: hit=true rank=1 (依据关键词 "vector clock")
+    新尺子: level=partial rank=1 —— a 被切成两半：命中块 #1 + #2 拼起来才完整（两块在库里是相邻的，正卡在接缝上）
+  ✓ 旧尺子判 hit（关键词在块里）
+  ✓ 新尺子判 partial（答案句被切开）
+  ✓ 新旧结论不同（这就是 P0-2 的翻转证据）
+    只检回 id=87 时新尺子: level=partial —— 命中块里只有 a 的前 195/258 字，答案句在块尾被切断
+  ✓ 只检回一块时新尺子仍判 partial（不是 full）
+  ✓ 只检回一块时旧尺子仍判 hit
+
+[样例 2] attention id=48/49 —— 句子跨页被切开
+  ✓ a 前半在 id=48
+  ✓ a 后半在 id=49
+  ✓ a 不完整落在任一块
+    旧尺子: hit=true rank=1
+    新尺子: level=partial rank=1 —— a 被切成两半：命中块 #1 + #2 拼起来才完整（两块在库里是相邻的，正卡在接缝上）
+  ✓ 旧尺子判 hit
+  ✓ 新尺子判 partial
+
+[样例 3] 规则③ —— 块尾把答案句切断，后半截不在任何命中块里
+    新尺子: level=partial prefixLen=71 —— 命中块里只有 a 的前 71/117 字，答案句在块尾被切断
+  ✓ 块内只有 a 的前半截（无邻块可拼）→ 判 partial
+  ✓ 前缀长度 71 达到门槛 59 且不足全句 117
+  ✓ 旧尺子对同一块判 hit（关键词都在）
+  ✓ 新旧结论不同（规则③ 也是真翻转）
+    前缀不足一半（58/117 → 门槛 59）时: level=miss
+  ✓ 前缀不到一半 → 判 miss
+
+[对照] pride id=42 开篇句 —— 完整落在单块内，应判 full
+    新尺子: level=full —— a 完整落在命中块里
+  ✓ 完整句判 full
+  ✓ 旧尺子也判 hit（完整句时两尺一致）
+
+[对照] 完全检不到答案句 → miss
+    新尺子: level=miss —— 命中结果里找不到答案句
+  ✓ 判 miss
+  ✓ 旧尺子也 miss（这点两尺一致）
+
+[汇总] judgeAll 的六行指标口径
+    total=2 full=1 partial=1 miss=0 hitRate=1 damageRate=0.5 avgFirstRank=1 legacyHit=2
+  ✓ full 率 0.5（1/2）
+  ✓ 切块损伤率 partial÷hit = 0.5
+  ✓ 旧尺子 2 题全 hit（比新尺子松）
+
+✓ judge 翻转测试全部通过
+PASS - 默认值 = 全开：不设 env 与 Q=1/N=1/K=18 结果逐字节一致
+PASS - 默认值：邻块默认已开（16 条）
+PASS - 单书题只入选 1 本（实际 1 本）
+PASS - 单书退化：配额/邻块开与关结果逐字节一致（daodejing-zh#15,daodejing-zh#68,daodejing-zh#65,daodejing-zh#55,daodejing-zh#54 vs daodejing-zh#15,daodejing-zh#68,daodejing-zh#65,daodejing-zh#55,daodejing-zh#54）
+PASS - 多书题入选 ≥2 本（实际 3 本：pg1260-简爱/pg1661-福尔摩斯冒险史/pride-and-prejudice-en）
+PASS - 配额关：book-major 下结果被首名书独占（{"pg1260-简爱":5}）
+PASS - 配额关：首名书吞满全部 5 席（{"pg1260-简爱":5}）
+PASS - 配额关：种子席位数 = topN（实际 5）
+PASS - 配额开：每本入选书至少 1 席（{"pg1260-简爱":2,"pg1661-福尔摩斯冒险史":2,"pride-and-prejudice-en":1}）
+PASS - 配额开：结果里的书与 routed_books 一致（3 vs 3）
+PASS - 配额开：种子席位数仍 = topN（实际 5）
+PASS - 邻块关时（BSP_ROUTE_NBR=0）：results 无 nbr 字段（0 条带 nbr）
+PASS - 邻块开：确实追加了邻块（16 条）
+PASS - 邻块开：总量 ≤ cap 16（实际 16）
+PASS - 邻块开：种子席位不被挤占（5 vs 5）
+PASS - 邻块开：每条都带 nbrOf 与 nbr 距离
+PASS - 邻块开：id 与 nbrOf 的距离恰等于 nbr（±1/±2）
+PASS - 邻块开：结果 = 种子 + 邻块（21 = 5 + 16）
+PASS - 总闸优先：BSP_ROUTE=0 时邻块不生效（0 条带 nbr）
+PASS - 总闸优先：BSP_ROUTE=0 时座位分布与全关一致（{"pg1260-简爱":5}）
+
+全部 PASS
+PASS - 覆盖：每个库都有简介（缺 0 个）
+PASS - 覆盖：没有多余条目（多 0 个）
+PASS - 长度：全部 ≤200 字（最长 169，平均 125）
+PASS - attention-is-all-you-need-en.pdf（en）: 英文专名命中 100%（3/3）
+PASS - daodejing-zh.docx（zh）: 中文 2-gram 命中 52%（25/48）
+PASS - Dynamo-亚马逊高可用键值存储-2007.pdf（en）: 英文专名命中 100%（4/4）
+PASS - frankenstein-en.epub（en）: 英文专名命中 100%（10/10）
+PASS - Lamport-时间时钟与分布式系统排序-1978.pdf（en）: 英文专名命中 100%（1/1）
+PASS - lunyu-xueer-zh.docx（zh）: 中文 2-gram 命中 51%（28/55）
+PASS - lunyu-xueer-zh.pdf（zh）: 中文 2-gram 命中 53%（32/60）
+PASS - MapReduce-谷歌大规模分布式处理-2004.pdf（en）: 英文专名命中 100%（2/2）
+PASS - mengzi-zh.docx（zh）: 中文 2-gram 命中 50%（29/58）
+PASS - pg1260-简爱.epub（en）: 英文专名命中 100%（3/3）
+PASS - pg1661-福尔摩斯冒险史.epub（en）: 英文专名命中 100%（7/7）
+PASS - pride-and-prejudice-en.epub（en）: 英文专名命中 100%（7/7）
+PASS - 低压电器检测实训报告（带表格样例）.docx（zh）: 中文 2-gram 命中 68%（36/53）
+PASS - 同质化：最高 3-gram 相似度 0.14（上限 0.5） @ lunyu-xueer-zh.docx ↔ lunyu-xueer-zh.pdf
+
+全部 PASS
+TESTFAST_EXIT=0

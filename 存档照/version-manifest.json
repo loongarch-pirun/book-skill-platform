@@ -1,8 +1,8 @@
 {
  "snapshotId": "r4-snapshot-20261115",
- "capturedAt": "2026-11-16T12:50:09.614Z",
+ "capturedAt": "2026-11-16T13:02:07.356Z",
  "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
- "treeSha16": "dd9153415b53d0f6",
+ "treeSha16": "9746abbd21151f5c",
  "fileCount": 267,
  "facts": {
   "golden": {
@@ -452,14 +452,14 @@
   {
    "path": "package-lock.json",
    "bytes": 240498,
-   "mtime": "2026-11-13T14:23:57.052Z",
-   "sha256": "728ca5ff1cf38bf52d4cecea22ef59ea072dc3e4661d942566f70748a719e1b6"
+   "mtime": "2026-11-16T13:01:57.580Z",
+   "sha256": "f8bdfae014defd5b766c2cfbfd0d6179989bdc9ae25f9b6d2cb5eed9088f8fe0"
   },
   {
    "path": "package.json",
    "bytes": 6369,
-   "mtime": "2026-11-16T12:49:15.990Z",
-   "sha256": "c902c24b50586b59d6b57c4b9273b2fafe6faea729367150c7c5f8ec71d04c22"
+   "mtime": "2026-11-16T13:01:57.569Z",
+   "sha256": "36e30afb85adb5a395ca92f2f052e6c884c373b5935d1406e0d36221f77dc6dc"
   },
   {
    "path": "quality-baseline.json",
@@ -1716,5 +1716,5 @@
    "sha256": "6ba80b3bc2ce102574ddac54641397ef9a74b3905902457fccafffaf7f3f6144"
   }
  ],
- "previousTreeSha16": "088b57a279fcfffd"
+ "previousTreeSha16": "dd9153415b53d0f6"
 }
