@@ -1,0 +1,96 @@
+{
+  "$comment": "包体与本地化门禁配置。数字为 2026-11-16 实测，口径以 docs/模型清单与包体基线.md 为准；改本文件必须同步改该文档。",
+  "measuredAt": "2026-11-16",
+  "installer": {
+    "path": "release/BookSkillPlatform Setup 0.1.0.exe",
+    "bytes": 1936705243,
+    "gib": 1.8,
+    "gb": 1.94,
+    "builtAt": "2026-11-15T11:48:00+08:00",
+    "compressionRatio": 1.57
+  },
+  "budget": {
+    "regressionLineGib": 1.1,
+    "regressionLineSource": "docs/收官打包与交接规划-2026-10-21.md:190",
+    "status": "exceeded",
+    "overByGib": 0.7,
+    "ratioToLine": 1.64
+  },
+  "modelsInPackage": {
+    "totalMb": 1271.2,
+    "totalGb": 1.24,
+    "items": [
+      {
+        "dir": "Xenova/bge-m3",
+        "file": "onnx/model_int8.onnx",
+        "mb": 558.4,
+        "role": "embed-primary",
+        "dtype": "int8"
+      },
+      {
+        "dir": "onnx-community/bge-reranker-v2-m3-ONNX",
+        "file": "onnx/model_int8.onnx",
+        "mb": 560.6,
+        "role": "rerank",
+        "dtype": "int8"
+      },
+      {
+        "dir": "Xenova/multilingual-e5-small",
+        "file": "onnx/model_int8.onnx",
+        "mb": 128.9,
+        "role": "embed-alt",
+        "dtype": "int8"
+      },
+      {
+        "dir": "Xenova/bge-small-zh-v1.5",
+        "file": "onnx/model_quantized.onnx",
+        "mb": 23.3,
+        "role": "embed-alt",
+        "dtype": "q8"
+      }
+    ],
+    "excluded": [
+      {
+        "file": "onnx-community/bge-reranker-v2-m3-ONNX/onnx/model_q4.onnx",
+        "mb": 1194.5,
+        "reason": "extraResources filter 排除；代码用 dtype=int8 不读它；且比 int8 大 2.2 倍，属废档"
+      }
+    ],
+    "generationModel": null,
+    "generationNote": "包内无本地生成模型；答案生成走云端 OpenAI 兼容 API（src/lib/llm.mjs）"
+  },
+  "otherPackagesMb": {
+    "runtime/mineru-models": 838.6,
+    "runtime/mineru-python": 832.4,
+    "library": 86.3,
+    "books": 12.1
+  },
+  "uncompressedKnownMb": 3040.6,
+  "blockShare": {
+    "pdfParsingMb": 1671.0,
+    "pdfParsingShare": 0.549,
+    "localModelsMb": 1271.2,
+    "localModelsShare": 0.418
+  },
+  "constraints": {
+    "contentNeverUploaded": false,
+    "singlePackageUnderLine": false,
+    "pdfImportSupported": true,
+    "modelDtype": "int8/q8-lowest-available"
+  },
+  "verdict": {
+    "zeroUploadPlusUnderLinePlusPdf": "impossible",
+    "reason": "模型 1271.2MB + PDF 解析 1671.0MB = 2942.2MB，压缩后约 1.87GiB，必然超 1.10GiB 线；模型已是 int8/q8 最低档，无余量可挤",
+    "viablePaths": [
+      "去掉 PDF 导入（省 1671.0MB，压缩后约 1.06GB）→ 降至约 0.87GiB",
+      "模型移出安装包首次下载（省 1271.2MB）→ 降至约 1.05GiB，但不再开箱即用",
+      "拆完整版/精简版双包",
+      "把 1.1GiB 线改成 1.8~2.0GiB 的真实预算（认现状）"
+    ],
+    "deadEnds": [
+      "模型再降精度：已是 int8/q8，q4 文件更大且代码不读",
+      "只砍备选向量：仅省 152.2MB",
+      "压缩算法调优：已 1.57:1，收益 <5%"
+    ]
+  }
+}

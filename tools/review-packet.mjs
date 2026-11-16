@@ -1,0 +1,155 @@
+#!/usr/bin/env node
+/**
+ * review-packet.mjs —— 提审前先跑这个：告诉你这次改动属于哪一级、必跑哪几关、有没有踩红线。
+ *
+ * 定位：只提醒，不代替判断。标准见 docs/代码审查标准与流程.md。
+ * 跑法：node tools/review-packet.mjs [--staged]
+ *   --staged 只看已暂存（git add 过）的文件；默认看工作区全部改动（含未跟踪）。
+ */
+import { execSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+
+const ROOT = path.join(import.meta.dirname, "..");
+const onlyStaged = process.argv.includes("--staged");
+
+function git(cmd) {
+  try {
+    return execSync(cmd, { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  } catch {
+    return "";
+  }
+}
+
+// ---------- 1) 收集改动 ----------
+// core.quotepath=false：不然中文路径会变成 \344\272\244 这种八进制转义，没法分类
+const status = git("git -c core.quotepath=false status --porcelain");
+const files = status
+  .split("\n")
+  .filter((l) => l.trim())
+  .filter((l) => (onlyStaged ? /^[MADRC]/.test(l.slice(0, 2)) : true))
+  .map((l) => {
+    // porcelain 格式固定：2 位状态 + 1 个空格 + 路径。**不许先 trim**，否则状态位会被吃掉
+    const code = l.slice(0, 2);
+    let p = l.slice(3);
+    if (p.includes(" -> ")) p = p.split(" -> ").pop();  // 重命名取新路径
+    return { code: code.trim(), path: p };
+  });
+
+if (!files.length) {
+  console.log("没有改动。要不要先 git status 看一眼？");
+  process.exit(0);
+}
+
+// ---------- 2) 分级 ----------
+const C_RE = [
+  /^src\//,
+  /^test\/lib\/judge\.mjs$/,
+  /^test\/holdout\//,
+  /^package\.json$/,
+  /^\.github\//,
+  /^build\//,
+];
+const B_RE = [/^test\//, /^tools\//, /^eslint\.config\.mjs$/];
+const redline = [];
+const gates = new Set(["npm run lint", "npm run test:ci"]);
+
+let level = "A";
+for (const f of files) {
+  const p = f.path;
+  if (C_RE.some((re) => re.test(p))) level = "C";
+  else if (B_RE.some((re) => re.test(p)) && level !== "C") level = "B";
+}
+
+// ---------- 3) 按改动路径映射必跑闸门 ----------
+const MAP = [
+  [/^src\/lib\/search\.mjs$/, ["node test/guard-test.mjs", "node test/graphrag-fuzz.mjs", "node test/stage3-mcp-test.mjs", "node test/holdout-run.mjs --gate", "node test/perf-test.mjs"]],
+  [/^src\/lib\/vec-cache\.mjs$/, ["node test/guard-test.mjs", "node test/perf-test.mjs", "node test/holdout-run.mjs --gate"]],
+  [/^src\/lib\/keywords\.mjs$/, ["node test/ftsliteral-test.mjs", "node test/guard-test.mjs"]],
+  [/^src\/lib\/catalog\.mjs$/, ["node test/catalog-fuzz.mjs", "node test/catalog-test.mjs"]],
+  [/^src\/lib\/models\.mjs$/, ["node test/guard-test.mjs"]],
+  [/^src\/lib\/register-tools\.mjs$/, ["node test/graphrag-fuzz.mjs", "node test/stage3-mcp-test.mjs"]],
+  [/^src\/renderer\//, ["node test/renderer-graph-test.mjs", "node test/book-view-test.mjs", "node test/guard-test.mjs"]],
+  [/^src\/desktop\//, ["node test/ipc-test.mjs", "node test/paths-test.mjs"]],
+  [/^src\/build-book|^src\/embed|^src\/import/, ["node test/stage1-chunk-test.mjs", "node test/stage2-test.mjs"]],
+  [/^test\/holdout\//, ["node test/guard-test.mjs", "node test/holdout-run.mjs --gate"]],
+];
+for (const f of files) for (const [re, list] of MAP) if (re.test(f.path)) list.forEach((g) => gates.add(g));
+
+// ---------- 4) 红线扫描 ----------
+for (const f of files) {
+  const p = f.path;
+  if (/^test\/golden\//.test(p)) redline.push(`动了同源卷子：${p}（golden.sha 必须恒定）`);
+  if (/\.db(-wal|-shm)?$/.test(p)) redline.push(`动了数据库文件：${p}（无迁移不许改库）`);
+  if (/^library\//.test(p)) redline.push(`动了书库：${p}`);
+  if (/^release\//.test(p)) redline.push(`动了打包产物：${p}`);
+  if (/^\.models\//.test(p)) redline.push(`动了模型目录：${p}（删除不可逆）`);
+}
+
+// 静默调参扫描：只针对参数表，且**必须真是数值变化**才算
+// （把 ROUTE_DEFAULTS 从常量改成快照函数时会有大量 +/- 行，但值没变——那种不该报）
+const PARAM_KEYS = ["minLen", "sigTopK", "books", "keep", "refW", "poolCap", "floorRatio"];
+for (const f of files) {
+  if (!/^src\/lib\/search\.mjs$/.test(f.path)) continue;
+  const d = git(`git diff -- "${f.path}"`);
+  const grab = (sign) => {
+    const m = {};
+    for (const line of d.split("\n")) {
+      if (!line.startsWith(sign)) continue;
+      for (const k of PARAM_KEYS) {
+        const hit = line.match(new RegExp(`\\b${k}\\s*:\\s*([\\d.]+)`));
+        if (hit) m[k] = +hit[1];
+      }
+    }
+    return m;
+  };
+  const before = grab("-");
+  const after = grab("+");
+  for (const k of PARAM_KEYS) {
+    if (before[k] !== undefined && after[k] !== undefined && before[k] !== after[k]) {
+      redline.push(`参数被改：${k} ${before[k]} → ${after[k]}（必须由静态断言钉死并说明依据）`);
+    }
+  }
+}
+
+// ---------- 5) 留痕检查 ----------
+const manifest = path.join(ROOT, "..", "存档照", "version-manifest.json");
+const hasManifest = fs.existsSync(path.join("D:/新建文件夹/2026-11-15-18-22-57/存档照", "version-manifest.json"));
+
+// ---------- 6) 输出 ----------
+const LV = { A: "A 轻（文档/注释）", B: "B 中（测试/脚本）", C: "C 重（生产码/配置/尺子/卷子）" };
+console.log("===== 提审包 =====");
+console.log(`改动文件：${files.length} 个`);
+console.log(`风险分级：${LV[level]}`);
+if (level === "C") console.log("审查要求：**强制双人，作者不能自己批**；五关全跑");
+else if (level === "B") console.log("审查要求：另一人复核 + 跑该套件；新增断言要有翻转证据");
+else console.log("审查要求：作者自查 + lint；文档里的数字必须能复算");
+
+console.log("\n--- 改动清单 ---");
+for (const f of files) console.log(`  ${f.code || "  "} ${f.path}`);
+
+console.log("\n--- 必跑闸门（按顺序）---");
+[...gates].forEach((g, i) => console.log(`  ${i + 1}. ${g}`));
+
+if (redline.length) {
+  console.log("\n--- 🔴 红线命中（命中即 Blocker，改完再提）---");
+  redline.forEach((r) => console.log("  🔴 " + r));
+} else {
+  console.log("\n--- 红线扫描：未命中 ---");
+}
+
+console.log("\n--- 留痕提醒 ---");
+console.log("  台账：在 存档照/改动台账.md（不在本仓库，git 看不见）——手动确认补了一行八列");
+console.log(`  存档照：${hasManifest ? "存在。改完跑 node 存档照/生成清单.cjs <r4> 重拍并记新指纹" : "⚠ 找不到 存档照/version-manifest.json"}`);
+
+if (level === "C") {
+  console.log("\n--- 人工审查重点（关 3）---");
+  console.log("  1. 改的是起作用的那一处吗（有没有写了没接上）");
+  console.log("  2. 返回字段/参数语义/错误码变了没，谁受影响");
+  console.log("  3. 会不会写坏 .db，外部输入有没有拼进 SQL/路径");
+  if (files.some((f) => /search\.mjs|judge|holdout/.test(f.path))) {
+    console.log("  4. 涉及检索或判分：效果必须用独立卷子 + 对照组差分，同源 80 题只作回归门禁");
+  }
+}
+console.log("\n提醒：本工具只列清单，不代替判断。标准见 docs/代码审查标准与流程.md");
+void manifest;

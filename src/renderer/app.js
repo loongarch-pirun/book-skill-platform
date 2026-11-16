@@ -82,7 +82,7 @@ async function maybeWizard(cfg) {
       <p>· <b>从空白开始</b>：以后往书架里拖书就行</p>
       <div class="wizard-note alpha"><b>Alpha 测试版</b>：这是早期版本，请勿当成品使用；功能、界面与数据格式都可能调整，遇到问题属正常。</div>
       <div class="wizard-note backup"><b>先备份再开始</b>：建议先把你的书库文件夹（含 .db 与 books/ 原件）复制一份留底，再导入或加工书；加工与删除不可撤销。</div>
-      <p style="font-size:12px">模型（约 700MB）已随安装包内置，不用下载。</p>
+      <p style="font-size:12px">模型（约 1.24GB）已随安装包内置，不用下载。</p>
       <div class="wizard-btns">
         ${seedBtn}
         <button class="ghost" id="wzPick">选择现有书库文件夹</button>

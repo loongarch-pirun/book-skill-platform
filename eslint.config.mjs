@@ -109,9 +109,10 @@ export default [
     },
   },
   {
-    // 测试文件：Node ESM（.mjs），靠 console 输出 PASS/FAIL 计数；
-    // 此前 test/ 不在任何作用域内 → node globals 全 no-undef 的假阳性，纳管修掉
-    files: ["test/**/*.mjs"],
+    // 测试与工具脚本：Node ESM（.mjs），靠 console 输出 PASS/FAIL 计数；
+    // 此前 test/ 不在任何作用域内 → node globals 全 no-undef 的假阳性，纳管修掉。
+    // tools/ 同款（review-packet.mjs 是提审前的提醒工具，同样靠 console 输出）。
+    files: ["test/**/*.mjs", "tools/**/*.mjs"],
     languageOptions: {
       sourceType: "module",
       globals: {
