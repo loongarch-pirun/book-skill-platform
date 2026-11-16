@@ -1,0 +1,16 @@
+test(gate): 逐题导出 + 对照器 + 库结构对账；定性报告定位到唯一退步题
+
+闸门从 0.725 掉到 0.7125 但只有聚合值，说不清哪题。补三个取证工具：
+- test/quality-gate.mjs：新增 --dump-rows[=<path>]，逐题导出 level/rank/bookRows/routeRows，
+  落在任何 exit 之前；routeRows 补 q/book/nRes（原来只有 hit/routeOk/rank/level，无法对账）；
+  默认行为零变化
+- test/gate-diff.mjs：键 book::q 对账，白名单字段（lat 显式忽略），0/1/2 三值退出码
+- tools/gate-ab-libstat.mjs：先证「两份库正文逐本一致」，再谈归因
+
+定性结论（存档照/质量闸门定性-2026-11-16.md）：
+- A 轮（备份库 + 当前代码）逐位复现基线 0.725/0.725/3.837，归因前提成立
+- 80 题中只有 1 题退步：frankenstein「what does the creature ask victor to create for him」
+  full@2 → miss；答案块被 #602/#265 顶出 top-4，legacyRank 1→2 说明字面腿名次也变了
+- 路由准确率 A/B 同为 0.4875（高于基线 0.45）→ 路由收益来自代码修复，与回灌无关
+
+踩坑：--dump-rows=<path> 首版没写出来（has() 只认裸参数），白跑一轮 A/B，靠 raw 重放找回。

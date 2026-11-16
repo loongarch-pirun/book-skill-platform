@@ -1,0 +1,14 @@
+
+--- 按书口径：变化 1 题 ---
+  [翻转] frankenstein-en.epub::what does the creature ask victor to create for him
+      level full → miss / rank 2 → 0 / hit true → false / legacyRank 1 → 2
+
+--- 端到端口径：变化 0 题 ---
+
+===== 汇总 =====
+按书命中  A 58/80  →  B 57/80
+路由正确  A 39/80  →  B 39/80
+指标      A {"hitRate":0.725,"fullRate":0.725,"avgFirstRank":3.837,"routeAcc":0.4875,"dirtyRate":0.0031}
+          B {"hitRate":0.7125,"fullRate":0.7125,"avgFirstRank":3.938,"routeAcc":0.4875,"dirtyRate":0.0031}
+
+（lat 已显式忽略：机器负载噪声，计入会制造假阳性）
