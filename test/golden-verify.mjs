@@ -9,6 +9,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
+import { resolveBookPrefix } from "./lib/book-alias.mjs";
 const require = createRequire("C:/Users/JIANG XIAO HUA/Desktop/book-skill-platform-r3/package.json");
 const Database = require("better-sqlite3");
 
@@ -16,14 +17,7 @@ const R4 = path.resolve(import.meta.dirname, "..");
 const LIB = path.join(R4, "library");
 const GOLDEN_DIR = path.join(R4, "test", "golden");
 
-// 与 test/v2-eval.mjs:21-27 保持一致的别名表
-const BOOK_ALIAS = {
-  "jane-eyre-en.epub": "pg1260-简爱.epub",
-  "sherlock-holmes-adventures-en.epub": "pg1661-福尔摩斯冒险史.epub",
-  "dynamo-2007-en.pdf": "Dynamo-亚马逊高可用键值存储-2007.pdf",
-  "lamport-1978-en.pdf": "Lamport-时间时钟与分布式系统排序-1978.pdf",
-  "mapreduce-2004-en.pdf": "MapReduce-谷歌大规模分布式处理-2004.pdf",
-};
+// 书名 → .db 前缀的唯一正本在 test/lib/book-alias.mjs（旧 eval 体系移除后收敛）。
 
 const HARD = ".!?。！？";
 const SOFT = ";：;:";
@@ -31,7 +25,7 @@ const SOFT = ";：;:";
 const dbCache = new Map();
 function rowsOf(book) {
   if (dbCache.has(book)) return dbCache.get(book);
-  const want = BOOK_ALIAS[book] || book;
+  const want = resolveBookPrefix(book);
   const f = fs.readdirSync(LIB).find(x => x.startsWith(want) && x.endsWith(".db"));
   if (!f) throw new Error(`找不到库文件 ${want}*.db`);
   const db = new Database(path.join(LIB, f), { readonly: true });

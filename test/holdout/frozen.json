@@ -1,0 +1,17 @@
+{
+ "setId": "holdout-v1",
+ "file": "test/holdout/sets/holdout-v1.json",
+ "sha256": "0f532846455c67d2cdfd9dec05eb5b398f400444ff4d6a502325b91f0fa2d7c5",
+ "bytes": 17789,
+ "total": 30,
+ "byKind": {
+  "answerable": 16,
+  "refusal": 8,
+  "ambiguous": 4,
+  "newbook": 2
+ },
+ "frozenAt": "2026-11-15T17:06:22.663Z",
+ "reviewedBy": "爸爸（2026-11-16 01:05 指令「直接开干」= 同意冻结）",
+ "revision": "v1.2 冻结：仅补拒答题 absent 判分字段；30 题题干、答案句、金词一字未改",
+ "rule": "此后只许看它给多少分，不许回头改题；改题必须新开 setId"
+}

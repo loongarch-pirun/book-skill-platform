@@ -1,0 +1,15 @@
+{
+ "note": "留出集独立基线。与 test/quality-baseline.json 严格分离，两者不得互相引用。",
+ "setId": "holdout-v1",
+ "sha256": "0f532846455c67d2cdfd9dec05eb5b398f400444ff4d6a502325b91f0fa2d7c5",
+ "updatedAt": "2026-11-15T17:13:07.090Z",
+ "passRate": 0.9,
+ "byKind": {
+  "answerable": 0.8125,
+  "refusal": 1,
+  "ambiguous": 1,
+  "newbook": 1
+ },
+ "bookPickRate": 1,
+ "avgMs": 8819
+}

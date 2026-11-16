@@ -1,6 +1,6 @@
 // 反馈样本池导出（V3 第三波-③）：pool.jsonl → markdown 草稿（按失败类型分组）。
-// 升格流程：人工从草稿里挑题 → 金词回原文验真 → 候选题探针实跑（v2-eval 同款 judge）
-// → 入考卷 test/v2-eval.mjs。本工具只读池子，不改任何数据。
+// 升格流程：人工从草稿里挑题 → 金词回原文验真 → 候选题探针实跑（关键词对照器同款判定）
+// → 入考卷 test/golden/<书名>.json。本工具只读池子，不改任何数据。
 //
 // 用法: node src/feedback-export.mjs [--lib DIR] [--out FILE] [--kind KIND] [--limit N]
 //   --lib   书库目录（默认 resolveDirs：env BSP_LIB_DIR > 配置 > ./library）
@@ -51,7 +51,7 @@ const lines = [];
 lines.push("# 反馈样本池导出");
 lines.push("");
 lines.push(`> 池文件：${path.join(libDir, "feedback", "pool.jsonl")}（共 ${total} 条，本次导出 ${items.length} 条）`);
-lines.push("> 升格流程：人工挑题 → 金词回原文验真 → 候选题探针实跑 → 入考卷（test/v2-eval.mjs）");
+lines.push("> 升格流程：人工挑题 → 金词回原文验真 → 候选题探针实跑 → 入考卷（test/golden/）");
 lines.push("");
 if (!items.length) lines.push("（池为空——还没有失败样本，或者都已处理）");
 for (const k of kind ? [kind] : KINDS) {

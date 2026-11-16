@@ -1,6 +1,6 @@
 // IPC 通道层测试：假 ipcMain 捕获 handler，对关键通道子集逐个断言注册与行为
 // 测的是生产同一份注册代码（ipc.mjs）——不需要 Electron 进程。
-// ask:query 要加载模型（重），留给 desktop-smoke（真机）与 eval-gate；这里只测不碰模型的通道。
+// ask:query 要加载模型（重），留给 desktop-smoke（真机）与质量门；这里只测不碰模型的通道。
 import fs from "node:fs";
 import path from "node:path";
 import { registerIpc } from "../src/desktop/ipc.mjs";

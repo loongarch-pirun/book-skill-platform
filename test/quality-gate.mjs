@@ -20,8 +20,8 @@
 // （实测 80/80，见 23-质量彻底解决施工\probe-subset.mjs）⇒ 窗口里的脏块只会变少。
 // 而按书检索 hybridSearch 的候选池随 topN 变（src/lib/search.mjs:360
 // RECALL = min(max(topN*4,12),20)）：topN=1 是真把检索面缩小了，脏块挤占率会上升。
-// 所以：命中/full/名次/脏块走按书口径（与 test/v2-eval.mjs:250 同一条路径，
-// 虾虾核过的旧尺子基线 75/80=94 也是这条路径算的，新旧尺子必须同一条路径才算同一份考卷），
+// 所以：命中/full/名次/脏块走按书口径（src/lib/search.mjs 的 hybridSearch），
+// 关键词对照器基线 75/80=94 也是这条路径算的，新尺子与对照器必须同一条路径才算同一份考卷），
 // 路由准确率走端到端口径。两份原始数据都落盘，口径写在基线文件里。
 //
 // ── 口径说明（每条都写清楚，避免"数字对不上"）────────────────────────────
@@ -53,7 +53,7 @@
 //   · 现扫全库 13 个库，把「一句答案被切在相邻两块接缝上」的真实句子挖出来当样本
 //     （几何判定，不靠尺子，所以尺子坏了样本还在）；
 //   · 新尺子 judge() 必须对每一条判 partial（认得出切伤）；
-//   · 旧尺子 legacyJudge() 必须对每一条判 hit（认不出——只看关键词还在就算过，
+//   · 关键词对照器 keywordOnlyJudge() 必须对每一条判 hit（认不出——只看关键词还在就算过，
 //     这正是 P0-2 要治的病）；
 //   · 任一条不成立 → 闸门红 exit 1。
 // 翻转：把 judge() 换回旧逻辑 → 接缝识别率掉到 0 → 闸门红。
@@ -76,7 +76,7 @@ try {
   Database = createRequire("C:/Users/JIANG XIAO HUA/Desktop/book-skill-platform-r3/package.json")("better-sqlite3");
 }
 
-const { judge, legacyJudge, normText, isTerminator } = await import("./lib/judge.mjs");
+const { judge, keywordOnlyJudge, normText, isTerminator } = await import("./lib/judge.mjs");
 const { filterNoiseChunks, loadRules } = await import("../src/lib/noise-rules.mjs");
 
 // ---- 参数 ------------------------------------------------------------------
@@ -249,7 +249,7 @@ function dirtyOf(rs, defaultBookId) {
 //   几何扫描全库，找出「一句答案被切在相邻两块接缝上」的真实句子当样本
 //   （判定只看几何：句首在 A 块内且 A 块里句首前是句读、句尾落在 B 块，不看尺子）；
 //   要求新尺子 judge() 对这些样本全部判 partial（能认出切块损伤）；
-//   同时记下旧尺子 legacyJudge() 对同批样本的虚命中数（旧尺子只看关键词，
+//   同时记下关键词对照器 keywordOnlyJudge() 对同批样本的虚命中数（对照器只看关键词，
 //   关键词在 A 块里就算过，答案句被切开它照样放行）。
 // 任一条样本不被新尺子判 partial → 识别率 < 1 → 闸门红 exit 1。
 // 翻转证据：把 judge() 换回旧逻辑 → 识别率掉到 0 → 闸门红。
@@ -328,7 +328,7 @@ function runSeamAssertion() {
     else fails.push({ book: s.book, aId: s.aId, bId: s.bId, level: v.level });
     if (kw) {
       legacyCnt++;
-      if (legacyJudge(rs, [kw]).hit) legacyHit++;
+      if (keywordOnlyJudge(rs, [kw]).hit) legacyHit++;
     }
   }
   return {
@@ -343,7 +343,7 @@ function runSeamAssertion() {
 }
 
 // ---- 现跑（慢路径）----------------------------------------------------------
-// 按书口径：hybridSearch(dbPath, q, topN) —— 与 test/v2-eval.mjs:250 同一条路径
+// 按书口径：hybridSearch(dbPath, q, topN) —— src/lib/search.mjs 的同一条路径
 async function runBook(items) {
   const { hybridSearch } = await import("../src/lib/search.mjs");
   const raw = { items: [], meta: { n: items.length, topN: TOP_N, caliber: "perbook", rerank: RERANK } };
@@ -470,7 +470,7 @@ function judgeOf(rawItem, d, goldens, where) {
     throw new Error(`${where}找不到题目「${rawItem.q}」（${rawItem.book}）在当前考卷里的条目`
       + ` —— 这份 raw 与当前考卷不是同一份题单，请用当前卷重跑，或核对 --from-book 指的哪份`);
   }
-  return { v: judge(rs, g), lg: legacyJudge(rs, g.g || []), rs };
+  return { v: judge(rs, g), lg: keywordOnlyJudge(rs, g.g || []), rs };
 }
 
 export function computeMetrics(rawBook, rawRoute, N, goldens = null) {
@@ -606,7 +606,7 @@ const N = FROM_BOOK
 const res = computeMetrics(rawBook, rawRoute, N);
 
 console.log(`\n===== QUALITY GATE（topN=${N}，题数 ${res.total}）=====`);
-console.log(`口径：命中/full/名次/脏块 = 按书检索 hybridSearch（与 v2-eval 同路径）｜路由准确率 = 端到端 routeAndSearch`);
+console.log(`口径：命中/full/名次/脏块 = 按书检索 hybridSearch（src/lib/search.mjs）｜路由准确率 = 端到端 routeAndSearch`);
 console.log(`指标                本次      基线      方向   结论`);
 let regress = [];
 let base = null;
@@ -649,7 +649,7 @@ for (const k of Object.keys(DIRECTION)) {
   );
 }
 console.log(`\n明细（按书口径）：full ${res.detail.full} / partial ${res.detail.partial} / miss ${res.detail.miss}`
-  + ` | 旧尺子命中 ${res.detail.legacyHit}/${res.total}(${res.detail.legacyRate})`
+  + ` | 关键词对照器命中 ${res.detail.legacyHit}/${res.total}(${res.detail.legacyRate})`
   + ` | 切块损伤率 partial÷hit ${res.detail.damageRate}`
   + ` | 平均延迟 ${res.detail.avgLatencyMs}ms`
   + ` | 形态脏块 ${res.detail.dirtyTotal}/${res.detail.returnedTotal}（涉 ${res.detail.dirtyQ} 题）`
@@ -663,7 +663,7 @@ console.log(`明细（端到端口径）：full ${res.detail.routeFull} / partia
 const seam = runSeamAssertion();
 console.log(`接缝自测断言：样本 ${seam.total} 条（几何扫库现扫）`
   + ` | 新尺子认出 partial ${seam.newPartial} 条，识别率 ${seam.rate}`
-  + ` | 旧尺子对同批样本虚命中 ${seam.legacyHit}/${seam.legacyTotal}(${seam.legacyRate})`
+  + ` | 关键词对照器对同批样本虚命中 ${seam.legacyHit}/${seam.legacyTotal}(${seam.legacyRate})`
   + ` | 断言：识别率必须 = 1，缺一条即红`);
 if (seam.fails.length) {
   for (const f of seam.fails.slice(0, 5)) {
@@ -730,9 +730,9 @@ if (seam.total > 0 && seam.rate < 1) {
 // 天然比新尺子松（实测 full 59 / 旧尺子命中 75，旧的多出 16 条正是虚命中）。
 // 所以「新尺子的 full 数 > 旧尺子命中数」在因果上说不通：更严的判据不可能比更松的判出更多
 // 完整命中。一旦出现，说明有人把新尺子放松了（或旧尺子收紧到失真），必须红。
-// 这条不是恒真项：正常数据下 full(59) < legacyHit(75)，恒为绿；只有放水才翻红。
+// 这条不是恒真项：正常数据下 full(59) < 对照器命中(75)，恒为绿；只有放水才翻红。
 if (res.detail.full > res.detail.legacyHit) {
-  console.log(`\n✗ 判分尺子疑似放水：新尺子 full ${res.detail.full} > 旧尺子命中 ${res.detail.legacyHit}`
+  console.log(`\n✗ 判分尺子疑似放水：新尺子 full ${res.detail.full} > 关键词对照器命中 ${res.detail.legacyHit}`
     + ` —— 更严的判据不可能判出更多完整命中，请检查 test/lib/judge.mjs`);
   process.exit(1);
 }

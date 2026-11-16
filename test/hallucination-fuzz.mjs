@@ -1,7 +1,7 @@
 // P0 幻觉爆破（终期暴力测试核心）：拿对抗弹药攻四道幻觉闸门。
 // 门1 编目五重校验（validateResult）：假人名/子串陷阱/安错人/坏引用 → 拒；合法 → 收
 // 门2 技能三道质检（saveSkill）：中文数字声称/引文边缘造假/假索引/穿越/超限 → 拒；合法 → 收
-// 门3 考卷金标准反验：GOLDEN 52 题每个关键词必须回该书库原文（常驻断言，防考卷自身带幻觉）
+// 门3 考卷金标准反验：新考卷 80 题每个关键词必须回该书库原文（常驻断言，防考卷自身带幻觉）
 // 门4 检索探针：无答案问题/篡改主语（记录型——检索是相关性排序不是事实核查，不断言）
 // 门2 的 sources 与门3/门4 用真 library（readonly）；门1/门2 落点全部临时目录。
 // 挂载：test:slow（门4 要加载 e5 模型）。
@@ -10,6 +10,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
+import { resolveBookPrefix } from "./lib/book-alias.mjs";
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -188,26 +189,29 @@ sources: { dd: daodejing-zh.docx }
 }
 
 // ================= 门3 考卷门：金标准回原文反验 =================
-console.log("===== 门3 考卷金标准反验（GOLDEN 52 题全查） =====");
+console.log("===== 门3 考卷金标准反验（新考卷 80 题全查） =====");
 {
-  // v2-eval.mjs 无导出且 import 会真跑评测 → 正则提取 GOLDEN 字面量
-  const src = fs.readFileSync(path.join(ROOT, "test/v2-eval.mjs"), "utf8")
-    .split("\n").filter(l => !l.trim().startsWith("//")).join("\n");
+  // 新考卷 test/golden/*.json（每题 {q,a,g}）；书名从文件名取，
+  // 到 library/ 的寻址统一走 test/lib/book-alias.mjs（旧 eval 考卷已移除）。
+  const goldenDir = path.join(ROOT, "test", "golden");
   const items = [];
-  const re = /\{\s*book:\s*"([^"]+)"[\s\S]*?g:\s*\[([^\]]*)\]\s*\}/g;
-  let m;
-  while ((m = re.exec(src)) !== null) {
-    const gs = [...m[2].matchAll(/"([^"]+)"/g)].map(x => x[1]);
-    if (gs.length) items.push({ book: m[1], g: gs });
+  for (const f of fs.readdirSync(goldenDir).filter(x => x.endsWith(".json")).sort()) {
+    const book = f.replace(/\.json$/, "");
+    const arr = JSON.parse(fs.readFileSync(path.join(goldenDir, f), "utf8"));
+    for (const it of arr) {
+      const gs = (Array.isArray(it.g) ? it.g : []).filter(x => typeof x === "string" && x);
+      if (gs.length) items.push({ book, g: gs });
+    }
   }
-  ok(items.length >= 50, `门3-0 GOLDEN 提取 ${items.length} 题（≥50 才算覆盖考卷）`);
+  ok(items.length >= 50, `门3-0 新考卷提取 ${items.length} 题（≥50 才算覆盖考卷）`);
   const cache = new Map();
   const textOf = (book) => {
     if (!cache.has(book)) {
-      const p = path.join(LIB, book + ".db");
-      // 缺库书 → null（V3 第五波书架重建中：md 五本/简爱/福尔摩斯原件已随删库清空，
-      // 这些题等考卷重建；CANTOPEN 崩溃改跳过，语义同 eval-gate 的「丢弃」）
-      if (!fs.existsSync(p)) { cache.set(book, null); return null; }
+      const want = resolveBookPrefix(book);
+      const f = fs.readdirSync(LIB).find(x => x.startsWith(want) && x.endsWith(".db"));
+      // 缺库书 → null（书架重建期间部分原件不在本机；缺库跳过，不判红）
+      if (!f) { cache.set(book, null); return null; }
+      const p = path.join(LIB, f);
       try {
         const d = new Database(p, { readonly: true });
         cache.set(book, d.prepare("SELECT text FROM chunks").all().map(r => r.text).join("\n").toLowerCase());
@@ -223,11 +227,11 @@ console.log("===== 门3 考卷金标准反验（GOLDEN 52 题全查） =====");
     const text = textOf(it.book);
     if (text == null) { skippedBooks++; continue; }
     const hits = it.g.filter(kw => text.includes(kw.toLowerCase()));
-    // 判分语义同 v2-eval.mjs 90 行：some（任一金标准词命中即有效题）——全不中才是考卷带幻觉
+    // 判分语义同关键词对照器 keywordOnlyJudge：some（任一金标准词命中即有效题）——全不中才是考卷带幻觉
     if (!hits.length) bad.push(`「${it.g.join("/")}」全部不在 ${it.book}`);
     else if (hits.length < it.g.length) redundant.push(`${it.g.filter(k => !hits.includes(k)).join("/")}@${it.book}`);
   }
-  ok(bad.length === 0, `门3-1 每题至少一个金标准词回原文验真（some 语义，同 v2-eval 90 行；缺库跳过 ${skippedBooks} 题）${bad.length ? "，失败: " + bad.join("; ") : ""}`);
+  ok(bad.length === 0, `门3-1 每题至少一个金标准词回原文验真（some 语义，同 keywordOnlyJudge；缺库跳过 ${skippedBooks} 题）${bad.length ? "，失败: " + bad.join("; ") : ""}`);
   obs(`门3-2 冗余金标准词（some 语义允许的提名冗余，非幻觉）：${redundant.join("; ") || "无"}`);
 }
 

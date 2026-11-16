@@ -7,13 +7,13 @@
 //            id=88 开头 "the new vector clock) to the N highest-ranked reachable nodes."
 //   attention id=48 结尾 "...self-attention layers are faster than recurrent layers when the sequence"
 //            id=49 开头 "length n is smaller than the representation dimensionality d, ..."
-// 这两处的答案句确实被切在接缝两侧，关键词却都在块里 —— 旧尺子必然判 hit。
+// 这两处的答案句确实被切在接缝两侧，关键词却都在块里 —— 关键词对照器必然判 hit。
 //
-// 翻转可复现：把 test/lib/judge.mjs 的 judge() 换成 legacyJudge()，本文件必红。
+// 翻转可复现：把 test/lib/judge.mjs 的 judge() 换成 keywordOnlyJudge()，本文件必红。
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { judge, legacyJudge, judgeAll, normText } from "./lib/judge.mjs";
+import { judge, keywordOnlyJudge, judgeAll, normText } from "./lib/judge.mjs";
 
 const LIB = path.join(import.meta.dirname, "..", "library");
 const file = (prefix) => {
@@ -50,7 +50,7 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
   check("a 不完整落在 id=88", !normText(a88.text).includes(normText(a)));
 
   const both = [a87, a88];
-  const oldV = legacyJudge(both, golden.g);
+  const oldV = keywordOnlyJudge(both, golden.g);
   const newV = judge(both, golden);
   console.log(`    旧尺子: hit=${oldV.hit} rank=${oldV.rank ?? "-"} (依据关键词 "${oldV.golden}")`);
   console.log(`    新尺子: level=${newV.level} rank=${newV.rank ?? "-"} —— ${newV.why}`);
@@ -62,7 +62,7 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
   const onlyFirst = judge([a87], golden);
   console.log(`    只检回 id=87 时新尺子: level=${onlyFirst.level} —— ${onlyFirst.why}`);
   check("只检回一块时新尺子仍判 partial（不是 full）", onlyFirst.level === "partial");
-  check("只检回一块时旧尺子仍判 hit", legacyJudge([a87], golden.g).hit === true);
+  check("只检回一块时旧尺子仍判 hit", keywordOnlyJudge([a87], golden.g).hit === true);
   console.log();
 }
 
@@ -78,7 +78,7 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
   check("a 不完整落在任一块", !normText(a48.text).includes(normText(a)) && !normText(a49.text).includes(normText(a)));
 
   const both = [a48, a49];
-  const oldV = legacyJudge(both, golden.g);
+  const oldV = keywordOnlyJudge(both, golden.g);
   const newV = judge(both, golden);
   console.log(`    旧尺子: hit=${oldV.hit} rank=${oldV.rank ?? "-"}`);
   console.log(`    新尺子: level=${newV.level} rank=${newV.rank ?? "-"} —— ${newV.why}`);
@@ -105,8 +105,8 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
   console.log(`    新尺子: level=${v.level} prefixLen=${v.prefixLen ?? "-"} —— ${v.why}`);
   check("块内只有 a 的前半截（无邻块可拼）→ 判 partial", v.level === "partial");
   check(`前缀长度 ${v.prefixLen} 达到门槛 ${required} 且不足全句 ${a.length}`, v.prefixLen >= required && v.prefixLen < a.length);
-  check("旧尺子对同一块判 hit（关键词都在）", legacyJudge(cut, golden.g).hit === true);
-  check("新旧结论不同（规则③ 也是真翻转）", (legacyJudge(cut, golden.g).hit === true) !== (v.level === "full"));
+  check("旧尺子对同一块判 hit（关键词都在）", keywordOnlyJudge(cut, golden.g).hit === true);
+  check("新旧结论不同（规则③ 也是真翻转）", (keywordOnlyJudge(cut, golden.g).hit === true) !== (v.level === "full"));
 
   // 门槛下沿：前缀不足一半 → 按设计判 miss（不能把「沾边几个字」当命中）
   const under = [{ id: 87, text: a.slice(0, required - 1) }];
@@ -125,7 +125,7 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
   const v = judge([p42], golden);
   console.log(`    新尺子: level=${v.level} —— ${v.why}`);
   check("完整句判 full", v.level === "full");
-  check("旧尺子也判 hit（完整句时两尺一致）", legacyJudge([p42], golden.g).hit === true);
+  check("旧尺子也判 hit（完整句时两尺一致）", keywordOnlyJudge([p42], golden.g).hit === true);
   console.log();
 }
 
@@ -136,7 +136,7 @@ console.log("===== judge 翻转测试（P0-2）=====\n");
   const v = judge([{ id: 1, text: "some unrelated chunk text" }], golden);
   console.log(`    新尺子: level=${v.level} —— ${v.why}`);
   check("判 miss", v.level === "miss");
-  check("旧尺子也 miss（这点两尺一致）", legacyJudge([{ text: "some unrelated chunk text" }], golden.g).hit === false);
+  check("旧尺子也 miss（这点两尺一致）", keywordOnlyJudge([{ text: "some unrelated chunk text" }], golden.g).hit === false);
   console.log();
 }
 

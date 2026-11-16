@@ -113,7 +113,7 @@ const assert = (cond, msg, extra = "") => {
 
 // ===== 7) P1 词法实体链接：别名注入字面腿（BSP_ENTITY_LINK 默认开）=====
 // 目标：命中人物的书内真实写法（match_names）补进字面腿词盘——问一种写法搜全写法 +
-// 简体问句链到繁体原文。只加词不改分（打分/权重/复试官零改动），eval-gate 两道门守红线。
+// 简体问句链到繁体原文。只加词不改分（打分/权重/复试官零改动），质量门防退化守红线。
 {
   const PP = path.join(LIB, "pride-and-prejudice-en.epub.db");
   const MZ = path.join(LIB, "mengzi-zh.docx.db");

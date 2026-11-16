@@ -1,0 +1,22 @@
+{
+ "setId": "holdout-v2",
+ "file": "test/holdout/sets/holdout-v2.json",
+ "sha256": "504a1feb32d5b4c54e26549d9d03df4d1c137f709ac0f081761fa086ffab4164",
+ "bytes": 16592,
+ "total": 30,
+ "byKind": {
+  "answerable": 16,
+  "newbook": 2,
+  "refusal": 8,
+  "ambiguous": 4
+ },
+ "byLang": {
+  "en": 4,
+  "cross": 12,
+  "zh": 14
+ },
+ "frozenAt": "2026-11-16T03:19:45.487Z",
+ "reviewedBy": "富江（出题+验真自核；v1 已由爸爸盖章，本卷按同一流程自动核）",
+ "revision": "v2.1 冻结：30 题，块复用 0、题干最高相似度 0.387、absent 词全库 0 命中",
+ "rule": "此后只许看它给多少分，不许回头改题；改题必须新开 setId"
+}

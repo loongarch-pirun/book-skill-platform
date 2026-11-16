@@ -1,8 +1,10 @@
 // test/lib/judge.mjs —— 判分尺子（三级：full / partial / miss）
 //
-// 为什么换尺子：旧尺子（test/v2-eval.mjs:235-242 的 judge）只看「命中块里有没有关键词」。
+// 为什么换尺子：旧的「关键词命中即算中」判法只看命中块里有没有关键词。
 // 关键词在书里到处都是，切块把答案句切成两半也照样判过——它测不出切块损伤，
 // 只能测出「词出现过」。这把尺子换掉之后，「切块损伤」才第一次能被量化。
+// （旧 eval 体系 test/v2-eval.mjs 已于 2026-11-15 移除；本文件保留的
+//  「关键词对照器」不是那套评测体系，而是新闸门自己的自检基准。）
 //
 // 三级定义（判据见规划 P0-2）：
 //   full    —— 标准答案句 a 完整落在某一个命中块里（逐字包含）
@@ -11,8 +13,10 @@
 //              (b) 命中块里只有 a 的前半截，后半截掉在块外（块尾在句中被切断）
 //   miss    —— a 既不完整也不成段地出现在命中结果里
 //
-// 附带导出 legacyJudge：旧尺子原样保留（仅关键词包含），
-// 用来在同一份考卷上跑「旧尺子 vs 新尺子」，量出旧尺子到底松了多少。
+// 附带导出 keywordOnlyJudge：关键词对照器（仅关键词包含）。
+// 它是新闸门 quality-gate.mjs 的对照基准：接缝自测要求它对切伤样本判 hit，
+// 防放水断言用它卡 full 上限。删掉它，闸门 import 就会报错。
+// legacyJudge 仅为兼容 quality-baseline.json 里 legacy* 字段名保留的别名。
 //
 // 不接任何大模型，纯确定性字符串判定。
 
@@ -37,10 +41,10 @@ export function isTerminator(text, i) {
 }
 
 /**
- * 旧尺子（原样照抄 test/v2-eval.mjs:235-242 的语义）：
- * 只要命中块里出现任一关键词就算 hit。goldens 是关键词数组。
+ * 关键词对照器：只要命中块里出现任一关键词就算 hit。
+ * 归属：新闸门的自检基准，不属于已移除的旧 eval 体系。
  */
-export function legacyJudge(results, goldens) {
+export function keywordOnlyJudge(results, goldens) {
   const low = (results ?? []).map(r => String(r?.text ?? "").toLowerCase());
   const gs = (goldens ?? []).map(g => String(g).toLowerCase());
   for (let i = 0; i < low.length; i++) {
@@ -49,6 +53,9 @@ export function legacyJudge(results, goldens) {
   }
   return { hit: false };
 }
+
+// 兼容别名：baseline 字段名 legacyHit / legacyRate 沿用，勿把它当评测入口。
+export const legacyJudge = keywordOnlyJudge;
 
 /** 最长公共前缀长度：a 的前 k 个字符整体出现在 text 里，取最大 k */
 function longestPrefixIn(text, a, minK = 0) {
@@ -69,12 +76,12 @@ export function judge(results, golden) {
   // 翻转验证开关：把新尺子临时换成旧逻辑（只看关键词），
   // 用来证明闸门的接缝识别率断言真的能红。默认关闭。
   if (process.env.BSP_LEGACY_JUDGE === "1") {
-    const lg0 = legacyJudge(results, golden?.g ?? []);
+    const lg0 = keywordOnlyJudge(results, golden?.g ?? []);
     return { level: lg0.hit ? "full" : "miss", rank: lg0.rank || 0, legacy: lg0, why: "旧逻辑（翻转验证用）" };
   }
   const a = normText(golden?.a);
   const g = (golden?.g ?? []).map(x => String(x).toLowerCase());
-  const legacy = legacyJudge(results, g);
+  const legacy = keywordOnlyJudge(results, g);
   const texts = (results ?? []).map(r => normText(r?.text ?? ""));
 
   if (!a) {
@@ -150,7 +157,7 @@ export function judgeAll(resultsByQuestion, goldens) {
     hitRate: n ? +(hit / n).toFixed(4) : 0,
     damageRate: hit ? +(partial / hit).toFixed(4) : 0,   // 切块损伤率 = partial ÷ hit
     avgFirstRank: ranks.length ? +(ranks.reduce((s, x) => s + x, 0) / ranks.length).toFixed(2) : 0,
-    legacyHit,                                            // 旧尺子命中数（同一份考卷）
+    legacyHit,                                            // 关键词对照器命中数（字段名沿用 baseline 的 legacy*）
     legacyRate: n ? +(legacyHit / n).toFixed(4) : 0,
   };
 }
