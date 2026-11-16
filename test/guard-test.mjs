@@ -1198,6 +1198,20 @@ const copyDb = (src) => {
     `list_books 每本带 total_tokens（新库 meta 或旧库现场估算，${books.length} 本）`);
   ok(books.every(b => b.chapter_quality && ["reliable", "messy", "none"].includes(b.chapter_quality.verdict)),
     "list_books 每本带 chapter_quality（none/messy/reliable 三态）");
+  // 简介（2026-11-16）：字段必须每本都有（可为 null），且多数书要有非空值。
+  // 为什么要守：简介是智能体「自己选哪本书」的唯一依据，被清空后模型只能凭书名猜，
+  // 而且不会报任何错——这种静默退化必须钉住。
+  ok(books.every(b => "summary" in b),
+    "list_books 每本带 summary 字段（无简介时为 null，不许整个字段消失）");
+  const withSum = books.filter(b => typeof b.summary === "string" && b.summary.trim());
+  ok(withSum.length >= Math.ceil(books.length * 0.8),
+    `list_books 至少 80% 的书有非空简介（${withSum.length}/${books.length}）——缺了跑 node src/backfill-summary.mjs`);
+  ok(withSum.every(b => b.summary.length <= 200),
+    `简介全部 ≤200 字（最长 ${Math.max(0, ...withSum.map(b => b.summary.length))}）——list_books 是常驻调用`);
+  // 工具描述必须引导用 summary，否则模型仍旧只看书名
+  const regToolSrc = fs.readFileSync(path.join(import.meta.dirname, "..", "src", "lib", "register-tools.mjs"), "utf8");
+  ok(/按 summary 判断哪本书可能回答/.test(regToolSrc),
+    "list_books 描述里明确要求按 summary 判断该翻哪本（不只凭书名猜）");
 }
 
 // ========== 21) V3R7-② read_full_book + token 闸（第2批门禁） ==========
