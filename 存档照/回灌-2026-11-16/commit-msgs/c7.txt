@@ -1,0 +1,33 @@
+fix(search): 编目信号退出排序（80 题 0.7125 → 0.725），三项默认值 + 4 条守卫
+
+问题：编目回灌后同源 80 题 0.725 → 0.7125（1 题退步），定性报告定位到
+frankenstein「what does the creature ask victor to create for him」。
+
+先否掉两个错误假设（都有实测）：
+- 不是别名注入：BSP_ENTITY_LINK=0 单题 top4 完全不变
+- 不是权重调大：BSP_CATALOG_W 从 0.3 扫到 0.05，答案块仍进不了 top4
+
+真原因是三个结构性的：
+1. 编目信号方向反了：答案块 #436 把怪物写作 "The being"，mention 边没连上
+   （cat 为空），而一堆闲聊提 Victor 的块各拿 w=1.0 —— 最该加权的拿 0，最不该的拿满
+2. 提名与扩窗实现和注释相反：注释「多给 8 张复试门票」，实现 RECALL - nominations.length
+   让池内席位从 20 缩到 16
+3. tie-break 的 0.02 不是近并列裁决：bge-reranker int8 在这批块上分差只有 0.0004~0.03
+
+改法：不动任何打分公式、不改任何参数值，只把三条默认值从「改序」降为「记账」
+- BSP_CATALOG_POOL 默认关（池内不加权）
+- BSP_CATALOG_NOM 默认关（不提名，也就不会扩窗）
+- BSP_CATALOG_TIE 默认 0.02 → 0
+- RECALL 的 +8 改跟 NOM_ACTIVE 走（原按 cat.hit.size 判，提名关了仍撑宽候选集）
+- regular 席保底 RECALL_BASE（修「提名挤占池内席位」这个独立真 bug）
+
+信号没废：loadCatalogSignal 照常算、catW 照常挂返回体；alias 注入（BSP_ENTITY_LINK）
+完全未动，ftsliteral 9 条实体断言全绿可证。
+
+验证（同一份库同一份卷子，四点对照）：
+  A 回灌前 0.725 / 3.837  ← B 修前 0.7125 / 3.938
+  C 关编目 0.725 / 3.837  ← D 本次 0.725 / 3.837
+逐题：D vs A = 0 题差异（两口径都 0）；D vs B = 1 题翻转（miss→full, rank 0→2）
+伴生：ftsliteral 0 FAIL；holdout v1 27/30、v2 26/30 门禁均过；guard 351 项全 PASS
+
+回滚：BSP_CATALOG_POOL=1 BSP_CATALOG_NOM=1（实测复现修前 28 条 / #436 出窗）

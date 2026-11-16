@@ -1,0 +1,5 @@
+fix(test): quality-gate 日志跟 --out 同目录，不再往仓库根目录甩 A.json.log
+
+原来写的是 path.basename(OUT) + ".log"，--out=release/x/A.json 时把 A.json.log
+落在 cwd（仓库根目录）。跑四次 A/B/C/D 就攒了 4 个，进 git status、
+也让一致性核对报「漏登记 4 项」（95.1%）。改成跟 OUT 同目录，覆盖率回 100%。

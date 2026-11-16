@@ -1,9 +1,9 @@
 {
  "snapshotId": "r4-snapshot-20261115",
- "capturedAt": "2026-11-16T06:24:38.919Z",
+ "capturedAt": "2026-11-16T09:18:28.445Z",
  "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
- "treeSha16": "458d276f98fcb04d",
- "fileCount": 265,
+ "treeSha16": "743eef533d580b0f",
+ "fileCount": 263,
  "facts": {
   "golden": {
    "files": 11,
@@ -42,7 +42,7 @@
   "evalBaseline": null,
   "lastCodeChange": {
    "path": "test/quality-gate.mjs",
-   "mtime": "2026-11-16T06:22:49.257Z"
+   "mtime": "2026-11-16T09:18:06.751Z"
   },
   "release": [
    {
@@ -91,18 +91,6 @@
     "bytes": 2824,
     "mtime": "2026-11-14T06:17:08.475Z",
     "sha16": "2815b6233583c9a1"
-   },
-   {
-    "name": "A.json.log",
-    "bytes": 12688,
-    "mtime": "2026-11-16T06:09:23.205Z",
-    "sha16": "a532a219785ae631"
-   },
-   {
-    "name": "B.json.log",
-    "bytes": 12688,
-    "mtime": "2026-11-16T06:22:32.058Z",
-    "sha16": "5a09af81f264de9f"
    },
    {
     "name": "gate-live.log",
@@ -166,18 +154,6 @@
    "bytes": 2303,
    "mtime": "2026-11-13T14:23:56.962Z",
    "sha256": "d526918d6b9d029904800895cbda3fbb9d03f85372b9c0a2013859d602befc2b"
-  },
-  {
-   "path": "A.json.log",
-   "bytes": 12688,
-   "mtime": "2026-11-16T06:09:23.205Z",
-   "sha256": "a532a219785ae631c3ce7e9c2d70b48524a5e3568173a44c617bf19fe1488817"
-  },
-  {
-   "path": "B.json.log",
-   "bytes": 12688,
-   "mtime": "2026-11-16T06:22:32.058Z",
-   "sha256": "5a09af81f264de9f6523c0fe17beb8f4801fcb5a19bfb25115c5077c037f3cab"
   },
   {
    "path": "build/installer.nsh",
@@ -1051,9 +1027,9 @@
   },
   {
    "path": "src/lib/search.mjs",
-   "bytes": 55001,
-   "mtime": "2026-11-16T05:14:07.716Z",
-   "sha256": "0e140b9a0b6c780c267e431c75019f09164ea35619740135b419f4b525fd3d6c"
+   "bytes": 58617,
+   "mtime": "2026-11-16T08:49:05.296Z",
+   "sha256": "6bf2313236083b2196080f5dca05d2bd1feb8bca52556192a60b48289fd0fdf2"
   },
   {
    "path": "src/lib/semantic-chunk.mjs",
@@ -1435,9 +1411,9 @@
   },
   {
    "path": "test/guard-test.mjs",
-   "bytes": 118758,
-   "mtime": "2026-11-16T04:43:38.063Z",
-   "sha256": "1a104375c01dbc2d1032063004e96c26abf32b478daa5bf33d262e6580769f06"
+   "bytes": 119813,
+   "mtime": "2026-11-16T08:52:51.780Z",
+   "sha256": "677c61329b65fb33761c4e0969b8156570803ea5b4c99d56fce86141d219f6b7"
   },
   {
    "path": "test/hallucination-fuzz.mjs",
@@ -1597,9 +1573,9 @@
   },
   {
    "path": "test/quality-gate.mjs",
-   "bytes": 42566,
-   "mtime": "2026-11-16T06:22:49.257Z",
-   "sha256": "9562236cc3d08ed766f8ee2b8a23ec3f62b870593ac572464c70b953927d7942"
+   "bytes": 42779,
+   "mtime": "2026-11-16T09:18:06.751Z",
+   "sha256": "47a42d4eb18ef4811360a8e0d5dda71c8ab91e416acf21f1c762f77057019964"
   },
   {
    "path": "test/query-rewrite-test.mjs",
@@ -1716,5 +1692,5 @@
    "sha256": "6ba80b3bc2ce102574ddac54641397ef9a74b3905902457fccafffaf7f3f6144"
   }
  ],
- "previousTreeSha16": "791853c092fe2958"
+ "previousTreeSha16": "a4d821811d65ca1f"
 }
