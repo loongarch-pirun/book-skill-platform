@@ -1028,8 +1028,8 @@ const copyDb = (src) => {
   // ③ 邻块扩展：开关门 + 终排限定 + 衰减 + 同章判据 + 只附加 + 套件挂载
   ok(searchSrc.includes('process.env.BSP_NEIGHBOR === "1" && rerank'),
     "静态: 邻块 BSP_NEIGHBOR=1 开且只跟终排（变体快路 rerank:false 不扩）");
-  ok(/\* 0\.5\)\.toFixed\(4\)/.test(searchSrc) && searchSrc.includes("added.length >= 4"),
-    "静态: 邻块衰减 ×0.5 计分 + 总数 ≤4（提示词增量可控）");
+  ok(/\* 0\.5\)\.toFixed\(4\)/.test(searchSrc) && searchSrc.includes("added.length >= NBR_CAP"),
+    "静态: 邻块衰减 ×0.5 计分 + 总数受 NBR_CAP 控制（默认 6，提示词增量可控）");
   ok(searchSrc.includes("c.chapter !== s.chapter"),
     "静态: 邻块同章判据（跨章/空章不扩）");
   ok((pkgSrc.scripts["test:fast"] || "").includes("neighbor-test"),
@@ -1614,8 +1614,10 @@ const copyDb = (src) => {
   ok(/process\.env\.BSP_ROUTE !== "0"/.test(searchSrc),
     "路由: BSP_ROUTE!==\"0\" 总闸判断存在（一键回滚到旧全库扫描）");
 
-  // 默认值逐字等于改造前的值：这是防「静默调参」的唯一硬防线
-  const want = { minLen: 60, sigTopK: 3, books: 8, keep: 10, refW: 0.5, poolCap: 48, floorRatio: 0.3 };
+  // 默认值逐字等于改造前的值：这是防「静默调参」的唯一硬防线。
+  // keep 是唯一例外：2026-11-16 经 holdout(v1 27→30) + 80 题 gate(五项逐位不变) 双门验证后
+  // 10→18，依据写在 ROUTE_DEFAULTS 上方注释里。其余六项仍逐字等于改造前。
+  const want = { minLen: 60, sigTopK: 3, books: 8, keep: 18, refW: 0.5, poolCap: 48, floorRatio: 0.3 };
   const block = (searchSrc.match(/const ROUTE_DEFAULTS = Object\.freeze\(\{([\s\S]*?)\}\)/) || [])[1] || "";
   const got = Object.fromEntries([...block.matchAll(/(\w+):\s*([\d.]+)/g)].map((m) => [m[1], +m[2]]));
   ok(Object.keys(want).every((k) => got[k] === want[k]),
@@ -1626,6 +1628,21 @@ const copyDb = (src) => {
     const out = await routeAndSearch("《道德经》第十五章开头用哪两个词形容古之善為士者？", { libDir: LIB });
     ok(typeof out.route_source === "string" && ["prefilter", "full", "degraded"].includes(out.route_source),
       `路由: route_source 存在且取值受控（${out.route_source}）`);
+
+  // 本轮新增：结果层每书配额 + route 邻块扩展（默认全关 → 行为逐字节不变）
+  ok(/BSP_ROUTE_QUOTA !== "0" && picked\.length > 1/.test(searchSrc),
+    "路由: 每书轮转配额默认开（BSP_ROUTE_QUOTA=0 可关；单书仍退化）");
+  ok(/cfg\.enabled && process\.env\.BSP_ROUTE_QUOTA/.test(searchSrc)
+    && /cfg\.enabled && process\.env\.BSP_ROUTE_NBR/.test(searchSrc),
+    "路由: 配额与邻块都受总闸约束（BSP_ROUTE=0 必须逐字节回旧行为）");
+  ok(/BSP_NEIGHBOR_CAP \?\? 6/.test(searchSrc),
+    "邻块: 上限参数化默认 6（原硬编码 4；BSP_NEIGHBOR 自身的默认值仍为关）");
+  ok(/function sameSection\(a, b\)/.test(searchSrc) && /Math\.abs\(a\.page - b\.page\) <= 1/.test(searchSrc),
+    "邻块: 同段落判据 chapter 优先、page Δ≤1 兜底（5 本 PDF 的 chapter 全为 null）");
+  ok(/\(c\.kind \?\? "text"\) !== "text"\) continue/.test(searchSrc),
+    "邻块: 候选必须 kind===\"text\"（不把脚注/图片说明扩进答案上下文）");
+  ok(/\.\.\.\(r\.nbr \? \{ nbr: r\.nbr, nbrOf: r\.nbrOf \} : \{\}\)/.test(searchSrc),
+    "邻块: nbr/nbrOf 只在有值时透出（老行一个字段都不多）");
     ok(Array.isArray(out.route_candidates) && out.route_candidates.length >= 1
       && out.route_candidates.every((x) => typeof x === "string"),
       `路由: route_candidates 是非空书名字符串数组（${out.route_candidates?.length ?? 0} 本）`);

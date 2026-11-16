@@ -44,6 +44,14 @@ const BASELINE_PATH = SUFFIX === "v1" ? path.join(HOLD, "baseline.json") : path.
 const LIMIT = Number(arg("limit", 0)) || 0;
 const ONLY = arg("only", null);
 const OUT = arg("out", null);
+// 单题探针（2026-11-16）：--ids=H05,H06,H16 只跑指定题，用于改造期的快速对照
+//（三招验证每组跑整卷 4-5 分钟、跑三题 40 秒）。与 --limit/--only 同样会让 --gate 跳过。
+const IDS = (() => {
+  const v = arg("ids", null);
+  if (!v || v === true) return null;
+  const list = String(v).split(",").map((s) => s.trim()).filter(Boolean);
+  return list.length ? list : null;
+})();
 
 // ---------- 0) 互斥检查：更新基线与开门禁不许同时用 ----------
 // 为什么必须拦住：写基线的代码在门禁之前，两者同时给出时门禁读的就是刚写的新基线，
@@ -80,10 +88,20 @@ if (sha !== frozen.sha256) {
 const set = JSON.parse(raw.toString("utf8"));
 
 let items = set.items ?? [];
+if (IDS) {
+  const want = new Set(IDS);
+  const missing = IDS.filter((id) => !items.some((x) => x.id === id));
+  if (missing.length) {
+    // 题号写错必须报错而不是静默跑空：探针结果会被当成「这题通过」的证据
+    console.error(`卷子里没有这些题号：${missing.join(", ")}（可用：${items.map((x) => x.id).join(",")}）`);
+    process.exit(2);
+  }
+  items = items.filter((x) => want.has(x.id));
+}
 if (ONLY) items = items.filter((x) => x.kind === ONLY);
 if (LIMIT > 0) items = items.slice(0, LIMIT);
 if (!items.length) {
-  console.error("没有可跑的题（--only / --limit 过滤后为空）");
+  console.error("没有可跑的题（--only / --ids / --limit 过滤后为空）");
   process.exit(2);
 }
 
@@ -91,7 +109,7 @@ if (!items.length) {
 console.log("===== 留出集跑分 =====");
 console.log("卷子   :", frozen.file, `(${SET_ID})`);
 console.log("sha256 :", frozen.sha256.slice(0, 16) + "…", `(${frozen.total} 题 / 冻结于 ${frozen.frozenAt})`);
-console.log("本次跑 :", items.length, "题", ONLY ? `（只跑 ${ONLY}）` : "");
+console.log("本次跑 :", items.length, "题", ONLY ? `（只跑 ${ONLY}）` : "", IDS ? `（只跑 ${IDS.join(",")}）` : "");
 console.log("");
 
 const rows = [];
@@ -218,8 +236,8 @@ if (flag("update-baseline")) {
 
 // ---------- 3) 门禁比对 ----------
 if (flag("gate")) {
-  if (LIMIT > 0 || ONLY) {
-    console.log("\n本次是抽样跑（--limit / --only），--gate 跳过：门禁只对整卷有意义");
+  if (LIMIT > 0 || ONLY || IDS) {
+    console.log("\n本次是抽样跑（--limit / --only / --ids），--gate 跳过：门禁只对整卷有意义");
   } else if (!fs.existsSync(BASELINE_PATH)) {
     console.log("\n没有基线，--gate 跳过（先跑一次 --update-baseline）");
   } else {

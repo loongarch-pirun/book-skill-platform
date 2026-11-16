@@ -107,8 +107,8 @@ const textOf = (id) => chunks.find(c => c.id === id)?.text;
     const lemonNbrs = nbrs.filter(n => n.nbrOf === lemon);
     const lemonNext = nbrs.some(n => n.id === lemon + 1 && chunks.find(c => c.id === lemon + 1)?.chapter !== chunks.find(c => c.id === lemon)?.chapter);
     assert(!lemonNext, `开: 跨章邻居不扩（柠檬+1 属链表章，${lemonNbrs.length} 个 nbr 中无跨章）`);
-    // 上限：邻块总数 ≤4
-    assert(nbrs.length <= 4, `开: 邻块总数 ≤4（实际 ${nbrs.length}）`);
+    // 上限：邻块总数 ≤ 默认上限 6（原硬编码 4；2026-11-16 H16 差的就是一个名额）
+    assert(nbrs.length <= 6, `开: 邻块总数 ≤6（实际 ${nbrs.length}）`);
     // chapter_path 透传：nbr 行继承种子的 chapterPath
     assert(nbrs.every(n => typeof n.chapterPath === "string" && n.chapterPath.includes("数组")),
       `开: chapter_path 透传（${JSON.stringify(nbrs[0]?.chapterPath)}）`);
