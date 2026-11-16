@@ -1,0 +1,143 @@
+{
+  "name": "book-skill-platform",
+  "version": "0.1.0",
+  "description": "通用个人知识库平台：书进来，变成 AI 能查的 skill",
+  "main": "src/main.js",
+  "author": "boss",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis",
+    "lint": "eslint .",
+    "test:ci": "node test/stage0-format-test.mjs && node test/renderer-graph-test.mjs && node test/parser-fuzz.mjs && node test/paths-test.mjs && node test/skill-store-test.mjs && node test/skill-health-test.mjs && node test/llm-test.mjs && node test/llm-fuzz.mjs && node test/chat-archive-test.mjs && node test/feedback-pool-test.mjs && node test/archive-config-fuzz.mjs && node test/catalog-fuzz.mjs && node test/enrich-adversarial-fuzz.mjs && node test/derived-test.mjs && node test/shelf-assets-test.mjs && node test/book-view-test.mjs && node test/structurize-test.mjs && node test/entry-adversarial-fuzz.mjs",
+    "test:fast": "node test/paths-test.mjs && node test/guard-test.mjs && node test/stage0-format-test.mjs && node test/stage1-chunk-test.mjs && node test/parser-v3-test.mjs && node test/semantic-chunk-test.mjs && node test/enrich-fuzz.mjs && node test/enrich-import-test.mjs && node test/enrich-job-test.mjs && node test/enrich-adversarial-fuzz.mjs && node test/ftsliteral-test.mjs && node test/enrich-nom-test.mjs && node test/catalog-test.mjs && node test/skill-store-test.mjs && node test/skill-health-test.mjs && node test/renderer-graph-test.mjs && node test/parser-fuzz.mjs && node test/ipc-test.mjs && node test/llm-test.mjs && node test/llm-fuzz.mjs && node test/chat-archive-test.mjs && node test/feedback-pool-test.mjs && node test/derived-test.mjs && node test/shelf-assets-test.mjs && node test/book-view-test.mjs && node test/structurize-test.mjs && node test/archive-config-fuzz.mjs && node test/catalog-fuzz.mjs && node test/graphrag-fuzz.mjs && node test/browse-test.mjs && node test/query-rewrite-test.mjs && node test/entry-adversarial-fuzz.mjs  &&  node test/neighbor-test.mjs && node test/clean-test.mjs && node test/outline-test.mjs && node test/cite-check-test.mjs && node test/inline-clean-test.mjs && node test/theme-test.mjs && node test/usage-gate-test.mjs && node test/skill-validate-test.mjs && node test/judge-test.mjs",
+    "test:slow": "node test/stage2-test.mjs && node test/stage3-mcp-test.mjs && node test/jobs-test.mjs && node test/perf-test.mjs && node test/soak-test.mjs && node test/jobs-fuzz.mjs && node test/hallucination-fuzz.mjs && node test/similar-fuzz.mjs && node test/chat-fuzz.mjs && node test/kk-clean-slow-test.mjs",
+    "test": "npm run test:fast && npm run test:slow",
+    "test:judge": "node test/judge-test.mjs",
+    "test:gate": "node test/quality-gate.mjs",
+    "eval": "node test/quality-gate.mjs",
+    "ingest": "node src/embed-all.js",
+    "mcp": "node src/mcp-server.mjs",
+    "backup": "node src/backup.mjs",
+    "smoke:desktop": "electron test/desktop-smoke-main.js",
+    "skill:validate": "node src/skill-validate.mjs"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.3.1",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@pdf-lib/fontkit": "^1.1.1",
+    "@xmldom/xmldom": "^0.9.12",
+    "adm-zip": "^0.6.1",
+    "better-sqlite3": "^13.0.3",
+    "mammoth": "^1.13.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.4.299",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
+    "eslint": "^10.12.0"
+  },
+  "build": {
+    "appId": "com.boss.book-skill-platform",
+    "productName": "BookSkillPlatform",
+    "npmRebuild": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "!node_modules/onnxruntime-web/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/darwin/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/linux/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/win32/arm64/**",
+      "!node_modules/better-sqlite3/prebuilds/darwin*.node",
+      "!node_modules/better-sqlite3/prebuilds/linux*.node",
+      "!node_modules/better-sqlite3/prebuilds/win32-arm64.node",
+      "!node_modules/@napi-rs/**",
+      "!node_modules/@img/sharp-wasm32/**"
+    ],
+    "extraResources": [
+      {
+        "from": "library",
+        "to": "library",
+        "filter": [
+          "**/*",
+          "!**/*.db-wal",
+          "!**/*.db-shm",
+          "!usage-log.jsonl",
+          "!chat-archive/**",
+          "!feedback/**"
+        ]
+      },
+      {
+        "from": "skills",
+        "to": "skills",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "books",
+        "to": "books",
+        "filter": [
+          "**/*",
+          "!_work/**"
+        ]
+      },
+      {
+        "from": ".models",
+        "to": "models",
+        "filter": [
+          "Xenova/bge-m3/**",
+          "Xenova/multilingual-e5-small/**",
+          "Xenova/bge-small-zh-v1.5/**",
+          "onnx-community/bge-reranker-v2-m3-ONNX/**",
+          "!onnx-community/bge-reranker-v2-m3-ONNX/onnx/model_q4.onnx"
+        ]
+      },
+      {
+        "from": "runtime/mineru-python",
+        "to": "runtime/mineru-python",
+        "filter": [
+          "**/*",
+          "!**/__pycache__/**",
+          "!**/*.pyc"
+        ]
+      },
+      {
+        "from": "runtime/mineru-models",
+        "to": "runtime/mineru-models",
+        "filter": [
+          "MinerU-4_models_onnx/**",
+          "!**/*.gguf"
+        ]
+      }
+    ],
+    "extraFiles": [
+      {
+        "from": "build/stop-mineru.ps1",
+        "to": "stop-mineru.ps1"
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false
+    }
+  }
+}

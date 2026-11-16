@@ -16,6 +16,9 @@ export default [
       "skills/**",
       "catalog-results/**",
       "catalog-tasks/**",
+      // 存档照：台账/报告/提审留痕 + 翻转验证的代码备份副本。含 .mjs 副本，
+      // 不排除会被当成源码再 lint 一遍（副本本来就不是要维护的代码）。
+      "存档照/**",
     ],
   },
   js.configs.recommended,

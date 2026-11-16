@@ -1,0 +1,16 @@
+test(holdout): 两套冻结卷子 + 独立跑分器，旧 eval 体系退场
+
+留出集（回答「改完到底有没有变好」的唯一独立依据）：
+- test/holdout/sets/holdout-v1.json：30 题，sha256 0f532846…，爸爸盖章冻结
+- test/holdout/sets/holdout-v2.json：30 题，sha256 504a1feb…，与 v1 零块复用、题干最高相似度 0.387
+- 每卷各带 frozen 凭证与自己的基线，两卷互不覆盖（--set 选卷）
+- test/holdout-run.mjs：跑前校验卷子 sha256，四类题型分别判分；--gate 抽样跑自动跳过
+- test/lib/book-alias.mjs：测试侧书名别名表（pg1260-简爱 → 简爱）
+
+旧 eval 体系退场（已归档到工作区 存档照/旧eval归档/）：
+- 删 v2-eval.mjs / eval-gate.mjs / eval-baseline.json
+- eval 脚本改指 quality-gate.mjs；test:slow 摘掉 eval-gate
+- 判分尺子收敛为 test/lib/judge.mjs 三级判据，legacyJudge 只作兼容别名
+- 八套测试把 v2-eval 引用改成 test/golden 与 keywordOnlyJudge
+
+验证：ci 18 套 0 fail；guard 343 项；holdout v1 27/30、v2 26/30（与对照逐题一致）。

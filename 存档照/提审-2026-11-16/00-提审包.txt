@@ -1,0 +1,63 @@
+===== 提审包 =====
+改动文件：32 个
+风险分级：C 重（生产码/配置/尺子/卷子）
+审查要求：**强制双人，作者不能自己批**；五关全跑
+
+--- 改动清单 ---
+  M EADME.md
+  M docs/交接文档-2026-10-21.md
+  M docs/收官打包与交接规划-2026-10-21.md
+  M docs/真机验收勾选单.md
+  M eslint.config.mjs
+  M package.json
+  M src/feedback-export.mjs
+  M src/lib/models.mjs
+  M src/lib/search.mjs
+  M src/lib/vec-cache.mjs
+  M src/renderer/app.js
+  D test/eval-baseline.json
+  D test/eval-gate.mjs
+  M test/ftsliteral-test.mjs
+  M test/golden-verify.mjs
+  M test/graphrag-fuzz.mjs
+  M test/guard-test.mjs
+  M test/hallucination-fuzz.mjs
+  M test/ipc-test.mjs
+  M test/judge-test.mjs
+  M test/lib/judge.mjs
+  M test/quality-gate.mjs
+  D test/v2-eval.mjs
+  ?? docs/代码审查标准与流程.md
+  ?? docs/审查模板-改动说明.md
+  ?? docs/旧eval体系归档说明.md
+  ?? docs/模型清单与包体基线.md
+  ?? size-budget.json
+  ?? test/holdout-run.mjs
+  ?? test/holdout/
+  ?? test/lib/book-alias.mjs
+  ?? tools/
+
+--- 必跑闸门（按顺序）---
+  1. npm run lint
+  2. npm run test:ci
+  3. node test/guard-test.mjs
+  4. node test/graphrag-fuzz.mjs
+  5. node test/stage3-mcp-test.mjs
+  6. node test/holdout-run.mjs --gate
+  7. node test/perf-test.mjs
+  8. node test/renderer-graph-test.mjs
+  9. node test/book-view-test.mjs
+
+--- 红线扫描：未命中 ---
+
+--- 留痕提醒 ---
+  台账：在 存档照/改动台账.md（不在本仓库，git 看不见）——手动确认补了一行八列
+  存档照：存在。改完跑 node 存档照/生成清单.cjs <r4> 重拍并记新指纹
+
+--- 人工审查重点（关 3）---
+  1. 改的是起作用的那一处吗（有没有写了没接上）
+  2. 返回字段/参数语义/错误码变了没，谁受影响
+  3. 会不会写坏 .db，外部输入有没有拼进 SQL/路径
+  4. 涉及检索或判分：效果必须用独立卷子 + 对照组差分，同源 80 题只作回归门禁
+
+提醒：本工具只列清单，不代替判断。标准见 docs/代码审查标准与流程.md

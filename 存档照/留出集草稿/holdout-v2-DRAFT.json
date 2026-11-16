@@ -1,0 +1,461 @@
+{
+ "setId": "holdout-v2",
+ "status": "DRAFT",
+ "frozen": false,
+ "draftedAt": "2026-11-16T03:19:30.065Z",
+ "selfReviewed": false,
+ "selfReviewedAt": null,
+ "frozenAt": null,
+ "reviewedBy": null,
+ "revision": "v2.1 首版：30 题，与 v1 零重复块、零重复题干；四类配比与 v1 相同",
+ "total": 30,
+ "byKind": {
+  "answerable": 16,
+  "newbook": 2,
+  "refusal": 8,
+  "ambiguous": 4
+ },
+ "byLang": {
+  "en": 4,
+  "cross": 12,
+  "zh": 14
+ },
+ "sourcePolicy": "答案句按「起始标记」从 chunks.text 自动切 260 字，保证逐字一致；起草阶段零检索调用",
+ "designNote": "出题时已知 v1 的三道漏题（H05/H06/H16）——本题库只有 13 本，知识点天然重叠，只能保证「不复用同一块原文、不复用同一句题干」，无法保证「不知道 v1 的错在哪」。此风险已如实登记。",
+ "items": [
+  {
+   "id": "V01",
+   "q": "In Dynamo, what does the partitioning scheme rely on to distribute load across storage hosts?",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "kind": "answerable",
+   "a": "partitioning scheme relies on consistent hashing to distribute the load across multiple storage hosts. In consistent hashing [10], the output range of a hash function is treated as a fixed circular space or “ring” (i.e. the largest hash value wraps around to t",
+   "g": [
+    "consistent hashing",
+    "ring"
+   ],
+   "expect": null,
+   "lang": "en",
+   "chunk_id": 60
+  },
+  {
+   "id": "V02",
+   "q": "Dynamo 遇到同一对象的版本分歧时，用什么办法决定哪一版算数？",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "kind": "answerable",
+   "a": "timestamp based reconciliation logic of “last write wins”; i.e., the object with the largest physical timestamp value is chosen as the correct version. The service that maintains customer’s session information is a good example of a service that uses this mode",
+   "g": [
+    "last write wins",
+    "timestamp"
+   ],
+   "expect": null,
+   "lang": "cross",
+   "chunk_id": 122
+  },
+  {
+   "id": "V03",
+   "q": "Lamport 说当两个事件拿到同一个时钟值时，靠什么打破平局？",
+   "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+   "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+   "kind": "answerable",
+   "a": "we use any arbitrary total ordering < of the processes. More precisely, we define a relation ⇒ as follows: if a is an event in process \\mathbf { P } _ { i } and b is an event in process \\mathbf { P } _ { j } , then a \\Rightarrow b if and only if either (i) \\ma",
+   "g": [
+    "arbitrary total ordering",
+    "processes"
+   ],
+   "expect": null,
+   "lang": "cross",
+   "chunk_id": 37
+  },
+  {
+   "id": "V04",
+   "q": "机器故障之后，已经完成的 reduce 任务为什么不需要重跑？",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "kind": "answerable",
+   "a": "Completed reduce tasks do not need to be re-executed since their output is stored in a global file system. When a map task is executed first by worker A and then later executed by worker B (because A failed), all OSDI ’04: 6th Symposium on Operating Systems De",
+   "g": [
+    "global file system"
+   ],
+   "expect": null,
+   "lang": "cross",
+   "chunk_id": 35
+  },
+  {
+   "id": "V05",
+   "q": "MapReduce 里哪一类计数值是库自己维护的？",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "kind": "answerable",
+   "a": "Some counter values are automatically maintained by the MapReduce library, such as the number of input key/value pairs processed and the number of output key/value pairs produced. Users have found the counter facility useful for sanity checking the behavior of",
+   "g": [
+    "counter",
+    "key/value pairs"
+   ],
+   "expect": null,
+   "lang": "cross",
+   "chunk_id": 68
+  },
+  {
+   "id": "V06",
+   "q": "Why are the dot products scaled by one over the square root of d_k?",
+   "book": "attention-is-all-you-need-en.pdf",
+   "bookId": "attention-is-all-you-need-en.pdf",
+   "kind": "answerable",
+   "a": "We suspect that for large values of d _ { k } , the dot products grow large in magnitude, pushing the softmax function into regions where it has extremely small gradients 4. To counteract this effect, we scale the dot products by \\frac { 1 } { \\sqrt { d _ { k ",
+   "g": [
+    "softmax",
+    "gradients"
+   ],
+   "expect": null,
+   "lang": "en",
+   "chunk_id": 28
+  },
+  {
+   "id": "V07",
+   "q": "「人法地，地法天」后面接着说什么？",
+   "book": "daodejing-zh.docx",
+   "bookId": "daodejing-zh.docx",
+   "kind": "answerable",
+   "a": "人法地，地法天，天法道，道法自然。",
+   "g": [
+    "天法道",
+    "道法自然"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "chunk_id": 25
+  },
+  {
+   "id": "V08",
+   "q": "第五十章说「善攝生者」走路不会遇到什么、入军不会被什么伤到？",
+   "book": "daodejing-zh.docx",
+   "bookId": "daodejing-zh.docx",
+   "kind": "answerable",
+   "a": "善攝生者，路行不遇兕虎，入軍不被甲兵；兕無所投其角，虎無所用其爪，兵無所容其刃。夫何故？以其無死地。",
+   "g": [
+    "兕虎",
+    "甲兵"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "chunk_id": 50
+  },
+  {
+   "id": "V09",
+   "q": "维克多和伊丽莎白走进牢房时，贾斯汀坐在什么上面？",
+   "book": "frankenstein-en.epub",
+   "bookId": "frankenstein-en.epub",
+   "kind": "answerable",
+   "a": "We entered the gloomy prison chamber and beheld Justine sitting on some straw at the farther end; her hands were manacled, and her head rested on her knees. She rose on seeing us enter, and when we were left alone with her, she threw herself at the feet of Eli",
+   "g": [
+    "straw",
+    "manacled"
+   ],
+   "expect": null,
+   "lang": "cross",
+   "chunk_id": 243
+  },
+  {
+   "id": "V10",
+   "q": "曾子每天拿哪三件事反省自己？",
+   "book": "lunyu-xueer-zh.docx",
+   "bookId": "lunyu-xueer-zh.docx",
+   "kind": "answerable",
+   "a": "吾日三省吾身：爲人謀而不忠乎？與朋友交而不信乎？傳不習乎？」",
+   "g": [
+    "爲人謀",
+    "與朋友交",
+    "傳不習"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "chunk_id": 4
+  },
+  {
+   "id": "V11",
+   "q": "孟子认为解说《诗》的正确做法是什么？",
+   "book": "mengzi-zh.docx",
+   "bookId": "mengzi-zh.docx",
+   "kind": "answerable",
+   "a": "故說詩者，不以文害辭，不以辭害志；以意逆志，是為得之。如以辭而已矣。《雲漢》之詩曰：『周餘黎民，靡有孑遺。』信斯言也，是周無遺民也。孝子之至，莫大乎尊親；尊親之至，莫大乎以天下養。為天子父，尊之至也；以天下養，養之至也。《詩》曰：『永言孝思，孝思惟則』，此之謂也。《書》曰：『祗載見瞽瞍，夔夔齋栗，瞽瞍亦允若』，是為父不得而子也？」",
+   "g": [
+    "以意逆志",
+    "不以文害辭"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "chunk_id": 138
+  },
+  {
+   "id": "V12",
+   "q": "罗切斯特追问时，简爱说自己把房门怎么处理了？",
+   "book": "pg1260-简爱.epub",
+   "bookId": "pg1260-简爱.epub",
+   "kind": "answerable",
+   "a": "I bolted my door.” “Then you are not in the habit of bolting your door every night before you get into bed?” “Fiend! she wants to know my habits, that she may lay her plans accordingly!” Indignation again prevailed over prudence: I replied sharply, “Hitherto I",
+   "g": [
+    "bolted my door"
+   ],
+   "expect": null,
+   "lang": "cross",
+   "chunk_id": 628
+  },
+  {
+   "id": "V13",
+   "q": "How is Miss Darcy described in comparison with Elizabeth?",
+   "book": "pride-and-prejudice-en.epub",
+   "bookId": "pride-and-prejudice-en.epub",
+   "kind": "answerable",
+   "a": "Miss Darcy was tall, and on a larger scale than Elizabeth; and, though little more than sixteen, her figure was formed, and her appearance womanly and graceful. She was less handsome than her brother, but there was sense and good-humour in her face, and her ma",
+   "g": [
+    "tall",
+    "sixteen"
+   ],
+   "expect": null,
+   "lang": "en",
+   "chunk_id": 858
+  },
+  {
+   "id": "V14",
+   "q": "《工程师拇指案》里那位访客的职业是什么？",
+   "book": "pg1661-福尔摩斯冒险史.epub",
+   "bookId": "pg1661-福尔摩斯冒险史.epub",
+   "kind": "answerable",
+   "a": "By profession I am a hydraulic engineer, and I have had considerable experience of my work during the seven years that I was apprenticed to Venner & Matheson, the well-known firm, of Greenwich. Two years ago, having served my time, and having also come into a ",
+   "g": [
+    "hydraulic engineer"
+   ],
+   "expect": null,
+   "lang": "cross",
+   "chunk_id": 693
+  },
+  {
+   "id": "V15",
+   "q": "Why is the Strong Clock Condition not in general satisfied by logical clocks?",
+   "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+   "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+   "kind": "answerable",
+   "a": "This is stronger than the ordinary Clock Condition because → is a stronger relation than →. It is not in general satisfied by our logical clocks. Let us identify S with some set of “real\" events in physical space-time, and let → be the partial ordering of even",
+   "g": [
+    "stronger relation",
+    "logical clocks"
+   ],
+   "expect": null,
+   "lang": "en",
+   "chunk_id": 63
+  },
+  {
+   "id": "V16",
+   "q": "子贡问孔子「夫子聖矣乎」，孔子自己怎么回答？",
+   "book": "mengzi-zh.docx",
+   "bookId": "mengzi-zh.docx",
+   "kind": "answerable",
+   "a": "我學不厭而教不倦也。』子貢曰：『學不厭，智也；教不倦，仁也。仁且智，夫子既聖矣。』夫聖，孔子不居，是何言也？」 「昔者竊聞之：子夏、子游、子張皆有聖人之一體，冉牛、閔子、顏淵則具體而微，敢問所安？」 曰：「姑舍是。」 曰：「伯夷、伊尹何如？」 曰：「不同道。非其君不事，非其民不使，治則進，亂則退，伯夷也。何事非君？何使非民？治亦進，亂亦進，伊尹也。可以仕則仕，可以止則止，可以久則久，可以速則速，孔子也。皆古聖人也。吾未能有行焉，乃所愿，則學孔子也。」 「伯夷、伊尹於孔子，若是班乎？」 曰：「否，自有生民以來，未有孔",
+   "g": [
+    "學不厭",
+    "教不倦"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "chunk_id": 30
+  },
+  {
+   "id": "V17",
+   "q": "这批 36 台样本的总体合格率是多少？",
+   "book": "低压电器检测实训报告（带表格样例）.docx",
+   "bookId": "低压电器检测实训报告（带表格样例）.docx",
+   "kind": "newbook",
+   "a": "总体合格率 91.7%。两项不合格均属批次性工艺偏差，不涉及设计缺陷。建议：一是对绝缘件供应商启动来料加严检验；二是对触头压力弹簧的批次热处理记录做全量追溯；三是四月中旬复检一次以闭环。 本报告为带表格样例文档，专用于验证知识库管线的表格提取能力——若导入后表格内容缺失，即命中已知缺陷，待 V3 第二波修复后复测。",
+   "g": [
+    "91.7%"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "chunk_id": 7
+  },
+  {
+   "id": "V18",
+   "q": "曾子说「愼終追遠」会带来什么结果？",
+   "book": "lunyu-xueer-zh.pdf",
+   "bookId": "lunyu-xueer-zh.pdf",
+   "kind": "newbook",
+   "a": "愼終追遠，民德歸厚矣。」 第10章 子禽問於子貢曰:「夫子至於是邦也，必聞其政，求之與？抑與之與？」子貢曰:「夫子溫、良、恭、儉、讓以得之。夫子之求之也，其諸異乎人之求之與？」 第11章 子曰:「父在觀其志，父沒觀其行。三年無改於父之道，可謂孝矣。」 第12章 有子曰:「禮之用，和爲貴；先王之道，斯爲美；小大由之。有所不行，知和而和，不以禮節之，亦不可行也。」",
+   "g": [
+    "民德歸厚"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "chunk_id": 3
+  },
+  {
+   "id": "V19",
+   "q": "《論語·學而》里有讲怎么配置 Docker 容器吗？",
+   "book": "lunyu-xueer-zh.docx",
+   "bookId": "lunyu-xueer-zh.docx",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "absent": [
+    "Docker"
+   ],
+   "expect": "refusal",
+   "lang": "zh",
+   "chunk_id": null
+  },
+  {
+   "id": "V20",
+   "q": "Dynamo 论文里给出了 Blender 三维渲染的参数吗？",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "absent": [
+    "Blender"
+   ],
+   "expect": "refusal",
+   "lang": "cross",
+   "chunk_id": null
+  },
+  {
+   "id": "V21",
+   "q": "《道德经》里有讲怎么调试 JavaScript 代码吗？",
+   "book": "daodejing-zh.docx",
+   "bookId": "daodejing-zh.docx",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "absent": [
+    "JavaScript"
+   ],
+   "expect": "refusal",
+   "lang": "zh",
+   "chunk_id": null
+  },
+  {
+   "id": "V22",
+   "q": "《弗兰肯斯坦》里提到过 Wi-Fi 吗？",
+   "book": "frankenstein-en.epub",
+   "bookId": "frankenstein-en.epub",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "absent": [
+    "Wi-Fi"
+   ],
+   "expect": "refusal",
+   "lang": "cross",
+   "chunk_id": null
+  },
+  {
+   "id": "V23",
+   "q": "MapReduce 论文规定了员工年假天数吗？",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "absent": [
+    "年假"
+   ],
+   "expect": "refusal",
+   "lang": "cross",
+   "chunk_id": null
+  },
+  {
+   "id": "V24",
+   "q": "《傲慢与偏见》里出现了信用卡账单吗？",
+   "book": "pride-and-prejudice-en.epub",
+   "bookId": "pride-and-prejudice-en.epub",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "absent": [
+    "信用卡"
+   ],
+   "expect": "refusal",
+   "lang": "cross",
+   "chunk_id": null
+  },
+  {
+   "id": "V25",
+   "q": "Attention 这篇论文给出了显卡超频设置吗？",
+   "book": "attention-is-all-you-need-en.pdf",
+   "bookId": "attention-is-all-you-need-en.pdf",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "absent": [
+    "超频"
+   ],
+   "expect": "refusal",
+   "lang": "cross",
+   "chunk_id": null
+  },
+  {
+   "id": "V26",
+   "q": "这份检测报告里有电动汽车充电桩的试验数据吗？",
+   "book": "低压电器检测实训报告（带表格样例）.docx",
+   "bookId": "低压电器检测实训报告（带表格样例）.docx",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "absent": [
+    "充电桩"
+   ],
+   "expect": "refusal",
+   "lang": "zh",
+   "chunk_id": null
+  },
+  {
+   "id": "V27",
+   "q": "刚才提到的那段话，是哪本书里写的？",
+   "book": null,
+   "bookId": null,
+   "kind": "ambiguous",
+   "a": null,
+   "g": [],
+   "expect": "ambiguous",
+   "lang": "zh",
+   "chunk_id": null
+  },
+  {
+   "id": "V28",
+   "q": "「道」到底是什么意思？",
+   "book": null,
+   "bookId": null,
+   "kind": "ambiguous",
+   "a": null,
+   "g": [],
+   "expect": "ambiguous",
+   "lang": "zh",
+   "chunk_id": null
+  },
+  {
+   "id": "V29",
+   "q": "作者当初为什么要写这本书？",
+   "book": null,
+   "bookId": null,
+   "kind": "ambiguous",
+   "a": null,
+   "g": [],
+   "expect": "ambiguous",
+   "lang": "zh",
+   "chunk_id": null
+  },
+  {
+   "id": "V30",
+   "q": "里面那个实验具体是怎么做的？",
+   "book": null,
+   "bookId": null,
+   "kind": "ambiguous",
+   "a": null,
+   "g": [],
+   "expect": "ambiguous",
+   "lang": "zh",
+   "chunk_id": null
+  }
+ ]
+}

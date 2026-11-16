@@ -1,0 +1,36 @@
+留出集草稿 · 回源验真结果
+时间: 2026-11-15T15:26:19.512Z
+口径: 只读 SELECT chunks.text；零检索调用
+题数 30 | 有答案句 18 | 验真通过 18 | 失败 0 | 无答案句跳过 12
+H01 ✓ Dynamo-亚马逊高可用键值存储-2007.pdf #125 a=260字 金词 4 个
+H02 ✓ Dynamo-亚马逊高可用键值存储-2007.pdf #125 a=260字 金词 3 个
+H03 ✓ Lamport-时间时钟与分布式系统排序-1978.pdf #29 a=260字 金词 2 个
+H04 ✓ MapReduce-谷歌大规模分布式处理-2004.pdf #26 a=260字 金词 3 个
+H05 ✓ MapReduce-谷歌大规模分布式处理-2004.pdf #51 a=260字 金词 2 个
+H06 ✓ attention-is-all-you-need-en.pdf #29 a=260字 金词 2 个
+H07 ✓ daodejing-zh.docx #15 a=165字 金词 2 个
+H08 ✓ daodejing-zh.docx #49 a=98字 金词 1 个
+H09 ✓ frankenstein-en.epub #145 a=260字 金词 2 个
+H10 ✓ frankenstein-en.epub #565 a=260字 金词 2 个
+H11 ✓ lunyu-xueer-zh.docx #15 a=100字 金词 2 个
+H12 ✓ mengzi-zh.docx #34 a=260字 金词 2 个
+H13 ✓ pg1260-简爱.epub #372 a=260字 金词 2 个
+H14 ✓ pg1260-简爱.epub #1489 a=238字 金词 2 个
+H15 ✓ pride-and-prejudice-en.epub #256 a=260字 金词 3 个
+H16 ✓ pg1661-福尔摩斯冒险史.epub #211 a=260字 金词 2 个
+H17 [refusal] 无答案句（refusal）→ 跳过回源，判分待 judgeRefusal 实现
+H18 [refusal] 无答案句（refusal）→ 跳过回源，判分待 judgeRefusal 实现
+H19 [refusal] 无答案句（refusal）→ 跳过回源，判分待 judgeRefusal 实现
+H20 [refusal] 无答案句（refusal）→ 跳过回源，判分待 judgeRefusal 实现
+H21 [refusal] 无答案句（refusal）→ 跳过回源，判分待 judgeRefusal 实现
+H22 [refusal] 无答案句（refusal）→ 跳过回源，判分待 judgeRefusal 实现
+H23 [refusal] 无答案句（refusal）→ 跳过回源，判分待 judgeRefusal 实现
+H24 [refusal] 无答案句（refusal）→ 跳过回源，判分待 judgeRefusal 实现
+H25 [ambiguous] 无答案句（ambiguous）→ 跳过回源，判分待 judgeRefusal 实现
+H26 [ambiguous] 无答案句（ambiguous）→ 跳过回源，判分待 judgeRefusal 实现
+H27 [ambiguous] 无答案句（ambiguous）→ 跳过回源，判分待 judgeRefusal 实现
+H28 [ambiguous] 无答案句（ambiguous）→ 跳过回源，判分待 judgeRefusal 实现
+H29 ✓ lunyu-xueer-zh.pdf #1 a=191字 金词 2 个
+H30 ✓ 低压电器检测实训报告（带表格样例）.docx #4 a=183字 金词 2 个
+
+结论: ✓ 全部有答案句的题逐字回源，金词命中

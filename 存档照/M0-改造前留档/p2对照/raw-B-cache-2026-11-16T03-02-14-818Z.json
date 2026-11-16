@@ -1,0 +1,8482 @@
+[
+ {
+  "q": "what kind of model does the paper propose that uses only attention",
+  "ms": 4946,
+  "err": null,
+  "routed": [
+   {
+    "id": "attention-is-all-you-need-en.pdf",
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.958
+   }
+  ],
+  "considered": [
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.571,
+    "n": 121
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 13,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.9161
+   },
+   {
+    "id": 76,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.9049
+   },
+   {
+    "id": 8,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.8828
+   },
+   {
+    "id": 33,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.1719
+   }
+  ],
+  "skipped": null,
+  "ambiguous": true,
+  "note": null
+ },
+ {
+  "q": "how many GPUs were used for training the big model",
+  "ms": 7387,
+  "err": null,
+  "routed": [
+   {
+    "id": "attention-is-all-you-need-en.pdf",
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.996
+   }
+  ],
+  "considered": [
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.629,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.473,
+    "n": 130
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.413,
+    "n": 201
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.386,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.368,
+    "n": 704
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.365,
+    "n": 140
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.361,
+    "n": 1028
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.346,
+    "n": 7
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.344,
+    "n": 1277
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.284,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.271,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.217,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.215,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 54,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.9916
+   },
+   {
+    "id": 62,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.9834
+   },
+   {
+    "id": 9,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.9444
+   },
+   {
+    "id": 64,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.5864
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "which translation benchmark is used for english to german",
+  "ms": 7776,
+  "err": null,
+  "routed": [
+   {
+    "id": "attention-is-all-you-need-en.pdf",
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.841
+   }
+  ],
+  "considered": [
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.544,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.404,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.382,
+    "n": 7
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.38,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.372,
+    "n": 140
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.362,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.335,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.328,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.322,
+    "n": 1277
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.284,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.274,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.229,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.222,
+    "n": 16
+   }
+  ],
+  "results": [
+   {
+    "id": 62,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.6827
+   },
+   {
+    "id": 76,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.3553
+   },
+   {
+    "id": 8,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.3243
+   },
+   {
+    "id": 66,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.2828
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what BLEU score did the big model get on english to german",
+  "ms": 8664,
+  "err": null,
+  "routed": [
+   {
+    "id": "attention-is-all-you-need-en.pdf",
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.998
+   }
+  ],
+  "considered": [
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.622,
+    "n": 121
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.364,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.363,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.342,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.33,
+    "n": 1277
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.321,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.32,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.317,
+    "n": 7
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.307,
+    "n": 201
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.278,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.277,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.204,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.202,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 62,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.9966
+   },
+   {
+    "id": 63,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.9811
+   },
+   {
+    "id": 59,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.9612
+   },
+   {
+    "id": 8,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.9612
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what functions encode token positions",
+  "ms": 8904,
+  "err": null,
+  "routed": [
+   {
+    "id": "attention-is-all-you-need-en.pdf",
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.915
+   }
+  ],
+  "considered": [
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.516,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.435,
+    "n": 201
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.426,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.39,
+    "n": 140
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.316,
+    "n": 81
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.313,
+    "n": 1028
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.311,
+    "n": 274
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.31,
+    "n": 1861
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.31,
+    "n": 7
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.282,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.277,
+    "n": 1277
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.243,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.23,
+    "n": 16
+   }
+  ],
+  "results": [
+   {
+    "id": 41,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.8292
+   },
+   {
+    "id": 44,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.0458
+   },
+   {
+    "id": 35,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.0301
+   },
+   {
+    "id": 36,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.0249
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "how long does one training step take on the big model",
+  "ms": 7934,
+  "err": null,
+  "routed": [
+   {
+    "id": "attention-is-all-you-need-en.pdf",
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.997
+   }
+  ],
+  "considered": [
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.64,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.446,
+    "n": 130
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.434,
+    "n": 201
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.427,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.417,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.408,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.401,
+    "n": 1277
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.39,
+    "n": 140
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.37,
+    "n": 7
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.348,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.321,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.31,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.249,
+    "n": 16
+   }
+  ],
+  "results": [
+   {
+    "id": 54,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.9931
+   },
+   {
+    "id": 62,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.6786
+   },
+   {
+    "id": 9,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.2026
+   },
+   {
+    "id": 63,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.189
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "which convolutional sequence models are cited as prior work",
+  "ms": 5717,
+  "err": null,
+  "routed": [
+   {
+    "id": "attention-is-all-you-need-en.pdf",
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.662
+   }
+  ],
+  "considered": [
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.49,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.442,
+    "n": 130
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.402,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.38,
+    "n": 140
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.344,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.344,
+    "n": 1277
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.329,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.323,
+    "n": 704
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.309,
+    "n": 81
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.309,
+    "n": 274
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.303,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.285,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.271,
+    "n": 16
+   }
+  ],
+  "results": [
+   {
+    "id": 76,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.3244
+   },
+   {
+    "id": 87,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.2179
+   },
+   {
+    "id": 14,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.035
+   },
+   {
+    "id": 84,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.0244
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "论文里的缩放点积注意力是什么",
+  "ms": 7922,
+  "err": null,
+  "routed": [
+   {
+    "id": "attention-is-all-you-need-en.pdf",
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.763
+   }
+  ],
+  "considered": [
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.551,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.442,
+    "n": 130
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.436,
+    "n": 201
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.407,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.403,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.401,
+    "n": 704
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.392,
+    "n": 140
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.379,
+    "n": 1277
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.367,
+    "n": 81
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.343,
+    "n": 7
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.34,
+    "n": 274
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.326,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.305,
+    "n": 16
+   }
+  ],
+  "results": [
+   {
+    "id": 25,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.5263
+   },
+   {
+    "id": 23,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.464
+   },
+   {
+    "id": 27,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.0263
+   },
+   {
+    "id": 28,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.0234
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "这篇论文用了几张显卡训练",
+  "ms": 7305,
+  "err": null,
+  "routed": [
+   {
+    "id": "attention-is-all-you-need-en.pdf",
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.921
+   }
+  ],
+  "considered": [
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.612,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.533,
+    "n": 130
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.496,
+    "n": 201
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.481,
+    "n": 1861
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.479,
+    "n": 140
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.473,
+    "n": 7
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.471,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.464,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.439,
+    "n": 1277
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.426,
+    "n": 81
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.382,
+    "n": 274
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.38,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.346,
+    "n": 16
+   }
+  ],
+  "results": [
+   {
+    "id": 9,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.8421
+   },
+   {
+    "id": 54,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.8072
+   },
+   {
+    "id": 62,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.3029
+   },
+   {
+    "id": 64,
+    "book": "attention-is-all-you-need-en",
+    "score": 0.2733
+   }
+  ],
+  "skipped": null,
+  "ambiguous": true,
+  "note": null
+ },
+ {
+  "q": "可以说出来的道就不是永恒的道吗",
+  "ms": 7277,
+  "err": null,
+  "routed": [
+   {
+    "id": "daodejing-zh.docx",
+    "title": "daodejing-zh",
+    "best_sim": 0.527
+   },
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.48
+   },
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.463
+   }
+  ],
+  "considered": [
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.557,
+    "n": 81
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.523,
+    "n": 274
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.485,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.479,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.455,
+    "n": 1028
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.441,
+    "n": 140
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.435,
+    "n": 1277
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.426,
+    "n": 16
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.424,
+    "n": 201
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.42,
+    "n": 4
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.41,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.397,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.329,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 1,
+    "book": "daodejing-zh",
+    "score": 0.0538
+   },
+   {
+    "id": 32,
+    "book": "daodejing-zh",
+    "score": 0.0068
+   },
+   {
+    "id": 41,
+    "book": "daodejing-zh",
+    "score": 0.0058
+   },
+   {
+    "id": 7,
+    "book": "daodejing-zh",
+    "score": 0.0056
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "最高的善像什么",
+  "ms": 7730,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.511
+   },
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.44
+   }
+  ],
+  "considered": [
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.381,
+    "n": 704
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.377,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.358,
+    "n": 1277
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.348,
+    "n": 81
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.335,
+    "n": 1028
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.32,
+    "n": 274
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.31,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.29,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.269,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.267,
+    "n": 130
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.244,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.242,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.219,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 703,
+    "book": "pg1260-简爱",
+    "score": 0.0341
+   },
+   {
+    "id": 1814,
+    "book": "pg1260-简爱",
+    "score": 0.0066
+   },
+   {
+    "id": 1858,
+    "book": "pg1260-简爱",
+    "score": 0.0061
+   },
+   {
+    "id": 705,
+    "book": "pg1260-简爱",
+    "score": 0.0036
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "了解别人叫聪明，了解自己叫什么",
+  "ms": 6927,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.514
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.563,
+    "n": 274
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.513,
+    "n": 1861
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.511,
+    "n": 81
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.505,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.503,
+    "n": 704
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.497,
+    "n": 121
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.489,
+    "n": 4
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.482,
+    "n": 1277
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.452,
+    "n": 16
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.444,
+    "n": 140
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.426,
+    "n": 201
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.419,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.312,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 553,
+    "book": "pg1260-简爱",
+    "score": 0.1154
+   },
+   {
+    "id": 707,
+    "book": "pg1260-简爱",
+    "score": 0.0207
+   },
+   {
+    "id": 816,
+    "book": "pg1260-简爱",
+    "score": 0.0065
+   },
+   {
+    "id": 970,
+    "book": "pg1260-简爱",
+    "score": 0.003
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "再远的路从哪里开始",
+  "ms": 8698,
+  "err": null,
+  "routed": [
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.557
+   },
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.54
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.518,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.499,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.485,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.483,
+    "n": 704
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.43,
+    "n": 81
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.423,
+    "n": 274
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.408,
+    "n": 121
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.398,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.392,
+    "n": 130
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.382,
+    "n": 201
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.38,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.322,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.253,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 524,
+    "book": "pride-and-prejudice-en",
+    "score": 0.176
+   },
+   {
+    "id": 800,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0661
+   },
+   {
+    "id": 981,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0471
+   },
+   {
+    "id": 903,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0365
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "天下最柔弱的东西是什么",
+  "ms": 8371,
+  "err": null,
+  "routed": [
+   {
+    "id": "daodejing-zh.docx",
+    "title": "daodejing-zh",
+    "best_sim": 0.681
+   },
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.536
+   }
+  ],
+  "considered": [
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.513,
+    "n": 81
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.485,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.468,
+    "n": 704
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.467,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.456,
+    "n": 1028
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.443,
+    "n": 274
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.386,
+    "n": 201
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.378,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.368,
+    "n": 140
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.35,
+    "n": 16
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.344,
+    "n": 121
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.338,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.283,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 78,
+    "book": "daodejing-zh",
+    "score": 0.3615
+   },
+   {
+    "id": 76,
+    "book": "daodejing-zh",
+    "score": 0.3113
+   },
+   {
+    "id": 36,
+    "book": "daodejing-zh",
+    "score": 0.1252
+   },
+   {
+    "id": 39,
+    "book": "daodejing-zh",
+    "score": 0.0063
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "治理大国像做什么菜",
+  "ms": 7556,
+  "err": null,
+  "routed": [
+   {
+    "id": "daodejing-zh.docx",
+    "title": "daodejing-zh",
+    "best_sim": 0.637
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.464,
+    "n": 1861
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.459,
+    "n": 81
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.446,
+    "n": 274
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.427,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.413,
+    "n": 1277
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.409,
+    "n": 130
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.408,
+    "n": 201
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.407,
+    "n": 704
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.399,
+    "n": 140
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.38,
+    "n": 4
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.376,
+    "n": 121
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.352,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.272,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 60,
+    "book": "daodejing-zh",
+    "score": 0.2848
+   },
+   {
+    "id": 57,
+    "book": "daodejing-zh",
+    "score": 0.0049
+   },
+   {
+    "id": 65,
+    "book": "daodejing-zh",
+    "score": 0.002
+   },
+   {
+    "id": 59,
+    "book": "daodejing-zh",
+    "score": 0.0015
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "功业成就之后怎么办才符合天道",
+  "ms": 5779,
+  "err": null,
+  "routed": [
+   {
+    "id": "daodejing-zh.docx",
+    "title": "daodejing-zh",
+    "best_sim": 0.514
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.555,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.553,
+    "n": 81
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.491,
+    "n": 1861
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.483,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.466,
+    "n": 16
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.46,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.435,
+    "n": 1277
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.433,
+    "n": 1028
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.412,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.41,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.392,
+    "n": 130
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.37,
+    "n": 121
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.32,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 77,
+    "book": "daodejing-zh",
+    "score": 0.0303
+   },
+   {
+    "id": 9,
+    "book": "daodejing-zh",
+    "score": 0.0251
+   },
+   {
+    "id": 25,
+    "book": "daodejing-zh",
+    "score": 0.0083
+   },
+   {
+    "id": 34,
+    "book": "daodejing-zh",
+    "score": 0.008
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "杯子装满了不如怎样",
+  "ms": 7790,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.511
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.57,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.535,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.532,
+    "n": 1277
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.506,
+    "n": 274
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.505,
+    "n": 704
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.49,
+    "n": 81
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.468,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.465,
+    "n": 140
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.448,
+    "n": 201
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.441,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.437,
+    "n": 16
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.43,
+    "n": 121
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.397,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 1780,
+    "book": "pg1260-简爱",
+    "score": 0.0211
+   },
+   {
+    "id": 1781,
+    "book": "pg1260-简爱",
+    "score": 0.0168
+   },
+   {
+    "id": 880,
+    "book": "pg1260-简爱",
+    "score": 0.0073
+   },
+   {
+    "id": 649,
+    "book": "pg1260-简爱",
+    "score": 0.0021
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "缤纷的颜色动听的音乐厚味让人怎样",
+  "ms": 8525,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.5
+   },
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.499
+   },
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.498
+   },
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.459
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.546,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.545,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.543,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.5,
+    "n": 1277
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.403,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.391,
+    "n": 201
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.389,
+    "n": 274
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.378,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.378,
+    "n": 130
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.362,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.316,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.311,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.303,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 687,
+    "book": "pg1260-简爱",
+    "score": 0.0009
+   },
+   {
+    "id": 699,
+    "book": "pg1260-简爱",
+    "score": 0.0009
+   },
+   {
+    "id": 297,
+    "book": "pg1260-简爱",
+    "score": 0.0004
+   },
+   {
+    "id": 458,
+    "book": "pg1260-简爱",
+    "score": 0.0002
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what partitioning technique does dynamo use to spread its keys across nodes",
+  "ms": 1654,
+  "err": null,
+  "routed": [
+   {
+    "id": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.997
+   }
+  ],
+  "considered": [
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.671,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 134,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.9941
+   },
+   {
+    "id": 60,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.991
+   },
+   {
+    "id": 102,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.8872
+   },
+   {
+    "id": 12,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.8374
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what mechanism does dynamo use to capture causality between different versions of the same object",
+  "ms": 1730,
+  "err": null,
+  "routed": [
+   {
+    "id": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.999
+   }
+  ],
+  "considered": [
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.634,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 72,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.9975
+   },
+   {
+    "id": 69,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.7608
+   },
+   {
+    "id": 122,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.6169
+   },
+   {
+    "id": 12,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.5358
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what quorum-like technique keeps writes available when some replicas are temporarily down",
+  "ms": 8452,
+  "err": null,
+  "routed": [
+   {
+    "id": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.961
+   }
+  ],
+  "considered": [
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.573,
+    "n": 201
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.468,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.445,
+    "n": 140
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.438,
+    "n": 121
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.414,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.404,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.382,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.37,
+    "n": 1277
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.351,
+    "n": 81
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.349,
+    "n": 274
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.339,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.279,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.246,
+    "n": 16
+   }
+  ],
+  "results": [
+   {
+    "id": 56,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.9212
+   },
+   {
+    "id": 12,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.1081
+   },
+   {
+    "id": 90,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.0993
+   },
+   {
+    "id": 89,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.0416
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what structure is used in anti-entropy to synchronize divergent replicas",
+  "ms": 8801,
+  "err": null,
+  "routed": [
+   {
+    "id": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.96
+   }
+  ],
+  "considered": [
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.555,
+    "n": 201
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.427,
+    "n": 130
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.426,
+    "n": 121
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.404,
+    "n": 140
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.338,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.314,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.313,
+    "n": 1028
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.301,
+    "n": 7
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.271,
+    "n": 81
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.27,
+    "n": 1277
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.25,
+    "n": 274
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.195,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.167,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 56,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.9206
+   },
+   {
+    "id": 93,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.6359
+   },
+   {
+    "id": 95,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.185
+   },
+   {
+    "id": 117,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.0692
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what load distribution did dynamo choose for uniform performance across nodes",
+  "ms": 1632,
+  "err": null,
+  "routed": [
+   {
+    "id": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.997
+   }
+  ],
+  "considered": [
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.611,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 134,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.9939
+   },
+   {
+    "id": 160,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.9397
+   },
+   {
+    "id": 60,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.7869
+   },
+   {
+    "id": 149,
+    "book": "Dynamo-亚马逊高可用键值存储-2007",
+    "score": 0.3417
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who writes the letters that open the novel",
+  "ms": 7357,
+  "err": null,
+  "routed": [
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.526
+   },
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.514
+   },
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.511
+   },
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.473
+   }
+  ],
+  "considered": [
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.472,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.449,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.448,
+    "n": 1028
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.432,
+    "n": 1861
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.373,
+    "n": 81
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.364,
+    "n": 201
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.359,
+    "n": 274
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.334,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.333,
+    "n": 16
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.327,
+    "n": 121
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.314,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.286,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.18,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 409,
+    "book": "pride-and-prejudice-en",
+    "score": 0.052
+   },
+   {
+    "id": 972,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0514
+   },
+   {
+    "id": 901,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0352
+   },
+   {
+    "id": 961,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0297
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who is falsely accused of william's murder",
+  "ms": 8824,
+  "err": null,
+  "routed": [
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.593
+   }
+  ],
+  "considered": [
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.479,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.414,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.414,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.397,
+    "n": 1861
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.314,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.29,
+    "n": 81
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.268,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.267,
+    "n": 140
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.264,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.254,
+    "n": 130
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.24,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.2,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.199,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 265,
+    "book": "frankenstein-en",
+    "score": 0.1863
+   },
+   {
+    "id": 220,
+    "book": "frankenstein-en",
+    "score": 0.1189
+   },
+   {
+    "id": 196,
+    "book": "frankenstein-en",
+    "score": 0.0933
+   },
+   {
+    "id": 194,
+    "book": "frankenstein-en",
+    "score": 0.0679
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who teaches the creature language in the cottage",
+  "ms": 8361,
+  "err": null,
+  "routed": [
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.495
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.444,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.417,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.413,
+    "n": 1277
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.412,
+    "n": 1028
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.336,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.312,
+    "n": 201
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.291,
+    "n": 274
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.282,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.277,
+    "n": 140
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.265,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.248,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.245,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.168,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 345,
+    "book": "frankenstein-en",
+    "score": 0.0488
+   },
+   {
+    "id": 316,
+    "book": "frankenstein-en",
+    "score": 0.0126
+   },
+   {
+    "id": 405,
+    "book": "frankenstein-en",
+    "score": 0.0052
+   },
+   {
+    "id": 323,
+    "book": "frankenstein-en",
+    "score": 0.0036
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what does the creature ask victor to create for him",
+  "ms": 8237,
+  "err": null,
+  "routed": [
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.515
+   }
+  ],
+  "considered": [
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.481,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.449,
+    "n": 1028
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.439,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.418,
+    "n": 1277
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.404,
+    "n": 201
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.356,
+    "n": 81
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.355,
+    "n": 121
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.349,
+    "n": 274
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.337,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.326,
+    "n": 130
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.315,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.295,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.252,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 683,
+    "book": "frankenstein-en",
+    "score": 0.03
+   },
+   {
+    "id": 436,
+    "book": "frankenstein-en",
+    "score": 0.0169
+   },
+   {
+    "id": 159,
+    "book": "frankenstein-en",
+    "score": 0.0067
+   },
+   {
+    "id": 655,
+    "book": "frankenstein-en",
+    "score": 0.0053
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "which university does victor attend",
+  "ms": 8910,
+  "err": null,
+  "routed": [
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.528
+   }
+  ],
+  "considered": [
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.368,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.327,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.326,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.317,
+    "n": 1028
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.306,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.296,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.285,
+    "n": 140
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.279,
+    "n": 274
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.267,
+    "n": 130
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.254,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.236,
+    "n": 7
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.231,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.197,
+    "n": 16
+   }
+  ],
+  "results": [
+   {
+    "id": 178,
+    "book": "frankenstein-en",
+    "score": 0.0557
+   },
+   {
+    "id": 94,
+    "book": "frankenstein-en",
+    "score": 0.0211
+   },
+   {
+    "id": 214,
+    "book": "frankenstein-en",
+    "score": 0.0029
+   },
+   {
+    "id": 194,
+    "book": "frankenstein-en",
+    "score": 0.0005
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "which outdated philosopher's work first inspires victor",
+  "ms": 8819,
+  "err": null,
+  "routed": [
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.568
+   }
+  ],
+  "considered": [
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.472,
+    "n": 704
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.421,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.404,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.391,
+    "n": 1277
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.38,
+    "n": 274
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.376,
+    "n": 121
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.373,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.346,
+    "n": 4
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.327,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.322,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.318,
+    "n": 130
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.316,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.168,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 83,
+    "book": "frankenstein-en",
+    "score": 0.1362
+   },
+   {
+    "id": 198,
+    "book": "frankenstein-en",
+    "score": 0.0212
+   },
+   {
+    "id": 85,
+    "book": "frankenstein-en",
+    "score": 0.0081
+   },
+   {
+    "id": 384,
+    "book": "frankenstein-en",
+    "score": 0.005
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "怪物最后说要把自己怎么样",
+  "ms": 6315,
+  "err": null,
+  "routed": [
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.551
+   }
+  ],
+  "considered": [
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.538,
+    "n": 704
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.527,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.504,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.503,
+    "n": 1277
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.453,
+    "n": 81
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.442,
+    "n": 274
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.39,
+    "n": 16
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.387,
+    "n": 130
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.386,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.371,
+    "n": 140
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.37,
+    "n": 4
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.36,
+    "n": 121
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.322,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 518,
+    "book": "frankenstein-en",
+    "score": 0.1018
+   },
+   {
+    "id": 465,
+    "book": "frankenstein-en",
+    "score": 0.0144
+   },
+   {
+    "id": 440,
+    "book": "frankenstein-en",
+    "score": 0.0091
+   },
+   {
+    "id": 683,
+    "book": "frankenstein-en",
+    "score": 0.009
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "弗兰肯斯坦在哪个城市读大学",
+  "ms": 1997,
+  "err": null,
+  "routed": [
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.508
+   }
+  ],
+  "considered": [
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.409,
+    "n": 704
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 198,
+    "book": "frankenstein-en",
+    "score": 0.0156
+   },
+   {
+    "id": 87,
+    "book": "frankenstein-en",
+    "score": 0.0026
+   },
+   {
+    "id": 94,
+    "book": "frankenstein-en",
+    "score": 0.0024
+   },
+   {
+    "id": 472,
+    "book": "frankenstein-en",
+    "score": 0.0024
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what was impossible to do on the day the novel opens",
+  "ms": 7474,
+  "err": null,
+  "routed": [
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.582
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.502,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.496,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.481,
+    "n": 1277
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.476,
+    "n": 1028
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.378,
+    "n": 81
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.352,
+    "n": 274
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.332,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.305,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.296,
+    "n": 130
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.28,
+    "n": 16
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.275,
+    "n": 121
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.256,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.218,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 409,
+    "book": "frankenstein-en",
+    "score": 0.1763
+   },
+   {
+    "id": 455,
+    "book": "frankenstein-en",
+    "score": 0.0143
+   },
+   {
+    "id": 411,
+    "book": "frankenstein-en",
+    "score": 0.0061
+   },
+   {
+    "id": 211,
+    "book": "frankenstein-en",
+    "score": 0.0042
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what is the name of mr rochester's country estate",
+  "ms": 8977,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.634
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.466,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.465,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.404,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.36,
+    "n": 704
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.276,
+    "n": 274
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.268,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.254,
+    "n": 140
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.252,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.246,
+    "n": 130
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.205,
+    "n": 81
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.178,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.167,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.158,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 1124,
+    "book": "pg1260-简爱",
+    "score": 0.2673
+   },
+   {
+    "id": 407,
+    "book": "pg1260-简爱",
+    "score": 0.1268
+   },
+   {
+    "id": 642,
+    "book": "pg1260-简爱",
+    "score": 0.081
+   },
+   {
+    "id": 468,
+    "book": "pg1260-简爱",
+    "score": 0.0682
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who is rochester's first wife hidden in the attic at thornfield",
+  "ms": 10778,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.731
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.509,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.471,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.436,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.412,
+    "n": 704
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.28,
+    "n": 201
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.267,
+    "n": 274
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.263,
+    "n": 140
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.258,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.246,
+    "n": 130
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.232,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.18,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.159,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.143,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 1759,
+    "book": "pg1260-简爱",
+    "score": 0.4619
+   },
+   {
+    "id": 1563,
+    "book": "pg1260-简爱",
+    "score": 0.3685
+   },
+   {
+    "id": 1755,
+    "book": "pg1260-简爱",
+    "score": 0.1918
+   },
+   {
+    "id": 761,
+    "book": "pg1260-简爱",
+    "score": 0.1657
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "简爱离开盖茨黑德之后就读的学校叫什么",
+  "ms": 7561,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.536
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.415,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.349,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.325,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.318,
+    "n": 1028
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.255,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.247,
+    "n": 201
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.233,
+    "n": 274
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.23,
+    "n": 140
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.212,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.211,
+    "n": 4
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.199,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.196,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.165,
+    "n": 16
+   }
+  ],
+  "results": [
+   {
+    "id": 92,
+    "book": "pg1260-简爱",
+    "score": 0.0714
+   },
+   {
+    "id": 93,
+    "book": "pg1260-简爱",
+    "score": 0.0352
+   },
+   {
+    "id": 1229,
+    "book": "pg1260-简爱",
+    "score": 0.0253
+   },
+   {
+    "id": 219,
+    "book": "pg1260-简爱",
+    "score": 0.0086
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who is the clergyman who runs lowood school and humiliates jane in public",
+  "ms": 9164,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.614
+   },
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.511
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.448,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.407,
+    "n": 1277
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.36,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.354,
+    "n": 704
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.316,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.279,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.232,
+    "n": 4
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.228,
+    "n": 140
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.222,
+    "n": 16
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.217,
+    "n": 130
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.199,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.197,
+    "n": 201
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.109,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 145,
+    "book": "pg1260-简爱",
+    "score": 0.2286
+   },
+   {
+    "id": 189,
+    "book": "pg1260-简爱",
+    "score": 0.0648
+   },
+   {
+    "id": 128,
+    "book": "pg1260-简爱",
+    "score": 0.0646
+   },
+   {
+    "id": 132,
+    "book": "pg1260-简爱",
+    "score": 0.0616
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who is the little french girl that jane works for as governess at thornfield",
+  "ms": 8234,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.646
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.473,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.449,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.427,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.416,
+    "n": 1028
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.274,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.269,
+    "n": 201
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.269,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.262,
+    "n": 81
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.248,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.244,
+    "n": 140
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.204,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.158,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.151,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 1024,
+    "book": "pg1260-简爱",
+    "score": 0.2922
+   },
+   {
+    "id": 409,
+    "book": "pg1260-简爱",
+    "score": 0.0367
+   },
+   {
+    "id": 1229,
+    "book": "pg1260-简爱",
+    "score": 0.0196
+   },
+   {
+    "id": 1235,
+    "book": "pg1260-简爱",
+    "score": 0.016
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "whose laugh does jane keep hearing from the third storey of thornfield",
+  "ms": 8003,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.522
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.519,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.478,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.441,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.436,
+    "n": 1028
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.333,
+    "n": 201
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.316,
+    "n": 274
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.305,
+    "n": 121
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.285,
+    "n": 81
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.272,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.265,
+    "n": 140
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.26,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.245,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.22,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 438,
+    "book": "pg1260-简爱",
+    "score": 0.0442
+   },
+   {
+    "id": 1034,
+    "book": "pg1260-简爱",
+    "score": 0.0391
+   },
+   {
+    "id": 679,
+    "book": "pg1260-简爱",
+    "score": 0.0389
+   },
+   {
+    "id": 1024,
+    "book": "pg1260-简爱",
+    "score": 0.0099
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who proposes marriage to jane while she is living with the rivers family",
+  "ms": 8675,
+  "err": null,
+  "routed": [
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.671
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.512,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.493,
+    "n": 1277
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.424,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.406,
+    "n": 704
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.329,
+    "n": 274
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.312,
+    "n": 130
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.295,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.294,
+    "n": 140
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.268,
+    "n": 81
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.258,
+    "n": 121
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.235,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.201,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.184,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 352,
+    "book": "pride-and-prejudice-en",
+    "score": 0.3796
+   },
+   {
+    "id": 1032,
+    "book": "pride-and-prejudice-en",
+    "score": 0.094
+   },
+   {
+    "id": 1126,
+    "book": "pride-and-prejudice-en",
+    "score": 0.071
+   },
+   {
+    "id": 484,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0667
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what relation does lamport define to order events in a distributed system",
+  "ms": 1830,
+  "err": null,
+  "routed": [
+   {
+    "id": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.975
+   }
+  ],
+  "considered": [
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.578,
+    "n": 140
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 3,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.9499
+   },
+   {
+    "id": 10,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.697
+   },
+   {
+    "id": 9,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.624
+   },
+   {
+    "id": 84,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.3327
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what does lamport introduce into the system to assign numbers to events",
+  "ms": 1894,
+  "err": null,
+  "routed": [
+   {
+    "id": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.748
+   }
+  ],
+  "considered": [
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.504,
+    "n": 140
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 23,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.495
+   },
+   {
+    "id": 3,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.1205
+   },
+   {
+    "id": 46,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.0402
+   },
+   {
+    "id": 132,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.0273
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what must the system of clocks satisfy so events can be ordered by their timestamps",
+  "ms": 7268,
+  "err": null,
+  "routed": [
+   {
+    "id": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.975
+   }
+  ],
+  "considered": [
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.664,
+    "n": 140
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.551,
+    "n": 201
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.492,
+    "n": 130
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.474,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.445,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.444,
+    "n": 1277
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.436,
+    "n": 121
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.435,
+    "n": 704
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.378,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.373,
+    "n": 81
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.363,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.341,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.335,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 34,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.9505
+   },
+   {
+    "id": 36,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.9257
+   },
+   {
+    "id": 38,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.8456
+   },
+   {
+    "id": 77,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.7911
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "how are ties broken when two events happen to get the same clock value",
+  "ms": 7903,
+  "err": null,
+  "routed": [
+   {
+    "id": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.77
+   }
+  ],
+  "considered": [
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.58,
+    "n": 140
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.534,
+    "n": 201
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.472,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.455,
+    "n": 1028
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.436,
+    "n": 130
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.435,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.426,
+    "n": 704
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.4,
+    "n": 121
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.365,
+    "n": 7
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.362,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.34,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.309,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.294,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 37,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.5392
+   },
+   {
+    "id": 71,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.1264
+   },
+   {
+    "id": 29,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.0787
+   },
+   {
+    "id": 33,
+    "book": "Lamport-时间时钟与分布式系统排序-1978",
+    "score": 0.0552
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "学了之后经常温习会怎么样",
+  "ms": 7607,
+  "err": null,
+  "routed": [
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.503
+   },
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.489
+   },
+   {
+    "id": "attention-is-all-you-need-en.pdf",
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.472
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.532,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.531,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.514,
+    "n": 1277
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.504,
+    "n": 4
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.501,
+    "n": 1028
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.499,
+    "n": 121
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.474,
+    "n": 81
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.465,
+    "n": 274
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.458,
+    "n": 201
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.449,
+    "n": 16
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.445,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.431,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.425,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 138,
+    "book": "frankenstein-en",
+    "score": 0.0062
+   },
+   {
+    "id": 346,
+    "book": "frankenstein-en",
+    "score": 0.0034
+   },
+   {
+    "id": 142,
+    "book": "frankenstein-en",
+    "score": 0.0022
+   },
+   {
+    "id": 107,
+    "book": "frankenstein-en",
+    "score": 0.0013
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "别人不了解我我也不生气，算怎样的人",
+  "ms": 7180,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.507
+   },
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.491
+   },
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.488
+   },
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.484
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.55,
+    "n": 1861
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.532,
+    "n": 274
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.527,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.518,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.504,
+    "n": 1028
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.465,
+    "n": 81
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.451,
+    "n": 201
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.432,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.428,
+    "n": 16
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.407,
+    "n": 121
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.397,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.39,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.328,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 428,
+    "book": "pg1260-简爱",
+    "score": 0.0137
+   },
+   {
+    "id": 818,
+    "book": "pg1260-简爱",
+    "score": 0.0127
+   },
+   {
+    "id": 553,
+    "book": "pg1260-简爱",
+    "score": 0.0094
+   },
+   {
+    "id": 639,
+    "book": "pg1260-简爱",
+    "score": 0.0066
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "君子专心做人的根本，根本立住了会怎样",
+  "ms": 7446,
+  "err": null,
+  "routed": [
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.51
+   },
+   {
+    "id": "daodejing-zh.docx",
+    "title": "daodejing-zh",
+    "best_sim": 0.465
+   },
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.436
+   },
+   {
+    "id": "lunyu-xueer-zh.docx",
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.409
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.604,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.551,
+    "n": 81
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.544,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.52,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.506,
+    "n": 1277
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.502,
+    "n": 4
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.499,
+    "n": 1028
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.471,
+    "n": 16
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.433,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.428,
+    "n": 140
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.427,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.421,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.345,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 129,
+    "book": "mengzi-zh",
+    "score": 0.0197
+   },
+   {
+    "id": 268,
+    "book": "mengzi-zh",
+    "score": 0.0109
+   },
+   {
+    "id": 188,
+    "book": "mengzi-zh",
+    "score": 0.0106
+   },
+   {
+    "id": 211,
+    "book": "mengzi-zh",
+    "score": 0.0084
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "曾子每天反省自己的哪几件事",
+  "ms": 7071,
+  "err": null,
+  "routed": [
+   {
+    "id": "lunyu-xueer-zh.docx",
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.664
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.464,
+    "n": 274
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.438,
+    "n": 4
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.422,
+    "n": 81
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.419,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.414,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.414,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.411,
+    "n": 704
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.386,
+    "n": 16
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.368,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.362,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.35,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.343,
+    "n": 140
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.31,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 4,
+    "book": "lunyu-xueer-zh",
+    "score": 0.4956
+   },
+   {
+    "id": 9,
+    "book": "lunyu-xueer-zh",
+    "score": 0.0578
+   },
+   {
+    "id": 16,
+    "book": "lunyu-xueer-zh",
+    "score": 0.0139
+   },
+   {
+    "id": 5,
+    "book": "lunyu-xueer-zh",
+    "score": 0.0129
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "治理一个大国要怎么做",
+  "ms": 8102,
+  "err": null,
+  "routed": [
+   {
+    "id": "daodejing-zh.docx",
+    "title": "daodejing-zh",
+    "best_sim": 0.778
+   }
+  ],
+  "considered": [
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.537,
+    "n": 81
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.526,
+    "n": 274
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.463,
+    "n": 1861
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.441,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.439,
+    "n": 140
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.436,
+    "n": 1277
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.435,
+    "n": 4
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.433,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.429,
+    "n": 1028
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.419,
+    "n": 130
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.39,
+    "n": 16
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.388,
+    "n": 121
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.27,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 60,
+    "book": "daodejing-zh",
+    "score": 0.5555
+   },
+   {
+    "id": 57,
+    "book": "daodejing-zh",
+    "score": 0.1593
+   },
+   {
+    "id": 78,
+    "book": "daodejing-zh",
+    "score": 0.045
+   },
+   {
+    "id": 65,
+    "book": "daodejing-zh",
+    "score": 0.0395
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "年轻人怎么对待父母兄长和朋友",
+  "ms": 8013,
+  "err": null,
+  "routed": [
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.538
+   },
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.504
+   },
+   {
+    "id": "lunyu-xueer-zh.docx",
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.442
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.519,
+    "n": 274
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.511,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.511,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.491,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.484,
+    "n": 1028
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.452,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.444,
+    "n": 16
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.442,
+    "n": 81
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.399,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.372,
+    "n": 121
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.37,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.355,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.27,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 205,
+    "book": "mengzi-zh",
+    "score": 0.0768
+   },
+   {
+    "id": 77,
+    "book": "mengzi-zh",
+    "score": 0.053
+   },
+   {
+    "id": 100,
+    "book": "mengzi-zh",
+    "score": 0.0407
+   },
+   {
+    "id": 210,
+    "book": "mengzi-zh",
+    "score": 0.033
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "礼的运用以什么为贵",
+  "ms": 7163,
+  "err": null,
+  "routed": [
+   {
+    "id": "lunyu-xueer-zh.docx",
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.931
+   },
+   {
+    "id": "lunyu-xueer-zh.pdf",
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.927
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.552,
+    "n": 274
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.546,
+    "n": 4
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.537,
+    "n": 81
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.506,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.501,
+    "n": 1277
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.496,
+    "n": 16
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.495,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.488,
+    "n": 704
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.447,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.436,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.435,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.398,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.277,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 12,
+    "book": "lunyu-xueer-zh",
+    "score": 0.9645
+   },
+   {
+    "id": 13,
+    "book": "lunyu-xueer-zh",
+    "score": 0.0285
+   },
+   {
+    "id": 15,
+    "book": "lunyu-xueer-zh",
+    "score": 0.0093
+   },
+   {
+    "id": 3,
+    "book": "lunyu-xueer-zh",
+    "score": 0.0056
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "不担心别人不了解自己，该担心什么",
+  "ms": 7729,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.521
+   },
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.501
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.549,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.536,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.53,
+    "n": 1028
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.528,
+    "n": 274
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.527,
+    "n": 1277
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.48,
+    "n": 81
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.454,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.445,
+    "n": 121
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.441,
+    "n": 4
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.42,
+    "n": 140
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.408,
+    "n": 16
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.383,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.344,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 553,
+    "book": "pg1260-简爱",
+    "score": 0.0424
+   },
+   {
+    "id": 1321,
+    "book": "pg1260-简爱",
+    "score": 0.0102
+   },
+   {
+    "id": 818,
+    "book": "pg1260-简爱",
+    "score": 0.0085
+   },
+   {
+    "id": 1299,
+    "book": "pg1260-简爱",
+    "score": 0.0076
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "贫穷不谄媚富贵不骄傲，更好的境界是什么",
+  "ms": 7239,
+  "err": null,
+  "routed": [
+   {
+    "id": "lunyu-xueer-zh.pdf",
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.628
+   },
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.598
+   },
+   {
+    "id": "lunyu-xueer-zh.docx",
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.587
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.538,
+    "n": 1861
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.534,
+    "n": 274
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.514,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.511,
+    "n": 1277
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.504,
+    "n": 81
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.467,
+    "n": 1028
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.465,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.451,
+    "n": 16
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.376,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.365,
+    "n": 121
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.353,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.351,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.253,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 4,
+    "book": "lunyu-xueer-zh",
+    "score": 0.391
+   },
+   {
+    "id": 1474,
+    "book": "pg1260-简爱",
+    "score": 0.1969
+   },
+   {
+    "id": 1452,
+    "book": "pg1260-简爱",
+    "score": 0.1114
+   },
+   {
+    "id": 1571,
+    "book": "pg1260-简爱",
+    "score": 0.0956
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "which functional language inspired the map and reduce primitives",
+  "ms": 8293,
+  "err": null,
+  "routed": [
+   {
+    "id": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.977
+   }
+  ],
+  "considered": [
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.524,
+    "n": 130
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.401,
+    "n": 121
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.394,
+    "n": 140
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.379,
+    "n": 201
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.351,
+    "n": 704
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.343,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.337,
+    "n": 1028
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.306,
+    "n": 274
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.292,
+    "n": 1277
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.289,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.238,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.229,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.191,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 7,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.9533
+   },
+   {
+    "id": 50,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.1168
+   },
+   {
+    "id": 14,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.0503
+   },
+   {
+    "id": 15,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.0373
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what is the primary mechanism mapreduce uses for fault tolerance",
+  "ms": 1591,
+  "err": null,
+  "routed": [
+   {
+    "id": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.941
+   }
+  ],
+  "considered": [
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.496,
+    "n": 130
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 102,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.8813
+   },
+   {
+    "id": 104,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.7049
+   },
+   {
+    "id": 33,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.6268
+   },
+   {
+    "id": 95,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.4625
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what does the master launch to handle straggler machines that slow down completion",
+  "ms": 8220,
+  "err": null,
+  "routed": [
+   {
+    "id": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.641
+   }
+  ],
+  "considered": [
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.553,
+    "n": 130
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.431,
+    "n": 1028
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.43,
+    "n": 1861
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.428,
+    "n": 201
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.415,
+    "n": 1277
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.412,
+    "n": 121
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.402,
+    "n": 140
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.395,
+    "n": 704
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.338,
+    "n": 81
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.319,
+    "n": 7
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.294,
+    "n": 274
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.229,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.218,
+    "n": 16
+   }
+  ],
+  "results": [
+   {
+    "id": 49,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.2825
+   },
+   {
+    "id": 48,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.2177
+   },
+   {
+    "id": 67,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.0084
+   },
+   {
+    "id": 34,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.0054
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "why does mapreduce schedule map tasks close to the data they process",
+  "ms": 1658,
+  "err": null,
+  "routed": [
+   {
+    "id": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.945
+   }
+  ],
+  "considered": [
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.591,
+    "n": 130
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 49,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.8904
+   },
+   {
+    "id": 99,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.8143
+   },
+   {
+    "id": 48,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.5328
+   },
+   {
+    "id": 36,
+    "book": "MapReduce-谷歌大规模分布式处理-2004",
+    "score": 0.1732
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "上天要降大任给一个人之前会怎么考验他",
+  "ms": 7208,
+  "err": null,
+  "routed": [
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.74
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.517,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.499,
+    "n": 1277
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.492,
+    "n": 274
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.483,
+    "n": 704
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.475,
+    "n": 81
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.458,
+    "n": 1028
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.417,
+    "n": 140
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.417,
+    "n": 16
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.413,
+    "n": 130
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.402,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.393,
+    "n": 121
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.388,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.332,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 189,
+    "book": "mengzi-zh",
+    "score": 0.5273
+   },
+   {
+    "id": 270,
+    "book": "mengzi-zh",
+    "score": 0.0014
+   },
+   {
+    "id": 80,
+    "book": "mengzi-zh",
+    "score": 0.0014
+   },
+   {
+    "id": 24,
+    "book": "mengzi-zh",
+    "score": 0.0011
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "鱼和熊掌不能同时得到该怎么选",
+  "ms": 8015,
+  "err": null,
+  "routed": [
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.774
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.479,
+    "n": 274
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.461,
+    "n": 140
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.45,
+    "n": 81
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.442,
+    "n": 201
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.441,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.437,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.436,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.41,
+    "n": 704
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.405,
+    "n": 121
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.391,
+    "n": 16
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.389,
+    "n": 130
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.37,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.368,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 164,
+    "book": "mengzi-zh",
+    "score": 0.5488
+   },
+   {
+    "id": 221,
+    "book": "mengzi-zh",
+    "score": 0.0013
+   },
+   {
+    "id": 216,
+    "book": "mengzi-zh",
+    "score": 0.0009
+   },
+   {
+    "id": 20,
+    "book": "mengzi-zh",
+    "score": 0.0007
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "打仗的时候天时和地利哪个更重要",
+  "ms": 6811,
+  "err": null,
+  "routed": [
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.964
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.532,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.493,
+    "n": 81
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.452,
+    "n": 140
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.447,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.435,
+    "n": 704
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.432,
+    "n": 201
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.431,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.412,
+    "n": 1277
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.399,
+    "n": 130
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.394,
+    "n": 121
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.384,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.374,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.249,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 39,
+    "book": "mengzi-zh",
+    "score": 0.9273
+   },
+   {
+    "id": 87,
+    "book": "mengzi-zh",
+    "score": 0.0058
+   },
+   {
+    "id": 127,
+    "book": "mengzi-zh",
+    "score": 0.0013
+   },
+   {
+    "id": 20,
+    "book": "mengzi-zh",
+    "score": 0.001
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "国家当中什么最贵重，江山和君主哪个轻",
+  "ms": 6779,
+  "err": null,
+  "routed": [
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.788
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.525,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.512,
+    "n": 81
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.469,
+    "n": 1028
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.451,
+    "n": 4
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.447,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.44,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.43,
+    "n": 704
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.42,
+    "n": 16
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.376,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.373,
+    "n": 140
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.362,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.346,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.251,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 250,
+    "book": "mengzi-zh",
+    "score": 0.5758
+   },
+   {
+    "id": 32,
+    "book": "mengzi-zh",
+    "score": 0.0064
+   },
+   {
+    "id": 209,
+    "book": "mengzi-zh",
+    "score": 0.0049
+   },
+   {
+    "id": 80,
+    "book": "mengzi-zh",
+    "score": 0.0048
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "不得志的时候修养自身，得志的时候要怎么样",
+  "ms": 7205,
+  "err": null,
+  "routed": [
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.51
+   },
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.468
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.579,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.567,
+    "n": 81
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.553,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.526,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.513,
+    "n": 1277
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.506,
+    "n": 4
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.487,
+    "n": 1028
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.474,
+    "n": 16
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.464,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.458,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.449,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.447,
+    "n": 140
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.375,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 77,
+    "book": "mengzi-zh",
+    "score": 0.0205
+   },
+   {
+    "id": 52,
+    "book": "mengzi-zh",
+    "score": 0.0131
+   },
+   {
+    "id": 267,
+    "book": "mengzi-zh",
+    "score": 0.0058
+   },
+   {
+    "id": 29,
+    "book": "mengzi-zh",
+    "score": 0.0057
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "富贵贫穷威武什么样的考验都不能动摇一个人",
+  "ms": 7214,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.509
+   },
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.508
+   },
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.505
+   },
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.475
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.55,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.543,
+    "n": 704
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.523,
+    "n": 1277
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.508,
+    "n": 1028
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.476,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.463,
+    "n": 81
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.408,
+    "n": 201
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.402,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.398,
+    "n": 4
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.393,
+    "n": 140
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.344,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.335,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.302,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 828,
+    "book": "pg1260-简爱",
+    "score": 0.019
+   },
+   {
+    "id": 1299,
+    "book": "pg1260-简爱",
+    "score": 0.0181
+   },
+   {
+    "id": 1301,
+    "book": "pg1260-简爱",
+    "score": 0.0051
+   },
+   {
+    "id": 269,
+    "book": "pg1260-简爱",
+    "score": 0.0042
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "不用学就会的能力不用想就懂的见识叫什么",
+  "ms": 7344,
+  "err": null,
+  "routed": [
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.631
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.494,
+    "n": 274
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.472,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.459,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.444,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.439,
+    "n": 1028
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.434,
+    "n": 81
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.417,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.417,
+    "n": 201
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.411,
+    "n": 4
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.389,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.38,
+    "n": 130
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.351,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.232,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 205,
+    "book": "mengzi-zh",
+    "score": 0.2622
+   },
+   {
+    "id": 163,
+    "book": "mengzi-zh",
+    "score": 0.0133
+   },
+   {
+    "id": 127,
+    "book": "mengzi-zh",
+    "score": 0.0067
+   },
+   {
+    "id": 267,
+    "book": "mengzi-zh",
+    "score": 0.0056
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "看见小孩子快要掉进井里为什么会心跳",
+  "ms": 9199,
+  "err": null,
+  "routed": [
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.669
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.525,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.506,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.502,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.472,
+    "n": 1277
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.409,
+    "n": 274
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.397,
+    "n": 130
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.394,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.381,
+    "n": 121
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.381,
+    "n": 140
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.372,
+    "n": 81
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.366,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.292,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.279,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 34,
+    "book": "mengzi-zh",
+    "score": 0.5603
+   },
+   {
+    "id": 161,
+    "book": "mengzi-zh",
+    "score": 0.0001
+   },
+   {
+    "id": 57,
+    "book": "mengzi-zh",
+    "score": 0.0001
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "有人嫌禾苗不长就往高里拔，苗最后怎样了",
+  "ms": 7990,
+  "err": null,
+  "routed": [
+   {
+    "id": "mengzi-zh.docx",
+    "title": "mengzi-zh",
+    "best_sim": 0.515
+   }
+  ],
+  "considered": [
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.491,
+    "n": 274
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.451,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.45,
+    "n": 704
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.446,
+    "n": 81
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.443,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.44,
+    "n": 1277
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.414,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.408,
+    "n": 121
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.401,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.395,
+    "n": 4
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.38,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.378,
+    "n": 140
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.336,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 29,
+    "book": "mengzi-zh",
+    "score": 0.0301
+   },
+   {
+    "id": 59,
+    "book": "mengzi-zh",
+    "score": 0.0015
+   },
+   {
+    "id": 60,
+    "book": "mengzi-zh",
+    "score": 0.0011
+   },
+   {
+    "id": 87,
+    "book": "mengzi-zh",
+    "score": 0.0007
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what is the famous opening sentence about",
+  "ms": 7375,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1260-简爱.epub",
+    "title": "pg1260-简爱",
+    "best_sim": 0.545
+   },
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.526
+   },
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.523
+   },
+   {
+    "id": "frankenstein-en.epub",
+    "title": "frankenstein-en",
+    "best_sim": 0.51
+   }
+  ],
+  "considered": [
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.45,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.448,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.447,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.434,
+    "n": 704
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.43,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.409,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.363,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.356,
+    "n": 16
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.335,
+    "n": 140
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.332,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.316,
+    "n": 201
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.3,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.183,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 1835,
+    "book": "pg1260-简爱",
+    "score": 0.0941
+   },
+   {
+    "id": 1112,
+    "book": "pg1260-简爱",
+    "score": 0.0452
+   },
+   {
+    "id": 1296,
+    "book": "pg1260-简爱",
+    "score": 0.0333
+   },
+   {
+    "id": 652,
+    "book": "pg1260-简爱",
+    "score": 0.0294
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "how many daughters does the bennet family have",
+  "ms": 9794,
+  "err": null,
+  "routed": [
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.965
+   }
+  ],
+  "considered": [
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.457,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.4,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.366,
+    "n": 704
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.343,
+    "n": 1028
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.323,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.302,
+    "n": 201
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.279,
+    "n": 274
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.263,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.261,
+    "n": 130
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.238,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.204,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.202,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.191,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 1014,
+    "book": "pride-and-prejudice-en",
+    "score": 0.9307
+   },
+   {
+    "id": 166,
+    "book": "pride-and-prejudice-en",
+    "score": 0.5578
+   },
+   {
+    "id": 1265,
+    "book": "pride-and-prejudice-en",
+    "score": 0.4674
+   },
+   {
+    "id": 1155,
+    "book": "pride-and-prejudice-en",
+    "score": 0.2301
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "whom does mr collins marry after being rejected",
+  "ms": 8354,
+  "err": null,
+  "routed": [
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.943
+   }
+  ],
+  "considered": [
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.503,
+    "n": 1277
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.472,
+    "n": 1028
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.44,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.414,
+    "n": 704
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.301,
+    "n": 274
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.286,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.253,
+    "n": 140
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.244,
+    "n": 121
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.24,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.223,
+    "n": 16
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.219,
+    "n": 130
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.2,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.186,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 396,
+    "book": "pride-and-prejudice-en",
+    "score": 0.886
+   },
+   {
+    "id": 503,
+    "book": "pride-and-prejudice-en",
+    "score": 0.7906
+   },
+   {
+    "id": 387,
+    "book": "pride-and-prejudice-en",
+    "score": 0.7057
+   },
+   {
+    "id": 481,
+    "book": "pride-and-prejudice-en",
+    "score": 0.6544
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who finds lydia and wickham in london",
+  "ms": 8673,
+  "err": null,
+  "routed": [
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.94
+   }
+  ],
+  "considered": [
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.578,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.46,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.459,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.419,
+    "n": 704
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.343,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.3,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.293,
+    "n": 130
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.288,
+    "n": 121
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.285,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.253,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.216,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.198,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.19,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 1059,
+    "book": "pride-and-prejudice-en",
+    "score": 0.8803
+   },
+   {
+    "id": 263,
+    "book": "pride-and-prejudice-en",
+    "score": 0.8295
+   },
+   {
+    "id": 1061,
+    "book": "pride-and-prejudice-en",
+    "score": 0.8249
+   },
+   {
+    "id": 981,
+    "book": "pride-and-prejudice-en",
+    "score": 0.7464
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what is mr darcy's estate called",
+  "ms": 9265,
+  "err": null,
+  "routed": [
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.664
+   }
+  ],
+  "considered": [
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.457,
+    "n": 1277
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.422,
+    "n": 1028
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.4,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.325,
+    "n": 704
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.314,
+    "n": 201
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.304,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.268,
+    "n": 81
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.265,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.263,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.233,
+    "n": 140
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.2,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.193,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.154,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 292,
+    "book": "pride-and-prejudice-en",
+    "score": 0.3287
+   },
+   {
+    "id": 287,
+    "book": "pride-and-prejudice-en",
+    "score": 0.1111
+   },
+   {
+    "id": 288,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0333
+   },
+   {
+    "id": 645,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0215
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who tries to separate jane and bingley",
+  "ms": 7711,
+  "err": null,
+  "routed": [
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.73
+   }
+  ],
+  "considered": [
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.556,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.481,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.43,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.417,
+    "n": 704
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.345,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.317,
+    "n": 140
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.313,
+    "n": 81
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.308,
+    "n": 130
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.307,
+    "n": 274
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.295,
+    "n": 121
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.258,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.237,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.219,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 419,
+    "book": "pride-and-prejudice-en",
+    "score": 0.4596
+   },
+   {
+    "id": 863,
+    "book": "pride-and-prejudice-en",
+    "score": 0.4188
+   },
+   {
+    "id": 365,
+    "book": "pride-and-prejudice-en",
+    "score": 0.1331
+   },
+   {
+    "id": 1198,
+    "book": "pride-and-prejudice-en",
+    "score": 0.1322
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "达西先生的庄园叫什么名字",
+  "ms": 8400,
+  "err": null,
+  "routed": [
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.52
+   }
+  ],
+  "considered": [
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.381,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.373,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.372,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.335,
+    "n": 704
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.305,
+    "n": 274
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.254,
+    "n": 201
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.247,
+    "n": 81
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.238,
+    "n": 121
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.233,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.22,
+    "n": 140
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.213,
+    "n": 4
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.198,
+    "n": 16
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.145,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 155,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0405
+   },
+   {
+    "id": 1257,
+    "book": "pride-and-prejudice-en",
+    "score": 0.021
+   },
+   {
+    "id": 292,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0175
+   },
+   {
+    "id": 802,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0143
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what legal arrangement means the estate passes to collins",
+  "ms": 8380,
+  "err": null,
+  "routed": [
+   {
+    "id": "pride-and-prejudice-en.epub",
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.524
+   }
+  ],
+  "considered": [
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.434,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.423,
+    "n": 1861
+   },
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.419,
+    "n": 1028
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.362,
+    "n": 704
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.347,
+    "n": 201
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.339,
+    "n": 140
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.332,
+    "n": 274
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.32,
+    "n": 130
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.315,
+    "n": 121
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.303,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.259,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.228,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.192,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 433,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0479
+   },
+   {
+    "id": 562,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0323
+   },
+   {
+    "id": 460,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0166
+   },
+   {
+    "id": 380,
+    "book": "pride-and-prejudice-en",
+    "score": 0.0112
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who is the woman who outwits sherlock holmes in a scandal in bohemia",
+  "ms": 2045,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.973
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.462,
+    "n": 1028
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 91,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.9463
+   },
+   {
+    "id": 4,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.7361
+   },
+   {
+    "id": 194,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.2404
+   },
+   {
+    "id": 68,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.1293
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what is the address of sherlock holmes's london lodgings",
+  "ms": 1911,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.774
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.525,
+    "n": 1028
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 39,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.5474
+   },
+   {
+    "id": 693,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.4507
+   },
+   {
+    "id": 83,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.2318
+   },
+   {
+    "id": 141,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.1786
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what kind of snake is the deadly serpent in the speckled band",
+  "ms": 8455,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.985
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.48,
+    "n": 1028
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.378,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.37,
+    "n": 704
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.319,
+    "n": 121
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.293,
+    "n": 1277
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.281,
+    "n": 201
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.271,
+    "n": 130
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.26,
+    "n": 140
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.247,
+    "n": 274
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.246,
+    "n": 81
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.237,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.191,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.144,
+    "n": 4
+   }
+  ],
+  "results": [
+   {
+    "id": 670,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.9701
+   },
+   {
+    "id": 608,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.0028
+   },
+   {
+    "id": 582,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.0014
+   },
+   {
+    "id": 451,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.0011
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who is the friend and colleague who helps sherlock holmes and narrates the cases",
+  "ms": 1564,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.816
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.532,
+    "n": 1028
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 587,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.6316
+   },
+   {
+    "id": 880,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.295
+   },
+   {
+    "id": 436,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.2178
+   },
+   {
+    "id": 564,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.129
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who brought jabez wilson the newspaper advertisement about the red-headed league",
+  "ms": 7675,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.812
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.58,
+    "n": 1028
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.418,
+    "n": 1861
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.367,
+    "n": 1277
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.339,
+    "n": 704
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.335,
+    "n": 121
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.319,
+    "n": 201
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.283,
+    "n": 274
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.268,
+    "n": 140
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.262,
+    "n": 130
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.242,
+    "n": 81
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.198,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.193,
+    "n": 7
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.187,
+    "n": 16
+   }
+  ],
+  "results": [
+   {
+    "id": 112,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.6238
+   },
+   {
+    "id": 109,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.4925
+   },
+   {
+    "id": 141,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.3465
+   },
+   {
+    "id": 104,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.3155
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "what did john openshaw's relatives receive from london before dying, marked with K.K.K.",
+  "ms": 9343,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.667
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.54,
+    "n": 1028
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0.435,
+    "n": 1277
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0.413,
+    "n": 1861
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0.397,
+    "n": 704
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0.31,
+    "n": 274
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0.291,
+    "n": 201
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0.29,
+    "n": 121
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0.287,
+    "n": 140
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0.276,
+    "n": 81
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0.266,
+    "n": 130
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.239,
+    "n": 16
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0.225,
+    "n": 4
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0.211,
+    "n": 7
+   }
+  ],
+  "results": [
+   {
+    "id": 369,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.3342
+   },
+   {
+    "id": 407,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.1601
+   },
+   {
+    "id": 416,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.1419
+   },
+   {
+    "id": 378,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.0752
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ },
+ {
+  "q": "who did holmes confront and release for the theft of the blue carbuncle",
+  "ms": 2119,
+  "err": null,
+  "routed": [
+   {
+    "id": "pg1661-福尔摩斯冒险史.epub",
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.8
+   }
+  ],
+  "considered": [
+   {
+    "title": "pg1661-福尔摩斯冒险史",
+    "best_sim": 0.504,
+    "n": 1028
+   },
+   {
+    "title": "attention-is-all-you-need-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "daodejing-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Dynamo-亚马逊高可用键值存储-2007",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "frankenstein-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "Lamport-时间时钟与分布式系统排序-1978",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "lunyu-xueer-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "MapReduce-谷歌大规模分布式处理-2004",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "mengzi-zh",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pg1260-简爱",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "pride-and-prejudice-en",
+    "best_sim": 0,
+    "n": 0
+   },
+   {
+    "title": "低压电器检测实训报告（带表格样例）",
+    "best_sim": 0,
+    "n": 0
+   }
+  ],
+  "results": [
+   {
+    "id": 531,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.6001
+   },
+   {
+    "id": 536,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.3118
+   },
+   {
+    "id": 567,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.2534
+   },
+   {
+    "id": 247,
+    "book": "pg1661-福尔摩斯冒险史",
+    "score": 0.1417
+   }
+  ],
+  "skipped": null,
+  "ambiguous": false,
+  "note": null
+ }
+]

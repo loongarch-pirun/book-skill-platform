@@ -1,0 +1,15 @@
+docs: 模型口径纠偏 + 代码审查标准与流程 + 提审工具
+
+文档口径纠偏（原来照文档做决策会做反）：
+- README：bge-m3 1024 维 int8；reranker 由 fp32 改回 int8（代码 dtype 就是 int8，磁盘也没有 fp32 权重）
+- 打包规划顶部过期横幅：包内模型 2.41GB/fp32 → 1.24GB/int8，删掉无法复算的 1.88GB 推算
+- 交接文档：e5-small → bge-m3；指向新的模型清单
+- 新增 docs/模型清单与包体基线.md 作唯一事实源；旧 eval 体系归档说明
+- 首启向导文案：约 700MB → 约 1.24GB
+
+审查机制（新）：
+- docs/代码审查标准与流程.md：A/B/C 三级 + 五道关 + 12 条本仓库专属红线 + 度量
+- docs/审查模板-改动说明.md：五栏提审模板
+- tools/review-packet.mjs：分级 + 必跑闸门映射 + 红线扫描 + 留痕提醒
+- eslint.config.mjs：tools/**/*.mjs 纳入 node globals（否则 console 全假阳性）
+- size-budget.json：包体预算表

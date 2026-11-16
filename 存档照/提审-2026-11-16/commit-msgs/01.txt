@@ -1,0 +1,13 @@
+feat(route): 问句点了书名就只扫那几本，向量缓存接到路由扫描上
+
+- selectBooks：只认「问句里命中书名/别名」这一种信号，命中就只扫候选书，
+  零命中退回全库（route_source:"full"），预筛全扫不成再退回全库并标 "degraded"
+- routeCfg()：7 个模块顶层常量改只读快照，BSP_ROUTE_* 从假开关变真开关
+- BSP_ROUTE=0 总闸：逐字节回到全量扫描（已验证与改造前 80 题逐题一致）
+- considered 补全库占位：未扫的书按 0 分记账，保住「翻了哪些书」的清单契约
+- 池子上限参数化：BSP_ROUTE_POOL 默认 48（旧值），auto 才走预算/耗时公式
+- scanBookSem 接 getMatrix：命中纯点积 + 一条不读 BLOB 的 kind/len 回表，未命中走原逐行分支
+- 返回体加 route_source / route_candidates，guard-test 补 3 条断言守着（含翻转验证）
+
+验证：guard 343 项全 PASS；graphrag 46/0；stage3 全 PASS；holdout v1 27/30；
+perf 全 PASS（2 万块 67→11ms）；lint 0 新增；缓存开/关 80 题严格逐位一致。

@@ -1,0 +1,811 @@
+{
+ "summary": {
+  "setId": "holdout-v1",
+  "ranAt": "2026-11-15T17:44:06.906Z",
+  "sha256": "0f532846455c67d2cdfd9dec05eb5b398f400444ff4d6a502325b91f0fa2d7c5",
+  "total": 30,
+  "pass": 27,
+  "passRate": 0.9,
+  "byKind": {
+   "answerable": {
+    "total": 16,
+    "pass": 13,
+    "rate": 0.8125
+   },
+   "refusal": {
+    "total": 8,
+    "pass": 8,
+    "rate": 1
+   },
+   "ambiguous": {
+    "total": 4,
+    "pass": 4,
+    "rate": 1
+   },
+   "newbook": {
+    "total": 2,
+    "pass": 2,
+    "rate": 1
+   }
+  },
+  "bookPickHit": 18,
+  "bookPickTotal": 18,
+  "bookPickRate": 1,
+  "avgMs": 6412,
+  "missList": [
+   "H05[answerable] MapReduce 的使用者需要自己指定什么数量？ → 判分 miss（命中结果里找不到答案句）｜挑书命中本尊",
+   "H06[answerable] What does multi-head attention replace? → 判分 miss（命中结果里找不到答案句）｜挑书命中本尊",
+   "H16[answerable] At which church was the wedding to take place? → 判分 miss（命中结果里找不到答案句）｜挑书命中本尊"
+  ]
+ },
+ "rows": [
+  {
+   "id": "H01",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "In Dynamo, what do the values of W and R affect?",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 6477,
+   "routed": [
+    "Dynamo-亚马逊高可用键值存储-2007(0.995)"
+   ],
+   "resultIds": [
+    125,
+    124,
+    86,
+    127,
+    128
+   ],
+   "resultBooks": [
+    "Dynamo-亚马逊高可用键值存储-2007"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H02",
+   "kind": "answerable",
+   "lang": "cross",
+   "q": "Dynamo 论文里，W 和 R 这两个参数的取值会影响什么？",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 2306,
+   "routed": [
+    "Dynamo-亚马逊高可用键值存储-2007(0.994)"
+   ],
+   "resultIds": [
+    125,
+    86,
+    128,
+    124,
+    127
+   ],
+   "resultBooks": [
+    "Dynamo-亚马逊高可用键值存储-2007"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H03",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "Why does Lamport say the converse condition cannot be expected to hold?",
+   "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 2459,
+   "routed": [
+    "Lamport-时间时钟与分布式系统排序-1978(0.963)"
+   ],
+   "resultIds": [
+    29,
+    75,
+    26,
+    42,
+    46
+   ],
+   "resultBooks": [
+    "Lamport-时间时钟与分布式系统排序-1978"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H04",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "How can the input splits be processed in MapReduce?",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 1944,
+   "routed": [
+    "MapReduce-谷歌大规模分布式处理-2004(0.996)"
+   ],
+   "resultIds": [
+    26,
+    27,
+    80,
+    31,
+    10
+   ],
+   "resultBooks": [
+    "MapReduce-谷歌大规模分布式处理-2004"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H05",
+   "kind": "answerable",
+   "lang": "cross",
+   "q": "MapReduce 的使用者需要自己指定什么数量？",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "pass": false,
+   "detail": "判分 miss（命中结果里找不到答案句）｜挑书命中本尊",
+   "ms": 1689,
+   "routed": [
+    "MapReduce-谷歌大规模分布式处理-2004(0.793)"
+   ],
+   "resultIds": [
+    26,
+    27,
+    47,
+    68,
+    14
+   ],
+   "resultBooks": [
+    "MapReduce-谷歌大规模分布式处理-2004"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H06",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "What does multi-head attention replace?",
+   "book": "attention-is-all-you-need-en.pdf",
+   "pass": false,
+   "detail": "判分 miss（命中结果里找不到答案句）｜挑书命中本尊",
+   "ms": 2544,
+   "routed": [
+    "attention-is-all-you-need-en(0.874)"
+   ],
+   "resultIds": [
+    76,
+    31,
+    23,
+    34,
+    14
+   ],
+   "resultBooks": [
+    "attention-is-all-you-need-en"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H07",
+   "kind": "answerable",
+   "lang": "zh",
+   "q": "《道德经》第十五章开头，用哪两个词形容「古之善為士者」？",
+   "book": "daodejing-zh.docx",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 2745,
+   "routed": [
+    "daodejing-zh(0.994)"
+   ],
+   "resultIds": [
+    15,
+    65,
+    68,
+    55,
+    54
+   ],
+   "resultBooks": [
+    "daodejing-zh"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H08",
+   "kind": "answerable",
+   "lang": "zh",
+   "q": "「聖人常無心」的下一句是什么？",
+   "book": "daodejing-zh.docx",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 33536,
+   "routed": [
+    "daodejing-zh(0.963)"
+   ],
+   "resultIds": [
+    49,
+    3,
+    29,
+    64,
+    81
+   ],
+   "resultBooks": [
+    "daodejing-zh"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H09",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "What does the narrator say is less changeable than the accidents of life?",
+   "book": "frankenstein-en.epub",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 15740,
+   "routed": [
+    "frankenstein-en(0.912)"
+   ],
+   "resultIds": [
+    145,
+    669,
+    557,
+    280,
+    53
+   ],
+   "resultBooks": [
+    "frankenstein-en"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H10",
+   "kind": "answerable",
+   "lang": "cross",
+   "q": "《弗兰肯斯坦》里，巡回审判季快到时，叙述者已经在牢里待了多久？",
+   "book": "frankenstein-en.epub",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 3027,
+   "routed": [
+    "frankenstein-en(0.944)"
+   ],
+   "resultIds": [
+    565,
+    550,
+    548,
+    619,
+    691
+   ],
+   "resultBooks": [
+    "frankenstein-en"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H11",
+   "kind": "answerable",
+   "lang": "zh",
+   "q": "子貢問「貧而無諂，富而無驕，何如」，孔子怎麼答？",
+   "book": "lunyu-xueer-zh.docx",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 9424,
+   "routed": [
+    "lunyu-xueer-zh(0.997)",
+    "lunyu-xueer-zh(0.983)",
+    "mengzi-zh(0.914)"
+   ],
+   "resultIds": [
+    15,
+    10,
+    14,
+    1,
+    6
+   ],
+   "resultBooks": [
+    "lunyu-xueer-zh"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H12",
+   "kind": "answerable",
+   "lang": "zh",
+   "q": "孟子说「人皆有不忍人之心」，举了什么例子来证明？",
+   "book": "mengzi-zh.docx",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 7973,
+   "routed": [
+    "mengzi-zh(0.985)"
+   ],
+   "resultIds": [
+    34,
+    267,
+    189,
+    166,
+    6
+   ],
+   "resultBooks": [
+    "mengzi-zh"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H13",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "What happened to John Reed at college?",
+   "book": "pg1260-简爱.epub",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 8966,
+   "routed": [
+    "pg1260-简爱(0.842)"
+   ],
+   "resultIds": [
+    372,
+    27,
+    92,
+    921,
+    24
+   ],
+   "resultBooks": [
+    "pg1260-简爱"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H14",
+   "kind": "answerable",
+   "lang": "cross",
+   "q": "《简爱》里，除了 Mr. Rivers，这句话还跟谁打招呼？",
+   "book": "pg1260-简爱.epub",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 8191,
+   "routed": [
+    "pg1260-简爱(0.706)"
+   ],
+   "resultIds": [
+    1489,
+    1467,
+    1400,
+    1425,
+    1497
+   ],
+   "resultBooks": [
+    "pg1260-简爱"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H15",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "According to this passage, when was the clergyman recommended to Lady Catherine de Bourgh?",
+   "book": "pride-and-prejudice-en.epub",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 10592,
+   "routed": [
+    "pride-and-prejudice-en(0.926)"
+   ],
+   "resultIds": [
+    256,
+    235,
+    373,
+    539,
+    1191
+   ],
+   "resultBooks": [
+    "pride-and-prejudice-en"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H16",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "At which church was the wedding to take place?",
+   "book": "pg1661-福尔摩斯冒险史.epub",
+   "pass": false,
+   "detail": "判分 miss（命中结果里找不到答案句）｜挑书命中本尊",
+   "ms": 9825,
+   "routed": [
+    "pg1260-简爱(0.866)",
+    "pg1661-福尔摩斯冒险史(0.829)",
+    "pride-and-prejudice-en(0.798)"
+   ],
+   "resultIds": [
+    1062,
+    1185,
+    1628,
+    1842,
+    1844
+   ],
+   "resultBooks": [
+    "pg1260-简爱"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H17",
+   "kind": "refusal",
+   "lang": "zh",
+   "q": "《論語·學而》里有专门讲量子计算的章节吗？",
+   "book": "lunyu-xueer-zh.docx",
+   "pass": true,
+   "detail": "未出现 量子，正确拒答",
+   "ms": 7303,
+   "routed": [
+    "lunyu-xueer-zh(0.512)",
+    "daodejing-zh(0.465)",
+    "lunyu-xueer-zh(0.449)"
+   ],
+   "resultIds": [
+    1,
+    4,
+    2,
+    3,
+    70
+   ],
+   "resultBooks": [
+    "lunyu-xueer-zh",
+    "daodejing-zh"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H18",
+   "kind": "refusal",
+   "lang": "cross",
+   "q": "Dynamo 论文给出 Kubernetes 的部署 yaml 了吗？",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "pass": true,
+   "detail": "未出现 Kubernetes，正确拒答",
+   "ms": 1628,
+   "routed": [
+    "Dynamo-亚马逊高可用键值存储-2007(0.519)"
+   ],
+   "resultIds": [
+    15,
+    128,
+    12,
+    49,
+    59
+   ],
+   "resultBooks": [
+    "Dynamo-亚马逊高可用键值存储-2007"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H19",
+   "kind": "refusal",
+   "lang": "zh",
+   "q": "《道德经》第六十一章提到比特币价格了吗？",
+   "book": "daodejing-zh.docx",
+   "pass": true,
+   "detail": "未出现 比特币，正确拒答",
+   "ms": 1322,
+   "routed": [
+    "daodejing-zh(0.518)"
+   ],
+   "resultIds": [
+    61,
+    60,
+    63,
+    21,
+    70
+   ],
+   "resultBooks": [
+    "daodejing-zh"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H20",
+   "kind": "refusal",
+   "lang": "zh",
+   "q": "这份检测报告里有 5G 基站的检测数据吗？",
+   "book": "低压电器检测实训报告（带表格样例）.docx",
+   "pass": true,
+   "detail": "未出现 基站，正确拒答",
+   "ms": 1070,
+   "routed": [
+    "低压电器检测实训报告（带表格样例）(0.527)"
+   ],
+   "resultIds": [
+    5,
+    1,
+    2,
+    3,
+    4
+   ],
+   "resultBooks": [
+    "低压电器检测实训报告（带表格样例）"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H21",
+   "kind": "refusal",
+   "lang": "cross",
+   "q": "《弗兰肯斯坦》里出现智能手机了吗？",
+   "book": "frankenstein-en.epub",
+   "pass": true,
+   "detail": "未出现 智能手机，正确拒答",
+   "ms": 2082,
+   "routed": [
+    "frankenstein-en(0.5)"
+   ],
+   "resultIds": [
+    687,
+    657,
+    673,
+    154,
+    292
+   ],
+   "resultBooks": [
+    "frankenstein-en"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H22",
+   "kind": "refusal",
+   "lang": "cross",
+   "q": "MapReduce 论文规定了公司年终奖发放标准吗？",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "pass": true,
+   "detail": "未出现 年终奖，正确拒答",
+   "ms": 1628,
+   "routed": [
+    "MapReduce-谷歌大规模分布式处理-2004(0.525)"
+   ],
+   "resultIds": [
+    2,
+    130,
+    99,
+    104,
+    90
+   ],
+   "resultBooks": [
+    "MapReduce-谷歌大规模分布式处理-2004"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H23",
+   "kind": "refusal",
+   "lang": "cross",
+   "q": "《傲慢与偏见》里写了多少行 Python 代码？",
+   "book": "pride-and-prejudice-en.epub",
+   "pass": true,
+   "detail": "未出现 Python，正确拒答",
+   "ms": 1854,
+   "routed": [
+    "pride-and-prejudice-en(0.501)"
+   ],
+   "resultIds": [
+    1,
+    252,
+    987,
+    651,
+    1069
+   ],
+   "resultBooks": [
+    "pride-and-prejudice-en"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H24",
+   "kind": "refusal",
+   "lang": "cross",
+   "q": "Attention Is All You Need 里给出了食堂菜单吗？",
+   "book": "attention-is-all-you-need-en.pdf",
+   "pass": true,
+   "detail": "未出现 食堂，正确拒答",
+   "ms": 1657,
+   "routed": [
+    "attention-is-all-you-need-en(0.502)"
+   ],
+   "resultIds": [
+    1,
+    33,
+    22,
+    27,
+    36
+   ],
+   "resultBooks": [
+    "attention-is-all-you-need-en"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H25",
+   "kind": "ambiguous",
+   "lang": "zh",
+   "q": "这本书的作者是谁？",
+   "book": null,
+   "pass": true,
+   "detail": "ambiguous=true｜routed=4 本",
+   "ms": 7180,
+   "routed": [
+    "pride-and-prejudice-en(0.645)",
+    "pg1260-简爱(0.561)",
+    "frankenstein-en(0.534)",
+    "attention-is-all-you-need-en(0.522)"
+   ],
+   "resultIds": [
+    2,
+    8,
+    974,
+    862,
+    7
+   ],
+   "resultBooks": [
+    "pride-and-prejudice-en"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H26",
+   "kind": "ambiguous",
+   "lang": "zh",
+   "q": "书里说的「一致性」是怎么保证的？",
+   "book": null,
+   "pass": true,
+   "detail": "ambiguous=false｜routed=3 本",
+   "ms": 7277,
+   "routed": [
+    "Dynamo-亚马逊高可用键值存储-2007(0.507)",
+    "pg1260-简爱(0.491)",
+    "daodejing-zh(0.46)"
+   ],
+   "resultIds": [
+    20,
+    12,
+    86,
+    31,
+    69
+   ],
+   "resultBooks": [
+    "Dynamo-亚马逊高可用键值存储-2007"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H27",
+   "kind": "ambiguous",
+   "lang": "zh",
+   "q": "「學而時習之」出自哪一章？",
+   "book": null,
+   "pass": true,
+   "detail": "ambiguous=false｜routed=2 本",
+   "ms": 6830,
+   "routed": [
+    "lunyu-xueer-zh(0.984)",
+    "lunyu-xueer-zh(0.867)"
+   ],
+   "resultIds": [
+    1,
+    2,
+    3,
+    4,
+    1
+   ],
+   "resultBooks": [
+    "lunyu-xueer-zh"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H28",
+   "kind": "ambiguous",
+   "lang": "zh",
+   "q": "第一章里出现的那个人名是谁？",
+   "book": null,
+   "pass": true,
+   "detail": "ambiguous=false｜routed=4 本",
+   "ms": 8451,
+   "routed": [
+    "pride-and-prejudice-en(0.584)",
+    "pg1661-福尔摩斯冒险史(0.537)",
+    "frankenstein-en(0.522)",
+    "daodejing-zh(0.491)"
+   ],
+   "resultIds": [
+    42,
+    907,
+    961,
+    229,
+    640
+   ],
+   "resultBooks": [
+    "pride-and-prejudice-en"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "H29",
+   "kind": "newbook",
+   "lang": "zh",
+   "q": "《論語·學而第一》开篇第一章，孔子说的第一句是什么？",
+   "book": "lunyu-xueer-zh.pdf",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 7630,
+   "routed": [
+    "lunyu-xueer-zh(0.978)",
+    "lunyu-xueer-zh(0.844)",
+    "daodejing-zh(0.647)"
+   ],
+   "resultIds": [
+    1,
+    4,
+    2,
+    3,
+    1
+   ],
+   "resultBooks": [
+    "lunyu-xueer-zh"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "H30",
+   "kind": "newbook",
+   "lang": "zh",
+   "q": "介电强度试验里那台不合格样品，是在多少电压下击穿的？",
+   "book": "低压电器检测实训报告（带表格样例）.docx",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 9001,
+   "routed": [
+    "低压电器检测实训报告（带表格样例）(0.998)"
+   ],
+   "resultIds": [
+    4,
+    3,
+    6,
+    7,
+    1
+   ],
+   "resultBooks": [
+    "低压电器检测实训报告（带表格样例）"
+   ],
+   "bookOk": true,
+   "err": null
+  }
+ ]
+}

@@ -1,0 +1,655 @@
+{
+ "setId": "holdout-v1-DRAFT",
+ "status": "DRAFT",
+ "frozen": false,
+ "draftedAt": "2026-11-15T15:25:05.878Z",
+ "frozenAt": null,
+ "reviewedBy": null,
+ "selfReviewed": true,
+ "selfReviewedAt": "2026-11-15T15:25:05.878Z",
+ "revision": "v1.1 自答复核：答案句 160→260 字，收紧 H07/H13/H15/H16 四题措辞",
+ "total": 30,
+ "byKind": {
+  "answerable": 16,
+  "refusal": 8,
+  "ambiguous": 4,
+  "newbook": 2
+ },
+ "byLang": {
+  "en": 8,
+  "cross": 9,
+  "zh": 13
+ },
+ "sourcePolicy": "答案句逐字取自 library/*.db 的 chunks.text；起草阶段零检索调用、零分数可见",
+ "nextStep": "爸爸复核后，由富江写入 r4 的 test/holdout/sets/ 并生成 frozen.json",
+ "items": [
+  {
+   "id": "H01",
+   "q": "In Dynamo, what do the values of W and R affect?",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "kind": "answerable",
+   "a": "The values of W and R impact object availability, durability and consistency. For instance, if W is set to 1, then the system will never reject a write request as long as there is at least one node in the system that can successfully process a write request. H",
+   "g": [
+    "W and R",
+    "availability",
+    "durability",
+    "consistency"
+   ],
+   "expect": null,
+   "lang": "en",
+   "hasTopicJson": true,
+   "chunk_id": 125,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H02",
+   "q": "Dynamo 论文里，W 和 R 这两个参数的取值会影响什么？",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "kind": "answerable",
+   "a": "The values of W and R impact object availability, durability and consistency. For instance, if W is set to 1, then the system will never reject a write request as long as there is at least one node in the system that can successfully process a write request. H",
+   "g": [
+    "W and R",
+    "availability",
+    "durability"
+   ],
+   "expect": null,
+   "lang": "cross",
+   "hasTopicJson": true,
+   "chunk_id": 125,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H03",
+   "q": "Why does Lamport say the converse condition cannot be expected to hold?",
+   "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+   "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+   "kind": "answerable",
+   "a": "Note that we cannot expect the converse condition to hold as well, since that would imply that any two concurrent events must occur at the same time. In Figure 1, p _ { 2 } and p _ { 3 } are both concurrent with q _ { 3 } , so this would mean that they both mu",
+   "g": [
+    "converse condition",
+    "imply"
+   ],
+   "expect": null,
+   "lang": "en",
+   "hasTopicJson": true,
+   "chunk_id": 29,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H04",
+   "q": "How can the input splits be processed in MapReduce?",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "kind": "answerable",
+   "a": "into a set of M splits. The input splits can be processed in parallel by different machines. Reduce invocations are distributed by partitioning the intermediate key space into R pieces using a partitioning function (e.g., hash(key) mod R). The number of partit",
+   "g": [
+    "M splits",
+    "parallel",
+    "different machines"
+   ],
+   "expect": null,
+   "lang": "en",
+   "hasTopicJson": true,
+   "chunk_id": 26,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H05",
+   "q": "MapReduce 的使用者需要自己指定什么数量？",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "kind": "answerable",
+   "a": "4.1 Partitioning Function\nThe users of MapReduce specify the number of reduce tasks/output files that they desire (R). Data gets partitioned across these tasks using a partitioning function on the intermediate key. A default partitioning function is provided t",
+   "g": [
+    "reduce tasks",
+    "output files"
+   ],
+   "expect": null,
+   "lang": "cross",
+   "hasTopicJson": true,
+   "chunk_id": 51,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H06",
+   "q": "What does multi-head attention replace?",
+   "book": "attention-is-all-you-need-en.pdf",
+   "bookId": "attention-is-all-you-need-en.pdf",
+   "kind": "answerable",
+   "a": "3.2.2 Multi-Head Attention\nInstead of performing a single attention function with d _ { \\mathrm { m o d e l } } -dimensional keys, values and queries, we found it beneficial to linearly project the queries, keys and values h times with different, learned linea",
+   "g": [
+    "Multi-Head Attention",
+    "single attention function"
+   ],
+   "expect": null,
+   "lang": "en",
+   "hasTopicJson": true,
+   "chunk_id": 29,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H07",
+   "q": "《道德经》第十五章开头，用哪两个词形容「古之善為士者」？",
+   "book": "daodejing-zh.docx",
+   "bookId": "daodejing-zh.docx",
+   "kind": "answerable",
+   "a": "第十五章 古之善為士一作「道」者，微妙玄通一作「達」，深不可識。夫唯不可識，故強一作「彊」為之容：豫兮，若冬涉川；猶一作「猷」兮，若畏四鄰；儼兮，其若客；渙兮，其若冰之將釋；敦一作「沌」兮，其若樸；曠兮，其若谷；混兮，其若濁。濁而靜之，徐清。安以動之，徐生。保一作「葆」此道者，不欲盈。夫唯不盈，故能蔽一作「敝」不一作「而」新成。",
+   "g": [
+    "微妙玄通",
+    "深不可識"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "hasTopicJson": true,
+   "chunk_id": 15,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H08",
+   "q": "「聖人常無心」的下一句是什么？",
+   "book": "daodejing-zh.docx",
+   "bookId": "daodejing-zh.docx",
+   "kind": "answerable",
+   "a": "第四十九章 聖人常無心，以百姓心為心。善者，吾善之；不善者，吾亦善之；德一作「得」善。信者，吾信之；不信者，吾亦信之；德一作「得」信。聖人在天下，歙歙焉，為天下渾其心，百姓皆注其耳目，聖人皆孩之。",
+   "g": [
+    "以百姓心為心"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "hasTopicJson": true,
+   "chunk_id": 49,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H09",
+   "q": "What does the narrator say is less changeable than the accidents of life?",
+   "book": "frankenstein-en.epub",
+   "bookId": "frankenstein-en.epub",
+   "kind": "answerable",
+   "a": "The different accidents of life are not so changeable as the feelings of human\nnature.I had worked hard for nearly two years, for the sole purpose of\ninfusing life into an inanimate body.For this I had deprived myself of rest\nand health.I had desired it with a",
+   "g": [
+    "feelings of human nature",
+    "accidents of life"
+   ],
+   "expect": null,
+   "lang": "en",
+   "hasTopicJson": true,
+   "chunk_id": 145,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H10",
+   "q": "《弗兰肯斯坦》里，巡回审判季快到时，叙述者已经在牢里待了多久？",
+   "book": "frankenstein-en.epub",
+   "bookId": "frankenstein-en.epub",
+   "kind": "answerable",
+   "a": "The season of the assizes approached. I had already been three months in\nprison, and although I was still weak and in continual danger of a relapse, I\nwas obliged to travel nearly a hundred miles to the country town where the\ncourt was held. Mr. Kirwin charged",
+   "g": [
+    "three months",
+    "assizes"
+   ],
+   "expect": null,
+   "lang": "cross",
+   "hasTopicJson": true,
+   "chunk_id": 565,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H11",
+   "q": "子貢問「貧而無諂，富而無驕，何如」，孔子怎麼答？",
+   "book": "lunyu-xueer-zh.docx",
+   "bookId": "lunyu-xueer-zh.docx",
+   "kind": "answerable",
+   "a": "第15章 子貢曰：「貧而無諂，富而無驕，何如？」子曰：「可也。未若貧而樂，富而好禮者也」。子貢曰：「《詩》云：『如切如磋，如琢如磨。』其斯之謂與？」子曰：「賜也，始可與言《詩》已矣！吿諸往而知來者。」",
+   "g": [
+    "未若貧而樂",
+    "富而好禮"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "hasTopicJson": true,
+   "chunk_id": 15,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H12",
+   "q": "孟子说「人皆有不忍人之心」，举了什么例子来证明？",
+   "book": "mengzi-zh.docx",
+   "bookId": "mengzi-zh.docx",
+   "kind": "answerable",
+   "a": "孟子曰：「人皆有不忍人之心。先王有不忍人之心，斯有不忍人之政矣。以不忍人之心，行不忍人之政，治天下可運之掌上。所以謂人皆有不忍人之心者，今人乍見孺子將入於井，皆有怵惕惻隱之心；非所以內交於孺子之父母也，非所以要譽於鄉黨朋友也，非惡其聲而然也。由是觀之，無惻隱之心，非人也。無羞惡之心，非人也。無辭讓之心，非人也。無是非之心，非人也。惻隱之心，仁之端也；羞惡之心，義之端也；辭讓之心，禮之端也；是非之心，智之端也。人之有是四端也，猶其有四體也。有是四端而自謂不能者，自賊者也；謂其君不能者，賊其君者也。凡有四端於我者，知皆",
+   "g": [
+    "孺子將入於井",
+    "怵惕惻隱"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "hasTopicJson": true,
+   "chunk_id": 34,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H13",
+   "q": "What happened to John Reed at college?",
+   "book": "pg1260-简爱.epub",
+   "bookId": "pg1260-简爱.epub",
+   "kind": "answerable",
+   "a": "“Well, and what of John Reed?”\n“Oh, he is not doing so well as his mama could wish. He went to college, and he\ngot—plucked, I think they call it: and then his uncles wanted him to be a\nbarrister, and study the law: but he is such a dissipated young man, they w",
+   "g": [
+    "John Reed",
+    "college"
+   ],
+   "expect": null,
+   "lang": "en",
+   "hasTopicJson": true,
+   "chunk_id": 372,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H14",
+   "q": "《简爱》里，除了 Mr. Rivers，这句话还跟谁打招呼？",
+   "book": "pg1260-简爱.epub",
+   "bookId": "pg1260-简爱.epub",
+   "kind": "answerable",
+   "a": "“Good evening, Mr. Rivers. And good evening, old Carlo. Your dog is quicker to\nrecognise his friends than you are, sir; he pricked his ears and wagged his\ntail when I was at the bottom of the field, and you have your back towards me\nnow.”",
+   "g": [
+    "Carlo",
+    "Mr. Rivers"
+   ],
+   "expect": null,
+   "lang": "cross",
+   "hasTopicJson": true,
+   "chunk_id": 1489,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H15",
+   "q": "According to this passage, when was the clergyman recommended to Lady Catherine de Bourgh?",
+   "book": "pride-and-prejudice-en.epub",
+   "bookId": "pride-and-prejudice-en.epub",
+   "kind": "answerable",
+   "a": "A fortunate chance had recommended him to Lady Catherine de\nBourgh when the living of Hunsford was vacant; and the respect which he\nfelt for her high rank, and his veneration for her as his patroness,\nmingling with a very good opinion of himself, of his author",
+   "g": [
+    "Hunsford",
+    "Lady Catherine",
+    "vacant"
+   ],
+   "expect": null,
+   "lang": "en",
+   "hasTopicJson": true,
+   "chunk_id": 256,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H16",
+   "q": "At which church was the wedding to take place?",
+   "book": "pg1661-福尔摩斯冒险史.epub",
+   "bookId": "pg1661-福尔摩斯冒险史.epub",
+   "kind": "answerable",
+   "a": "“Yes, sir, but very quietly. It was to be at St. Saviour’s, near\nKing’s Cross, and we were to have breakfast afterwards at the St. Pancras\nHotel. Hosmer came for us in a hansom, but as there were two of us he put us\nboth into it and stepped himself into a four",
+   "g": [
+    "St. Saviour",
+    "King's Cross"
+   ],
+   "expect": null,
+   "lang": "en",
+   "hasTopicJson": true,
+   "chunk_id": 211,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H17",
+   "q": "《論語·學而》里有专门讲量子计算的章节吗？",
+   "book": "lunyu-xueer-zh.docx",
+   "bookId": "lunyu-xueer-zh.docx",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "expect": "refusal",
+   "lang": "zh",
+   "hasTopicJson": true,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H18",
+   "q": "Dynamo 论文给出 Kubernetes 的部署 yaml 了吗？",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "expect": "refusal",
+   "lang": "cross",
+   "hasTopicJson": true,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H19",
+   "q": "《道德经》第六十一章提到比特币价格了吗？",
+   "book": "daodejing-zh.docx",
+   "bookId": "daodejing-zh.docx",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "expect": "refusal",
+   "lang": "zh",
+   "hasTopicJson": true,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H20",
+   "q": "这份检测报告里有 5G 基站的检测数据吗？",
+   "book": "低压电器检测实训报告（带表格样例）.docx",
+   "bookId": "低压电器检测实训报告（带表格样例）.docx",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "expect": "refusal",
+   "lang": "zh",
+   "hasTopicJson": false,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H21",
+   "q": "《弗兰肯斯坦》里出现智能手机了吗？",
+   "book": "frankenstein-en.epub",
+   "bookId": "frankenstein-en.epub",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "expect": "refusal",
+   "lang": "cross",
+   "hasTopicJson": true,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H22",
+   "q": "MapReduce 论文规定了公司年终奖发放标准吗？",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "expect": "refusal",
+   "lang": "cross",
+   "hasTopicJson": true,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H23",
+   "q": "《傲慢与偏见》里写了多少行 Python 代码？",
+   "book": "pride-and-prejudice-en.epub",
+   "bookId": "pride-and-prejudice-en.epub",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "expect": "refusal",
+   "lang": "cross",
+   "hasTopicJson": true,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H24",
+   "q": "Attention Is All You Need 里给出了食堂菜单吗？",
+   "book": "attention-is-all-you-need-en.pdf",
+   "bookId": "attention-is-all-you-need-en.pdf",
+   "kind": "refusal",
+   "a": null,
+   "g": [],
+   "expect": "refusal",
+   "lang": "cross",
+   "hasTopicJson": true,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H25",
+   "q": "这本书的作者是谁？",
+   "book": null,
+   "bookId": null,
+   "kind": "ambiguous",
+   "a": null,
+   "g": [],
+   "expect": "ambiguous",
+   "lang": "zh",
+   "hasTopicJson": null,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H26",
+   "q": "书里说的「一致性」是怎么保证的？",
+   "book": null,
+   "bookId": null,
+   "kind": "ambiguous",
+   "a": null,
+   "g": [],
+   "expect": "ambiguous",
+   "lang": "zh",
+   "hasTopicJson": null,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H27",
+   "q": "「學而時習之」出自哪一章？",
+   "book": null,
+   "bookId": null,
+   "kind": "ambiguous",
+   "a": null,
+   "g": [],
+   "expect": "ambiguous",
+   "lang": "zh",
+   "hasTopicJson": null,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H28",
+   "q": "第一章里出现的那个人名是谁？",
+   "book": null,
+   "bookId": null,
+   "kind": "ambiguous",
+   "a": null,
+   "g": [],
+   "expect": "ambiguous",
+   "lang": "zh",
+   "hasTopicJson": null,
+   "chunk_id": null,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H29",
+   "q": "《論語·學而第一》开篇第一章，孔子说的第一句是什么？",
+   "book": "lunyu-xueer-zh.pdf",
+   "bookId": "lunyu-xueer-zh.pdf",
+   "kind": "newbook",
+   "a": "論語 · 學而第一（第 1 / 4 頁） 第1章 子曰:「學而時習之，不亦說乎？有朋自遠方來，不亦樂乎？人不知而不慍，不亦君子乎？」\n第2章 有子曰:「其爲人也孝弟，而好犯上者，鮮矣；不好犯上，而好作亂者，未之有也。君子務本，本立而道生；孝弟也者，其爲仁之本與？」\n第3章 子曰:「巧言令色，鮮矣仁。」\n第4章 曾子曰:「吾日三省吾身:爲人謀而不忠乎？與朋友交而不信乎？傳不習乎？」",
+   "g": [
+    "學而時習之",
+    "不亦說乎"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "hasTopicJson": true,
+   "chunk_id": 1,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  },
+  {
+   "id": "H30",
+   "q": "介电强度试验里那台不合格样品，是在多少电压下击穿的？",
+   "book": "低压电器检测实训报告（带表格样例）.docx",
+   "bookId": "低压电器检测实训报告（带表格样例）.docx",
+   "kind": "newbook",
+   "a": "介电强度试验中出现 1 台不合格：施压部位为相与外壳之间，击穿发生在 1.8 kV，低于 2.0 kV 的规定值。初步判断为外壳绝缘件存在气泡缺陷，建议对同批次绝缘件加做抽样切片检查。\n操作循环寿命不合格 2 台：均在第 8500 次左右出现触头熔焊，占位编号分别为 C-07 与 C-19。熔焊原因指向触头压力弹簧的批次热处理偏差，已反馈供应商按 8D 流程整改。",
+   "g": [
+    "1.8 kV",
+    "2.0 kV"
+   ],
+   "expect": null,
+   "lang": "zh",
+   "hasTopicJson": false,
+   "chunk_id": 4,
+   "source": {
+    "origin": "只读 SELECT chunks.text；起草阶段零检索调用",
+    "draftedAt": "2026-11-15T15:25:05.878Z",
+    "frozenAt": null,
+    "reviewedBy": null
+   }
+  }
+ ]
+}

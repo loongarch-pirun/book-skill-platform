@@ -1,0 +1,308 @@
+# 改动台账
+
+> 从 2026-11-15 起生效。配合 `存档照-2026-11-15.md` 使用。
+> 规矩一句话：**改一行代码，就填一行。不许事后补，不许只写「优化」。**
+>
+> 2026-11-15 20:30 补全：把 **11-10 ~ 11-15 这一轮**的全部变更条目按原有八列格式登记，逐条注明来源、原因、文件、责任人、时间、验收，并做一致性核对。
+
+## 怎么填
+
+| 列 | 写什么 |
+|---|---|
+| 日期 | 改动当天，能精确到时刻就写时刻 |
+| 文件 | 相对路径，多个用逗号 |
+| 改了什么 | 一句人话，说清行为变化，不写「重构/优化/调整」 |
+| 为什么 | 要解决的具体问题或现象 |
+| 依据 | 哪次跑批、哪份报告、哪个注释；没有就写「未记录」 |
+| 谁确认 | 拍板的人；查不到写「未记录」，不许编 |
+| 验收 | 改动后跑了什么、结论、报告在哪；没跑写「未跑 / 无 11 月输出」 |
+| 存档照 | 已含入 `r4-snapshot-20261115`（树指纹 `f654586be8aea832`），或写「已重拍」 |
+
+**本轮图例（只用于下面的补全登记）**
+
+- `[外回]` = 该改动在外部 workspace（`…\.dsh\bot\workspace\前置过滤-施工\` 等）完成，随 2026-11-13 22:23 的 worktree 基线快照整体回收进 r4。**实锤**：279 个文件 mtime 全为 22:23，但注释里带 11-10~11-14 日期；`quality-baseline.json:72-83` 的 source / inputs 直接写着外部绝对路径。
+- 依据列末尾的证据强度：`[实]` 文件时间戳 / 日志 / 基线直接可证；`[注]` 仅代码注释自述；`[推]` 由上下文推出。
+- 责任人：这一轮**没有留下任何真实姓名**，只有流程代号「虾虾 / 施工官 / CP1 复核 / 复核 🟡-x / V07-A07」与泛称「老板」。8 个日志零命中。台账如实写代号或「未记录」。
+- 存档照：r4 内 11-10 之后无任何图片/截图文件，故本列统一记「已含入快照」，不伪造截图。
+
+**配套动作**
+
+```
+# 改之前：确认起点就是存档照这一版
+node 存档照/生成清单.cjs "C:/Users/JIANG XIAO HUA/Desktop/book-skill-platform-r4" --check
+
+# 改之后：重拍一次，把新树指纹记进表里
+node 存档照/生成清单.cjs "C:/Users/JIANG XIAO HUA/Desktop/book-skill-platform-r4"
+
+# 台账与实际改动是否一致
+node 存档照/核对一致性.cjs "C:/Users/JIANG XIAO HUA/Desktop/book-skill-platform-r4"
+```
+
+---
+
+## 台账 · 11 月这一轮补全登记
+
+> 共 **79 条**，按 16 个主题分节。每条严格沿用八列。同一文件的连续改动合并为一条，逐文件覆盖见文末一致性核对。
+
+### A. 回收基线（2 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-13 22:23 | 全库 279 文件（`src/**`、`test/**`、`docs/**`、`skills/**`、根配置） | 从主仓库 worktree 拉出基线快照，把外部 workspace 已完成的 11 月改动整体回收进 r4 | 本轮施工在外部 workspace 进行，r4 是成果快照 | `[外回][实]` 279 个文件 mtime 全为 22:23，注释却带 11-10~11-14 日期；`quality-baseline.json:72-83` 外部绝对路径 | 未记录 | 基线本身无跑批输出 | 已含入 `f654586be8aea832` |
+| 11-13 | r4 全库 | 判定「注释日期 ≠ 文件 mtime」= 改动先在外部完成、后随基线导入 | 解释日期与时间戳错位 | `[外回][推]` 由上条 mtime 与注释日期错位 + baseline inputs 外部路径推出；外部原件未访问 | 未记录 | 未跑 | 已含入快照 |
+
+### B. 默认向量引擎 e5 → m3、全库重建（8 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-13 | `src/lib/models.mjs` | `DEFAULT_EMBED` 由 e5 改为 m3（bge-m3，1024 维，int8，cls pooling） | 中文问英文书的跨语言对，e5 把答案块排到自家书内第 55 名（简爱 1861 块），扩池到 10 条也捞不回；m3 同对排第 1 | `[外回][注]` `models.mjs:34-42` 13 本库 / 8 题决定性对照原文 | 未记录（旧决策见 `docs/v2-升级报告-引擎与复试官.md:30`「老板拍板默认 e5」） | `guard-test.mjs:24` 换代断言；`_final-gate.log` 未退化 | 已含入快照 |
+| 11-13 | `src/lib/models.mjs` | 记账换代代价：建库 86.2ms/块 vs 11.2ms/块（7.7 倍），查询侧只差 15ms，模型 542.1MB vs 112.6MB | 「唯一真金白银的代价，已计入本地模型总账」 | `[外回][注]` `models.mjs:38-40` | 未记录 | 未跑 | 已含入快照 |
+| 11-13 | `src/lib/models.mjs`、`.gitignore` | 保留 `BSP_EMBED_MODEL=e5` 回退，旧库存 `library.bak-e5/` | 旧库要能拷回来 | `[外回][注]` `models.mjs:41`、`.gitignore:22` | 未记录 | 未跑 | 已含入快照 |
+| 11-13 | `src/embed-book.js` | 建库侧模型兜底改读 `models.DEFAULT_EMBED`，删掉硬编码 `"e5"` | 默认引擎改 m3 后若建库仍灌 e5，查询侧立刻报引擎不一致；jobs-test / jobs-fuzz / soak-test 三个失败同源 | `[外回][注]` `embed-book.js:42-56`、`guard-test.mjs:448-466` | 未记录 | `guard-test.mjs` 9f 静态断言（无 11 月跑批输出） | 已含入快照 |
+| 11-13 | `src/desktop/engine.mjs` | 新增 `migrateStaleBundledLibrary()`：升级时把同名 + 引擎不同 + 无用户编目成果的旧内置库 rename 成 `.bak-<旧引擎>` 再拷 m3 新库 | 幂等规则会把新库整批挡在门外，assertEngine 逐本抛错 → 13 本全 skip、召回 0 条 | `[外回][注]` `engine.mjs:100-145` 三条判据原文 | 未记录 | `guard-test.mjs:471-477` 静态断言；外部 `16-升级迁移/upgrade-migrate-probe.mjs` 仅被引用 | 已含入快照 |
+| 11-13 22:24~23:42 | `library/*.db-wal`（13 个） | 全库按 m3 重灌重建 | 「2026-11-13 全库换 m3 引擎重建」 | `[外回][推]` 13 个 -wal 时间戳 + `.gitignore:28`、`catalog-test.mjs:15` 自述；r4 内无重建跑批日志 | 未记录 | 未跑 | 已含入快照 |
+| 11-13 | `.gitignore` | 新增 `library.bak-e5/` 忽略；`!test/fixtures/library/*.db` 破例随仓库 | m3 重建后主库 pride 是重切过的块、没有编目数据，旧 e5 编目夹具是 `catalog-test` 唯一验收底座 | `[外回][实]` `.gitignore:22, 27-31` | 未记录 | 未跑 | 已含入快照 |
+| 11-13 | `test/catalog-test.mjs`、`test/graphrag-fuzz.mjs`、`test/guard-test.mjs`、`test/stage3-mcp-test.mjs` | 编目验收改读 fixtures 的 e5 副本；新增 9f 换代静态断言；m3 后书级信号挤进窄带记为 OBSERVE 已知局限 | 主库换了引擎又丢了编目，不改断言就测的不是编目层 | `[外回][注]` `catalog-test.mjs:15-21`、`graphrag-fuzz.mjs:75-79`、`guard-test.mjs:448-477`、`stage3-mcp-test.mjs:122-131` | 未记录 | 静态断言存在，无 11 月执行日志 | 已含入快照 |
+| 11-13 | `package.json` | `.models` 过滤清单加入 `Xenova/bge-m3/**` | 「默认引擎换成 m3，bge-m3 必须跟着进包，否则装完查库直接报引擎不一致」 | `[外回][实]` `package.json:95`、`guard-test.mjs:1480-1482` | 未记录 | `guard-test.mjs:1481` 静态断言 | 已含入快照 |
+
+### C. MinerU basic 档 PDF 解析 + 便携运行时（10 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-11/12 | `src/lib/mineru.mjs` | 新建 MinerU basic 档解析通道（取产物 + 转块），替代 build-book 只吃 pdfjs 文字流 | 表格被拍平成 `a | b | c`，公式/图/表结构全丢 | `[外回][注]` `mineru.mjs:1-16` | 未记录 | 未跑 | 已含入快照 |
+| 11-11/12 | `src/lib/mineru.mjs` | 三条实测事实入注释：不能直调 mineru.exe、CLI 不给 bbox、bbox 唯一路是读 doclib 缓存 JSON | 「三条实测确定的事实（见 前置过滤-施工\logs\）」 | `[外回][注]` `mineru.mjs:8-14`；外部 logs 未访问 | 未记录 | 未跑 | 已含入快照 |
+| 11-11/12 | `src/lib/mineru.mjs` | `mineruConfig()` 默认值全可由 `BSP_MINERU_*` 覆盖，tier 固定 basic | 产品化时装包路径会变，代码不写死；本轮不加载 VLM | `[外回][注]` `mineru.mjs:23-34` | 未记录 | 未跑 | 已含入快照 |
+| 11-13 | `src/lib/mineru.mjs` | 就绪判据拆成 `mineruAvailable()`（同步查 doclib）+ `mineruReachable()`（异步真探活） | 修假阳性：doclib/ 跑过一次就永久存在，但服务没起 CLI 会抛 ServerNotRunningError | `[外回][注]` `mineru.mjs:37-49` | 未记录 | `guard-test.mjs:223-235` 9d 静态断言 | 已含入快照 |
+| 11-13 | `src/lib/mineru.mjs` | 补「其余每一个承载文字的类型都必须收进来」 | 「2026-11-13 实测：否则就是静默改字」 | `[外回][注]` `mineru.mjs:182` | 未记录 | 未跑 | 已含入快照 |
+| 11-13 | `src/lib/pdf-route.mjs` | 新建 PDF 判定表：R12→R3→R4→needs_calibration，任一 PDF 唯一落一条 route；删「页图占比<5%」、R12 改论坛元数据行判据、阈值收敛成 100/20 两条 | 「每条规则触发条件必须能从文件本身算出来」；页图占比实测无区分力（Lamport 每页 100% 有图对象但每页 4246 字） | `[外回][注]` `pdf-route.mjs:1-62, 139-189`；外部探针 logs 未访问 | 未记录 | 注释自述可单测，无 11 月跑批输出 | 已含入快照 |
+| 11-13 | `src/lib/pdf-route.mjs` | 新增 `DIRTY_RULES` 8 条（5 启用 / 3 仅记账）、`cleanDirtyBlocks()` 块级清洗、`assessAfterOcr()` 复测只标 needs_vlm 不自动拒书 | 表格/公式/图块不参与脏行清洗，误判会把整张表丢掉 | `[外回][注]` `pdf-route.mjs:43-62, 191-220` | 未记录 | 未跑 | 已含入快照 |
+| 11-12 12:59 / 11-13 | `src/build-book.js` | 新增 `routePdf()`（判定与抽取分离）、`legacyAnnotations()`（回落时把注解改写「未执行」）、`parsePdf()` 分流、meta 新键 `parse_report` | 「判定只读文件不建库，可单测可复跑」；回落时不许日志声称做了没做的解析；新键不并进 struct_report 免得弄红清洗账回归 | `[外回][注]` `build-book.js:444-520, 1170-1185`；`:463` 记「复核单 🟡 242」 | 复核单 🟡 242（部分） | `guard-test.mjs` 9d/9b 静态断言 | 已含入快照 |
+| 11-13 | `src/desktop/mineru-runtime.mjs`、`src/main.js` | 新建随包运行时编排：准备 MINERU_HOME ACL、独立 cwd 拉起 doclib、强制 basic、等 healthy 后注入 `BSP_MINERU_*`；`bootMineru()` 仅打包态且早于 `engine.init` | CLI 是纯 HTTP 客户端，打包版必须有人在主进程做这四件事；失败不阻断启动 | `[外回][注]` `mineru-runtime.mjs:1-44`、`main.js:32-35` | 未记录 | `guard-test.mjs:223-331` 静态断言 | 已含入快照 |
+| 11-13 真机 | `src/desktop/mineru-runtime.mjs`、`build/stop-mineru.ps1`、`build/installer.nsh`、`test/guard-test.mjs` | 新增 `tightenHomeAcl()`（断开 DACL 继承只留当前用户/SYSTEM/Administrators）；卸载钩子按 pid 停进程树、删 mineru-home/run、按 exe 前缀筛不误杀 | 「这条链我在 2026-11-13 用组装好的 runtime 真机跑出来过…孤儿 SID 带 Modify 永远过不了校验」；卸载残留几百 MB 用户看不见 | `[外回][注]` `mineru-runtime.mjs:60-75`、`guard-test.mjs:296-330` | 未记录 | `guard-test.mjs` 静态断言 | 已含入快照 |
+
+### D. block-schema 方案 A 五表（3 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-12 | `src/lib/block-schema.mjs` | 新建五表 DDL：`blocks` / `block_orig` / `block_key` / `block_key_fts` / `block_pos`，chunks 原文一字不动 | 「一个 ID 串三个视图，不是三份拷贝」；铁律：本模块只读 chunks，绝不 UPDATE/DELETE | `[外回][注]` `block-schema.mjs:1-7, 15-51`；引用外部 `01-耦合与改造设计.md:179-228` | **虾虾**（`:3`「方案 A 定案：虾虾 2026-11-12」） | 未跑（外部原件未访问） | 已含入快照 |
+| 11-12 | `src/lib/block-schema.mjs`、`src/migrate-blocks.mjs` | 契约 v3 后按列存在性分支搬运 7 个描述列、逐列校验、回滚只 DROP 五表；迁移 CLI 提供 status/verify/migrate/drop，批量写强制 `--confirm` | 老库缺列要 NULL 回退不编造；防手滑把 18 库一次改掉 | `[外回][注]` `block-schema.mjs:99-231`、`migrate-blocks.mjs:1-45` | 解析官 `3573edd`（代号） | `verifyBlockViews()` 自检（代码内，无 11 月跑批输出） | 已含入快照 |
+| 11-12 | 5 本真库迁移实测（外部） | 方案 A 在 5 本真库上迁移验证 | 定案前的实库验证 | `[外回][推]` `block-schema.mjs:3` 引用 `exp-cite-migrate-round2-output.txt`；原件不在 r4 | 虾虾（定案） | **仅注释引用，原件需外部 workspace 确认** | 已含入快照 |
+
+### E. 三段式路由、指代回填、切片语义单元（8 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-13 | `src/lib/search.mjs` | 挑书路由改三段式：逐本全块语义扫描（不做每书归一化）→ 只深翻最像几本合成一池 → 全池只跑一次 rerank 按书取最高分 | 「2026-11-13 实测推翻」四条：跨书归一化后不可比、字面腿跨书串味、每本 6 条太浅（答案块排 12/13/556）、硬塞答案块 4 题 3 题拿第 1 | `[外回][注]` `search.mjs:485-498` | 未记录 | `stage3-mcp-test.mjs:108-120` 硬契约（无 11 月跑批输出） | 已含入快照 |
+| 11-13 | `src/lib/search.mjs` | 新增碎片门槛 `ROUTE_MIN_LEN=60`、`tightPick()` 合格块优先；参数 `ROUTE_SIG_TOPK=3` / `ROUTE_BOOKS=8` / `ROUTE_K=10` / `ROUTE_REF_W=0.5` / `ROUTE_POOL_CAP=48` / `ROUTE_FLOOR_RATIO=0.3` | 句向量对短文本系统性给高分（95000 条实测 Pearson r=-0.18），不设门槛 top10 会被 13 字标题占满；max 偏袒块多块碎的书；ref 条只降权不剔除 | `[外回][注]` `search.mjs:500-549, 650-686` | 未记录 | 未跑 | 已含入快照 |
+| 11-13 | `src/lib/search.mjs` | 新增指代回填 `vagueRewrite()`：「这本书/这篇论文」→《书名》，且书名锚点须在正文里字面出现才改写 | 4 本 PDF × 2 问共 8 题，top1 落首页 1/8 → 回填后 8/8；无条件回填会把中文书名塞进英文正文（简爱 0.253→0.004） | `[外回][注]` `search.mjs:128-140, 234-237` | 未记录 | `guard-test.mjs:186-221` 9c 双向静态断言 | 已含入快照 |
+| 11-13 | `src/lib/search.mjs` | 新增 P0-4 SEM_GUARD：池内 sem 最高块被重排挤出 topN 时与末位交换（不扩池），`BSP_SEM_GUARD=0` 可关 | pride 开篇题向量召回第 1/1277，纯重排把它整条踢出候选池 | `[外回][注]` `search.mjs:386-415`；`:402-403`「关→74/80=93，开→75/80=94」 | 复核 🟡-3（口径） | 注释内自述对照，无独立跑批 | 已含入快照 |
+| 11-13 | `src/lib/search.mjs`、`test/neighbor-test.mjs` | 新增 P3-③ 邻块扩展（`BSP_NEIGHBOR=1`，默认关）：同章 id±1 补一席、×0.5 衰减、总数 ≤4、不重跑复试官 | 「双门（漏题 ⊆ 基线）过了才考虑默认开」 | `[外回][注]` `search.mjs:418-427`、`guard-test.mjs:1027-1031` | 未记录 | 静态断言 | 已含入快照 |
+| 11-13 | `src/lib/search.mjs` | 第三段统一重排、书分 `0.5×最好有效分 + 0.5×归一化书级信号`、报书分不报重排分、未点名问句标 `ambiguous` | 实测 9 题里简爱会被 pride 抢走；「以 0.956 高分确信地答错简爱」 | `[外回][注]` `search.mjs:641-720` | 未记录 | `stage3-mcp-test.mjs` 挑书硬契约 | 已含入快照 |
+| 11-13 | `src/lib/mineru.mjs`、`src/lib/structurize.mjs`、`src/build-book.js` | 切片改「先归并语义单元再按句切」：R1 标题并入 / R2 题注并入 / R3 续行打包，`UNIT_TARGET=400` / `UNIT_MAX=900`；13 本实测 13745 单元→6171，<60 字 31.9%→6.4% | 一块一 chunk 与语义单位不一致，短文本被向量系统性偏袒，标题单独成块会永远 top1 | `[外回][注]` `mineru.mjs:394-415`；外部 `13-可用性/` 未访问 | 未记录 | `test/stage1-chunk-test.mjs` 锁值更新（无 11 月跑批输出） | 已含入快照 |
+| 11-13 | `test/stage1-chunk-test.mjs`、`test/parser-v3-test.mjs`、`test/stage3-mcp-test.mjs`、`test/catalog-test.mjs` | 切片锁值跟着重建走：P&P 1250→1277、Frankenstein 711→704、attention 51→126、P&P 2400→1282、孟子 274 块/261 章、lookup 换到「梁惠王上·7」4 块、belongs 边数改动态派生 | 「这两项是有意的内容与粒度变化，不是解析漂移…值必须跟着重建走，而不是留着旧值让它永远红」 | `[外回][注]` `stage1-chunk-test.mjs:63-85`、`parser-v3-test.mjs:219-227`、`stage3-mcp-test.mjs:302-311`、`catalog-test.mjs:43-46` | 未记录 | 断言存在，无 11 月执行日志 | 已含入快照 |
+
+### F. 前置过滤、脏内容规则、结构化改造、行级清洗（8 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-13 | `src/lib/noise-rules.mjs` | 新建 CP1 脏内容规则过滤层（前置过滤真正进库的那一层） | CP0 实测证明「检索不知所云」根因不是解析引擎，MinerU 自己的块类型标签洗不动正主 | `[外回][注]` `noise-rules.mjs:1-15`；外部 `10-产品化/cp0-wash.txt` 未访问 | 未记录 | 未跑 | 已含入快照 |
+| 11-13 | `src/lib/noise-rules.mjs` | 五条设计铁律：规则是数据（外部 JSON 可覆盖）、每条可翻转、只丢整块不改字节、`BSP_NOISE=0` 逃生、不把书洗空抛错 | 用户原话「新增一类脏内容只需改一条规则配置而不是改函数」 | `[外回][注]` `noise-rules.mjs:9-32` | 用户原话（未具名） | 未跑 | 已含入快照 |
+| 11-13 | `src/lib/noise-rules.mjs` | O1 修法：人名对识别改「邮箱本地部分与块内人名同源」正向白名单 | 独立验收构造真垃圾实测推翻旧判据，三条纯联系行全被放行 | `[外回][注]` `noise-rules.mjs:33-54, 197`、`guard-test.mjs:333-340`；外部 `CP1-附加核查-unless版.md` 观察项 O1 未访问 | 独立验收 O1（外部） | `guard-test.mjs` 9e 回归钉（B 组 15 条） | 已含入快照 |
+| 11-14 10:34 | `src/lib/noise-rules.mjs` | P0-5 补三条规则：`journal_masthead_table` / `copyright_line` / `page_number_only` | 外部 JSON 配置不进打包名单（`build.files` 只有 `src/**/*` + `package.json`），写外面装出来的产品里失效 | `[外回][实]` 文件 mtime 10:34；`noise-rules.mjs:241-284` | 未记录 | `guard-test.mjs:413-446` 8b 合成块翻转证据 | 已含入快照 |
+| 11-13 | `src/lib/structurize.mjs` | 新建结构化改造层：修双重编码乱码、清控制符/PUA/替换符/孤立代理对、去空块去垃圾块，report 进 `meta.struct_report`；整块拒修时退化为逐行处置 | 「老板诉求原话：结构化改造要清洗坏数据/不全数据/乱码符号」；切片改语义单元后短段会并进大块，整块拒修会让一行乱码跟着入库 | `[外回][注]` `structurize.mjs:1-18, 245-252` | 老板（诉求） | `structurize-test.mjs` 逐字全等断言（无 11 月跑批输出） | 已含入快照 |
+| 11-13 | `src/build-book.js` | 接入点改为「解析成功 → 结构化改造 → 切片 → 洗数据」，硬拦 parse_failed 只在烧算力前；CP1 noise 过滤接在结构化之后、切片之前，落 `noise_report` | 「老板定的新流程」；解析产物里的 arXiv 号/授权声明/作者邮箱被 BM25 顶上来就是「检索不知所云」；书架上「少了两千字」必须能查到原因 | `[外回][注]` `build-book.js:1187-1195, 1355-1402` | 老板（定流程） | 未跑 | 已含入快照 |
+| 11-13 基线 | `src/inline-clean.mjs`、`src/lib/inline-clean.mjs`、`src/lib/inline-import.mjs`、`test/inline-clean-test.mjs` | 行级清洗 L1 删行 / L2 跟帖切分、D2 恢复=回退（清 5 个 inline meta 键）、I1~I6 护栏在位 | 「2a 策略，老板 2026-10-20 拍板」；恢复不回退会让 auditInline 假 ready | `[外回][实]` 四文件 mtime 11-13 22:23（随基线带入，非本轮新写）；`inline-clean.mjs:1-5` | 老板（10-20 拍板，非本轮） | 无 11 月直接改动证据 | 已含入快照 |
+| 11-13 / 11-14 10:27 | `test/guard-test.mjs`、`src/lib/parse-gate.mjs` | 补 9e 段（7 个署名块必留、纯联系行必丢）、8b 段（page_number_only 合成块翻转）、9d 段（MinerU 就绪/DACL/卸载）；`_rejected.jsonl` 默认落 `library/` | 「page_number_only 在 13 本里命中 0…必须由合成块固定，否则这条规则等于一张没有证据的注释」 | `[外回][实]` `guard-test.mjs` mtime 10:27；`:223-350, 413-446`；`parse-gate.mjs:127` | 未记录 | 静态断言存在，无 11 月执行日志 | 已含入快照 |
+
+### G. 新判分尺子与新考卷（5 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-14 14:16 | `test/lib/judge.mjs` | 新建三级判分 `judge()`：full / partial / miss，附 `legacyJudge()` 与 `judgeAll()`；规则③门槛 `max(4, ceil(a.length*0.5))` | 旧尺子只看关键词，答案句被切两半也照样判过，测不出切块损伤 | `[外回][实]` 文件 mtime 14:16；`judge.mjs:1-17, 85-126` | 未记录 | `_final-judge.log` / `_judge-test-final.log` 全通过 | 已含入快照 |
+| 11-14 | `test/lib/judge.mjs` | 新增 `BSP_LEGACY_JUDGE=1` 翻转开关 | 用来证明接缝识别率断言真的能红，默认关闭 | `[外回][注]` `judge.mjs:69-74` | 未记录 | `quality-gate.mjs:59` 翻转证据 | 已含入快照 |
+| 11-14 14:14 | `test/judge-test.mjs` | 新建 P0-2 翻转测试：Dynamo 87/88、attention 48/49 真实接缝、规则③、完整句 full 对照、miss 对照、judgeAll 六行口径 | 「用库里真实的接缝做证据，不用编造的假块」 | `[外回][实]` 文件 mtime 14:14 | 未记录 | `_final-judge.log` / `_judge-test-final.log` 全通过 | 已含入快照 |
+| 11-14 CP1 复核 | `test/judge-test.mjs` | 补规则③ 断言段 | 「2026-11-14 CP1 复核实测发现，此前 judge-test 里没有任何断言覆盖规则③」，改坏门槛或删段都不红 | `[外回][注]` `judge-test.mjs:90-117`；外部 `24-CP1复核/probe-judge-rule3.mjs` 未访问 | **CP1 复核** | `_judge-test-final.log` 恢复后全通过 | 已含入快照 |
+| 11-13 23:43 / 11-14 13:14 | `test/golden/` 11 份 JSON、`test/golden-verify.mjs` | 新建 80 题答案句考卷（每题 `{q,a,g}`，`a` 逐字抄原文）；`golden-verify.mjs` 校验 a 必须在某 chunk.text 且句读完整，不成立 exit 1 | 给 P0-2/3/7 提供判分依据 | `[外回][实]` 9 份 mtime 11-13 23:43、2 份 13:14；`golden-verify.mjs:1-8, 84-94`；`quality-gate.mjs:148` 记 frankenstein「10:01 校准过 3 条（8c2074e）」，与 r4 mtime 不一致（外部回收时重写） | **虾虾**（`golden-verify.mjs:6`「虾虾定的 full 条件」） | `quality-baseline.json` 记 files=11 / total=80；校验器无 11 月跑批输出 | 已含入快照 |
+
+### H. 质量门与基线（9 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-14 13:14 | `test/quality-gate.mjs` | 新建 P0-7 闸门：五项指标（命中率 / full 率 / 平均首中名次 / 路由准确率 / 脏块率）按 perbook 与 route 双口径计算，与 baseline 逐项比，退化 exit 1 | 规划判据：「人为把 topN 从 4 改成 1 → 五项全红」 | `[外回][实]` 文件 mtime 13:14；`:1-45` | 未记录 | `_final-gate.log` ✓ 五项均未退化 | 已含入快照 |
+| 11-14 13:37 | `quality-baseline.json` | 落基线：0.725 / 0.725 / 3.837 / 0.45 / 0.0031，topN=4、80 题、考卷指纹 `185ec42a62ad3845`、接缝 184 条、latency 单列 informational、inputs 记绝对路径+sha+字节 | 「这份基线是『哪一份卷子』下的成绩单」 | `[外回][实]` generatedAt `2026-11-14T05:37:22.617Z`；`source`/`inputs` 直指外部 workspace | 未记录 | `_final-gate.log` 逐项比全绿 | 已含入快照 |
+| 11-14 事故 | `test/quality-gate.mjs` | 新增考卷指纹 `goldenFingerprint()`（文件名+字节内容 sha256 前 16 位），不一致 exit 2 | 「2026-11-14 撞了个真事故」：旧基线生成于 01:29，考卷 10:01 被校准 3 条，拿新卷跑旧基线会报 3 项红，表面像检索退化 | `[外回][注]` `quality-gate.mjs:146-167, 618-634` | 复核 2026-11-14 | `_final-gate.log` 未触发（指纹一致） | 已含入快照 |
+| 11-14 复核 | `test/quality-gate.mjs` | 新增 raw 输入指纹 `fileSig()`：绝对路径 + sha + 字节数写入 baseline.inputs | 旧版只记 `path.basename()`，「光看 basename 谁也说不清这次量的是哪一份」 | `[外回][注]` `quality-gate.mjs:169-183, 708-715`「虾虾记为 ② 名下的新账①」 | **虾虾**（记账） | `quality-baseline.json` inputs 已含三项 | 已含入快照 |
+| 11-14 复核 | `test/quality-gate.mjs` | `baselineDetail()` 摘掉 `avgLatencyMs`，单独写 `latency.kind=informational` | 24498ms（旧基线 2841ms，差 8.6 倍）纯粹因为落基线时整机 CPU 100%，不能当性能基准 | `[外回][注]` `quality-gate.mjs:185-193, 697-705`「虾虾记为新账②」 | **虾虾**（记账） | `quality-baseline.json` `latency.note` | 已含入快照 |
+| 11-14 13:02 派 | `test/quality-gate.mjs` | ④ 改造：raw 只存客观召回事实（块 id/score/延迟/脏块），不存 level/rank/why/legacyHit/legacyRank；判级一律用当前考卷现算 | 判级是「召回块 + 当前考卷」的函数，钉进 raw 等于把某一天的卷子一起钉进原始数据 | `[外回][注]` `quality-gate.mjs:364-367, 398, 450-452`「虾虾 2026-11-14 13:02 派」 | **虾虾（13:02 派）** | `_final-gate.log` | 已含入快照 |
+| 11-14 复核 🟡-2 | `test/quality-gate.mjs` | `pickN()` 缺 `perN[N]` 直接 throw（废除 `|| {}` 静默兜底）；`--from-book` 的 N 改读 `meta.topN`（原读不存在的 `meta.Ns`） | 「指标会全变 0 却照样打印『绿』——那是把错数据当好数据」 | `[外回][注]` `quality-gate.mjs:437-449, 597-605` | 复核 🟡-2 | 未跑 | 已含入快照 |
+| 11-14 | `test/quality-gate.mjs` | 新增接缝自测断言：现扫全库相邻块接缝句，新尺子须全判 partial、旧尺子须全 hit，识别率 <1 即红；`seam.total===0` 也 exit 2 | 本卷 80 条答案句 intact 80 / split 0，切块损伤率恒为 0，一行永远不可能变红等于充数 | `[外回][注]` `quality-gate.mjs:47-60, 243-343, 661-685, 722-727`；🟡-5「0 条失败不许冒充绿灯」由**虾虾 13:02 派** | **虾虾（🟡-5）**、复核 🟡-4（防放水 `full > legacyHit` 即红，`:729-738`） | `_final-gate.log` 184 条识别率 1 | 已含入快照 |
+| 11-14 施工官自测 / 14:20 | `test/quality-gate.mjs`、`package.json` | `--write-baseline` 不参与基线指纹校验，避免旧格式基线把自己锁死；新增 `test:gate` 脚本 | 「否则…重落又被同一条校验拦下 exit 2，谁也修不回来」 | `[外回][注]` `quality-gate.mjs:613-615`「2026-11-14 施工官自测发现，见 01-改动清单.md ② 段」；`package.json:17` mtime 14:20 | **施工官**（自测） | `quality-baseline.json` 已成功重落；**无 11 月 test:gate / test:fast 跑批输出** | 已含入快照 |
+
+### I. eval-gate 与 BOOK_ALIAS（2 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-13 22:24 | `test/v2-eval.mjs` | 新增 `BOOK_ALIAS` 5 条映射（考卷书名 → 架上库文件前缀） | 「以前靠 startsWith 硬匹配，名字一对不上就整本按『佚书』丢弃——那不是题不会，是记错账」；有效题数 52→80 | `[外回][实]` 文件 mtime 22:24；`:17-27` | 未记录 | 注释自述数字，无独立跑批 log | 已含入快照 |
+| 11-13 | `test/eval-gate.mjs` | 新增「可比性」前置闸（门 0）：基线 model 或有效题数不同则打「不可比」并 exit 0，不静默判红也不判绿 | 「分母都变了，93 比 88 属于拿两把尺子量」；让换引擎不被假红灯挡路 | `[外回][注]` `eval-gate.mjs:8-11, 51-65` | 未记录 | 无 11 月跑批输出；当前该门实际空放行 | 已含入快照 |
+
+### J. P0-9 原文三态 / P0-10 思考档位（5 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-14 09:50 | `src/lib/llm.mjs` | P0-10：请求体只在显式配置时带 `reasoning_effort`，默认与改造前逐字节一致 | 本机 Ollama + qwen3.5:4b 是 thinking 模型，不发该字段时 max_tokens 全被 reasoning 吃掉、content 返回空（实测 30.3s 空）；发 "none" 后 1.0s 返回完整 JSON | `[外回][实]` 文件 mtime 09:50；`:119-125` | 未记录 | `test/llm-test.mjs:306-321`（代码存在，无 11 月执行日志） | 已含入快照 |
+| 11-14 09:51 | `src/desktop/llm-config.mjs` | P0-9：`sendSourceText` 三态 true/false/null，落盘缺省不写该键；P0-10：`reasoningEffort` 传了才改、空串=显式清除、非字符串拒收 | 只用 true/false 会把「从没问过」和「明确拒绝过」混成一种，界面没法在第一次发问时补问；「不传=保留原值，防误清」 | `[外回][实]` 文件 mtime 09:51；`:67-72, 92-98, 119-124` | 未记录 | `test/llm-test.mjs:182-206, 296-321`（无 11 月执行日志） | 已含入快照 |
+| 11-14 10:01 | `src/desktop/chat.mjs` | P0-9 病 B 修：从缺省 false 改为「一次性同意 + 记住选择」，显式 true/false 优先，null 按不发 | 原来缺省 false，模型只收到「书名+章号」一个字原文都没有 → verifyAnswer 必然 citations 全飞 → QUOTE_FAIL 整包降级；「不给本地就静默发原文留后门」 | `[外回][实]` 文件 mtime 10:01；`:150-161` | 未记录 | `test/chat-fuzz.mjs:103/131`（无 11 月执行日志） | 已含入快照 |
+| 11-14 09:56 / 10:03 | `src/renderer/views-ask.js`、`src/renderer/views-chat.js` | UI 增「发送原文」三态开关、首次发问一次性同意弹框（先本地预检索报字数）、思考档位可留空 | P0-9 三态里 null 按「当没允许」处理 | `[外回][实]` 文件 mtime；`views-ask.js:110/330/350`、`views-chat.js:175/224/239` | 未记录 | `test/renderer-graph-test.mjs:398-458`（无 11 月执行日志） | 已含入快照 |
+| 11-14 09:57~10:03 | `test/llm-test.mjs`、`test/chat-fuzz.mjs`、`test/renderer-graph-test.mjs` | 补 P0-9 三态存储 / buildMessages / 请求体断言、P0-10 六条断言、契约从「永远不发」改「未经同意不发／同意后必发」、UI 一次性同意断言 | 「不把看起来真的值当同意」；「请求体键与改造前逐字节一致」 | `[外回][实]` 三文件 mtime 09:57/09:58/10:03 | 未记录 | **无 11 月跑批输出** | 已含入快照 |
+
+### K. 打包清单与运行时进包（4 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-13 | `test/guard-test.mjs` | 22.10 段：`EXPECT_RESOURCES = 6`、两件 MinerU 资源在位、models 含 bge-m3、library 排除隐私数据 | 「新增一件就要在这里补一行，免得谁偷偷塞件进包没人拦」；「老板个人数据不出厂」 | `[外回][注]` `guard-test.mjs:1466-1491` | 老板（口径） | 静态断言，无跑批输出 | 已含入快照 |
+| 11-14 14:20 | `package.json` | `extraResources` 由 4 件扩到 6 件（加 `runtime/mineru-python`、`runtime/mineru-models`）、`extraFiles` 加 `stop-mineru.ps1`、`files` 加 onnxruntime 平台排除项 | 「2026-11-13：件数从 4 变 6 —— 运行时进包把 MinerU 的 python 运行时与模型目录加进来了」 | `[外回][实]` 文件 mtime 14:20；`:43-125`；`guard-test.mjs:1469` | 未记录 | `guard-test.mjs:1473-1479` 静态断言；`release/builder-debug.yml` | 已含入快照 |
+| 11-13 | `.gitignore` | 忽略 `runtime/mineru-python/`、`runtime/mineru-models/`；注明 832MB Python + 818MB onnx 由构建期组装、不入库 | 「体积大且可由源重建，不入库」 | `[外回][实]` `.gitignore:9-12`；runtime 目录 mtime 11-13 06:10 | 未记录 | 11-15 产出 1.8G 安装包 | 已含入快照 |
+| 11-13 | `runtime/mineru-python/**`、`runtime/mineru-models/**` | 便携 Python + basic onnx 模型落盘（实测 920M / 839M） | 打包版要把解析运行时一起装走 | `[外回][实]` 目录 mtime + `du -sh`；`.gitignore:9-12` | 未记录 | 未跑 | 已含入快照 |
+
+### L. V07 / A-07 复核（1 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-10（注释）/ 11-13 22:23（mtime） | `src/preload.js`、`src/main.js`、`src/desktop/security-prefs.js`、`test/book-view-test.mjs` | V07/A-07 复核：60 口 IPC 逐条核对、三项安全开关（contextIsolation / nodeIntegration / sandbox）收成唯一正本、book-view 静态断言 | 「全部 60 口逐条核对…零 Node 能力外漏」 | `[外回][注]` `preload.js:3`、`main.js:7/17`、`security-prefs.js:1`、`book-view-test.mjs:114-128` | 复核 V07/A-07 | 静态断言，无 11 月跑批输出 | 已含入快照 |
+
+### M. 11-14 跑批、调参实验与中间产物（8 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-14 01:45 | `gate-live.log` | 产出 topN=4 80 题逐题明细（book 1-80 + route 1-80），无最终报告行 | 未记录 | `[外回][实]` 文件 12685B + 内容 | 未记录 | 逐题跑完，**无结论** | 已含入快照 |
+| 11-14 12:58 | `gate.log` | 同规格另一次逐题明细（同为 12685B，但 frankenstein 第 25/28 题判定相反），无最终报告行 | 未记录（推断为考卷校准后重跑） | `[外回][实]` 文件 mtime + `diff` 4 处差异 | 未记录 | **无结论** | 已含入快照 |
+| 11-14 13:43 | `enrich-tasks/cli1.json`、`enrich-tasks/cli2.json`、`library/_rejected.jsonl` | 产出 2 份 fuzz 任务书（各 2039B）与 18639B 拒收记录（`parse_failed`，at 本地 10:04，host `DESKTOP-0ACULSQ`） | 未记录（推断为解析 fuzz 产物） | `[外回][推]` 文件 mtime + 内容；`parse-gate.mjs:127` | 未记录 | 无跑批命令日志 | 已含入快照 |
+| 11-14 14:16 | `_flip-rule3-lower.log` | 规则③门槛调低实验：58/117 前缀被判 partial（应为 miss） | 翻转验证 | `[外回][实]` UTF-16 日志末行「✗ judge 翻转测试失败：1 项不通过」 | 未记录 | **失败 1 项**（这是被否决的调参） | 已含入快照 |
+| 11-14 14:16~14:17 | `test/lib/judge.mjs`、`_judge-test-final.log` | 门槛恢复为 `ceil(a.length*0.5)`（117 字句门槛 59），重跑全通过 | 「前缀不到一半 → 判 miss」断言恢复 | `[外回][实]` 文件同分钟 mtime + 14:17 日志 | 未记录 | `✓ judge 翻转测试全部通过` | 已含入快照 |
+| 11-14 14:19 | `quality-gate-run.log` | 现跑只写出标题行「题数：80 topN=4」即中断 | 未记录 | `[外回][实]` 文件仅 19 字节；`quality-gate.mjs:589` 写标题后即 runBook | 未记录 | **中断，无结论** | 已含入快照 |
+| 11-14 14:20 | `_flip-topN1.log` | `--topN=1` 翻转判据：`[book]` 1-80 完整，`[route]` 停在 29/80 中断 | P0-7 判据要求「五项全红」 | `[外回][实]` 8540B / 110 行，末行 `[route] [29/80] frankenstein …` | 未记录 | **中断，未出五项结论** | 已含入快照 |
+| 11-14 14:21 / 14:31 | `library/skill-state.json`、`_final-gate.log`、`_final-judge.log` | skill-state 复位为 `{}`；最终报告：QUALITY GATE 五项全绿、judge 翻转测试全部通过 | 未记录（skill-state 推断为打包前配置卫生） | `[外回][实]` 文件 mtime + 内容；`_final-gate.log` 与 baseline 数值一致 | 未记录 | **✓ 五项未退化 / ✓ 全部通过**（本轮唯一完整通过的验收） | 已含入快照 |
+
+### N. 11-14 23:43 孤立改动（1 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| **11-14 23:43** | **`src/lib/search.mjs`** | **文件被改动，改了什么无法确认；文件内所有日期注释均为 11-13，无任何 11-14 / 23:43 说明** | **未记录** | `[外回][实]` 文件 mtime 23:43，孤立于其它 14:xx 改动 9 小时后；闸门注释仍引用旧行号 `:692`（实际 `:697`），召回池多出 `+8` 分支可证代码已变；r4 内无备份/diff，未访问 git 对象库 | **未记录** | **未跑**（该时刻无任何日志） | 已含入快照 |
+
+### O. 11-15 产物（2 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-15 01:19 | `library/*.db-shm`（14 个） | SQLite 共享内存文件被刷新 | 运行时产物，非源码改动 | `[外回][推]` 文件类型 + mtime；`.gitignore:24` 已忽略 | 未记录 | 未跑 | 已含入快照 |
+| 11-15 11:40 / 11:48 / 11:49 | `node_modules/`（junction）、`release/BookSkillPlatform Setup 0.1.0.exe`、`*.blockmap`、`builder-debug.yml` | 产出安装包 **1,936,705,243 字节（≈1.80 GiB）** 及打包调试文件 | 未记录（无说明文件） | `[外回][实]` 文件 mtime + 字节数；`builder-debug.yml:117-121` 含 MinerU 便携 Python 资源 | 未记录 | `builder-debug.yml` 是唯一打包侧输出，**非验收结论**；`win-unpacked/` 已删，`packaged-verify.mjs` 现必然 FAIL | 已含入快照 |
+
+### P. .gitignore 11 月备注（2 条）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-12 | `.gitignore` | 备注「17 个未忽略的 `tmp-probe*.cjs` 让 `eslint .` 从 0 涨到 75 errors」 | 记录踩过的坑 | `[外回][注]` `.gitignore:56-58` | 未记录 | 无 11 月 lint 跑批输出（备注是实测回忆） | 已含入快照 |
+| 11-13 | `.gitignore` | 备注诊断探针现场：36 个一次性 `.mjs/.cjs` + 缓存留盘供复核、不入仓库；忽略 `13-可用性/` | 「全部是验某条判据的一次性脚本，结论已写进回执」 | `[外回][注]` `.gitignore:62-64` | 未记录 | 未跑 | 已含入快照 |
+
+### Q. 方案 A 执行：双轨二选一（5 条，2026-11-15 21:00~21:30）
+
+> 依据：爸爸在 Ask 模式确认做法后切 Agent 模式下达「按方案 A 执行」。
+> 做法：**不提供新旧选择，直接切到新体系**；旧 eval 作为一套可运行的评测门禁整体移出，
+> 但保留「关键词对照器」供新闸门自检。三份原件完整归档在 `存档照/旧eval归档/`。
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-15 21:05 | `test/v2-eval.mjs`、`test/eval-gate.mjs`、`test/eval-baseline.json` | 三个文件从项目移出，完整存入 `存档照/旧eval归档/`（25048 / 4996 / 1841 字节） | 旧 eval 体系已空转（e5/125 题基线判「不可比」直接 exit 0），且是双轨混乱的主要来源 | 上一轮《双轨二选一》只读核对 + Ask 模式结论 | 爸爸 | 移出后 r4 内 `ls` 确认三文件不存在；原件字节数核对一致 | 已重拍 `c1b164759f9113ac` |
+| 11-15 21:10 | `package.json` | `test:slow` 摘掉 `node test/eval-gate.mjs`；`eval` 由 `v2-eval.mjs --rerank both` 改为 `node test/quality-gate.mjs`，与 `test:gate` 同一入口 | 删文件后 `npm test` 会报找不到文件；收敛到单一入口 | `package.json:14,17,18` | 爸爸 | 脚本自检：`eval` = `test:gate` = `node test/quality-gate.mjs`，`test:slow` 已不含 eval-gate | 已重拍 |
+| 11-15 21:12 | `test/lib/book-alias.mjs`（新增）、`test/golden-verify.mjs`、`test/hallucination-fuzz.mjs` | 新建别名表唯一正本（5 条映射 + `resolveBookPrefix`）；golden-verify 删本地副本改 import；hallucination-fuzz 门3 从「读 v2-eval 源码正则提 GOLDEN」改为「读 `test/golden/*.json` 80 题」并用别名表寻址 | 别名表原先两处重复；门3 是删 v2-eval 后会直接崩的隐藏依赖 | `golden-verify.mjs:19`、`hallucination-fuzz.mjs:193-230` 原文 | 爸爸 | `golden-verify` EXIT=0（80 题 a 全在书里、起点 80、终点 79）；`hallucination-fuzz` 门3 两断言全 PASS、缺库跳过 0 题、26 PASS / 0 FAIL | 已重拍 |
+| 11-15 21:15 | `test/lib/judge.mjs`、`test/quality-gate.mjs`、`test/judge-test.mjs` | 对照器主名 `legacyJudge` → `keywordOnlyJudge`，保留 `legacyJudge` 兼容别名；闸门与翻转测试 import/调用同步改新名；`BSP_LEGACY_JUDGE` 翻转开关保留；baseline 的 `legacy*` 字段名不动 | 它不是旧 eval 体系，是新闸门的接缝自测与防放水断言基准，删掉闸门 import 就报错 | `quality-gate.mjs:79,331,473,734`；`judge-test.mjs:16,53,65,81` | 爸爸 | `judge-test` 全通过 EXIT=0；导出自检 `keywordOnlyJudge === legacyJudge` 为 true；`quality-gate.mjs` 已无 `legacyJudge(` 调用 | 已重拍 |
+| 11-15 21:18 | `src/feedback-export.mjs`、`src/lib/search.mjs`、`test/ipc-test.mjs`、`test/graphrag-fuzz.mjs`、`test/ftsliteral-test.mjs`、`README.md`、`docs/旧eval体系归档说明.md`（新增） | 清理 6 处「v2-eval / eval-gate」文字引用；README 顶部加归档指针；新建归档说明写清「哪套算数」 | 删文件后文字指向不存在的路径；历史文档不逐份改写，只加一行总指针 | 残留引用扫描（Grep） | 爸爸 | 残留引用扫描（排除归档说明性文字）为空；8 个改动文件 `node --check` 全 OK | 已重拍 |
+
+**未改动（特意保留）**：`src/lib/search.mjs` 里的 `legacy` 指旧 PDF 解析回落；`quality-baseline.json` 的 `legacy*` 字段是对照数据；`BSP_LEGACY_JUDGE` 是闸门自检开关。三者都不是旧 eval 体系。
+
+---
+
+## 11 月这一轮「没动过」的部分（反向留痕）
+
+| 对象 | 证据 | 结论 |
+|---|---|---|
+| `docs/` 原 39 份 | mtime 全 11-13 22:23；Grep `2026-11-1[0-5]` / 施工代号零命中 | 外部回收那轮未动 docs；方案 A 执行时新增 1 份 `旧eval体系归档说明.md`（见 Q 节） |
+| `README.md` | 原 mtime 11-13 22:23 | 外部回收那轮未动；方案 A 时加归档指针与一处测试章节措辞（见 Q 节），其余历史表述仍待修 |
+| `.github/workflows/ci.yml` | mtime 11-13 22:23；11 月字样零命中 | 未动，CI 无本轮改动 |
+| `eslint.config.mjs` / `package-lock.json` / `LICENSE` | mtime 全 11-13 22:23 | 未动 |
+
+---
+
+## 历史欠账（更新状态）
+
+拍存档照时列的 7 条待补项，现已按上表登记。**仍查不回的**只剩下面这些，一律不编理由，留白待外部原件确认：
+
+| 时间 | 文件 / 产物 | 已登记位置 | 还缺什么 |
+|---|---|---|---|
+| 11-14 23:43 | `src/lib/search.mjs` | N 节 | 改了哪几个函数、依据哪次实测、为什么在闸门跑完之后改 |
+| 11-15 11:48 | 1.8G 安装包 | O 节 | 谁决定打包、有无解包抽查、体积偏差为什么不回写 |
+| 11-13 | e5 → m3 换代 | B 节 | 同考卷同尺子的换代前后分数（现只有名次对照 55→1） |
+| 11-14 13:37 | `quality-baseline.json` inputs | H 节 | 两份 raw 收回可追溯位置，或写明复现方式 |
+| 11-14 14:19 / 14:20 | 两个中断的验证 | M 节 | 是否重跑、为什么中断 |
+| 10-13 起 | `docs/真机验收勾选单.md` | 反向留痕 | 79 项真机验收到底跑没跑 |
+| 10-21 起 | `README.md` | 反向留痕 | 先改「零上传」，其余标历史归档 |
+
+**责任人缺口**：73 条里只有 12 条留下流程代号（虾虾 6、施工官 1、CP1 复核 1、复核 🟡-x 3、老板 3、V07/A-07 1，有重叠），其余 61 条全为「未记录」。真实姓名 0 个。
+
+**验收缺口**：8 个日志里 3 个完整通过（`_final-gate` / `_final-judge` / `_judge-test-final`）、1 个失败（`_flip-rule3-lower`）、2 个中断（`quality-gate-run` / `_flip-topN1`）、2 个只有逐题明细无结论（`gate` / `gate-live`）。`test:fast` / `lint` / `packaged-verify` 的 11 月跑批输出 **0 份**。
+
+---
+
+## 一条合格记录的样例
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 2026-11-16 | `src/lib/search.mjs` | 把挑书候选从 8 本扩到 12 本 | 加到第 14 本书后，论语 9/9 全漏，冠军被英文小说抢走 | `gate.log` 逐题明细 + `docs/暴力测试发现清单.md:341` | 爸爸 | 现跑 quality-gate（routeAcc 0.45 → 0.61）、test:fast 全绿，报告 `reports/2026-11-16-gate.log` | 已重拍 `xxxxxxxxxxxxxxxx` |
+
+写不出「依据」和「验收」两列的改动，就先别合。
+
+---
+
+## 一致性核对
+
+**首次核对** 2026-11-15 20:51；**方案 A 执行后复跑** 21:30。脚本 `核对一致性.cjs`，原始输出存 `一致性核对结果.txt`。
+
+| 项 | 值 |
+|---|---|
+| 台账登记条目 | **84 条**，17 个主题分节（含 Q 节方案 A 的 5 条） |
+| 台账「文件」列覆盖路径 | 78 项（精确 69 / 目录前缀 9） |
+| 实际 11 月痕迹文件集合 U | 60 个（判据：mtime 晚于 11-13 22:23 基线，或文件内容含 11 月日期 / 施工代号） |
+| 已覆盖 | 60 |
+| **漏登记** | **0**，覆盖率 **100%** |
+
+首次核对补掉一处漏项：`enrich-tasks/cli2.json` 原写成简写 `cli2.json`，已改全路径；条目总数从误写的 73 修正为 79。方案 A 执行后新增 Q 节 5 条（84 条 / 17 节），U 因新增 `test/lib/book-alias.mjs` 与 README 改动扩到 60 个，21:30 复跑仍 60/60 = 100%。
+
+**统计口径说明（22:4x 复核补）**：核对脚本只统计「## 台账 · 11 月」区内、日期列以 `11-` 开头的表格行。文末「22:4x · 方案复核」的 2 条记录的是**工作区与 plans 文件**的复核动作（r4 零改动），不属 r4 的 11 月改动，故不计入 84 条 / 17 节；`核对一致性.cjs:74-84` 的 `inRegister` 范围天然把它们排除，无需改脚本。
+
+「台账中有、U 中无」的项全部属正常，逐项清单见 `一致性核对结果.txt`：一类是本轮确实改过但自身不带 11 月字样的文件（`src/lib/models.mjs`、`src/embed-book.js`、`src/desktop/engine.mjs`、`src/lib/pdf-route.mjs` 等，改动由别处注释旁证）；另一类是构建脚本、产物与外部原件（`build/stop-mineru.ps1`、`build/installer.nsh`、`release/*.exe`、`library/_rejected.jsonl` 等）。U 只收「r4 内可见 11 月痕迹」，这 17 项不进 U 不代表台账多写。
+
+**结论**：台账与 r4 内可见的 11 月实际改动一致，文件覆盖无遗漏；条目字段中「谁确认 / 验收」两列的空缺已如实标注为「未记录」，未编造补齐。
+**边界**：外部 workspace 原件未读取，因此「与外部施工台账逐条一致」尚未校验（见下节证据边界）。
+
+---
+
+## 证据边界（必须如实说明）
+
+1. 本台账的「外部 workspace 回收」标记，依据的是 r4 内可见证据：279 个文件的基线 mtime、代码注释里的日期与施工代号、`quality-baseline.json` 的 `source`/`inputs` 外部绝对路径。**外部 workspace 原件未读取**（爸爸未点名授权），因此「与外部原件逐条一致」无法 100% 保证；本台账保证的是「与 r4 内可见的 11 月实际改动一致」。
+2. 注释里的时刻（旧基线 01:29、frankenstein 校准 10:01、虾虾 13:02 派）与 r4 文件 mtime（13:37 / 13:14）不一致 —— 外部回收时 mtime 被重写，只有注释保留原时刻。台账按「注释时刻优先、mtime 并列」登记。
+3. 11-14 23:43 的 `search.mjs` 改动，r4 内无备份、无 diff、无说明；要去主仓库对象库取 diff 才算查全，本次未越界。
+4. 只能靠外部原件确认的材料（均未访问）：`01-耦合与改造设计.md`、`00-解析与判定表施工方案.md`、`前置过滤-施工/logs/`、`exp-cite-migrate-round2-output.txt`、`10-产品化/cp0-wash.txt`、`11-全盘替换/CP1-附加核查-unless版.md`、`13-可用性/` 36 个探针、`21-切块质量/dirty-scan.mjs`、`23-质量彻底解决施工/perbook-dirty.json` 与 `gate-live.route.json`、`24-CP1复核/probe-judge-rule3.mjs`、`01-改动清单.md ② 段`、`12-运行时进包/回执`、`16-升级迁移/upgrade-migrate-probe.mjs`、旧 baseline（01:29）与 commit `8c2074e`、旧版 4 件 extraResources 的 package.json 快照。
+
+_要补最后一步「与外部施工台账逐条对账」，需要单独授权访问那个外部目录。_
+
+---
+
+## 22:4x · 长期知识库改造方案复核（r4 零改动）
+
+| 日期 | 文件 | 改了什么 | 为什么 | 依据 | 谁确认 | 验收 | 存档照 |
+|---|---|---|---|---|---|---|---|
+| 11-15 22:4x | `C:\Users\JIANG XIAO HUA\.workbuddy\plans\swift-nebula-lovelace-pdDJ2Sfi.md` | 就地修订 5 处硬伤 + 5 处措辞矛盾 + 2 处设计张力，新增 §9 复核记录 | 原方案存在自相矛盾与不可达判据，直接执行会卡住或重犯「改动无留痕」 | 复核报告 `存档照/方案复核报告.md`；全库 lint 实测 21852 errors（源于 `eslint.config.mjs:8-19` 漏 `runtime/**`） | 知库复核，爸爸待拍板 2 件 | 只读核对 14 项事实全通过；`生成清单.cjs --check` = ✓ 一致 | `c1b164759f9113ac`（**未变**） |
+| 11-15 22:4x | `存档照/方案复核报告.md` | 新建：14 项事实核对、5 硬伤、5 措辞、2 张力、待拍板 2 件、修订后执行顺序 | 给爸爸一个可判读的复核凭证，不堆进 r4 docs | 同上 | 知库 | r4 零改动，未跑闸门/回归/打包 | 同上 |
+
+**本次未改 r4 任何文件**，树指纹仍 `c1b164759f9113ac`，`golden.sha` 仍 `185ec42a62ad3845`，8 份日志原样。
+**关键修订**：Phase 4 判据分离（同源 80 题只作回归门禁，效果判定归 holdout）；每 Phase 重拍存档照形成指纹链；Phase 5 lint 判据改为可达口径。
+**待爸爸拍板**：① 8 个存量 lint 老错「不阻塞/先修」；② M1 留出集题目冻结时间。未拍板不进 Phase 4/5。

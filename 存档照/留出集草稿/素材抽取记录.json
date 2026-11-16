@@ -1,0 +1,296 @@
+[
+ {
+  "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+  "chunk_id": 42,
+  "chapter": null,
+  "text": "Various storage systems, such as Oceanstore [9] and PAST [17] were built on top of these routing overlays.Oceanstore provides a global, transactional, persistent storage service that supports serialized updates on widely replicated data.To allow for concurrent updates while avoiding many of the problems inherent with wide-area locking, it uses an update model based on conflict resolution.Conflict resolution was introduced in [21] to reduce the number of transaction aborts.Oceanstore resolves conflicts by processing a series of updates, choosing a total order among them, and then applying them atomically in that order.It is built for an environment where the data is replicated on an untrusted infrastructure.By comparison, PAST provides a simple abstraction layer on top of Pastry for persistent and immutable objects."
+ },
+ {
+  "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+  "chunk_id": 83,
+  "chapter": null,
+  "text": "Both get and put operations are invoked using Amazon’s infrastructure-specific request processing framework over HTTP. There are two strategies that a client can use to select a node: (1) route its request through a generic load balancer that will select a node based on load information, or (2) use a partition-aware client library that routes requests directly to the appropriate coordinator nodes. The advantage of the first approach is that the client does not have to link any code specific to Dynamo in its application, whereas the second strategy can achieve lower latency because it skips a potential forwarding step."
+ },
+ {
+  "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+  "chunk_id": 125,
+  "chapter": null,
+  "text": "The values of W and R impact object availability, durability and consistency. For instance, if W is set to 1, then the system will never reject a write request as long as there is at least one node in the system that can successfully process a write request. However, low values of W and R can increase the risk of inconsistency as write requests are deemed successful and returned to the clients even if they are not processed by a majority of the replicas. This also introduces a vulnerability window for durability when a write request is successfully returned to the client even though it has been persisted at only a small number of nodes."
+ },
+ {
+  "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+  "chunk_id": 164,
+  "chapter": null,
+  "text": "verset { \\underset { \\underset { \\underset { \\underset { \\mathrm { } { 1 } } } { } } { } } { } } \\overset { \\underset { \\underset { \\underset { \\mathrm { } { 1 } } } { } { } } } { \\underset { \\underset { \\underset { \\mathrm { } { 9 } } } { } } } \\overset { \\underset { \\underset { \\underset { \\mathrm { } { 1 } } } { } { } } { } } \\overset { \\underset { \\underset { \\mathrm { 1 } } { } } { } } { \\underset { \\underset { \\mathrm { 9 } } } { } } \\overset { \\underset { \\underset { \\mathrm { 1 } } { } } { } { } } \\overset { \\underset { \\underset { \\mathrm { 1 } } { } } { } { } } \\overset { \\underset { \\underset { \\mathrm { 1 } } { } { } } { } } \\overset { \\underset { \\underset { \\mathrm { 1 } } { } { } } { } } { \\underset { \\underset { \\mathrm { 2 } } { } { } } { } } \\overset { \\underset { \\mathrm { 1 } } { } { \\underset { \\mathrm { 2 } } { } { } } } \\overset { \\underset { \\mathrm { 1 } } { } { "
+ },
+ {
+  "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+  "chunk_id": 29,
+  "chapter": null,
+  "text": "Note that we cannot expect the converse condition to hold as well, since that would imply that any two concurrent events must occur at the same time. In Figure 1, p _ { 2 } and p _ { 3 } are both concurrent with q _ { 3 } , so this would mean that they both must occur at the same time as q _ { 3 } , which would contradict the Clock Condition because p _ { 2 } \\rightarrow p _ { 3 } .\nIt is easy to see from our definition of the relation \\leftrightarrow that the Clock Condition is satisfied if the following two conditions hold."
+ },
+ {
+  "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+  "chunk_id": 52,
+  "chapter": null,
+  "text": "request. Since rules 3 and 4 are the only ones which delete messages from the request queue, it is then easy to see that condition I holds. Condition II follows from the fact that the total ordering → extends the partial ordering →. Rule 2 guarantees that after \\mathbf { P } _ { i } requests the resource, condition (ii) of rule 5 will eventually hold. Rules 3 and 4 imply that if each process which is granted the resource eventually releases it, then condition (i) of rule 5 will eventually hold, thus proving condition III."
+ },
+ {
+  "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+  "chunk_id": 76,
+  "chapter": null,
+  "text": "We now specialize rules IR1 and 2 for our physical clocks as follows:\nIR1'. For each i , if \\mathbf { P } _ { i } does not receive a message at physical time t , then \\mathbf { C } _ { i } is differentiable at t and d C _ { i } ( t ) / d t > 0 IR2'. (a) If \\mathbf { P } _ { i } sends a message m at physical time t, then m contains a timestamp \\mathbf { T } _ { m } \\; = \\; \\mathbf { C } _ { i } ( t ) . (b) Upon receiving a message m at time t ^ { \\prime } , process \\mathbf { P } _ { j } sets \\mathbf { C } _ { j } ( t ^ { \\prime } ) equal to maximum ( \\mathrm { C } _ { j } ( t ^ { \\prime } - 0 ) , \\mathrm { T } _ { m } + \\mu _ { m } ) . ^ { 9 }"
+ },
+ {
+  "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+  "chunk_id": 105,
+  "chapter": null,
+  "text": "We now consider the following two cases: \\mathbf { ( i ) } \\mathbf { C } _ { x } is the clock \\mathbf { C } _ { q } of process \\mathbf { P } _ { q } . \\quad ( \\mathrm { i i } ) \\quad \\dot { \\mathbf { C } } _ { x } is the clock \\mathbf { C } _ { m } of a message sent at time t _ { 1 } by process \\mathbf { P } _ { \\mathbf { q } } . In case (i), (7) simply becomes"
+ },
+ {
+  "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+  "chunk_id": 26,
+  "chapter": null,
+  "text": "into a set of M splits. The input splits can be processed in parallel by different machines. Reduce invocations are distributed by partitioning the intermediate key space into R pieces using a partitioning function (e.g., hash(key) mod R). The number of partitions (R) and the partitioning function are specified by the user.\nFigure 1 shows the overall flow of a MapReduce operation in our implementation. When the user program calls the MapReduce function, the following sequence of actions occurs (the numbered labels in Figure 1 correspond to the numbers in the list below):"
+ },
+ {
+  "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+  "chunk_id": 51,
+  "chapter": null,
+  "text": "4.1 Partitioning Function\nThe users of MapReduce specify the number of reduce tasks/output files that they desire (R). Data gets partitioned across these tasks using a partitioning function on the intermediate key. A default partitioning function is provided that uses hashing (e.g. “hash(key) mod R”). This tends to result in fairly well-balanced partitions. In some cases, however, it is useful to partition data by some other function of the key. For example, sometimes the output keys are URLs, and we want all entries for a single host to end up in the same output file. To support situations like this, the user of the MapReduce library can provide a special partitioning function. For example, using “hash(Hostname(urlkey)) mod R” as the partitioning function causes all URLs from the same host to end up in the same output file."
+ },
+ {
+  "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+  "chunk_id": 79,
+  "chapter": null,
+  "text": "original text line as the intermediate key/value pair. We used a built-in Identity function as the Reduce operator. This functions passes the intermediate key/value pair unchanged as the output key/value pair. The final sorted output is written to a set of 2-way replicated GFS files (i.e., 2 terabytes are written as the output of the program).\nAs before, the input data is split into 64MB pieces (M = 15000). We partition the sorted output into 4000 files (R = 4000). The partitioning function uses the initial bytes of the key to segregate it into one of R pieces."
+ },
+ {
+  "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+  "chunk_id": 104,
+  "chapter": null,
+  "text": "The MapReduce programming model has been successfully used at Google for many different purposes.We attribute this success to several reasons.First, the model is easy to use, even for programmers without experience with parallel and distributed systems, since it hides the details of parallelization, fault-tolerance, locality optimization, and load balancing.Second, a large variety of problems are easily expressible as MapReduce computations.For example, MapReduce is used for the generation of data for Google’s production web search service, for sorting, for data mining, for machine learning, and many other systems.Third, we have developed an implementation of MapReduce that scales to large clusters of machines comprising thousands of machines."
+ },
+ {
+  "book": "attention-is-all-you-need-en.pdf",
+  "chunk_id": 29,
+  "chapter": null,
+  "text": "3.2.2 Multi-Head Attention\nInstead of performing a single attention function with d _ { \\mathrm { m o d e l } } -dimensional keys, values and queries, we found it beneficial to linearly project the queries, keys and values h times with different, learned linear projections to d _ { k } , d _ { k } and d _ { v } dimensions, respectively. On each of these projected versions of queries, keys and values we then perform the attention function in parallel, yielding d _ { v } . -dimensional"
+ },
+ {
+  "book": "attention-is-all-you-need-en.pdf",
+  "chunk_id": 53,
+  "chapter": null,
+  "text": "5.1 Training Data and Batching\nWe trained on the standard WMT 2014 English-German dataset consisting of about 4.5 million sentence pairs. Sentences were encoded using byte-pair encoding [3], which has a shared sourcetarget vocabulary of about 37000 tokens. For English-French, we used the significantly larger WMT 2014 English-French dataset consisting of 36M sentences and split tokens into a 32000 word-piece vocabulary [38]. Sentence pairs were batched together by approximate sequence length. Each training batch contained a set of sentence pairs containing approximately 25000 source tokens and 25000 target tokens."
+ },
+ {
+  "book": "attention-is-all-you-need-en.pdf",
+  "chunk_id": 77,
+  "chapter": null,
+  "text": "We are excited about the future of attention-based models and plan to apply them to other tasks. We plan to extend the Transformer to problems involving input and output modalities other than text and to investigate local, restricted attention mechanisms to efficiently handle large inputs and outputs such as images, audio and video. Making generation less sequential is another research goals of ours."
+ },
+ {
+  "book": "attention-is-all-you-need-en.pdf",
+  "chunk_id": 100,
+  "chapter": null,
+  "text": "[22] Zhouhan Lin, Minwei Feng, Cicero Nogueira dos Santos, Mo Yu, Bing Xiang, Bowen Zhou, and Yoshua Bengio. A structured self-attentive sentence embedding. arXiv preprint arXiv:1703.03130, 2017."
+ },
+ {
+  "book": "daodejing-zh.docx",
+  "chunk_id": 15,
+  "chapter": "第十五章",
+  "text": "第十五章 古之善為士一作「道」者，微妙玄通一作「達」，深不可識。夫唯不可識，故強一作「彊」為之容：豫兮，若冬涉川；猶一作「猷」兮，若畏四鄰；儼兮，其若客；渙兮，其若冰之將釋；敦一作「沌」兮，其若樸；曠兮，其若谷；混兮，其若濁。濁而靜之，徐清。安以動之，徐生。保一作「葆」此道者，不欲盈。夫唯不盈，故能蔽一作「敝」不一作「而」新成。"
+ },
+ {
+  "book": "daodejing-zh.docx",
+  "chunk_id": 28,
+  "chapter": "第二十八章",
+  "text": "第二十八章 知其雄，守其雌，為天下谿。為天下谿，常德不離，復歸於嬰兒。知其白，守其黑，為天下式。為天下式，常德不忒，復歸於無極。知其榮，守其辱，為天下谷。為天下谷，常德乃足，復歸於樸。樸散則為器，聖人用之，則為官長，故大制不割。"
+ },
+ {
+  "book": "daodejing-zh.docx",
+  "chunk_id": 49,
+  "chapter": "第四十九章",
+  "text": "第四十九章 聖人常無心，以百姓心為心。善者，吾善之；不善者，吾亦善之；德一作「得」善。信者，吾信之；不信者，吾亦信之；德一作「得」信。聖人在天下，歙歙焉，為天下渾其心，百姓皆注其耳目，聖人皆孩之。"
+ },
+ {
+  "book": "daodejing-zh.docx",
+  "chunk_id": 61,
+  "chapter": "第六十一章",
+  "text": "第六十一章 大邦者下流，天下之牝，天下之交也。牝常以靜勝牡，以靜為下。故大邦以下小邦，則取小邦；小邦以下大邦，則取大邦。故或下以取，或下而取。大邦不過欲兼畜人，小邦不過欲入事人。夫兩者各得所欲，大者宜為下。"
+ },
+ {
+  "book": "frankenstein-en.epub",
+  "chunk_id": 145,
+  "chapter": "Chapter 5",
+  "text": "The different accidents of life are not so changeable as the feelings of human\nnature.I had worked hard for nearly two years, for the sole purpose of\ninfusing life into an inanimate body.For this I had deprived myself of rest\nand health.I had desired it with an ardour that far exceeded moderation; but\nnow that I had finished, the beauty of the dream vanished, and breathless\nhorror and disgust filled my heart.Unable to endure the aspect of the being I\nhad created, I rushed out of the room and continued a long time traversing my\nbed-chamber, unable to compose my mind to sleep.At length lassitude succeeded\nto the tumult I had before endured, and I threw myself on the bed in my\nclothes, endeavouring to seek a few moments of forgetfulness.But it was in\nvain; I slept, indeed, but I was disturbed by the wildest dreams."
+ },
+ {
+  "book": "frankenstein-en.epub",
+  "chunk_id": 285,
+  "chapter": "Chapter 10",
+  "text": "“Devil,” I exclaimed, “do you dare approach me? And do not you fear the fierce\nvengeance of my arm wreaked on your miserable head? Begone, vile insect! Or\nrather, stay, that I may trample you to dust! And, oh! That I could, with the\nextinction of your miserable existence, restore those victims whom you have so\ndiabolically murdered!”"
+ },
+ {
+  "book": "frankenstein-en.epub",
+  "chunk_id": 424,
+  "chapter": "Chapter 16",
+  "text": "“I continued to wind among the paths of the wood, until I came to its boundary,\nwhich was skirted by a deep and rapid river, into which many of the trees bent\ntheir branches, now budding with the fresh spring.Here I paused, not exactly\nknowing what path to pursue, when I heard the sound of voices, that induced me\nto conceal myself under the shade of a cypress.I was scarcely hid when a young\ngirl came running towards the spot where I was concealed, laughing, as if she\nran from someone in sport.She continued her course along the precipitous sides\nof the river, when suddenly her foot slipped, and she fell into the rapid\nstream.I rushed from my hiding-place and with extreme labour, from the force\nof the current, saved her and dragged her to shore."
+ },
+ {
+  "book": "frankenstein-en.epub",
+  "chunk_id": 565,
+  "chapter": "Chapter 21",
+  "text": "The season of the assizes approached. I had already been three months in\nprison, and although I was still weak and in continual danger of a relapse, I\nwas obliged to travel nearly a hundred miles to the country town where the\ncourt was held. Mr. Kirwin charged himself with every care of collecting\nwitnesses and arranging my defence. I was spared the disgrace of appearing\npublicly as a criminal, as the case was not brought before the court that\ndecides on life and death. The grand jury rejected the bill, on its being\nproved that I was on the Orkney Islands at the hour the body of my friend was\nfound; and a fortnight after my removal I was liberated from prison."
+ },
+ {
+  "book": "lunyu-xueer-zh.docx",
+  "chunk_id": 15,
+  "chapter": "第15章",
+  "text": "第15章 子貢曰：「貧而無諂，富而無驕，何如？」子曰：「可也。未若貧而樂，富而好禮者也」。子貢曰：「《詩》云：『如切如磋，如琢如磨。』其斯之謂與？」子曰：「賜也，始可與言《詩》已矣！吿諸往而知來者。」"
+ },
+ {
+  "book": "lunyu-xueer-zh.pdf",
+  "chunk_id": 1,
+  "chapter": null,
+  "text": "論語 · 學而第一（第 1 / 4 頁） 第1章 子曰:「學而時習之，不亦說乎？有朋自遠方來，不亦樂乎？人不知而不慍，不亦君子乎？」\n第2章 有子曰:「其爲人也孝弟，而好犯上者，鮮矣；不好犯上，而好作亂者，未之有也。君子務本，本立而道生；孝弟也者，其爲仁之本與？」\n第3章 子曰:「巧言令色，鮮矣仁。」\n第4章 曾子曰:「吾日三省吾身:爲人謀而不忠乎？與朋友交而不信乎？傳不習乎？」"
+ },
+ {
+  "book": "lunyu-xueer-zh.pdf",
+  "chunk_id": 2,
+  "chapter": null,
+  "text": "論語 · 學而第一（第 2 / 4 頁）\n第5章 子曰:「道千乘之國，敬事而信，節用而愛人，使民以時。」\n第6章 子曰:「弟子入則孝，出則弟，謹而信，汎愛眾，而親仁。行有餘力，則以學文。」\n第7章 子夏曰:「賢賢易色；事父母，能竭其力；事君，能致其身；與朋友交，言而有信；雖曰未學，吾必謂之學已。」\n第8章 子曰:「君子不重則不威，學則不固。主忠信，無友不如己者，過則勿憚改。」"
+ },
+ {
+  "book": "lunyu-xueer-zh.pdf",
+  "chunk_id": 3,
+  "chapter": null,
+  "text": "論語 · 學而第一（第 3 / 4 頁） 第9章 曾子曰:「愼終追遠，民德歸厚矣。」\n第10章 子禽問於子貢曰:「夫子至於是邦也，必聞其政，求之與？抑與之與？」子貢曰:「夫子溫、良、恭、儉、讓以得之。夫子之求之也，其諸異乎人之求之與？」\n第11章 子曰:「父在觀其志，父沒觀其行。三年無改於父之道，可謂孝矣。」\n第12章 有子曰:「禮之用，和爲貴；先王之道，斯爲美；小大由之。有所不行，知和而和，不以禮節之，亦不可行也。」"
+ },
+ {
+  "book": "lunyu-xueer-zh.pdf",
+  "chunk_id": 4,
+  "chapter": null,
+  "text": "論語 · 學而第一（第 4 / 4 頁）\n第13章 有子曰:「信近於義，言可復也；恭近於禮，遠恥辱也。因不失其親，亦可宗也。」\n第14章 子曰:「君子食無求飽，居無求安，敏於事而愼於言，就有道而正焉:可謂好學也已。」\n第15章 子貢曰:「貧而無諂，富而無驕，何如？」子曰:「可也。未若貧而樂，富而好禮者也」。子貢曰:「《詩》云:『如切如磋，如琢如磨。』其斯之謂與？」子曰:「賜也，始可與言《詩》已矣！吿諸往而知來者。」\n第16章 子曰:「不患人之不己知，患不知人也。」"
+ },
+ {
+  "book": "mengzi-zh.docx",
+  "chunk_id": 34,
+  "chapter": "公孫丑上·6",
+  "text": "孟子曰：「人皆有不忍人之心。先王有不忍人之心，斯有不忍人之政矣。以不忍人之心，行不忍人之政，治天下可運之掌上。所以謂人皆有不忍人之心者，今人乍見孺子將入於井，皆有怵惕惻隱之心；非所以內交於孺子之父母也，非所以要譽於鄉黨朋友也，非惡其聲而然也。由是觀之，無惻隱之心，非人也。無羞惡之心，非人也。無辭讓之心，非人也。無是非之心，非人也。惻隱之心，仁之端也；羞惡之心，義之端也；辭讓之心，禮之端也；是非之心，智之端也。人之有是四端也，猶其有四體也。有是四端而自謂不能者，自賊者也；謂其君不能者，賊其君者也。凡有四端於我者，知皆擴而充之矣，若火之始然，泉之始達。茍能充之，足以保四海；茍不充之，不足以事父母。」"
+ },
+ {
+  "book": "mengzi-zh.docx",
+  "chunk_id": 70,
+  "chapter": "滕文公下·8",
+  "text": "戴盈之曰：「什一，去關市之征，今茲未能。請輕之，以待來年，然後已，何如？」\n孟子曰：「今有人日攘其鄰之雞者，或告之曰：『是非君子之道。』曰：『請損之，月攘一雞；以待來年，然後已。』如知其非義，斯速已矣，何待來年？」"
+ },
+ {
+  "book": "mengzi-zh.docx",
+  "chunk_id": 138,
+  "chapter": "萬章上·4",
+  "text": "咸丘蒙問曰：「語云：『盛德之士，君不得而臣，父不得而子。』舜南面而立，堯帥諸侯北面而朝之，瞽瞍亦北面而朝之。舜見瞽瞍，其容有蹙。孔子曰：『於斯時也，天下殆哉，岌岌乎！』不識此語，誠然乎哉？」\n孟子曰：「否，此非君子之言，齊東野人之語也。堯老而舜攝也，《堯典》曰：『二十有八載，放勛乃徂落，百姓如喪考妣。三年，四海遏密八音。』孔子曰：『天無二日，民無二王。』舜既為天子矣，又帥天下諸侯以為堯三年喪，是二天子矣。」\n咸丘蒙曰：「舜之不臣堯，則吾既得聞命矣。《詩》云：『普天之下，莫非王土；率土之濱，莫非王臣。』而舜既為天子矣，敢問瞽瞍之非臣，如何？」\n曰：「是詩也，非是之謂也，勞於王事而不得養父母也。曰：『此莫非王事，我獨賢勞也。』故說詩者，不以文害辭，不以辭害志；以意逆志，是為得之。如以辭而已矣。《雲漢》之詩曰：『周餘黎民，靡有孑遺。』信斯言也，是周無遺民也。孝子之至，莫大乎尊親；尊親之至，莫大乎以天下養。為天子父，尊之至也；以天下養，養之至也。《詩》曰：『永言孝思，孝思惟則』，此之謂也。《書》曰：『祗載見瞽瞍，夔夔齋栗，瞽瞍亦允若』，是為父不得而子也？」"
+ },
+ {
+  "book": "mengzi-zh.docx",
+  "chunk_id": 178,
+  "chapter": "告子下·4",
+  "text": "宋牼將之楚，孟子遇於石丘，曰：「先生將何之？」\n曰：「吾聞秦、楚構兵，我將見楚王，說而罷之；楚王不悅，我將見秦王，說而罷之。二王我將有所遇焉。」\n曰：「軻也請無問其詳，愿聞其指。說之將何如？」\n曰：「我將言其不利也。」\n曰：「先生之志則大矣，先生之號則不可。先生以利說秦、楚之王，秦、楚之王悅於利，以罷三軍之師；是三軍之士樂罷而悅於利也。為人臣者，懷利以事其君，為人子者，懷利以事其父，為人弟者，懷利以事其兄，是君臣、父子、兄弟終去仁義，懷利以相接；然而不亡者，未之有也。先生以仁義說秦、楚之王，秦、楚之王悅於仁義，以罷三軍之師；是三軍之士樂罷而悅於仁義也。為人臣者，懷仁義以事其君，為人子者，懷仁義以事其父，為人弟者，懷仁義以事其兄，是君臣、父子、兄弟去利，懷仁義以相接也；然而不王者，未之有也。何必曰利？」"
+ },
+ {
+  "book": "pg1260-简爱.epub",
+  "chunk_id": 372,
+  "chapter": "CHAPTER X",
+  "text": "“Well, and what of John Reed?”\n“Oh, he is not doing so well as his mama could wish. He went to college, and he\ngot—plucked, I think they call it: and then his uncles wanted him to be a\nbarrister, and study the law: but he is such a dissipated young man, they will\nnever make much of him, I think.”\n“What does he look like?”\n“He is very tall: some people call him a fine-looking young man; but he has\nsuch thick lips.”"
+ },
+ {
+  "book": "pg1260-简爱.epub",
+  "chunk_id": 745,
+  "chapter": "CHAPTER XVIII",
+  "text": ", were brought down in armfuls by the abigails;\nthen a selection was made, and such things as were chosen were carried to the\nboudoir within the drawing-room."
+ },
+ {
+  "book": "pg1260-简爱.epub",
+  "chunk_id": 1115,
+  "chapter": "CHAPTER XXIV",
+  "text": "“Would I forgive him for the selfish idea, and prove my pardon by a reconciling\nkiss?”\n“No: I would rather be excused.”\nHere I heard myself apostrophised as a “hard little thing;” and it was added,\n“any other woman would have been melted to marrow at hearing such stanzas\ncrooned in her praise.”\nI assured him I was naturally hard—very flinty, and that he would often find me\nso; and that, moreover, I was determined to show him divers rugged points in my\ncharacter before the ensuing four weeks elapsed: he should know fully what sort\nof a bargain he had made, while there was yet time to rescind it."
+ },
+ {
+  "book": "pg1260-简爱.epub",
+  "chunk_id": 1489,
+  "chapter": "CHAPTER XXXI",
+  "text": "“Good evening, Mr. Rivers. And good evening, old Carlo. Your dog is quicker to\nrecognise his friends than you are, sir; he pricked his ears and wagged his\ntail when I was at the bottom of the field, and you have your back towards me\nnow.”"
+ },
+ {
+  "book": "pg1661-福尔摩斯冒险史.epub",
+  "chunk_id": 211,
+  "chapter": "III. A CASE OF IDENTITY",
+  "text": "“Yes, sir, but very quietly. It was to be at St. Saviour’s, near\nKing’s Cross, and we were to have breakfast afterwards at the St. Pancras\nHotel. Hosmer came for us in a hansom, but as there were two of us he put us\nboth into it and stepped himself into a four-wheeler, which happened to be the\nonly other cab in the street. We got to the church first, and when the\nfour-wheeler drove up we waited for him to step out, but he never did, and when\nthe cabman got down from the box and looked there was no one there! The cabman\nsaid that he could not imagine what had become of him, for he had seen him get\nin with his own eyes. That was last Friday, Mr. Holmes, and I have never seen\nor heard anything since then to throw any light upon what became of him.”"
+ },
+ {
+  "book": "pg1661-福尔摩斯冒险史.epub",
+  "chunk_id": 414,
+  "chapter": "V. THE FIVE ORANGE PIPS",
+  "text": "“Texas, I think.”\n“I was not and am not sure which; but I knew that the ship must have an\nAmerican origin.”\n“What then?”\n“I searched the Dundee records, and when I found that the barque Lone\nStar was there in January, ’85, my suspicion became a certainty. I\nthen inquired as to the vessels which lay at present in the port of\nLondon.”\n“The Lone Star had arrived here last week. I went down to the\nAlbert Dock and found that she had been taken down the river by the early tide\nthis morning, homeward bound to Savannah. I wired to Gravesend and learned that\nshe had passed some time ago, and as the wind is easterly I have no doubt that\nshe is now past the Goodwins and not very far from the Isle of Wight.”"
+ },
+ {
+  "book": "pg1661-福尔摩斯冒险史.epub",
+  "chunk_id": 617,
+  "chapter": "VIII. THE ADVENTURE OF THE SPECKLED BAND",
+  "text": "The lady coloured deeply and covered over her injured wrist. “He is a\nhard man,” she said, “and perhaps he hardly knows his own\nstrength.”\nThere was a long silence, during which Holmes leaned his chin upon his hands\nand stared into the crackling fire.\n“This is a very deep business,” he said at last. “There are a\nthousand details which I should desire to know before I decide upon our course\nof action. Yet we have not a moment to lose. If we were to come to Stoke Moran\nto-day, would it be possible for us to see over these rooms without the\nknowledge of your stepfather?”"
+ },
+ {
+  "book": "pg1661-福尔摩斯冒险史.epub",
+  "chunk_id": 820,
+  "chapter": "X. THE ADVENTURE OF THE NOBLE BACHELOR",
+  "text": "“Perhaps, Mrs. Moulton, you would like my friend and me to leave the room\nwhile you explain this matter?”\n“If I may give an opinion,” remarked the strange gentleman,\n“we’ve had just a little too much secrecy over this business\nalready. For my part, I should like all Europe and America to hear the rights\nof it.” He was a small, wiry, sunburnt man, clean-shaven, with a sharp\nface and alert manner."
+ },
+ {
+  "book": "pride-and-prejudice-en.epub",
+  "chunk_id": 256,
+  "chapter": "Piling up the fire. CHAPTER XI.",
+  "text": "A fortunate chance had recommended him to Lady Catherine de\nBourgh when the living of Hunsford was vacant; and the respect which he\nfelt for her high rank, and his veneration for her as his patroness,\nmingling with a very good opinion of himself, of his authority as a\nclergyman, and his right as a rector, made him altogether a mixture of\npride and obsequiousness, self-importance and humility."
+ },
+ {
+  "book": "pride-and-prejudice-en.epub",
+  "chunk_id": 513,
+  "chapter": "CHAPTER XXIV.",
+  "text": "I am extremely\nglad that you have such pleasant accounts from our friends at\nHunsford.Pray go to see them, with Sir William and Maria.I am\nsure you will be very comfortable there."
+ },
+ {
+  "book": "pride-and-prejudice-en.epub",
+  "chunk_id": 768,
+  "chapter": "“When Colonel Miller’s regiment went away.” CHAPTER XLI.",
+  "text": "“Lydia will never be easy till she has exposed herself in some public\nplace or other, and we can never expect her to do it with so little\nexpense or inconvenience to her family as under the present\ncircumstances.”\n“If you were aware,” said Elizabeth, “of the very great disadvantage to\nus all, which must arise from the public notice of Lydia’s unguarded and\nimprudent manner, nay, which has already arisen from it, I am sure you\nwould judge differently in the affair.”"
+ },
+ {
+  "book": "pride-and-prejudice-en.epub",
+  "chunk_id": 1022,
+  "chapter": "“The Post.” CHAPTER XLVIII.",
+  "text": "Elizabeth was now most heartily sorry that she had, from the distress of\nthe moment, been led to make Mr. Darcy acquainted with their fears for\nher sister; for since her marriage would so shortly give the proper\ntermination to the elopement, they might hope to conceal its\nunfavourable beginning from all those who were not immediately on the\nspot."
+ },
+ {
+  "book": "低压电器检测实训报告（带表格样例）.docx",
+  "chunk_id": 3,
+  "chapter": "二、检测项目汇总表",
+  "text": "序号 | 检测项目 | 依据条款 | 样本数 | 合格数 | 判定\n1 | 动作特性验证 | 6.3.2 | 12 | 12 | 合格\n2 | 介电强度试验 | 6.4.1 | 12 | 11 | 1 台不合格\n3 | 温升极限验证 | 6.5.3 | 12 | 12 | 合格\n4 | 操作循环寿命 | 7.2.6 | 12 | 10 | 2 台不合格\n5 | 端子机械强度 | 7.4.9 | 12 | 12 | 合格"
+ },
+ {
+  "book": "低压电器检测实训报告（带表格样例）.docx",
+  "chunk_id": 4,
+  "chapter": "三、不合格项分析",
+  "text": "介电强度试验中出现 1 台不合格：施压部位为相与外壳之间，击穿发生在 1.8 kV，低于 2.0 kV 的规定值。初步判断为外壳绝缘件存在气泡缺陷，建议对同批次绝缘件加做抽样切片检查。\n操作循环寿命不合格 2 台：均在第 8500 次左右出现触头熔焊，占位编号分别为 C-07 与 C-19。熔焊原因指向触头压力弹簧的批次热处理偏差，已反馈供应商按 8D 流程整改。"
+ },
+ {
+  "book": "低压电器检测实训报告（带表格样例）.docx",
+  "chunk_id": 6,
+  "chapter": "四、参数记录表",
+  "text": "样本编号 | 额定电压 V | 额定电流 A | 实测动作电流 A | 实测温升 K | 循环次数\nC-03 | 230 | 32 | 31.6 | 48.2 | 12000\nC-07 | 230 | 32 | 31.9 | 52.7 | 8530\nC-11 | 400 | 63 | 62.4 | 55.1 | 12000\nC-19 | 400 | 63 | 62.8 | 57.9 | 8480\nC-22 | 400 | 80 | 79.2 | 49.6 | 12000"
+ },
+ {
+  "book": "低压电器检测实训报告（带表格样例）.docx",
+  "chunk_id": 7,
+  "chapter": "五、结论与建议",
+  "text": "本轮 36 台样本总体合格率 91.7%。两项不合格均属批次性工艺偏差，不涉及设计缺陷。建议：一是对绝缘件供应商启动来料加严检验；二是对触头压力弹簧的批次热处理记录做全量追溯；三是四月中旬复检一次以闭环。\n本报告为带表格样例文档，专用于验证知识库管线的表格提取能力——若导入后表格内容缺失，即命中已知缺陷，待 V3 第二波修复后复测。"
+ }
+]

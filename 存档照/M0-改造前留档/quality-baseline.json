@@ -1,0 +1,85 @@
+{
+ "generatedAt": "2026-11-14T05:37:22.617Z",
+ "topN": 4,
+ "total": 80,
+ "golden": {
+  "sha": "185ec42a62ad3845",
+  "files": 11
+ },
+ "caliberOf": {
+  "hitRate": "perbook",
+  "fullRate": "perbook",
+  "avgFirstRank": "perbook",
+  "routeAcc": "route",
+  "dirtyRate": "perbook"
+ },
+ "metrics": {
+  "hitRate": 0.725,
+  "fullRate": 0.725,
+  "avgFirstRank": 3.837,
+  "routeAcc": 0.45,
+  "dirtyRate": 0.0031
+ },
+ "detail": {
+  "full": 58,
+  "partial": 0,
+  "miss": 22,
+  "hit": 58,
+  "hitRate": 0.725,
+  "fullRate": 0.725,
+  "avgFirstRank": 3.837,
+  "avgFirstRankHitOnly": 1.5,
+  "dirtyRate": 0.0031,
+  "dirtyTotal": 1,
+  "dirtyQ": 1,
+  "returnedTotal": 320,
+  "prodDirtyRate": 0,
+  "prodDirtyTotal": 0,
+  "prodDirtyQ": 0,
+  "legacyHit": 75,
+  "legacyRate": 0.9375,
+  "legacyAvgFirstRank": 1.36,
+  "damageRate": 0,
+  "routeTotal": 80,
+  "routeFull": 36,
+  "routePartial": 1,
+  "routeHit": 37,
+  "routeHitRate": 0.4625,
+  "routeFullRate": 0.45,
+  "routeAvgFirstRank": 6.088,
+  "routeAcc": 0.45,
+  "routeAccHitOnly": 0.973
+ },
+ "latency": {
+  "kind": "informational",
+  "avgLatencyMs": 24498,
+  "note": "采集时整机 CPU 100%（同期有多个探针在跑）。此数不作性能基准。"
+ },
+ "seam": {
+  "total": 184,
+  "newPartial": 184,
+  "rate": 1,
+  "legacyHit": 167,
+  "legacyRate": 1
+ },
+ "direction": {
+  "hitRate": true,
+  "fullRate": true,
+  "avgFirstRank": false,
+  "routeAcc": true,
+  "dirtyRate": false
+ },
+ "source": "from-book:C:\\Users\\JIANG XIAO HUA\\.dsh\\bot\\workspace\\前置过滤-施工\\23-质量彻底解决施工\\perbook-dirty.json",
+ "inputs": {
+  "book": {
+   "path": "C:\\Users\\JIANG XIAO HUA\\.dsh\\bot\\workspace\\前置过滤-施工\\23-质量彻底解决施工\\perbook-dirty.json",
+   "sha": "28413f088b94c5e5",
+   "bytes": 97877
+  },
+  "route": {
+   "path": "C:\\Users\\JIANG XIAO HUA\\.dsh\\bot\\workspace\\前置过滤-施工\\23-质量彻底解决施工\\gate-live.route.json",
+   "sha": "382cb6a77f47727e",
+   "bytes": 72514
+  }
+ }
+}

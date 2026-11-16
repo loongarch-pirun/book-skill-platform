@@ -1,0 +1,1684 @@
+{
+ "snapshotId": "r4-snapshot-20261115",
+ "capturedAt": "2026-11-16T04:29:40.167Z",
+ "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
+ "treeSha16": "1538b1f834df8dc3",
+ "fileCount": 261,
+ "facts": {
+  "golden": {
+   "files": 11,
+   "questions": 80,
+   "sha": "185ec42a62ad3845"
+  },
+  "defaultEmbed": "m3",
+  "libraryDbCount": 13,
+  "libraryDbs": [
+   "低压电器检测实训报告（带表格样例）.docx.db",
+   "attention-is-all-you-need-en.pdf.db",
+   "daodejing-zh.docx.db",
+   "Dynamo-亚马逊高可用键值存储-2007.pdf.db",
+   "frankenstein-en.epub.db",
+   "Lamport-时间时钟与分布式系统排序-1978.pdf.db",
+   "lunyu-xueer-zh.docx.db",
+   "lunyu-xueer-zh.pdf.db",
+   "MapReduce-谷歌大规模分布式处理-2004.pdf.db",
+   "mengzi-zh.docx.db",
+   "pg1260-简爱.epub.db",
+   "pg1661-福尔摩斯冒险史.epub.db",
+   "pride-and-prejudice-en.epub.db"
+  ],
+  "qualityBaseline": {
+   "generatedAt": "2026-11-14T05:37:22.617Z",
+   "topN": 4,
+   "total": 80,
+   "metrics": {
+    "hitRate": 0.725,
+    "fullRate": 0.725,
+    "avgFirstRank": 3.837,
+    "routeAcc": 0.45,
+    "dirtyRate": 0.0031
+   }
+  },
+  "evalBaseline": null,
+  "lastCodeChange": {
+   "path": "src/lib/search.mjs",
+   "mtime": "2026-11-16T04:10:34.146Z"
+  },
+  "release": [
+   {
+    "name": "BookSkillPlatform Setup 0.1.0.exe",
+    "bytes": 1936705243,
+    "mtime": "2026-11-15T03:48:26.951Z"
+   },
+   {
+    "name": "BookSkillPlatform Setup 0.1.0.exe.blockmap",
+    "bytes": 2015457,
+    "mtime": "2026-11-15T03:49:26.226Z"
+   },
+   {
+    "name": "builder-debug.yml",
+    "bytes": 9978,
+    "mtime": "2026-11-15T03:49:26.259Z"
+   }
+  ],
+  "logs": [
+   {
+    "name": "_final-gate.log",
+    "bytes": 1470,
+    "mtime": "2026-11-14T06:31:28.259Z",
+    "sha16": "d58b88cce343e9c7"
+   },
+   {
+    "name": "_final-judge.log",
+    "bytes": 2824,
+    "mtime": "2026-11-14T06:31:26.952Z",
+    "sha16": "2815b6233583c9a1"
+   },
+   {
+    "name": "_flip-rule3-lower.log",
+    "bytes": 3500,
+    "mtime": "2026-11-14T06:16:28.998Z",
+    "sha16": "c3f39fabd2ee5d8c"
+   },
+   {
+    "name": "_flip-topN1.log",
+    "bytes": 8540,
+    "mtime": "2026-11-14T06:20:53.295Z",
+    "sha16": "96a23db9f67cd780"
+   },
+   {
+    "name": "_judge-test-final.log",
+    "bytes": 2824,
+    "mtime": "2026-11-14T06:17:08.475Z",
+    "sha16": "2815b6233583c9a1"
+   },
+   {
+    "name": "gate-live.log",
+    "bytes": 12685,
+    "mtime": "2026-11-13T17:45:55.967Z",
+    "sha16": "4c5b2c33a46642dd"
+   },
+   {
+    "name": "gate.log",
+    "bytes": 12685,
+    "mtime": "2026-11-14T04:58:18.876Z",
+    "sha16": "ce2d0bf542a5b8ad"
+   },
+   {
+    "name": "quality-gate-run.log",
+    "bytes": 19,
+    "mtime": "2026-11-14T06:19:46.555Z",
+    "sha16": "fd48062422c0d660"
+   }
+  ]
+ },
+ "files": [
+  {
+   "path": "_final-gate.log",
+   "bytes": 1470,
+   "mtime": "2026-11-14T06:31:28.259Z",
+   "sha256": "d58b88cce343e9c7b547370beba68025fd67d660aef0b973b069130fd0ee22cf"
+  },
+  {
+   "path": "_final-judge.log",
+   "bytes": 2824,
+   "mtime": "2026-11-14T06:31:26.952Z",
+   "sha256": "2815b6233583c9a15e3dfccc73d9f4596a9cca532379b543682a871dcaba011b"
+  },
+  {
+   "path": "_flip-rule3-lower.log",
+   "bytes": 3500,
+   "mtime": "2026-11-14T06:16:28.998Z",
+   "sha256": "c3f39fabd2ee5d8c972af474cc61d6841fcc9cb13dab5c72959392c7a8d92cea"
+  },
+  {
+   "path": "_flip-topN1.log",
+   "bytes": 8540,
+   "mtime": "2026-11-14T06:20:53.295Z",
+   "sha256": "96a23db9f67cd780a4410e1473c2980622f3eaa3978aa6cd9e3361c15ea05611"
+  },
+  {
+   "path": "_judge-test-final.log",
+   "bytes": 2824,
+   "mtime": "2026-11-14T06:17:08.475Z",
+   "sha256": "2815b6233583c9a15e3dfccc73d9f4596a9cca532379b543682a871dcaba011b"
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "bytes": 2883,
+   "mtime": "2026-11-13T14:23:56.961Z",
+   "sha256": "e7eff18ebc644ccbeaccf7fc647a645be0adacc50427dc39674e67dab85076ab"
+  },
+  {
+   "path": ".gitignore",
+   "bytes": 2303,
+   "mtime": "2026-11-13T14:23:56.962Z",
+   "sha256": "d526918d6b9d029904800895cbda3fbb9d03f85372b9c0a2013859d602befc2b"
+  },
+  {
+   "path": "build/installer.nsh",
+   "bytes": 1947,
+   "mtime": "2026-11-13T14:23:56.997Z",
+   "sha256": "8796f95a6141d819a483b8107beb6ba491942eb873163e55c44bcc0f477e8c4f"
+  },
+  {
+   "path": "build/stop-mineru.ps1",
+   "bytes": 2917,
+   "mtime": "2026-11-13T14:23:56.998Z",
+   "sha256": "47e1cc39570efebf24843a10f9e8ed0410a0f6e7d96f29d327980b2021314a31"
+  },
+  {
+   "path": "docs/暴力测试发现清单.md",
+   "bytes": 66677,
+   "mtime": "2026-11-13T14:23:57.040Z",
+   "sha256": "278b834ca802bcc7517a782496b628f84f61f08d9d43c320b4e808ca1c55ecfe"
+  },
+  {
+   "path": "docs/暴力测试计划-V2融合轮.md",
+   "bytes": 13801,
+   "mtime": "2026-11-13T14:23:57.041Z",
+   "sha256": "3a1bbc96e101bab89fc661959c542d6bafb6073a786d57dfadd9e1025c1c4028"
+  },
+  {
+   "path": "docs/暴力测试总览报告-V2融合轮.md",
+   "bytes": 13682,
+   "mtime": "2026-11-13T14:23:57.040Z",
+   "sha256": "63d6acee45cb6fc771ef8bfd9afd7b4e5481e593d15d68fd3f1e95315de73648"
+  },
+  {
+   "path": "docs/暴力测试总览报告.md",
+   "bytes": 6739,
+   "mtime": "2026-11-13T14:23:57.041Z",
+   "sha256": "b09c016df422f2ddf0e4f070c862a984ef7e3c3ba15c90e055d39bc4c9175fbe"
+  },
+  {
+   "path": "docs/编目管线.md",
+   "bytes": 6051,
+   "mtime": "2026-11-13T14:23:57.046Z",
+   "sha256": "5bc360e4d897b6952982a96804056d47936ee6ff5b0bfd2533430d1aa7158af9"
+  },
+  {
+   "path": "docs/标准轮-ledger-2026-10-20.md",
+   "bytes": 35574,
+   "mtime": "2026-11-13T14:23:57.042Z",
+   "sha256": "d284a5ac8f087df3f722ba53008ff1cc1f0f90a156a14e7af3e4b2ee0106906b"
+  },
+  {
+   "path": "docs/代码审查标准与流程.md",
+   "bytes": 8367,
+   "mtime": "2026-11-16T04:00:25.146Z",
+   "sha256": "322cd4d90916785be4dfb6fde091518052da4f34fed164e84d962e6c16855657"
+  },
+  {
+   "path": "docs/导入管线改造计划.md",
+   "bytes": 13066,
+   "mtime": "2026-11-13T14:23:57.032Z",
+   "sha256": "a7433c4a9e1c34fb60198028a8cced84dff014777ec6debc8884c21d20d11ab9"
+  },
+  {
+   "path": "docs/导入管线诊断档案.md",
+   "bytes": 7397,
+   "mtime": "2026-11-13T14:23:57.032Z",
+   "sha256": "c0d94bf35f957d494de8987bccad6cc631fdd2e9db823781ce3645fc934bdcee"
+  },
+  {
+   "path": "docs/方案-通用个人知识库平台.md",
+   "bytes": 10540,
+   "mtime": "2026-11-13T14:23:57.039Z",
+   "sha256": "9f91ac7bca0d15c8bf875b46802377a4fff1756aa6bc705c83f66186643f4014"
+  },
+  {
+   "path": "docs/凤凰架构实战验证报告.md",
+   "bytes": 6947,
+   "mtime": "2026-11-13T14:23:57.030Z",
+   "sha256": "47b4f8193b46a1eac32f1c998a2436468891d7669519b5de49b1ad55d1e516be"
+  },
+  {
+   "path": "docs/工作资料入库指引.md",
+   "bytes": 4551,
+   "mtime": "2026-11-13T14:23:57.033Z",
+   "sha256": "ad3b0f7b325062c99ddf4c64477ab7a5238b2973aedadf43610b2d24379bf4b1"
+  },
+  {
+   "path": "docs/恢复手册.md",
+   "bytes": 4642,
+   "mtime": "2026-11-13T14:23:57.033Z",
+   "sha256": "676e2a635b900566bce0e0b8547dbb5a0ff5602d3bae150398ef80a58ceb5be3"
+  },
+  {
+   "path": "docs/技能编目融合改造规划.md",
+   "bytes": 12582,
+   "mtime": "2026-11-13T14:23:57.037Z",
+   "sha256": "abefceb5f36498a36b0b7277b058ab3654cff1510217723cbcd65ebc9bc63099"
+  },
+  {
+   "path": "docs/技能体检报告-2026-10-21.md",
+   "bytes": 3479,
+   "mtime": "2026-11-13T14:23:57.035Z",
+   "sha256": "2546c53776892591635bbd44a8e11fa3ee0a645c39aaae74b8545ef9fa1873c8"
+  },
+  {
+   "path": "docs/技能体系重构与用量治理规划-2026-10-21.md",
+   "bytes": 10330,
+   "mtime": "2026-11-13T14:23:57.036Z",
+   "sha256": "5f1122f19638fe05f6c7033cf0d0fd7152e69f1cd283f18ea66babc1fd1a357c"
+  },
+  {
+   "path": "docs/技术债瘦身清单-2026-10-21.md",
+   "bytes": 12803,
+   "mtime": "2026-11-13T14:23:57.034Z",
+   "sha256": "429cdfe7791d12d3d5715fed51e3d225b889bb94066b039f8c0e32c7db576f8f"
+  },
+  {
+   "path": "docs/交接文档-2026-10-21.md",
+   "bytes": 11035,
+   "mtime": "2026-11-16T03:56:48.330Z",
+   "sha256": "a08e53d58e715ac061c464af6e17a9f2f1059f9ec38fa602c408753750aa6b57"
+  },
+  {
+   "path": "docs/结题验收单.md",
+   "bytes": 4634,
+   "mtime": "2026-11-13T14:23:57.046Z",
+   "sha256": "32c0a06be0939afdbe4e3ffdd1e788aa097d82ef9f59a97767131a03ef529410"
+  },
+  {
+   "path": "docs/旧eval体系归档说明.md",
+   "bytes": 3625,
+   "mtime": "2026-11-15T13:10:32.557Z",
+   "sha256": "3972be773f2d67ce2342138b20dffa86be84493f9dd7336a7cd31b917152a4f2"
+  },
+  {
+   "path": "docs/可行性分析-通用个人知识库平台.md",
+   "bytes": 5066,
+   "mtime": "2026-11-13T14:23:57.031Z",
+   "sha256": "3f29a0b9b28fe151d3e4cc19afe060ae08688672983454d06bde0d4bb102bc9d"
+  },
+  {
+   "path": "docs/漏题档案.md",
+   "bytes": 13700,
+   "mtime": "2026-11-13T14:23:57.043Z",
+   "sha256": "f8d6cea1bb8d75851f2ffe7c67cda30786fe2462199b53116f4169884af7b6af"
+  },
+  {
+   "path": "docs/模型清单与包体基线.md",
+   "bytes": 8564,
+   "mtime": "2026-11-16T03:24:40.898Z",
+   "sha256": "d8a7a777f9d92c5c8d0db94dc4878f3ee1df5e779efa83f7a8d778958dcffaa8"
+  },
+  {
+   "path": "docs/全量复盘-2026-11-02.md",
+   "bytes": 21897,
+   "mtime": "2026-11-13T14:23:57.030Z",
+   "sha256": "4bd614ca358c4f3129baf214f43ed2b4eda8296e3885c262ab91dcf040e45da1"
+  },
+  {
+   "path": "docs/审查模板-改动说明.md",
+   "bytes": 1480,
+   "mtime": "2026-11-16T04:00:35.014Z",
+   "sha256": "a01cbdb42cdbb15a55142026d54a3246388d2419532dbd59501c73dfeea7b115"
+  },
+  {
+   "path": "docs/收官打包与交接规划-2026-10-21.md",
+   "bytes": 20576,
+   "mtime": "2026-11-16T03:56:45.880Z",
+   "sha256": "d88031798a8a10f1ab69664dc7eeee17c532b490d248aac6f7ced1270eb70b4a"
+  },
+  {
+   "path": "docs/外部智能体接入文档.md",
+   "bytes": 15199,
+   "mtime": "2026-11-13T14:23:57.032Z",
+   "sha256": "c42e0ad55735d3a5283f90d97d05cb409065a9992f036a6419518982d6812a83"
+  },
+  {
+   "path": "docs/项目全程复盘分析.md",
+   "bytes": 11286,
+   "mtime": "2026-11-13T14:23:57.047Z",
+   "sha256": "df1b2e0429c437ead951fc818587855bb2131cdd5c78de1d119a2c4c1eda8bdd"
+  },
+  {
+   "path": "docs/新书接入验收流程.md",
+   "bytes": 20279,
+   "mtime": "2026-11-13T14:23:57.039Z",
+   "sha256": "64a48af48380f3a8e925c4c88cc9f49e4957f69b5becde31937d10e5c374e374"
+  },
+  {
+   "path": "docs/行级清洗方案.md",
+   "bytes": 9577,
+   "mtime": "2026-11-13T14:23:57.047Z",
+   "sha256": "ecb6a3cc362cdf7f5e45ca1afab4eb44e57526a136d268e223dbc56dc1af4010"
+  },
+  {
+   "path": "docs/依赖审计记录.md",
+   "bytes": 4132,
+   "mtime": "2026-11-13T14:23:57.029Z",
+   "sha256": "1f24593d4bc2d0367d98e02f729307099896a2ba60f7b3d3ff4781ff3f81872e"
+  },
+  {
+   "path": "docs/真机验收-标准轮第1轮.md",
+   "bytes": 6640,
+   "mtime": "2026-11-13T14:23:57.044Z",
+   "sha256": "401f963b51209c502ada5a00a698d57de107526b81dbd1327986c479c08cf81c"
+  },
+  {
+   "path": "docs/真机验收勾选单.md",
+   "bytes": 25168,
+   "mtime": "2026-11-16T03:25:03.730Z",
+   "sha256": "88d99b5999cf5cda83743358c2dbdce53e033d5399f0b38fe271a20ca129f1c7"
+  },
+  {
+   "path": "docs/终期暴力测试计划.md",
+   "bytes": 8705,
+   "mtime": "2026-11-13T14:23:57.045Z",
+   "sha256": "995f72b610d20438827fca086b103d91da655a77cd7e2691d5712b52e0fa188b"
+  },
+  {
+   "path": "docs/UI-V4-重设计方案.md",
+   "bytes": 15082,
+   "mtime": "2026-11-13T14:23:57.023Z",
+   "sha256": "d3b0daf29532f2a0839ede450c909116354ef71db6ebe6ceb101cdaf04da9034"
+  },
+  {
+   "path": "docs/v2-升级报告-引擎与复试官.md",
+   "bytes": 3202,
+   "mtime": "2026-11-13T14:23:57.027Z",
+   "sha256": "8d70d30ef3ddf90bc2d991e476a524fa8f56f8f1fe578cea00c2626b11d99828"
+  },
+  {
+   "path": "docs/V2-云端问答改造规划.md",
+   "bytes": 17353,
+   "mtime": "2026-11-13T14:23:57.024Z",
+   "sha256": "7638c5341591a40e66ef09f50522ef2dc2f228f88ee6bfa6d39a9579bc2aa4de"
+  },
+  {
+   "path": "docs/V2-UI对齐规划.md",
+   "bytes": 16056,
+   "mtime": "2026-11-13T14:23:57.023Z",
+   "sha256": "651f6eb2cc361fe4b8054cbde99fa826386ae8ed8d2ef399ff6e4ca4af5219a0"
+  },
+  {
+   "path": "docs/V2融合轮验收单.md",
+   "bytes": 5851,
+   "mtime": "2026-11-13T14:23:57.024Z",
+   "sha256": "b8029ebe9655dd4a4645977982be070f1bae93b890d8932f7b229e6e81233fdb"
+  },
+  {
+   "path": "docs/V3第四波标准轮-ledger.md",
+   "bytes": 88838,
+   "mtime": "2026-11-13T14:23:57.026Z",
+   "sha256": "a212af62b512f0f56290b3e381feeabcca0b5d8c001c3598519a63cc720bae68"
+  },
+  {
+   "path": "docs/V3规划.md",
+   "bytes": 56763,
+   "mtime": "2026-11-13T14:23:57.026Z",
+   "sha256": "01094be8f0f2cfc628c04b93763a6db04b9c7a14bafa688c55940c34f02ea0d3"
+  },
+  {
+   "path": "docs/V3R7-模型可见性改造-审计与方案.md",
+   "bytes": 8498,
+   "mtime": "2026-11-13T14:23:57.025Z",
+   "sha256": "ce1f2a72e74a7b3ea53f2792676ddc5f5dda249af98659f1a53c0654d4d7ec16"
+  },
+  {
+   "path": "docs/V3R7-实施路线-四层联动机制.md",
+   "bytes": 13128,
+   "mtime": "2026-11-13T14:23:57.024Z",
+   "sha256": "01dd82fbbbc7ebf443b34226a61e660b560ba71d9d285d1ca790fae0199a8cc1"
+  },
+  {
+   "path": "eslint.config.mjs",
+   "bytes": 5932,
+   "mtime": "2026-11-16T04:29:27.092Z",
+   "sha256": "e4c205817817a322bed3ae9c0a51bae97866b77b8eb1a60cd3f102b7fb96d2e6"
+  },
+  {
+   "path": "gate-live.log",
+   "bytes": 12685,
+   "mtime": "2026-11-13T17:45:55.967Z",
+   "sha256": "4c5b2c33a46642ddf6d6858a1a0d07b861780a99b2104d7d2674be154a549eeb"
+  },
+  {
+   "path": "gate.log",
+   "bytes": 12685,
+   "mtime": "2026-11-14T04:58:18.876Z",
+   "sha256": "ce2d0bf542a5b8ade43fbbac4e8a792cacafb6883df5aca46b36bb52af7a23b5"
+  },
+  {
+   "path": "LICENSE",
+   "bytes": 11558,
+   "mtime": "2026-11-13T14:23:56.962Z",
+   "sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6"
+  },
+  {
+   "path": "package-lock.json",
+   "bytes": 240498,
+   "mtime": "2026-11-13T14:23:57.052Z",
+   "sha256": "728ca5ff1cf38bf52d4cecea22ef59ea072dc3e4661d942566f70748a719e1b6"
+  },
+  {
+   "path": "package.json",
+   "bytes": 6114,
+   "mtime": "2026-11-15T17:07:01.088Z",
+   "sha256": "309d6886c76e0e66282b004d845d5ad82435c82a330aa7ef8daf9518c642fdbe"
+  },
+  {
+   "path": "quality-baseline.json",
+   "bytes": 1970,
+   "mtime": "2026-11-14T05:37:22.619Z",
+   "sha256": "553741620d1fce9c5f2399a284bf5a4f5f1fdbd7c09be67c3bf0993b3ab12420"
+  },
+  {
+   "path": "quality-gate-run.log",
+   "bytes": 19,
+   "mtime": "2026-11-14T06:19:46.555Z",
+   "sha256": "fd48062422c0d6609a9c2811d7e6002430d27d638dbcce5596855657cb22ad51"
+  },
+  {
+   "path": "README.md",
+   "bytes": 10286,
+   "mtime": "2026-11-16T04:01:52.759Z",
+   "sha256": "04c84a54a8ee727a331ed787b7eab053d40b6ec85b2255078a2effd73a6cba82"
+  },
+  {
+   "path": "skills/book-intake/cheatsheet.md",
+   "bytes": 1050,
+   "mtime": "2026-11-13T14:23:57.055Z",
+   "sha256": "8b667aaa9ef7e8ea95d525ad5c3642c44efa8eb161f9cb5a7cf75b6adb8499cb"
+  },
+  {
+   "path": "skills/book-intake/references/ch01-pipeline.md",
+   "bytes": 2345,
+   "mtime": "2026-11-13T14:23:57.056Z",
+   "sha256": "58d1f066cfd71fbc0cba8012d3831c43f69cc38b2896dbb9130446b5a517dc05"
+  },
+  {
+   "path": "skills/book-intake/references/ch02-acceptance.md",
+   "bytes": 3916,
+   "mtime": "2026-11-13T14:23:57.056Z",
+   "sha256": "8b09236453c24d06ce2a49f39a4cbc8f8f4439154b1f6787664463997cd019d1"
+  },
+  {
+   "path": "skills/book-intake/SKILL.md",
+   "bytes": 2347,
+   "mtime": "2026-11-13T14:23:57.054Z",
+   "sha256": "b4b207a098abcefc01192a592e1e2c63d912f823ba01f9dbd8cbbf0a1b387f22"
+  },
+  {
+   "path": "skills/citation-check/references/ch01-verify-flow.md",
+   "bytes": 1898,
+   "mtime": "2026-11-13T14:23:57.058Z",
+   "sha256": "194f58a961bb70db77601f0d357d86ec8920b8f7444ee117c12a61848c8c618b"
+  },
+  {
+   "path": "skills/citation-check/references/ch02-forgery-patterns.md",
+   "bytes": 1769,
+   "mtime": "2026-11-13T14:23:57.059Z",
+   "sha256": "3a5240ac1f5d18a2efc8cba959a5a2b41581bdcd9abc4f24c4120da18ec4322d"
+  },
+  {
+   "path": "skills/citation-check/SKILL.md",
+   "bytes": 2570,
+   "mtime": "2026-11-13T14:23:57.057Z",
+   "sha256": "38826b2a1cdafd83a61cae6fcd10ad75e1542088e4495d471e96545d8de11e83"
+  },
+  {
+   "path": "skills/engineering-research/cheatsheet.md",
+   "bytes": 1002,
+   "mtime": "2026-11-13T14:23:57.061Z",
+   "sha256": "e650a6c6056d7aeb5c391440b09c2b2ec7f0a6892b976dbe7ce8dd9b39aa17bf"
+  },
+  {
+   "path": "skills/engineering-research/references/ch01-arch-research.md",
+   "bytes": 2080,
+   "mtime": "2026-11-13T14:23:57.061Z",
+   "sha256": "9416e6c9ad08729237ca73df7ad5fdabd6c7dc364af44a07b6a82a65d0b5cec8"
+  },
+  {
+   "path": "skills/engineering-research/references/ch02-code-study.md",
+   "bytes": 1932,
+   "mtime": "2026-11-13T14:23:57.062Z",
+   "sha256": "3097f8bef5d67e3e6599754dd10f7b5764db5abd70c574ea020fa8a62424306a"
+  },
+  {
+   "path": "skills/engineering-research/references/ch03-paper-reading.md",
+   "bytes": 1721,
+   "mtime": "2026-11-13T14:23:57.063Z",
+   "sha256": "79263ed806ab83aa9330049bd1f1b8b8590f9279b95121e0b6e58a1c6cfaa441"
+  },
+  {
+   "path": "skills/engineering-research/references/ch04-concept-compare.md",
+   "bytes": 2146,
+   "mtime": "2026-11-13T14:23:57.064Z",
+   "sha256": "972fa63a1d4e35bf69f12c33cf10e1f93c06d2099188925f8d259c4893105f8b"
+  },
+  {
+   "path": "skills/engineering-research/references/ch05-cloud-selection.md",
+   "bytes": 1835,
+   "mtime": "2026-11-13T14:23:57.065Z",
+   "sha256": "70b2ba39db8819bd07d85561f3f7fb3ab175b3727ecea43b8c488d0e73dba818"
+  },
+  {
+   "path": "skills/engineering-research/SKILL.md",
+   "bytes": 3957,
+   "mtime": "2026-11-13T14:23:57.060Z",
+   "sha256": "207ddb5f13582e398da730c84583d9d4133dc3c829a3d0f4549c6ec2a7608d96"
+  },
+  {
+   "path": "skills/humanities-reading/cheatsheet.md",
+   "bytes": 982,
+   "mtime": "2026-11-13T14:23:57.067Z",
+   "sha256": "ad5cbb36262c20f691aa94681df2137fbf54b91bff41728fbb8cb28e478d8c80"
+  },
+  {
+   "path": "skills/humanities-reading/references/ch01-classics.md",
+   "bytes": 1786,
+   "mtime": "2026-11-13T14:23:57.068Z",
+   "sha256": "f2ee5c515dd8609ca2a13b5a5e09fd0e750ea835dc2942538510e3ad204286db"
+  },
+  {
+   "path": "skills/humanities-reading/references/ch02-fiction.md",
+   "bytes": 1931,
+   "mtime": "2026-11-13T14:23:57.068Z",
+   "sha256": "879a8ae6d7ad9c4d8ae5448b2e36d36cb2efa6c0934d34ff32bd300fd0bd19cc"
+  },
+  {
+   "path": "skills/humanities-reading/references/ch03-annotation.md",
+   "bytes": 1710,
+   "mtime": "2026-11-13T14:23:57.069Z",
+   "sha256": "14fa780304707738b1f8df8f5aa64042353f69871cef0055fe275e5105e8194c"
+  },
+  {
+   "path": "skills/humanities-reading/SKILL.md",
+   "bytes": 3113,
+   "mtime": "2026-11-13T14:23:57.066Z",
+   "sha256": "a25240413fa7609d2e5aa6bf7584795ed8a417e6c7a7e27ba5fd984f1b9c7a46"
+  },
+  {
+   "path": "skills/kb-research/cheatsheet.md",
+   "bytes": 954,
+   "mtime": "2026-11-13T14:23:57.071Z",
+   "sha256": "fdc0ed31cd5e5427462a8e44c93fafb59743f5a1f74c42feb6104fe72a9a5e34"
+  },
+  {
+   "path": "skills/kb-research/glossary.md",
+   "bytes": 1108,
+   "mtime": "2026-11-13T14:23:57.071Z",
+   "sha256": "d5daaae79619284f293c3689404b2c7effc7b8cc15aa07812573ba13e7f396a8"
+  },
+  {
+   "path": "skills/kb-research/references/ch01-dongxian.md",
+   "bytes": 4344,
+   "mtime": "2026-11-13T14:23:57.072Z",
+   "sha256": "f05c187f1a46e5b363f066ae39551dc5cdc313afcda09a20b91fdc8ae4e70d59"
+  },
+  {
+   "path": "skills/kb-research/references/ch02-fenliu.md",
+   "bytes": 2360,
+   "mtime": "2026-11-13T14:23:57.073Z",
+   "sha256": "7d801567fe14107882f1254f042f6e77df8d4f9c9192e9af2f1613ff76fe93d5"
+  },
+  {
+   "path": "skills/kb-research/references/ch03-fangzhi-huanjue.md",
+   "bytes": 2381,
+   "mtime": "2026-11-13T14:23:57.074Z",
+   "sha256": "26ea0f79ef59bc4f20e04fdeac60dd8c768d5b0ee376a6887da9b92f51afe403"
+  },
+  {
+   "path": "skills/kb-research/SKILL.md",
+   "bytes": 3842,
+   "mtime": "2026-11-13T14:23:57.070Z",
+   "sha256": "c9a8409ddeff5ee3d3c32be3dbcbe913da37b5d9e5f37d9918177e9495d78498"
+  },
+  {
+   "path": "skills/opinion-archaeology/cheatsheet.md",
+   "bytes": 1068,
+   "mtime": "2026-11-13T14:23:57.075Z",
+   "sha256": "396555e9a6b34d2d83001d9f48a322943265de73983e4f3fdb23ee89c8820854"
+  },
+  {
+   "path": "skills/opinion-archaeology/glossary.md",
+   "bytes": 1809,
+   "mtime": "2026-11-13T14:23:57.077Z",
+   "sha256": "9e9a3930c794a7f0e2b700643491701c3673e6234f78243ffd9fd156be048963"
+  },
+  {
+   "path": "skills/opinion-archaeology/references/ch01-voice-attribution.md",
+   "bytes": 2079,
+   "mtime": "2026-11-13T14:23:57.078Z",
+   "sha256": "2e3b382a9c6b91133bab0cc8d8cb7abae5364b53fb00c154efddda4caaa268ee"
+  },
+  {
+   "path": "skills/opinion-archaeology/references/ch02-dating.md",
+   "bytes": 1594,
+   "mtime": "2026-11-13T14:23:57.080Z",
+   "sha256": "9a34200ac745d7fdd695f5a28b6a98976939e25e17d19b8e47c5bcc579d4830b"
+  },
+  {
+   "path": "skills/opinion-archaeology/references/ch03-retrospective.md",
+   "bytes": 2021,
+   "mtime": "2026-11-13T14:23:57.080Z",
+   "sha256": "4877479bf690f335848a85d9281a693e5826e48fde1b503540e5cd2b7ef9709a"
+  },
+  {
+   "path": "skills/opinion-archaeology/SKILL.md",
+   "bytes": 3275,
+   "mtime": "2026-11-13T14:23:57.075Z",
+   "sha256": "352bfed5930325c0496e4e43a1d60915fa94594db0b27da63d38e36a1aa0be18"
+  },
+  {
+   "path": "skills/skill-authoring/references/ch01-workflow.md",
+   "bytes": 4676,
+   "mtime": "2026-11-13T14:23:57.083Z",
+   "sha256": "15f33de501c60fcc47a95aa5a8734c7d2057ea94e451af007c5c2569749c3818"
+  },
+  {
+   "path": "skills/skill-authoring/references/ch02-quality-gates.md",
+   "bytes": 3672,
+   "mtime": "2026-11-13T14:23:57.084Z",
+   "sha256": "4b650dcbafeb97e4d5a2b52e3651cb0a6900009149eafdb2921e6c968ee95c1a"
+  },
+  {
+   "path": "skills/skill-authoring/references/ch03-citation-rules.md",
+   "bytes": 3344,
+   "mtime": "2026-11-13T14:23:57.085Z",
+   "sha256": "1c0c68fc7aa53da51878a087acc10d54c22b5717e8de6e479801c5f1a5b04441"
+  },
+  {
+   "path": "skills/skill-authoring/SKILL.md",
+   "bytes": 4887,
+   "mtime": "2026-11-13T14:23:57.082Z",
+   "sha256": "3e40546cdc850dbaccd98a086a8f2486e8cacbfef93ffdb21b289fb2d42b2ef2"
+  },
+  {
+   "path": "src/abi-check.js",
+   "bytes": 250,
+   "mtime": "2026-11-13T14:23:57.086Z",
+   "sha256": "532636274b14e0997ba243129f0185cc509b8b42d28276024f82a7d4aed18d0b"
+  },
+  {
+   "path": "src/backfill-meta.mjs",
+   "bytes": 3349,
+   "mtime": "2026-11-13T14:23:57.086Z",
+   "sha256": "0ff2af88568365f8e4d91208aa821f67775888a89394ccdbf5cb33ad92ab2de9"
+  },
+  {
+   "path": "src/backup.mjs",
+   "bytes": 7693,
+   "mtime": "2026-11-13T14:23:57.086Z",
+   "sha256": "49b8b178e2c240e3fdbe35cdb6bf2a5a810604b57e897b099c20742e48e5e1ad"
+  },
+  {
+   "path": "src/build-book.js",
+   "bytes": 85948,
+   "mtime": "2026-11-13T14:23:57.088Z",
+   "sha256": "999832c83cd2aab679fe0f841cbba13ed3d85dc9346a95af9861cd941757a009"
+  },
+  {
+   "path": "src/catalog-export.mjs",
+   "bytes": 2933,
+   "mtime": "2026-11-13T14:23:57.088Z",
+   "sha256": "08cac42fb4251dfe0ad83c54a6d272cbeae36908fca614f31269956a0b1b6059"
+  },
+  {
+   "path": "src/catalog-import.mjs",
+   "bytes": 4729,
+   "mtime": "2026-11-13T14:23:57.088Z",
+   "sha256": "80d7e2f6ab889c8225de08b013a88775bb8496a11e12c83c5dff8bdf9080f754"
+  },
+  {
+   "path": "src/check-skills.mjs",
+   "bytes": 2361,
+   "mtime": "2026-11-13T14:23:57.089Z",
+   "sha256": "3db11c599fbee7b122f17fa018f514c884b1a1ac0439acb1a28e605d0902c610"
+  },
+  {
+   "path": "src/clean-book.mjs",
+   "bytes": 7754,
+   "mtime": "2026-11-13T14:23:57.090Z",
+   "sha256": "c82728a7f48b1a43ffe79fcb2c2a2abb4fa43fa9a03c7a24a57f24fbb214827b"
+  },
+  {
+   "path": "src/clean-restore.mjs",
+   "bytes": 3014,
+   "mtime": "2026-11-13T14:23:57.090Z",
+   "sha256": "8ca2f971622c4f6587f53df22c2f99b87217523fefe41423100fff8b0433066d"
+  },
+  {
+   "path": "src/desktop/book-view.mjs",
+   "bytes": 9690,
+   "mtime": "2026-11-13T14:23:57.091Z",
+   "sha256": "af025e973758e921a574c2f66ca885d679470f7bcfa74d09d9d208a102f783bc"
+  },
+  {
+   "path": "src/desktop/chat-archive.mjs",
+   "bytes": 5983,
+   "mtime": "2026-11-13T14:23:57.092Z",
+   "sha256": "2cd07188c5d5e1f95e8cd2d41a72d24024e1b9535eadc289afcf91f516c439f6"
+  },
+  {
+   "path": "src/desktop/chat.mjs",
+   "bytes": 16138,
+   "mtime": "2026-11-14T02:01:20.468Z",
+   "sha256": "1b1f85b3d64e2c77cc8b5b450877f28626a60a5de7245fc7853cd58743262bd0"
+  },
+  {
+   "path": "src/desktop/engine.mjs",
+   "bytes": 44192,
+   "mtime": "2026-11-13T14:23:57.094Z",
+   "sha256": "496d3db9bbd5e8deff40753da09e621635f989ca3cc0ca0bef40f575a7d9dcd3"
+  },
+  {
+   "path": "src/desktop/enrich-job.mjs",
+   "bytes": 9856,
+   "mtime": "2026-11-13T14:23:57.094Z",
+   "sha256": "53535f03d9bef08d5e6874344945c3ce725b516aa7765e0e06ded615f1a783e5"
+  },
+  {
+   "path": "src/desktop/feedback-pool.mjs",
+   "bytes": 4156,
+   "mtime": "2026-11-13T14:23:57.095Z",
+   "sha256": "768582d1cff5914304c3f7ddb143b98e5d14c15319829f4ecce946fa46bc7a8d"
+  },
+  {
+   "path": "src/desktop/ipc.mjs",
+   "bytes": 8159,
+   "mtime": "2026-11-13T14:23:57.096Z",
+   "sha256": "907ebebeb80b3b8f41ae2a9d636c874af9e9417c21f6d3b4a3e14ee7f271a82e"
+  },
+  {
+   "path": "src/desktop/jobs.mjs",
+   "bytes": 34462,
+   "mtime": "2026-11-13T14:23:57.097Z",
+   "sha256": "4a101e3c653203ee25ba4e625afefa0e3677ee178f57eaa747d23973bc179516"
+  },
+  {
+   "path": "src/desktop/llm-config.mjs",
+   "bytes": 8055,
+   "mtime": "2026-11-14T01:51:52.698Z",
+   "sha256": "2cc6c55144a3206191e89e57729dff5fe5210bc598f26eb7e3ac42c78c440918"
+  },
+  {
+   "path": "src/desktop/mineru-runtime.mjs",
+   "bytes": 10653,
+   "mtime": "2026-11-13T14:23:57.099Z",
+   "sha256": "58d089666bb8df7a4b6ad7231efd594b08d7a46579236c6dd614d8f41dcf2b5c"
+  },
+  {
+   "path": "src/desktop/paths.mjs",
+   "bytes": 3462,
+   "mtime": "2026-11-13T14:23:57.100Z",
+   "sha256": "3a96a74313e8d19776100e99a5a6a1f21cb36cc4ad1c2db4a0fcabdf558e2795"
+  },
+  {
+   "path": "src/desktop/security-prefs.js",
+   "bytes": 734,
+   "mtime": "2026-11-13T14:23:57.100Z",
+   "sha256": "2555b9efea734a01d5fa14fc4e085f9cfe86b8e7b80131d6afb37594de2c7e98"
+  },
+  {
+   "path": "src/embed-all.js",
+   "bytes": 1149,
+   "mtime": "2026-11-13T14:23:57.100Z",
+   "sha256": "400a620e5ed175ca96956cffaec5fe55522545e1cb3e04190b13b3861403db7c"
+  },
+  {
+   "path": "src/embed-book.js",
+   "bytes": 9304,
+   "mtime": "2026-11-13T14:23:57.101Z",
+   "sha256": "94357cfa53d1adb2aaa0c4924f24c1ed0e1a2c5850fda6827de72e1cc4249324"
+  },
+  {
+   "path": "src/enrich-book.mjs",
+   "bytes": 8511,
+   "mtime": "2026-11-13T14:23:57.102Z",
+   "sha256": "2f03aa85cd348f582b3c4d9717dd6c37f95414931ac82527506c3e6ac0999b40"
+  },
+  {
+   "path": "src/enrich-import.mjs",
+   "bytes": 5502,
+   "mtime": "2026-11-13T14:23:57.102Z",
+   "sha256": "d1099820cb6509ee497b64d1571bc2acf7339c1f35ee24524a5c4e86bcc88207"
+  },
+  {
+   "path": "src/feedback-export.mjs",
+   "bytes": 3552,
+   "mtime": "2026-11-15T13:16:05.785Z",
+   "sha256": "25c675d1e8a7e59c7027e5ea430bca2dd1f849ed9f79681916c32065d77db914"
+  },
+  {
+   "path": "src/fetch-wikisource.mjs",
+   "bytes": 5132,
+   "mtime": "2026-11-13T14:23:57.103Z",
+   "sha256": "8dd5db030b3edb066555b6477a2f0fed736d2c4c6eb84725d98d4dc197cea763"
+  },
+  {
+   "path": "src/index.html",
+   "bytes": 2489,
+   "mtime": "2026-11-13T14:23:57.104Z",
+   "sha256": "8fcae8ac6b52098750917f663e9e1c494aa0f89e9a7a91a44c35eb31ac95299c"
+  },
+  {
+   "path": "src/inline-clean.mjs",
+   "bytes": 6245,
+   "mtime": "2026-11-13T14:23:57.105Z",
+   "sha256": "d8188d66e86ccf1f70c2323a8a59e0b65b4be40aebe029b94b356dc4d4604381"
+  },
+  {
+   "path": "src/lib/assets.mjs",
+   "bytes": 6932,
+   "mtime": "2026-11-13T14:23:57.105Z",
+   "sha256": "a939b7b1f921e5c0bc633a7c0c8e312395b6db74711b1289146c41f90f1af858"
+  },
+  {
+   "path": "src/lib/block-schema.mjs",
+   "bytes": 14957,
+   "mtime": "2026-11-13T14:23:57.106Z",
+   "sha256": "58515ce05a6fa1e9f626e91ce1d5adf9cef61a9defc7f5ff09a0d785a201f40e"
+  },
+  {
+   "path": "src/lib/browse.mjs",
+   "bytes": 8846,
+   "mtime": "2026-11-13T14:23:57.107Z",
+   "sha256": "990b68ace5af8dc6e476313717f9949ad2ab9ea3cff85fdd5ae6450814086029"
+  },
+  {
+   "path": "src/lib/catalog-skill.mjs",
+   "bytes": 10724,
+   "mtime": "2026-11-13T14:23:57.107Z",
+   "sha256": "04f63ec0e021b5c943360c15d8e776a6ec701ad700eea38e7746b63ca6ba55c0"
+  },
+  {
+   "path": "src/lib/catalog.mjs",
+   "bytes": 51402,
+   "mtime": "2026-11-13T14:23:57.109Z",
+   "sha256": "204a2bd5ca6ac5a7a23784b107a22afffceffb80e4cb05bafe37959c893bbd61"
+  },
+  {
+   "path": "src/lib/cite-check.mjs",
+   "bytes": 2499,
+   "mtime": "2026-11-13T14:23:57.109Z",
+   "sha256": "926b566aa9821155115104427e375332a7837e8471f32c97455b7d44df5d0429"
+  },
+  {
+   "path": "src/lib/clean-import.mjs",
+   "bytes": 17143,
+   "mtime": "2026-11-13T14:23:57.110Z",
+   "sha256": "fc54eb74a9fa3f4d41bc8ebbc269dd977223c9454883a750a3092ce20ff145f8"
+  },
+  {
+   "path": "src/lib/clean.mjs",
+   "bytes": 28090,
+   "mtime": "2026-11-13T14:23:57.111Z",
+   "sha256": "d75a5989244b0aa873b7135aca2047092bb358c5e079eaf2978a8afbc282f766"
+  },
+  {
+   "path": "src/lib/derived.mjs",
+   "bytes": 7337,
+   "mtime": "2026-11-13T14:23:57.112Z",
+   "sha256": "941232cfe7e45da85e9dc6f0a40ca27a48a9ed1566fde7a082e9446b40ab39cb"
+  },
+  {
+   "path": "src/lib/enrich-import.mjs",
+   "bytes": 15194,
+   "mtime": "2026-11-13T14:23:57.113Z",
+   "sha256": "48331611202675ddc7ca4cae690afa2465eaf4a9fe684e1fc003e9762ba4ecb5"
+  },
+  {
+   "path": "src/lib/enrich-signal.mjs",
+   "bytes": 4487,
+   "mtime": "2026-11-13T14:23:57.113Z",
+   "sha256": "9bb0e43246295787f3c752aaf7e2fc0a29338ab7cb6bd4928b0af1804b1a902f"
+  },
+  {
+   "path": "src/lib/enrich.mjs",
+   "bytes": 34918,
+   "mtime": "2026-11-13T14:23:57.114Z",
+   "sha256": "ba1883beb7d8d7d77706cc8bad3a19fb5c08ee5dd0c89fbcd9c2411e522de9e0"
+  },
+  {
+   "path": "src/lib/inline-clean.mjs",
+   "bytes": 12605,
+   "mtime": "2026-11-13T14:23:57.115Z",
+   "sha256": "c1529a8888b8ed463258b04689a1ea4bbbade47cdf0e58ffd2a1a00f923ef19f"
+  },
+  {
+   "path": "src/lib/inline-import.mjs",
+   "bytes": 16000,
+   "mtime": "2026-11-13T14:23:57.116Z",
+   "sha256": "892f9e05d7fda8e930de11207e75e08396a855009748303c462a2cdebaf349cd"
+  },
+  {
+   "path": "src/lib/keywords.mjs",
+   "bytes": 14117,
+   "mtime": "2026-11-13T14:23:57.116Z",
+   "sha256": "e3f777453f8078cef45b85ceceddc3ec322e821c450274b181080aa3e7210afb"
+  },
+  {
+   "path": "src/lib/lang-tag.mjs",
+   "bytes": 4273,
+   "mtime": "2026-11-13T14:23:57.117Z",
+   "sha256": "7bcde0ff712cfeb640cfbcaa836c83ece4f22bb0ffb4fb00b1e3c5fef40e513d"
+  },
+  {
+   "path": "src/lib/llm-hosts.mjs",
+   "bytes": 3291,
+   "mtime": "2026-11-13T14:23:57.118Z",
+   "sha256": "52b1cc8aa5f7579f0c5bd6f7d8b152f4ac89de0181baf46450f31ec3de1fa794"
+  },
+  {
+   "path": "src/lib/llm.mjs",
+   "bytes": 15339,
+   "mtime": "2026-11-14T01:50:07.832Z",
+   "sha256": "a663f28aad7e68c3ea451e8868a1d105764a7e3e13aa645e56ace4b9cfca2f53"
+  },
+  {
+   "path": "src/lib/lookup.mjs",
+   "bytes": 4285,
+   "mtime": "2026-11-13T14:23:57.120Z",
+   "sha256": "b44c64f06ee3c72268492ee2c45799849893360c07a666559cca0ef8965b3a86"
+  },
+  {
+   "path": "src/lib/mineru.mjs",
+   "bytes": 28178,
+   "mtime": "2026-11-13T14:23:57.121Z",
+   "sha256": "7b54a69959cd8b35713e878663f2c06c4b6796bbb50a36c8e75ed7d9b29e96bf"
+  },
+  {
+   "path": "src/lib/models.mjs",
+   "bytes": 7147,
+   "mtime": "2026-11-16T03:56:50.780Z",
+   "sha256": "fcb09dba7e4f5c08fe832ee8e509087d343e6266538b91ff7ed41b6963bc25d8"
+  },
+  {
+   "path": "src/lib/noise-rules.mjs",
+   "bytes": 21836,
+   "mtime": "2026-11-14T02:34:47.583Z",
+   "sha256": "42a885c1d10f295a3ca00589cb2eccf30327b23fb968f7204ddff23677fd962e"
+  },
+  {
+   "path": "src/lib/outline.mjs",
+   "bytes": 4019,
+   "mtime": "2026-11-13T14:23:57.123Z",
+   "sha256": "66c8e936d0bcfb2fdae9e3fc12affe40087d7acd9a3c99acf5bddf1e7fc1ea0f"
+  },
+  {
+   "path": "src/lib/parse-gate.mjs",
+   "bytes": 7946,
+   "mtime": "2026-11-13T14:23:57.124Z",
+   "sha256": "99e97370a6dbed4da99f450c3971ad639db06fbe66eddb621e8eeb75c04f0dd5"
+  },
+  {
+   "path": "src/lib/pdf-route.mjs",
+   "bytes": 13064,
+   "mtime": "2026-11-13T14:23:57.125Z",
+   "sha256": "aaf65aca644ad39270a28cd3bbbc6d1f8b21f3fd5c6daa366c3aec2d0305c553"
+  },
+  {
+   "path": "src/lib/query-rewrite.mjs",
+   "bytes": 3978,
+   "mtime": "2026-11-13T14:23:57.125Z",
+   "sha256": "a710fdb05ac1911bf0d9c21eea48b481999b5e86d67c04f0599a51c4d0e1a101"
+  },
+  {
+   "path": "src/lib/register-tools.mjs",
+   "bytes": 28520,
+   "mtime": "2026-11-13T14:23:57.127Z",
+   "sha256": "a8f481164838ed3951a8d852fe4b123d307fe2dacc57295bfe4eea6a6ec84979"
+  },
+  {
+   "path": "src/lib/search.mjs",
+   "bytes": 52688,
+   "mtime": "2026-11-16T04:10:34.146Z",
+   "sha256": "6ca830fe4ebe9429978db7b62e8f130e90ebb4f0db39e149b258de13ea5f10b3"
+  },
+  {
+   "path": "src/lib/semantic-chunk.mjs",
+   "bytes": 8691,
+   "mtime": "2026-11-13T14:23:57.128Z",
+   "sha256": "edacac2a5ec1cbeeff563cdff50a9efa8a64d47204c9ee35fc51fb699de4e7d7"
+  },
+  {
+   "path": "src/lib/similar.mjs",
+   "bytes": 5426,
+   "mtime": "2026-11-13T14:23:57.128Z",
+   "sha256": "1508d49564695adf30a4779f2c924158d9069b3fdb19778e9e13b5d0cc15944c"
+  },
+  {
+   "path": "src/lib/skill-health.mjs",
+   "bytes": 9304,
+   "mtime": "2026-11-13T14:23:57.129Z",
+   "sha256": "5e7fb5bc0e2f55fa610a2ad5f5345368082672f5263b1fe043776d3d6b5fdf96"
+  },
+  {
+   "path": "src/lib/skill-state.mjs",
+   "bytes": 1138,
+   "mtime": "2026-11-13T14:23:57.130Z",
+   "sha256": "fbd28d30c916455ee4732e46bb566af47cd0d8523d81ce5b847958a8634ce7ac"
+  },
+  {
+   "path": "src/lib/skill-store.mjs",
+   "bytes": 28741,
+   "mtime": "2026-11-13T14:23:57.131Z",
+   "sha256": "40d03c464bd8c07b66ad415814b02ae759d512cb938d792747ea3922d7c7f94e"
+  },
+  {
+   "path": "src/lib/skill-validate.mjs",
+   "bytes": 6694,
+   "mtime": "2026-11-13T14:23:57.132Z",
+   "sha256": "5116e08ab1f79b5a3d2558cff7cc019200488bf30f8297d986785ea7f1299db9"
+  },
+  {
+   "path": "src/lib/structurize.mjs",
+   "bytes": 19737,
+   "mtime": "2026-11-13T14:23:57.133Z",
+   "sha256": "55b6aff21e5b16e0e3bb437481761ece7898c3f8979782d34e6a2d27075ad958"
+  },
+  {
+   "path": "src/lib/token-estimate.mjs",
+   "bytes": 3327,
+   "mtime": "2026-11-13T14:23:57.133Z",
+   "sha256": "e924276f22ba7ec1e1e9e7ae4f1b7434986c76dd1e1de1ee6859796446e51c12"
+  },
+  {
+   "path": "src/lib/usage-policy.mjs",
+   "bytes": 9726,
+   "mtime": "2026-11-13T14:23:57.135Z",
+   "sha256": "844dc1bfa365830a6b73172cfd7aa0ccd6b243a93901fc9da67a92eaa01f0088"
+  },
+  {
+   "path": "src/lib/vec-cache.mjs",
+   "bytes": 3905,
+   "mtime": "2026-11-16T03:54:17.212Z",
+   "sha256": "a3809b6f2e2be091b034f2dfbc45b1fc98ee5391cd6cbdf91e3292035dac7deb"
+  },
+  {
+   "path": "src/main.js",
+   "bytes": 9275,
+   "mtime": "2026-11-13T14:23:57.136Z",
+   "sha256": "47f3ee2ea389511abad91a71888efc14118132222f78fd70f11f3ae806770772"
+  },
+  {
+   "path": "src/mcp-server.mjs",
+   "bytes": 896,
+   "mtime": "2026-11-13T14:23:57.136Z",
+   "sha256": "c18d83b16dfbf72f134bbb5944dd7c21b0c8389d1b0b34c06dc4e6c449220029"
+  },
+  {
+   "path": "src/migrate-blocks.mjs",
+   "bytes": 5434,
+   "mtime": "2026-11-13T14:23:57.137Z",
+   "sha256": "49d38684795d33173651fab14fb04327e3cc2cad5cdb73d1740f2bbdf1bb33a3"
+  },
+  {
+   "path": "src/preload.js",
+   "bytes": 5980,
+   "mtime": "2026-11-13T14:23:57.138Z",
+   "sha256": "5b2c9c0dff78796c2df02cb8fafb62cce04dd8770386a5d97ea8a74a711f24d1"
+  },
+  {
+   "path": "src/probe-llm.mjs",
+   "bytes": 5034,
+   "mtime": "2026-11-13T14:23:57.138Z",
+   "sha256": "dde4eabeeca91b5f8adc33f8343cbd620852dd684d2542c6751b905da6d9185c"
+  },
+  {
+   "path": "src/query-book.js",
+   "bytes": 1095,
+   "mtime": "2026-11-13T14:23:57.139Z",
+   "sha256": "0c8291c4acea5b8572afe07e833fc8154e230855e7206d7acf169abc84cbe0e2"
+  },
+  {
+   "path": "src/renderer/app.css",
+   "bytes": 36781,
+   "mtime": "2026-11-13T14:23:57.140Z",
+   "sha256": "74216c2e976a9ec7e0c4c76cfbf9800e2dbb5485ade5d3a44d784c39f3fb4480"
+  },
+  {
+   "path": "src/renderer/app.js",
+   "bytes": 16162,
+   "mtime": "2026-11-16T03:25:03.546Z",
+   "sha256": "968afb3d3fb4b6286f2bf2784fee54b6c306a054659c4e20322a123cc09399e7"
+  },
+  {
+   "path": "src/renderer/theme.js",
+   "bytes": 8657,
+   "mtime": "2026-11-13T14:23:57.142Z",
+   "sha256": "8d0030951db9425299d0705fbc864904fd355c9e4f39d8ef11f9d7b4ecd85b76"
+  },
+  {
+   "path": "src/renderer/views-ask.js",
+   "bytes": 30843,
+   "mtime": "2026-11-14T01:56:48.343Z",
+   "sha256": "6e8923e477debe1250b1aa22f2a536f6f9ebc77e1dea68f2fadfa34c514bec97"
+  },
+  {
+   "path": "src/renderer/views-chat.js",
+   "bytes": 17852,
+   "mtime": "2026-11-14T02:03:36.261Z",
+   "sha256": "9fc50bc3e20d55ec66f1437009cd10db93e7415375bbc45225328f72cc62114d"
+  },
+  {
+   "path": "src/renderer/views-reader.js",
+   "bytes": 16348,
+   "mtime": "2026-11-13T14:23:57.145Z",
+   "sha256": "219fea418cd49688de55c74f608d3f13c3ecc853c922fab4b13cdd617ae15c5c"
+  },
+  {
+   "path": "src/renderer/views.js",
+   "bytes": 24815,
+   "mtime": "2026-11-13T14:23:57.146Z",
+   "sha256": "d75bf5304c1f0a4f6f861294435c1cbd5f192427aa821c6c9e31769493d2a45e"
+  },
+  {
+   "path": "src/skill-scaffold.mjs",
+   "bytes": 1806,
+   "mtime": "2026-11-13T14:23:57.147Z",
+   "sha256": "2c64450cceef6d96a430207824f287e6490d95c3ee6a64c236a5f43524405029"
+  },
+  {
+   "path": "src/skill-validate.mjs",
+   "bytes": 1660,
+   "mtime": "2026-11-13T14:23:57.148Z",
+   "sha256": "e6c7402dd924bae2a6e3bf53c52636c3ef78d00c60c84c9bad151592116e08e9"
+  },
+  {
+   "path": "src/txt2docx.js",
+   "bytes": 2896,
+   "mtime": "2026-11-13T14:23:57.148Z",
+   "sha256": "2ef6a6a8917af0403024c04ac22671a3d0d455f8b8471eca9b743f1162adc6b0"
+  },
+  {
+   "path": "test/archive-config-fuzz.mjs",
+   "bytes": 35897,
+   "mtime": "2026-11-13T14:23:57.149Z",
+   "sha256": "70158d7ef88c13084ab316bfce4e11756f1d0b2447771606607e8ee214b52cfd"
+  },
+  {
+   "path": "test/book-view-test.mjs",
+   "bytes": 7476,
+   "mtime": "2026-11-13T14:23:57.150Z",
+   "sha256": "85244f2e241dfa8635e2763030e37d230623d9b12fda9fbfa1f4c38d24338d69"
+  },
+  {
+   "path": "test/browse-test.mjs",
+   "bytes": 9740,
+   "mtime": "2026-11-13T14:23:57.151Z",
+   "sha256": "31fcfccd9d2bf2cec5c41a389851aa7cdda1e1754abb7eb314cf0b14ab57eaea"
+  },
+  {
+   "path": "test/catalog-fuzz.mjs",
+   "bytes": 36515,
+   "mtime": "2026-11-13T14:23:57.152Z",
+   "sha256": "48bbbd8ed8c0cf55e8d7b37387c63e8e52ad32cc9295fb943e1a966743bc7419"
+  },
+  {
+   "path": "test/catalog-test.mjs",
+   "bytes": 15378,
+   "mtime": "2026-11-13T14:23:57.152Z",
+   "sha256": "a1e798534889a69b44b5f36b72a5d37c04c49ba578937dec774fae55966f0eec"
+  },
+  {
+   "path": "test/chat-archive-test.mjs",
+   "bytes": 8686,
+   "mtime": "2026-11-13T14:23:57.153Z",
+   "sha256": "db592f980bf53ec16520cea2fe47ebab7624e87894c44318e345ef21f81fa034"
+  },
+  {
+   "path": "test/chat-fuzz.mjs",
+   "bytes": 20561,
+   "mtime": "2026-11-14T01:57:16.213Z",
+   "sha256": "6a550b0d45327b2d6a4acd8cf85c7c78f6c87bac6944622721c6c9166257673a"
+  },
+  {
+   "path": "test/cite-check-test.mjs",
+   "bytes": 4414,
+   "mtime": "2026-11-13T14:23:57.155Z",
+   "sha256": "514d1543997448c7d021214cbf9bc5277da2f1d39b046e956942ccfa9d30fda2"
+  },
+  {
+   "path": "test/clean-test.mjs",
+   "bytes": 27424,
+   "mtime": "2026-11-13T14:23:57.156Z",
+   "sha256": "eb401c611c163bc3d7f7a14d2e70f957ad2716647b85494645d3ee17c09f3beb"
+  },
+  {
+   "path": "test/derived-test.mjs",
+   "bytes": 16980,
+   "mtime": "2026-11-13T14:23:57.157Z",
+   "sha256": "0085e4860522cde75dd4b5073cb9d348f577f56a80233243876bd290879ef4b9"
+  },
+  {
+   "path": "test/desktop-smoke-main.js",
+   "bytes": 5930,
+   "mtime": "2026-11-13T14:23:57.157Z",
+   "sha256": "8c5123b13a5c3ba7d158bf023b3056ee5edde39be5760a1dd83a54ec7b986a72"
+  },
+  {
+   "path": "test/enrich-adversarial-fuzz.mjs",
+   "bytes": 40268,
+   "mtime": "2026-11-13T14:23:57.158Z",
+   "sha256": "1d4a61f178b5191265ad7bde23ae133b5840201a1b8915eb30bbcd9d9de39f62"
+  },
+  {
+   "path": "test/enrich-fuzz.mjs",
+   "bytes": 26779,
+   "mtime": "2026-11-13T14:23:57.159Z",
+   "sha256": "edeab4b48d5f853a264523c611e7a79b6022f3023c862c5f9ecd3fbcb63430f3"
+  },
+  {
+   "path": "test/enrich-import-test.mjs",
+   "bytes": 31168,
+   "mtime": "2026-11-13T14:23:57.160Z",
+   "sha256": "e8704041e5d2d2b5d7978868840636bd56d6e04f3f6b6977fa22fe279af5b222"
+  },
+  {
+   "path": "test/enrich-job-test.mjs",
+   "bytes": 19803,
+   "mtime": "2026-11-13T14:23:57.161Z",
+   "sha256": "42f6cf64b003a345d4b9d01ec1702922ff413dd2db9c8d5d5f105d377f2e032c"
+  },
+  {
+   "path": "test/enrich-nom-test.mjs",
+   "bytes": 8319,
+   "mtime": "2026-11-13T14:23:57.161Z",
+   "sha256": "e0212c2617ac53f7829c31b8bc4a4ed89698ff989ec199f42d71ab1af5e4dfc6"
+  },
+  {
+   "path": "test/entry-adversarial-fuzz.mjs",
+   "bytes": 89382,
+   "mtime": "2026-11-13T14:23:57.162Z",
+   "sha256": "566a325a07fb2f6229d1dcb0ae019b9c76d0cfef2f725c8617577124ed64dd02"
+  },
+  {
+   "path": "test/feedback-pool-test.mjs",
+   "bytes": 4294,
+   "mtime": "2026-11-13T14:23:57.164Z",
+   "sha256": "31f81e7e855201f07c627a1ecc0bf638496b000b8a886f08ee4612dd04ee3dde"
+  },
+  {
+   "path": "test/feedback-samples.json",
+   "bytes": 1650,
+   "mtime": "2026-11-13T14:23:57.164Z",
+   "sha256": "cafcf2076995a79d45194bd3f3171570ddc0279b1826ce35ab75984f6f313b51"
+  },
+  {
+   "path": "test/fixtures/archive-worker.mjs",
+   "bytes": 812,
+   "mtime": "2026-11-13T14:23:57.165Z",
+   "sha256": "ba74bd3b68f1436c6c017e8791702266a40126474a2df38ea1518f2c4883d5b9"
+  },
+  {
+   "path": "test/fixtures/enrich-xueer-slice.json",
+   "bytes": 12066,
+   "mtime": "2026-11-13T14:23:57.165Z",
+   "sha256": "7fb45e11084e301f31507744f88c7fb45782bf59d903fea91f657e87c2b1c24e"
+  },
+  {
+   "path": "test/ftsliteral-test.mjs",
+   "bytes": 18126,
+   "mtime": "2026-11-15T13:09:58.443Z",
+   "sha256": "7a3ab140e7e7de4c20f081cd9858cf2e679aa3db53b05a7d4b4d5827ca321dd7"
+  },
+  {
+   "path": "test/gen-chinese-samples.js",
+   "bytes": 3144,
+   "mtime": "2026-11-13T14:23:57.220Z",
+   "sha256": "e0c39921e9a8914cd9ec1dc3c34b0bc458dcbb80c88f9876eb2ebb8c3df79f43"
+  },
+  {
+   "path": "test/golden-verify.mjs",
+   "bytes": 4138,
+   "mtime": "2026-11-15T13:06:07.278Z",
+   "sha256": "24676a09a5dc6e91ee36a5bde851a5cd87b6ed59c3157b6721a525be2d083c5e"
+  },
+  {
+   "path": "test/golden/attention-is-all-you-need-en.pdf.json",
+   "bytes": 2495,
+   "mtime": "2026-11-13T15:43:58.196Z",
+   "sha256": "4fc95ccaf5c7f05411bd65202469be01159e0dc38de739355fabeb409f968081"
+  },
+  {
+   "path": "test/golden/daodejing-zh.docx.json",
+   "bytes": 1810,
+   "mtime": "2026-11-13T15:43:58.196Z",
+   "sha256": "868faea6c2b62dc31d7332a84f5f37e77e0be6de95d67241938605357bf82069"
+  },
+  {
+   "path": "test/golden/dynamo-2007-en.pdf.json",
+   "bytes": 1594,
+   "mtime": "2026-11-13T15:43:58.197Z",
+   "sha256": "c6465cf6bce0dc3059ca3c5eb13410e2813661b0c9c34c8386dad2867d641722"
+  },
+  {
+   "path": "test/golden/frankenstein-en.epub.json",
+   "bytes": 2193,
+   "mtime": "2026-11-14T05:14:35.677Z",
+   "sha256": "5b94405b3bd16fe6c941d1a44c7a40605e56dfbffc233b3660b18177d6b3a995"
+  },
+  {
+   "path": "test/golden/jane-eyre-en.epub.json",
+   "bytes": 2531,
+   "mtime": "2026-11-13T15:43:58.196Z",
+   "sha256": "ab71f941e105887cd0d0fea1c8cf4dfa5e03de1516279e88ffbe0a95dc7d8809"
+  },
+  {
+   "path": "test/golden/lamport-1978-en.pdf.json",
+   "bytes": 1154,
+   "mtime": "2026-11-13T15:43:58.197Z",
+   "sha256": "b8724fe5dabb1cbad185eb8f641e9a252f065ace4fc0899af21f7e94c513b12b"
+  },
+  {
+   "path": "test/golden/lunyu-xueer-zh.docx.json",
+   "bytes": 1751,
+   "mtime": "2026-11-13T15:43:58.195Z",
+   "sha256": "b0a965c14349a3aa63a4aeea6b7eefa97371c8eb9da578ce6d1f82cb466cefa5"
+  },
+  {
+   "path": "test/golden/mapreduce-2004-en.pdf.json",
+   "bytes": 1276,
+   "mtime": "2026-11-13T15:43:58.198Z",
+   "sha256": "686d14db0358f143659758b8080e2c56987a3a26dd9bb985c754f42068a87e87"
+  },
+  {
+   "path": "test/golden/mengzi-zh.docx.json",
+   "bytes": 1973,
+   "mtime": "2026-11-14T05:14:58.655Z",
+   "sha256": "1968e9b5f56e187c4dff3ff468515a76a75fb0b9b07feb81cf98484be6a1cd13"
+  },
+  {
+   "path": "test/golden/pride-and-prejudice-en.epub.json",
+   "bytes": 1865,
+   "mtime": "2026-11-13T15:43:58.196Z",
+   "sha256": "c2ca89f2df560b12d7b7179414fbf6317ea6306ca63b1ccb476dc5bef2f63443"
+  },
+  {
+   "path": "test/golden/sherlock-holmes-adventures-en.epub.json",
+   "bytes": 1844,
+   "mtime": "2026-11-13T15:43:58.197Z",
+   "sha256": "34761106209a9c0c67c71980cd44926b1b2db0fcab5d25b57667b40d0a35887e"
+  },
+  {
+   "path": "test/graphrag-fuzz.mjs",
+   "bytes": 41294,
+   "mtime": "2026-11-15T13:09:50.456Z",
+   "sha256": "2e7927123fd112f70e141f38f22ef326fb3f78b464f5e75f8b309a0ca64ed0a7"
+  },
+  {
+   "path": "test/guard-test.mjs",
+   "bytes": 117937,
+   "mtime": "2026-11-16T04:09:31.503Z",
+   "sha256": "2ee70841e97069147b9fb8a528f95a7f5e76f525bb3bfa18606ae3e1cd123c2b"
+  },
+  {
+   "path": "test/hallucination-fuzz.mjs",
+   "bytes": 16491,
+   "mtime": "2026-11-15T13:07:18.318Z",
+   "sha256": "64f1eb5dca53d4862348a809fd20c82ccfd9366e687cac9ead411275ed695cb5"
+  },
+  {
+   "path": "test/holdout-run.mjs",
+   "bytes": 9326,
+   "mtime": "2026-11-16T03:20:04.155Z",
+   "sha256": "80e15311f3ea15c2d5f48c00b0da73d6f71bfd8383085ebb2a9c7a901bb93f27"
+  },
+  {
+   "path": "test/holdout/baseline-v2.json",
+   "bytes": 409,
+   "mtime": "2026-11-16T03:24:37.347Z",
+   "sha256": "659ff8d2c5a5997a6808d3aa5624aa39829ad89b900a9411889ab60b586449e0"
+  },
+  {
+   "path": "test/holdout/baseline.json",
+   "bytes": 402,
+   "mtime": "2026-11-15T17:13:07.101Z",
+   "sha256": "20a56bdb0b8a50a65e21a7adfcfff1e14f2ae8614f44e158c80e49bda353ca07"
+  },
+  {
+   "path": "test/holdout/frozen-v2.json",
+   "bytes": 671,
+   "mtime": "2026-11-16T03:19:45.502Z",
+   "sha256": "32a4ff0ed1ea66191083e12ae5b4f8a71da10aab040f285d13650ef1238b5ed9"
+  },
+  {
+   "path": "test/holdout/frozen.json",
+   "bytes": 601,
+   "mtime": "2026-11-15T17:06:22.678Z",
+   "sha256": "b3d7f154398c3a1735b2555000236fa3a214e1c8edd2d38db7e7253c8c7d9ab9"
+  },
+  {
+   "path": "test/holdout/sets/holdout-v1.json",
+   "bytes": 17789,
+   "mtime": "2026-11-15T17:06:22.671Z",
+   "sha256": "0f532846455c67d2cdfd9dec05eb5b398f400444ff4d6a502325b91f0fa2d7c5"
+  },
+  {
+   "path": "test/holdout/sets/holdout-v2.json",
+   "bytes": 16592,
+   "mtime": "2026-11-16T03:19:45.495Z",
+   "sha256": "504a1feb32d5b4c54e26549d9d03df4d1c137f709ac0f081761fa086ffab4164"
+  },
+  {
+   "path": "test/inline-clean-test.mjs",
+   "bytes": 18670,
+   "mtime": "2026-11-13T14:23:57.230Z",
+   "sha256": "24047d2b9a400fca7ccbfb4c085606271d73373aa30352da304b2f95116d9140"
+  },
+  {
+   "path": "test/ipc-test.mjs",
+   "bytes": 14813,
+   "mtime": "2026-11-15T13:16:33.026Z",
+   "sha256": "fc31dcd6cf5c0f3d3246ccbdccf594e1c9446297164c9968bb07c0ca272bd1ec"
+  },
+  {
+   "path": "test/jobs-fuzz.mjs",
+   "bytes": 13959,
+   "mtime": "2026-11-13T14:23:57.232Z",
+   "sha256": "9e5af22948de97903f2483bc61dd991205399c0cd0d3d0436c666daf8f7ecb4e"
+  },
+  {
+   "path": "test/jobs-test.mjs",
+   "bytes": 12953,
+   "mtime": "2026-11-13T14:23:57.232Z",
+   "sha256": "e033c11194fcfe8bef1651abc2a8325464b2bd24acdb3cbb52096ef7aba0aa6b"
+  },
+  {
+   "path": "test/judge-test.mjs",
+   "bytes": 10964,
+   "mtime": "2026-11-15T13:09:37.086Z",
+   "sha256": "67a6900e61ccb067b00a7fa883b60c242608376b916f2a3480213d689421709b"
+  },
+  {
+   "path": "test/kk-clean-slow-test.mjs",
+   "bytes": 13262,
+   "mtime": "2026-11-13T14:23:57.233Z",
+   "sha256": "4eca7412ce110bd70b7886639bcac4e5b340b518f69f7d32efc99135a70b1666"
+  },
+  {
+   "path": "test/lib/book-alias.mjs",
+   "bytes": 1069,
+   "mtime": "2026-11-15T13:05:51.980Z",
+   "sha256": "cc1118ee0c3f76ee7f16dd4a0b92bbd50e9e729a2065eb8b410eac6ce06d188f"
+  },
+  {
+   "path": "test/lib/judge.mjs",
+   "bytes": 7522,
+   "mtime": "2026-11-15T13:07:38.903Z",
+   "sha256": "07f75bc9f67159eb4fcbc0ce6fc30d11c826fb76608ca72c1bfa613aef3be672"
+  },
+  {
+   "path": "test/llm-fuzz.mjs",
+   "bytes": 22145,
+   "mtime": "2026-11-13T14:23:57.234Z",
+   "sha256": "7700bc75d9f1c3ed4816ce8b3737786ac016cb4e316235b96533ee0f61bdd2a3"
+  },
+  {
+   "path": "test/llm-test.mjs",
+   "bytes": 22790,
+   "mtime": "2026-11-14T01:58:19.999Z",
+   "sha256": "fcf2501196b9523f73563dc6125bb2b2fdf5aaa5d6b8dff8fb20d60e440cc10a"
+  },
+  {
+   "path": "test/neighbor-test.mjs",
+   "bytes": 7178,
+   "mtime": "2026-11-13T14:23:57.235Z",
+   "sha256": "164edc86ba0ce278fec008d69e24a73fd951e5913cb4ab2e3774a245694ea1bf"
+  },
+  {
+   "path": "test/newbook-check.mjs",
+   "bytes": 8923,
+   "mtime": "2026-11-13T14:23:57.236Z",
+   "sha256": "bfd5a45ee4ede5e73ff9a9e88b618cf9a252aeaa629a45b676ffa5f94c769957"
+  },
+  {
+   "path": "test/outline-test.mjs",
+   "bytes": 10074,
+   "mtime": "2026-11-13T14:23:57.237Z",
+   "sha256": "1d09e5966383a75e4ed092931025c524b1ee5993362dd4769b2c09482e709f92"
+  },
+  {
+   "path": "test/packaged-verify.mjs",
+   "bytes": 7154,
+   "mtime": "2026-11-13T14:23:57.237Z",
+   "sha256": "5bc190a096c3840efac6f22b843232f85d7ab5d59e8790b080eebfbeb939f1f0"
+  },
+  {
+   "path": "test/parser-fuzz.mjs",
+   "bytes": 22912,
+   "mtime": "2026-11-13T14:23:57.238Z",
+   "sha256": "8f1638c3211af760680125a72286578eb6d46172cf093c5ec1ee1e5c8af786cc"
+  },
+  {
+   "path": "test/parser-v3-test.mjs",
+   "bytes": 17822,
+   "mtime": "2026-11-13T14:23:57.239Z",
+   "sha256": "157b2215f62546433442c34721a394ed5f58b10d1c2981377bd7e063f4f4fde8"
+  },
+  {
+   "path": "test/paths-test.mjs",
+   "bytes": 8797,
+   "mtime": "2026-11-13T14:23:57.240Z",
+   "sha256": "f350a07aa6e62687ac06f2dc9208c9b3cebaad87474eebb36b7d0cdd3fa8cbb7"
+  },
+  {
+   "path": "test/perf-test.mjs",
+   "bytes": 6352,
+   "mtime": "2026-11-13T14:23:57.240Z",
+   "sha256": "d2e619a9d688c89f4925fdc0bea47c23d532a10e429deaea3730183ea0136084"
+  },
+  {
+   "path": "test/quality-gate.mjs",
+   "bytes": 39881,
+   "mtime": "2026-11-15T13:09:13.512Z",
+   "sha256": "67440dc3302631faf4904e39edcf03b91370b240b562fc7757478452fa2fc2c8"
+  },
+  {
+   "path": "test/query-rewrite-test.mjs",
+   "bytes": 10501,
+   "mtime": "2026-11-13T14:23:57.241Z",
+   "sha256": "8a7b64fef6e5c21db6d9ce4707baf9c8e09d5b3151f99c4cec349bdcc3abfd94"
+  },
+  {
+   "path": "test/renderer-graph-test.mjs",
+   "bytes": 49425,
+   "mtime": "2026-11-14T02:03:12.847Z",
+   "sha256": "673bc3aa8efa99241eb9314c05015a73aa36944c4f55625cd585705d26c96169"
+  },
+  {
+   "path": "test/semantic-chunk-test.mjs",
+   "bytes": 12872,
+   "mtime": "2026-11-13T14:23:57.242Z",
+   "sha256": "baa9e3d4bdab72626e53df914c3b2eca6cbfc170594efea5fc76f9b6fd76c1f3"
+  },
+  {
+   "path": "test/shelf-assets-test.mjs",
+   "bytes": 9337,
+   "mtime": "2026-11-13T14:23:57.242Z",
+   "sha256": "71b61835cbb5e67a9db39f5bfe6800634519ef3d5fbf409407e0fb026f44e734"
+  },
+  {
+   "path": "test/similar-fuzz.mjs",
+   "bytes": 17355,
+   "mtime": "2026-11-13T14:23:57.243Z",
+   "sha256": "d97b2baa9e315f30a62e7a9318af95e3ceb854386c1c0661179f855dc8beae6c"
+  },
+  {
+   "path": "test/skill-health-test.mjs",
+   "bytes": 10039,
+   "mtime": "2026-11-13T14:23:57.244Z",
+   "sha256": "a71a55af7c4ccf1dd72aa84259efbc63cc992e255ef2adca1e69c98871ed7570"
+  },
+  {
+   "path": "test/skill-store-test.mjs",
+   "bytes": 34652,
+   "mtime": "2026-11-13T14:23:57.246Z",
+   "sha256": "e5dd31da902ecadeea3cb643bcbbc28109d817544247830e925849991b518e61"
+  },
+  {
+   "path": "test/skill-validate-test.mjs",
+   "bytes": 5922,
+   "mtime": "2026-11-13T14:23:57.246Z",
+   "sha256": "87cea4625f25b234ec35bf9ba4c2bbd5958752fb38b7dd97da2ca5cfd750cb85"
+  },
+  {
+   "path": "test/soak-test.mjs",
+   "bytes": 6759,
+   "mtime": "2026-11-13T14:23:57.247Z",
+   "sha256": "39aa95e01893e8f18937e109320c760884b3e509179ab5a833792cb61d356494"
+  },
+  {
+   "path": "test/stage0-format-test.mjs",
+   "bytes": 7432,
+   "mtime": "2026-11-13T14:23:57.247Z",
+   "sha256": "dd263f33e755df1bafe36d3ab8688a514ada01fbf0fd0a18c8563f8efc7cf106"
+  },
+  {
+   "path": "test/stage0-trigram-test.js",
+   "bytes": 2809,
+   "mtime": "2026-11-13T14:23:57.248Z",
+   "sha256": "25e78df917e043be0f3b49215216af97585d15884766b04269f16dc6f794242b"
+  },
+  {
+   "path": "test/stage1-chunk-test.mjs",
+   "bytes": 6026,
+   "mtime": "2026-11-13T14:23:57.248Z",
+   "sha256": "d2fff09faf5a1257f36201fc9e1f4146b8efd25e3c7d4bb7f524b7e29942204d"
+  },
+  {
+   "path": "test/stage2-test.mjs",
+   "bytes": 5103,
+   "mtime": "2026-11-13T14:23:57.249Z",
+   "sha256": "88deb93ec1db840d39f9ef9b23a03fd65ffd5383da774e7436359f96e675989e"
+  },
+  {
+   "path": "test/stage3-mcp-test.mjs",
+   "bytes": 26716,
+   "mtime": "2026-11-13T14:23:57.250Z",
+   "sha256": "d00cb40acb864ab63fa4427a7daffa4716a91ed017c73d54fab01318dd415f7a"
+  },
+  {
+   "path": "test/structurize-test.mjs",
+   "bytes": 25769,
+   "mtime": "2026-11-13T14:23:57.250Z",
+   "sha256": "b6502cdf58781d815efe1196bd8ec9200f47c5312771107cd10a5eb325e9e3f4"
+  },
+  {
+   "path": "test/theme-test.mjs",
+   "bytes": 6365,
+   "mtime": "2026-11-13T14:23:57.251Z",
+   "sha256": "6d81cdd1d9f092625ae626fc2eb960a7eacb9bd0b81e24aa1f282196f9de0c05"
+  },
+  {
+   "path": "test/usage-gate-test.mjs",
+   "bytes": 15921,
+   "mtime": "2026-11-13T14:23:57.252Z",
+   "sha256": "0a9145b3862793505703f4a45697b5721c3f662318e26c3524e173a602c53b11"
+  },
+  {
+   "path": "test/v2-probe.mjs",
+   "bytes": 4645,
+   "mtime": "2026-11-13T14:23:57.253Z",
+   "sha256": "6ba80b3bc2ce102574ddac54641397ef9a74b3905902457fccafffaf7f3f6144"
+  }
+ ],
+ "previousTreeSha16": "daff46b5064c3a81"
+}

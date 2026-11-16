@@ -1,0 +1,107 @@
+===== H01 [answerable/en] Dynamo-亚马逊高可用键值存储-2007.pdf #125 =====
+Q: In Dynamo, what do the values of W and R affect?
+G: W and R | availability | durability | consistency
+A(草稿, 260字): The values of W and R impact object availability, durability and consistency. For instance, if W is set to 1, then the system will never reject a write request as long as there is at least one node in the system that can successfully process a write request. H
+原文块全文(644字): The values of W and R impact object availability, durability and consistency. For instance, if W is set to 1, then the system will never reject a write request as long as there is at least one node in the system that can successfully process a write request. However, low values of W and R can increase the risk of inconsistency as write requests are deemed successful and returned to the clients even if they are not processed by a majority of the replicas. This also introduces a vulnerability window for durability when a write request is successfully returned to the client even though it has been persisted at only a small number of nodes.
+
+===== H02 [answerable/cross] Dynamo-亚马逊高可用键值存储-2007.pdf #125 =====
+Q: Dynamo 论文里，W 和 R 这两个参数的取值会影响什么？
+G: W and R | availability | durability
+A(草稿, 260字): The values of W and R impact object availability, durability and consistency. For instance, if W is set to 1, then the system will never reject a write request as long as there is at least one node in the system that can successfully process a write request. H
+原文块全文(644字): The values of W and R impact object availability, durability and consistency. For instance, if W is set to 1, then the system will never reject a write request as long as there is at least one node in the system that can successfully process a write request. However, low values of W and R can increase the risk of inconsistency as write requests are deemed successful and returned to the clients even if they are not processed by a majority of the replicas. This also introduces a vulnerability window for durability when a write request is successfully returned to the client even though it has been persisted at only a small number of nodes.
+
+===== H03 [answerable/en] Lamport-时间时钟与分布式系统排序-1978.pdf #29 =====
+Q: Why does Lamport say the converse condition cannot be expected to hold?
+G: converse condition | imply
+A(草稿, 260字): Note that we cannot expect the converse condition to hold as well, since that would imply that any two concurrent events must occur at the same time. In Figure 1, p _ { 2 } and p _ { 3 } are both concurrent with q _ { 3 } , so this would mean that they both mu
+原文块全文(531字): Note that we cannot expect the converse condition to hold as well, since that would imply that any two concurrent events must occur at the same time. In Figure 1, p _ { 2 } and p _ { 3 } are both concurrent with q _ { 3 } , so this would mean that they both must occur at the same time as q _ { 3 } , which would contradict the Clock Condition because p _ { 2 } \rightarrow p _ { 3 } . It is easy to see from our definition of the relation \leftrightarrow that the Clock Condition is satisfied if the following two conditions hold.
+
+===== H04 [answerable/en] MapReduce-谷歌大规模分布式处理-2004.pdf #26 =====
+Q: How can the input splits be processed in MapReduce?
+G: M splits | parallel | different machines
+A(草稿, 260字): into a set of M splits. The input splits can be processed in parallel by different machines. Reduce invocations are distributed by partitioning the intermediate key space into R pieces using a partitioning function (e.g., hash(key) mod R). The number of partit
+原文块全文(577字): into a set of M splits. The input splits can be processed in parallel by different machines. Reduce invocations are distributed by partitioning the intermediate key space into R pieces using a partitioning function (e.g., hash(key) mod R). The number of partitions (R) and the partitioning function are specified by the user. Figure 1 shows the overall flow of a MapReduce operation in our implementation. When the user program calls the MapReduce function, the following sequence of actions occurs (the numbered labels in Figure 1 correspond to the numbers in the list below):
+
+===== H05 [answerable/cross] MapReduce-谷歌大规模分布式处理-2004.pdf #51 =====
+Q: MapReduce 的使用者需要自己指定什么数量？
+G: reduce tasks | output files
+A(草稿, 260字): 4.1 Partitioning Function The users of MapReduce specify the number of reduce tasks/output files that they desire (R). Data gets partitioned across these tasks using a partitioning function on the intermediate key. A default partitioning function is provided t
+原文块全文(836字): 4.1 Partitioning Function The users of MapReduce specify the number of reduce tasks/output files that they desire (R). Data gets partitioned across these tasks using a partitioning function on the intermediate key. A default partitioning function is provided that uses hashing (e.g. “hash(key) mod R”). This tends to result in fairly well-balanced partitions. In some cases, however, it is useful to partition data by some other function of the key. For example, sometimes the output keys are URLs, and we want all entries for a single host to end up in the same output file. To support situations like this, the user of the MapReduce library can provide a special partitioning function. For example,
+
+===== H06 [answerable/en] attention-is-all-you-need-en.pdf #29 =====
+Q: What does multi-head attention replace?
+G: Multi-Head Attention | single attention function
+A(草稿, 260字): 3.2.2 Multi-Head Attention Instead of performing a single attention function with d _ { \mathrm { m o d e l } } -dimensional keys, values and queries, we found it beneficial to linearly project the queries, keys and values h times with different, learned linea
+原文块全文(488字): 3.2.2 Multi-Head Attention Instead of performing a single attention function with d _ { \mathrm { m o d e l } } -dimensional keys, values and queries, we found it beneficial to linearly project the queries, keys and values h times with different, learned linear projections to d _ { k } , d _ { k } and d _ { v } dimensions, respectively. On each of these projected versions of queries, keys and values we then perform the attention function in parallel, yielding d _ { v } . -dimensional
+
+===== H07 [answerable/zh] daodejing-zh.docx #15 =====
+Q: 《道德经》第十五章开头，用哪两个词形容「古之善為士者」？
+G: 微妙玄通 | 深不可識
+A(草稿, 165字): 第十五章 古之善為士一作「道」者，微妙玄通一作「達」，深不可識。夫唯不可識，故強一作「彊」為之容：豫兮，若冬涉川；猶一作「猷」兮，若畏四鄰；儼兮，其若客；渙兮，其若冰之將釋；敦一作「沌」兮，其若樸；曠兮，其若谷；混兮，其若濁。濁而靜之，徐清。安以動之，徐生。保一作「葆」此道者，不欲盈。夫唯不盈，故能蔽一作「敝」不一作「而」新成。
+原文块全文(165字): 第十五章 古之善為士一作「道」者，微妙玄通一作「達」，深不可識。夫唯不可識，故強一作「彊」為之容：豫兮，若冬涉川；猶一作「猷」兮，若畏四鄰；儼兮，其若客；渙兮，其若冰之將釋；敦一作「沌」兮，其若樸；曠兮，其若谷；混兮，其若濁。濁而靜之，徐清。安以動之，徐生。保一作「葆」此道者，不欲盈。夫唯不盈，故能蔽一作「敝」不一作「而」新成。
+
+===== H08 [answerable/zh] daodejing-zh.docx #49 =====
+Q: 「聖人常無心」的下一句是什么？
+G: 以百姓心為心
+A(草稿, 98字): 第四十九章 聖人常無心，以百姓心為心。善者，吾善之；不善者，吾亦善之；德一作「得」善。信者，吾信之；不信者，吾亦信之；德一作「得」信。聖人在天下，歙歙焉，為天下渾其心，百姓皆注其耳目，聖人皆孩之。
+原文块全文(98字): 第四十九章 聖人常無心，以百姓心為心。善者，吾善之；不善者，吾亦善之；德一作「得」善。信者，吾信之；不信者，吾亦信之；德一作「得」信。聖人在天下，歙歙焉，為天下渾其心，百姓皆注其耳目，聖人皆孩之。
+
+===== H09 [answerable/en] frankenstein-en.epub #145 =====
+Q: What does the narrator say is less changeable than the accidents of life?
+G: feelings of human nature | accidents of life
+A(草稿, 260字): The different accidents of life are not so changeable as the feelings of human nature.I had worked hard for nearly two years, for the sole purpose of infusing life into an inanimate body.For this I had deprived myself of rest and health.I had desired it with a
+原文块全文(823字): The different accidents of life are not so changeable as the feelings of human nature.I had worked hard for nearly two years, for the sole purpose of infusing life into an inanimate body.For this I had deprived myself of rest and health.I had desired it with an ardour that far exceeded moderation; but now that I had finished, the beauty of the dream vanished, and breathless horror and disgust filled my heart.Unable to endure the aspect of the being I had created, I rushed out of the room and continued a long time traversing my bed-chamber, unable to compose my mind to sleep.At length lassitude succeeded to the tumult I had before endured, and I threw myself on the bed in my clothes, endeavou
+
+===== H10 [answerable/cross] frankenstein-en.epub #565 =====
+Q: 《弗兰肯斯坦》里，巡回审判季快到时，叙述者已经在牢里待了多久？
+G: three months | assizes
+A(草稿, 260字): The season of the assizes approached. I had already been three months in prison, and although I was still weak and in continual danger of a relapse, I was obliged to travel nearly a hundred miles to the country town where the court was held. Mr. Kirwin charged
+原文块全文(668字): The season of the assizes approached. I had already been three months in prison, and although I was still weak and in continual danger of a relapse, I was obliged to travel nearly a hundred miles to the country town where the court was held. Mr. Kirwin charged himself with every care of collecting witnesses and arranging my defence. I was spared the disgrace of appearing publicly as a criminal, as the case was not brought before the court that decides on life and death. The grand jury rejected the bill, on its being proved that I was on the Orkney Islands at the hour the body of my friend was found; and a fortnight after my removal I was liberated from prison.
+
+===== H11 [answerable/zh] lunyu-xueer-zh.docx #15 =====
+Q: 子貢問「貧而無諂，富而無驕，何如」，孔子怎麼答？
+G: 未若貧而樂 | 富而好禮
+A(草稿, 100字): 第15章 子貢曰：「貧而無諂，富而無驕，何如？」子曰：「可也。未若貧而樂，富而好禮者也」。子貢曰：「《詩》云：『如切如磋，如琢如磨。』其斯之謂與？」子曰：「賜也，始可與言《詩》已矣！吿諸往而知來者。」
+原文块全文(100字): 第15章 子貢曰：「貧而無諂，富而無驕，何如？」子曰：「可也。未若貧而樂，富而好禮者也」。子貢曰：「《詩》云：『如切如磋，如琢如磨。』其斯之謂與？」子曰：「賜也，始可與言《詩》已矣！吿諸往而知來者。」
+
+===== H12 [answerable/zh] mengzi-zh.docx #34 =====
+Q: 孟子说「人皆有不忍人之心」，举了什么例子来证明？
+G: 孺子將入於井 | 怵惕惻隱
+A(草稿, 260字): 孟子曰：「人皆有不忍人之心。先王有不忍人之心，斯有不忍人之政矣。以不忍人之心，行不忍人之政，治天下可運之掌上。所以謂人皆有不忍人之心者，今人乍見孺子將入於井，皆有怵惕惻隱之心；非所以內交於孺子之父母也，非所以要譽於鄉黨朋友也，非惡其聲而然也。由是觀之，無惻隱之心，非人也。無羞惡之心，非人也。無辭讓之心，非人也。無是非之心，非人也。惻隱之心，仁之端也；羞惡之心，義之端也；辭讓之心，禮之端也；是非之心，智之端也。人之有是四端也，猶其有四體也。有是四端而自謂不能者，自賊者也；謂其君不能者，賊其君者也。凡有四端於我者，知皆
+原文块全文(301字): 孟子曰：「人皆有不忍人之心。先王有不忍人之心，斯有不忍人之政矣。以不忍人之心，行不忍人之政，治天下可運之掌上。所以謂人皆有不忍人之心者，今人乍見孺子將入於井，皆有怵惕惻隱之心；非所以內交於孺子之父母也，非所以要譽於鄉黨朋友也，非惡其聲而然也。由是觀之，無惻隱之心，非人也。無羞惡之心，非人也。無辭讓之心，非人也。無是非之心，非人也。惻隱之心，仁之端也；羞惡之心，義之端也；辭讓之心，禮之端也；是非之心，智之端也。人之有是四端也，猶其有四體也。有是四端而自謂不能者，自賊者也；謂其君不能者，賊其君者也。凡有四端於我者，知皆擴而充之矣，若火之始然，泉之始達。茍能充之，足以保四海；茍不充之，不足以事父母。」
+
+===== H13 [answerable/en] pg1260-简爱.epub #372 =====
+Q: What happened to John Reed at college?
+G: John Reed | college
+A(草稿, 260字): “Well, and what of John Reed?” “Oh, he is not doing so well as his mama could wish. He went to college, and he got—plucked, I think they call it: and then his uncles wanted him to be a barrister, and study the law: but he is such a dissipated young man, they w
+原文块全文(417字): “Well, and what of John Reed?” “Oh, he is not doing so well as his mama could wish. He went to college, and he got—plucked, I think they call it: and then his uncles wanted him to be a barrister, and study the law: but he is such a dissipated young man, they will never make much of him, I think.” “What does he look like?” “He is very tall: some people call him a fine-looking young man; but he has such thick lips.”
+
+===== H14 [answerable/cross] pg1260-简爱.epub #1489 =====
+Q: 《简爱》里，除了 Mr. Rivers，这句话还跟谁打招呼？
+G: Carlo | Mr. Rivers
+A(草稿, 238字): “Good evening, Mr. Rivers. And good evening, old Carlo. Your dog is quicker to recognise his friends than you are, sir; he pricked his ears and wagged his tail when I was at the bottom of the field, and you have your back towards me now.”
+原文块全文(238字): “Good evening, Mr. Rivers. And good evening, old Carlo. Your dog is quicker to recognise his friends than you are, sir; he pricked his ears and wagged his tail when I was at the bottom of the field, and you have your back towards me now.”
+
+===== H15 [answerable/en] pride-and-prejudice-en.epub #256 =====
+Q: According to this passage, when was the clergyman recommended to Lady Catherine de Bourgh?
+G: Hunsford | Lady Catherine | vacant
+A(草稿, 260字): A fortunate chance had recommended him to Lady Catherine de Bourgh when the living of Hunsford was vacant; and the respect which he felt for her high rank, and his veneration for her as his patroness, mingling with a very good opinion of himself, of his author
+原文块全文(395字): A fortunate chance had recommended him to Lady Catherine de Bourgh when the living of Hunsford was vacant; and the respect which he felt for her high rank, and his veneration for her as his patroness, mingling with a very good opinion of himself, of his authority as a clergyman, and his right as a rector, made him altogether a mixture of pride and obsequiousness, self-importance and humility.
+
+===== H16 [answerable/en] pg1661-福尔摩斯冒险史.epub #211 =====
+Q: At which church was the wedding to take place?
+G: St. Saviour | King's Cross
+A(草稿, 260字): “Yes, sir, but very quietly. It was to be at St. Saviour’s, near King’s Cross, and we were to have breakfast afterwards at the St. Pancras Hotel. Hosmer came for us in a hansom, but as there were two of us he put us both into it and stepped himself into a four
+原文块全文(755字): “Yes, sir, but very quietly. It was to be at St. Saviour’s, near King’s Cross, and we were to have breakfast afterwards at the St. Pancras Hotel. Hosmer came for us in a hansom, but as there were two of us he put us both into it and stepped himself into a four-wheeler, which happened to be the only other cab in the street. We got to the church first, and when the four-wheeler drove up we waited for him to step out, but he never did, and when the cabman got down from the box and looked there was no one there! The cabman said that he could not imagine what had become of him, for he had seen him get in with his own eyes. That was last Friday, Mr. Holmes, and I have never seen or heard anything 
+
+===== H29 [newbook/zh] lunyu-xueer-zh.pdf #1 =====
+Q: 《論語·學而第一》开篇第一章，孔子说的第一句是什么？
+G: 學而時習之 | 不亦說乎
+A(草稿, 191字): 論語 · 學而第一（第 1 / 4 頁） 第1章 子曰:「學而時習之，不亦說乎？有朋自遠方來，不亦樂乎？人不知而不慍，不亦君子乎？」 第2章 有子曰:「其爲人也孝弟，而好犯上者，鮮矣；不好犯上，而好作亂者，未之有也。君子務本，本立而道生；孝弟也者，其爲仁之本與？」 第3章 子曰:「巧言令色，鮮矣仁。」 第4章 曾子曰:「吾日三省吾身:爲人謀而不忠乎？與朋友交而不信乎？傳不習乎？」
+原文块全文(191字): 論語 · 學而第一（第 1 / 4 頁） 第1章 子曰:「學而時習之，不亦說乎？有朋自遠方來，不亦樂乎？人不知而不慍，不亦君子乎？」 第2章 有子曰:「其爲人也孝弟，而好犯上者，鮮矣；不好犯上，而好作亂者，未之有也。君子務本，本立而道生；孝弟也者，其爲仁之本與？」 第3章 子曰:「巧言令色，鮮矣仁。」 第4章 曾子曰:「吾日三省吾身:爲人謀而不忠乎？與朋友交而不信乎？傳不習乎？」
+
+===== H30 [newbook/zh] 低压电器检测实训报告（带表格样例）.docx #4 =====
+Q: 介电强度试验里那台不合格样品，是在多少电压下击穿的？
+G: 1.8 kV | 2.0 kV
+A(草稿, 183字): 介电强度试验中出现 1 台不合格：施压部位为相与外壳之间，击穿发生在 1.8 kV，低于 2.0 kV 的规定值。初步判断为外壳绝缘件存在气泡缺陷，建议对同批次绝缘件加做抽样切片检查。 操作循环寿命不合格 2 台：均在第 8500 次左右出现触头熔焊，占位编号分别为 C-07 与 C-19。熔焊原因指向触头压力弹簧的批次热处理偏差，已反馈供应商按 8D 流程整改。
+原文块全文(183字): 介电强度试验中出现 1 台不合格：施压部位为相与外壳之间，击穿发生在 1.8 kV，低于 2.0 kV 的规定值。初步判断为外壳绝缘件存在气泡缺陷，建议对同批次绝缘件加做抽样切片检查。 操作循环寿命不合格 2 台：均在第 8500 次左右出现触头熔焊，占位编号分别为 C-07 与 C-19。熔焊原因指向触头压力弹簧的批次热处理偏差，已反馈供应商按 8D 流程整改。

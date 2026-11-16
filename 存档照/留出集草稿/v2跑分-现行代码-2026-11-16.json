@@ -1,0 +1,800 @@
+{
+ "summary": {
+  "setId": "holdout-v2",
+  "ranAt": "2026-11-16T03:24:37.334Z",
+  "sha256": "504a1feb32d5b4c54e26549d9d03df4d1c137f709ac0f081761fa086ffab4164",
+  "total": 30,
+  "pass": 26,
+  "passRate": 0.8667,
+  "byKind": {
+   "answerable": {
+    "total": 16,
+    "pass": 14,
+    "rate": 0.875
+   },
+   "newbook": {
+    "total": 2,
+    "pass": 1,
+    "rate": 0.5
+   },
+   "refusal": {
+    "total": 8,
+    "pass": 8,
+    "rate": 1
+   },
+   "ambiguous": {
+    "total": 4,
+    "pass": 3,
+    "rate": 0.75
+   }
+  },
+  "bookPickHit": 18,
+  "bookPickTotal": 18,
+  "bookPickRate": 1,
+  "avgMs": 7921,
+  "missList": [
+   "V11[answerable] 孟子认为解说《诗》的正确做法是什么？ → 判分 miss（命中结果里找不到答案句）｜挑书命中本尊",
+   "V12[answerable] 罗切斯特追问时，简爱说自己把房门怎么处理了？ → 判分 miss（命中结果里找不到答案句）｜挑书命中本尊",
+   "V18[newbook] 曾子说「愼終追遠」会带来什么结果？ → 判分 miss（命中结果里找不到答案句）｜挑书命中本尊",
+   "V28[ambiguous] 「道」到底是什么意思？ → ambiguous=false｜routed=1 本"
+  ]
+ },
+ "rows": [
+  {
+   "id": "V01",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "In Dynamo, what does the partitioning scheme rely on to distribute load across storage hosts?",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 5047,
+   "routed": [
+    "Dynamo-亚马逊高可用键值存储-2007(1)"
+   ],
+   "resultIds": [
+    60,
+    134,
+    12,
+    138,
+    102
+   ],
+   "resultBooks": [
+    "Dynamo-亚马逊高可用键值存储-2007"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V02",
+   "kind": "answerable",
+   "lang": "cross",
+   "q": "Dynamo 遇到同一对象的版本分歧时，用什么办法决定哪一版算数？",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "pass": true,
+   "detail": "判分 full @3（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 1465,
+   "routed": [
+    "Dynamo-亚马逊高可用键值存储-2007(0.989)"
+   ],
+   "resultIds": [
+    72,
+    69,
+    122,
+    120,
+    73
+   ],
+   "resultBooks": [
+    "Dynamo-亚马逊高可用键值存储-2007"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V03",
+   "kind": "answerable",
+   "lang": "cross",
+   "q": "Lamport 说当两个事件拿到同一个时钟值时，靠什么打破平局？",
+   "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 2149,
+   "routed": [
+    "Lamport-时间时钟与分布式系统排序-1978(0.611)"
+   ],
+   "resultIds": [
+    37,
+    3,
+    102,
+    33,
+    128
+   ],
+   "resultBooks": [
+    "Lamport-时间时钟与分布式系统排序-1978"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V04",
+   "kind": "answerable",
+   "lang": "cross",
+   "q": "机器故障之后，已经完成的 reduce 任务为什么不需要重跑？",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 9371,
+   "routed": [
+    "MapReduce-谷歌大规模分布式处理-2004(0.998)"
+   ],
+   "resultIds": [
+    35,
+    36,
+    39,
+    67,
+    37
+   ],
+   "resultBooks": [
+    "MapReduce-谷歌大规模分布式处理-2004"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V05",
+   "kind": "answerable",
+   "lang": "cross",
+   "q": "MapReduce 里哪一类计数值是库自己维护的？",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 1689,
+   "routed": [
+    "MapReduce-谷歌大规模分布式处理-2004(0.985)"
+   ],
+   "resultIds": [
+    68,
+    65,
+    130,
+    67,
+    10
+   ],
+   "resultBooks": [
+    "MapReduce-谷歌大规模分布式处理-2004"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V06",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "Why are the dot products scaled by one over the square root of d_k?",
+   "book": "attention-is-all-you-need-en.pdf",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 11348,
+   "routed": [
+    "attention-is-all-you-need-en(0.98)"
+   ],
+   "resultIds": [
+    28,
+    27,
+    30,
+    25,
+    70
+   ],
+   "resultBooks": [
+    "attention-is-all-you-need-en"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V07",
+   "kind": "answerable",
+   "lang": "zh",
+   "q": "「人法地，地法天」后面接着说什么？",
+   "book": "daodejing-zh.docx",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 14480,
+   "routed": [
+    "daodejing-zh(0.763)"
+   ],
+   "resultIds": [
+    25,
+    7,
+    17,
+    37,
+    54
+   ],
+   "resultBooks": [
+    "daodejing-zh"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V08",
+   "kind": "answerable",
+   "lang": "zh",
+   "q": "第五十章说「善攝生者」走路不会遇到什么、入军不会被什么伤到？",
+   "book": "daodejing-zh.docx",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 12357,
+   "routed": [
+    "daodejing-zh(0.997)"
+   ],
+   "resultIds": [
+    50,
+    55,
+    54,
+    52,
+    68
+   ],
+   "resultBooks": [
+    "daodejing-zh"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V09",
+   "kind": "answerable",
+   "lang": "cross",
+   "q": "维克多和伊丽莎白走进牢房时，贾斯汀坐在什么上面？",
+   "book": "frankenstein-en.epub",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 10788,
+   "routed": [
+    "frankenstein-en(0.996)"
+   ],
+   "resultIds": [
+    243,
+    251,
+    248,
+    227,
+    242
+   ],
+   "resultBooks": [
+    "frankenstein-en"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V10",
+   "kind": "answerable",
+   "lang": "zh",
+   "q": "曾子每天拿哪三件事反省自己？",
+   "book": "lunyu-xueer-zh.docx",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 8834,
+   "routed": [
+    "lunyu-xueer-zh(0.568)",
+    "lunyu-xueer-zh(0.514)"
+   ],
+   "resultIds": [
+    4,
+    9,
+    5,
+    13,
+    14
+   ],
+   "resultBooks": [
+    "lunyu-xueer-zh"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V11",
+   "kind": "answerable",
+   "lang": "zh",
+   "q": "孟子认为解说《诗》的正确做法是什么？",
+   "book": "mengzi-zh.docx",
+   "pass": false,
+   "detail": "判分 miss（命中结果里找不到答案句）｜挑书命中本尊",
+   "ms": 6898,
+   "routed": [
+    "mengzi-zh(0.626)",
+    "lunyu-xueer-zh(0.44)"
+   ],
+   "resultIds": [
+    122,
+    268,
+    216,
+    121,
+    165
+   ],
+   "resultBooks": [
+    "mengzi-zh"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V12",
+   "kind": "answerable",
+   "lang": "cross",
+   "q": "罗切斯特追问时，简爱说自己把房门怎么处理了？",
+   "book": "pg1260-简爱.epub",
+   "pass": false,
+   "detail": "判分 miss（命中结果里找不到答案句）｜挑书命中本尊",
+   "ms": 9360,
+   "routed": [
+    "pg1260-简爱(0.661)",
+    "pg1661-福尔摩斯冒险史(0.631)"
+   ],
+   "resultIds": [
+    885,
+    425,
+    638,
+    523,
+    859
+   ],
+   "resultBooks": [
+    "pg1260-简爱"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V13",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "How is Miss Darcy described in comparison with Elizabeth?",
+   "book": "pride-and-prejudice-en.epub",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 10229,
+   "routed": [
+    "pride-and-prejudice-en(0.992)"
+   ],
+   "resultIds": [
+    858,
+    816,
+    35,
+    120,
+    199
+   ],
+   "resultBooks": [
+    "pride-and-prejudice-en"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V14",
+   "kind": "answerable",
+   "lang": "cross",
+   "q": "《工程师拇指案》里那位访客的职业是什么？",
+   "book": "pg1661-福尔摩斯冒险史.epub",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 38369,
+   "routed": [
+    "pg1661-福尔摩斯冒险史(0.619)"
+   ],
+   "resultIds": [
+    693,
+    677,
+    99,
+    100,
+    683
+   ],
+   "resultBooks": [
+    "pg1661-福尔摩斯冒险史"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V15",
+   "kind": "answerable",
+   "lang": "en",
+   "q": "Why is the Strong Clock Condition not in general satisfied by logical clocks?",
+   "book": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 10954,
+   "routed": [
+    "Lamport-时间时钟与分布式系统排序-1978(0.999)"
+   ],
+   "resultIds": [
+    63,
+    71,
+    61,
+    77,
+    29
+   ],
+   "resultBooks": [
+    "Lamport-时间时钟与分布式系统排序-1978"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V16",
+   "kind": "answerable",
+   "lang": "zh",
+   "q": "子贡问孔子「夫子聖矣乎」，孔子自己怎么回答？",
+   "book": "mengzi-zh.docx",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 11947,
+   "routed": [
+    "mengzi-zh(0.998)",
+    "lunyu-xueer-zh(0.679)"
+   ],
+   "resultIds": [
+    30,
+    29,
+    144,
+    27,
+    54
+   ],
+   "resultBooks": [
+    "mengzi-zh"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V17",
+   "kind": "newbook",
+   "lang": "zh",
+   "q": "这批 36 台样本的总体合格率是多少？",
+   "book": "低压电器检测实训报告（带表格样例）.docx",
+   "pass": true,
+   "detail": "判分 full @1（a 完整落在命中块里）｜挑书命中本尊",
+   "ms": 9269,
+   "routed": [
+    "低压电器检测实训报告（带表格样例）(0.999)"
+   ],
+   "resultIds": [
+    7,
+    1,
+    3,
+    4,
+    5
+   ],
+   "resultBooks": [
+    "低压电器检测实训报告（带表格样例）"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V18",
+   "kind": "newbook",
+   "lang": "zh",
+   "q": "曾子说「愼終追遠」会带来什么结果？",
+   "book": "lunyu-xueer-zh.pdf",
+   "pass": false,
+   "detail": "判分 miss（命中结果里找不到答案句）｜挑书命中本尊",
+   "ms": 7418,
+   "routed": [
+    "lunyu-xueer-zh(0.883)",
+    "lunyu-xueer-zh(0.87)"
+   ],
+   "resultIds": [
+    9,
+    4,
+    14,
+    13,
+    1
+   ],
+   "resultBooks": [
+    "lunyu-xueer-zh"
+   ],
+   "bookOk": true,
+   "err": null
+  },
+  {
+   "id": "V19",
+   "kind": "refusal",
+   "lang": "zh",
+   "q": "《論語·學而》里有讲怎么配置 Docker 容器吗？",
+   "book": "lunyu-xueer-zh.docx",
+   "pass": true,
+   "detail": "未出现 Docker，正确拒答",
+   "ms": 9077,
+   "routed": [
+    "lunyu-xueer-zh(0.458)"
+   ],
+   "resultIds": [
+    1,
+    4,
+    2
+   ],
+   "resultBooks": [
+    "lunyu-xueer-zh"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "V20",
+   "kind": "refusal",
+   "lang": "cross",
+   "q": "Dynamo 论文里给出了 Blender 三维渲染的参数吗？",
+   "book": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+   "pass": true,
+   "detail": "未出现 Blender，正确拒答",
+   "ms": 1498,
+   "routed": [
+    "Dynamo-亚马逊高可用键值存储-2007(0.529)"
+   ],
+   "resultIds": [
+    172,
+    15,
+    124,
+    59,
+    153
+   ],
+   "resultBooks": [
+    "Dynamo-亚马逊高可用键值存储-2007"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "V21",
+   "kind": "refusal",
+   "lang": "zh",
+   "q": "《道德经》里有讲怎么调试 JavaScript 代码吗？",
+   "book": "daodejing-zh.docx",
+   "pass": true,
+   "detail": "未出现 JavaScript，正确拒答",
+   "ms": 1507,
+   "routed": [
+    "daodejing-zh(0.501)"
+   ],
+   "resultIds": [
+    54,
+    8,
+    37,
+    60,
+    55
+   ],
+   "resultBooks": [
+    "daodejing-zh"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "V22",
+   "kind": "refusal",
+   "lang": "cross",
+   "q": "《弗兰肯斯坦》里提到过 Wi-Fi 吗？",
+   "book": "frankenstein-en.epub",
+   "pass": true,
+   "detail": "未出现 Wi-Fi，正确拒答",
+   "ms": 2316,
+   "routed": [
+    "frankenstein-en(0.5)"
+   ],
+   "resultIds": [
+    151,
+    687,
+    657,
+    114,
+    673
+   ],
+   "resultBooks": [
+    "frankenstein-en"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "V23",
+   "kind": "refusal",
+   "lang": "cross",
+   "q": "MapReduce 论文规定了员工年假天数吗？",
+   "book": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+   "pass": true,
+   "detail": "未出现 年假，正确拒答",
+   "ms": 1795,
+   "routed": [
+    "MapReduce-谷歌大规模分布式处理-2004(0.514)"
+   ],
+   "resultIds": [
+    88,
+    27,
+    36,
+    99,
+    86
+   ],
+   "resultBooks": [
+    "MapReduce-谷歌大规模分布式处理-2004"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "V24",
+   "kind": "refusal",
+   "lang": "cross",
+   "q": "《傲慢与偏见》里出现了信用卡账单吗？",
+   "book": "pride-and-prejudice-en.epub",
+   "pass": true,
+   "detail": "未出现 信用卡，正确拒答",
+   "ms": 2584,
+   "routed": [
+    "pride-and-prejudice-en(0.5)"
+   ],
+   "resultIds": [
+    299,
+    733,
+    1001,
+    272,
+    651
+   ],
+   "resultBooks": [
+    "pride-and-prejudice-en"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "V25",
+   "kind": "refusal",
+   "lang": "cross",
+   "q": "Attention 这篇论文给出了显卡超频设置吗？",
+   "book": "attention-is-all-you-need-en.pdf",
+   "pass": true,
+   "detail": "未出现 超频，正确拒答",
+   "ms": 1504,
+   "routed": [
+    "attention-is-all-you-need-en(0.505)"
+   ],
+   "resultIds": [
+    13,
+    14,
+    76,
+    95,
+    94
+   ],
+   "resultBooks": [
+    "attention-is-all-you-need-en"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "V26",
+   "kind": "refusal",
+   "lang": "zh",
+   "q": "这份检测报告里有电动汽车充电桩的试验数据吗？",
+   "book": "低压电器检测实训报告（带表格样例）.docx",
+   "pass": true,
+   "detail": "未出现 充电桩，正确拒答",
+   "ms": 1102,
+   "routed": [
+    "低压电器检测实训报告（带表格样例）(0.525)"
+   ],
+   "resultIds": [
+    1,
+    5,
+    3,
+    6,
+    2
+   ],
+   "resultBooks": [
+    "低压电器检测实训报告（带表格样例）"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "V27",
+   "kind": "ambiguous",
+   "lang": "zh",
+   "q": "刚才提到的那段话，是哪本书里写的？",
+   "book": null,
+   "pass": true,
+   "detail": "ambiguous=true｜routed=1 本",
+   "ms": 9018,
+   "routed": [
+    "pg1260-简爱(0.583)"
+   ],
+   "resultIds": [
+    136,
+    31,
+    1296,
+    1370,
+    1027
+   ],
+   "resultBooks": [
+    "pg1260-简爱"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "V28",
+   "kind": "ambiguous",
+   "lang": "zh",
+   "q": "「道」到底是什么意思？",
+   "book": null,
+   "pass": false,
+   "detail": "ambiguous=false｜routed=1 本",
+   "ms": 8079,
+   "routed": [
+    "daodejing-zh(0.577)"
+   ],
+   "resultIds": [
+    1,
+    25,
+    51,
+    32,
+    30
+   ],
+   "resultBooks": [
+    "daodejing-zh"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "V29",
+   "kind": "ambiguous",
+   "lang": "zh",
+   "q": "作者当初为什么要写这本书？",
+   "book": null,
+   "pass": true,
+   "detail": "ambiguous=true｜routed=3 本",
+   "ms": 8997,
+   "routed": [
+    "pride-and-prejudice-en(0.553)",
+    "frankenstein-en(0.523)",
+    "pg1661-福尔摩斯冒险史(0.508)"
+   ],
+   "resultIds": [
+    8,
+    1253,
+    7,
+    373,
+    434
+   ],
+   "resultBooks": [
+    "pride-and-prejudice-en"
+   ],
+   "bookOk": null,
+   "err": null
+  },
+  {
+   "id": "V30",
+   "kind": "ambiguous",
+   "lang": "zh",
+   "q": "里面那个实验具体是怎么做的？",
+   "book": null,
+   "pass": true,
+   "detail": "ambiguous=false｜routed=2 本",
+   "ms": 8191,
+   "routed": [
+    "pg1661-福尔摩斯冒险史(0.512)",
+    "attention-is-all-you-need-en(0.49)"
+   ],
+   "resultIds": [
+    523,
+    646,
+    673,
+    675,
+    480
+   ],
+   "resultBooks": [
+    "pg1661-福尔摩斯冒险史"
+   ],
+   "bookOk": null,
+   "err": null
+  }
+ ]
+}

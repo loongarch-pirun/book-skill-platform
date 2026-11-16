@@ -1,0 +1,21 @@
+自答复核 · 只读原文扫描结果
+时间: 2026-11-15T15:26:19.903Z
+口径: 只读 SELECT chunks.text；零检索调用
+
+装载: 13 本 / 5844 块
+
+② 拒答题（在指定书内查特色词，0 命中才算「确实没有」）
+H17 lunyu-xueer-zh.docx | 特色词 4 个 | 本书命中 0 ✓ | 其他书出现过的词: 无
+H18 Dynamo-亚马逊高可用键值存储-2007.pdf | 特色词 5 个 | 本书命中 0 ✓ | 其他书出现过的词: 无
+H19 daodejing-zh.docx | 特色词 5 个 | 本书命中 0 ✓ | 其他书出现过的词: 无
+H20 低压电器检测实训报告（带表格样例）.docx | 特色词 4 个 | 本书命中 0 ✓ | 其他书出现过的词: 5G,5g
+H21 frankenstein-en.epub | 特色词 6 个 | 本书命中 0 ✓ | 其他书出现过的词: 无
+H22 MapReduce-谷歌大规模分布式处理-2004.pdf | 特色词 5 个 | 本书命中 0 ✓ | 其他书出现过的词: salary
+H23 pride-and-prejudice-en.epub | 特色词 4 个 | 本书命中 0 ✓ | 其他书出现过的词: 无
+H24 attention-is-all-you-need-en.pdf | 特色词 6 个 | 本书命中 0 ✓ | 其他书出现过的词: 无
+
+③ 歧义题（扫全库，命中 ≥2 本才算歧义成立）
+H25 | 词 作者/author/Author | 命中 6 本 / 108 块 | Dynamo-亚马逊高可用键值存储-2007.pdf, MapReduce-谷歌大规模分布式处理-2004.pdf, frankenstein-en.epub, pg1260-简爱.epub, pg1661-福尔摩斯冒险史.epub, pride-and-prejudice-en.epub
+H26 | 词 一致性/consistency/consistent/Consistency | 命中 6 本 / 88 块 | Dynamo-亚马逊高可用键值存储-2007.pdf, MapReduce-谷歌大规模分布式处理-2004.pdf, pg1260-简爱.epub, pride-and-prejudice-en.epub, Lamport-时间时钟与分布式系统排序-1978.pdf, frankenstein-en.epub
+H27 | 词 學而時習之/学而时习之 | 命中 2 本 / 2 块 | lunyu-xueer-zh.docx, lunyu-xueer-zh.pdf
+H28 | 词 第一章/第1章/Chapter 1/Chapter I/CHAPTER I | 命中 6 本 / 36 块 | daodejing-zh.docx, lunyu-xueer-zh.docx, lunyu-xueer-zh.pdf, frankenstein-en.epub, pg1260-简爱.epub, pride-and-prejudice-en.epub

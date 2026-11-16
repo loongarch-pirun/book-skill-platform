@@ -1,0 +1,17 @@
+
+C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r4\src\lib\search.mjs
+  145:7   error  Unexpected control character(s) in regular expression: \x00     no-control-regex
+  162:30  error  Unnecessary escape character: \-                                no-useless-escape
+  182:9   error  The value assigned to 'n' is not used in subsequent statements  no-useless-assignment
+
+C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r4\test\lib\judge.mjs
+  24:7  error  'CLOSE' is assigned a value but never used  no-unused-vars
+
+C:\Users\JIANG XIAO HUA\Desktop\book-skill-platform-r4\test\quality-gate.mjs
+  108:106  error  Unnecessary escape character: \|           no-useless-escape
+  112:43   error  Unnecessary escape character: \^           no-useless-escape
+  114:42   error  Unnecessary escape character: \.           no-useless-escape
+  256:7    error  'HARD' is assigned a value but never used  no-unused-vars
+
+✖ 8 problems (8 errors, 0 warnings)
+
