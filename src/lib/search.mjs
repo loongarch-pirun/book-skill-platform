@@ -461,13 +461,17 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
   // （null 章 / 跨章不扩）。双门（evals 漏题⊆基线）过了才考虑默认开。
   const topFinal = final.slice(0, topN);
   if (process.env.BSP_NEIGHBOR === "1" && rerank && topFinal.length) {
+    // 邻块上限参数化（2026-11-16）：原来是硬编码 4。实测 H16 差的就是一个名额——
+    // 种子 769/772/210 的 ±1 依次得 768,770,771,773,209,211，第 6 条才是答案块 #211。
+    // 默认 6；BSP_NEIGHBOR_CAP=4 可回退到旧上限（BSP_NEIGHBOR 本身的默认值不动）。
+    const NBR_CAP = Math.min(Math.max(+(process.env.BSP_NEIGHBOR_CAP ?? 6), 1), 20);
     const inSet = new Set(topFinal.map(r => r.id));
     const nbrGet = db.prepare("SELECT id, chapter, page, text FROM chunks WHERE id = ?");
     const added = [];
     outer:
     for (const s of topFinal) {
       for (const d of [-1, 1]) {
-        if (added.length >= 4) break outer;
+        if (added.length >= NBR_CAP) break outer;
         const nid = s.id + d;
         if (inSet.has(nid)) continue;
         const c = nbrGet.get(nid);
@@ -547,7 +551,10 @@ export async function multiVariantSearch(dbPath, questions, topN = 6) {
 // 为什么不在模块顶层读 env：桌面端进程长驻，顶层 const 让 BSP_ROUTE_* 变成假开关（改 env 必须重启）。
 // 默认值逐字等于改造前的值，不设任何 BSP_* 时行为与旧版逐字节一致。
 const ROUTE_DEFAULTS = Object.freeze({
-  minLen: 60, sigTopK: 3, books: 8, keep: 10, refW: 0.5, poolCap: 48, floorRatio: 0.3,
+  // keep 10 → 18（2026-11-16）：H05 的答案块书内第 14（keep=10 进不了池），
+  // keep=18 时它 rerank 第 1（0.7994，现 top1 仅 0.5861）。实测零重排成本——
+  // 重排条数恒等于 merged.length ≤ poolCap=48，keep 只决定谁进这 48 席。
+  minLen: 60, sigTopK: 3, books: 8, keep: 18, refW: 0.5, poolCap: 48, floorRatio: 0.3,
 });
 const _num = (v, fb, lo, hi) => {
   const x = +(v ?? fb);
@@ -569,6 +576,14 @@ function routeCfg() {
     floorRatio: d.floorRatio,                    // 0.3 默认不变
     rerankBudgetMs: _num(process.env.BSP_RERANK_BUDGET_MS, 6000, 1000, 60000),
     rerankCostMs: 128,                           // 无观测回退值（models.mjs 串行逐条实测 ~128ms）
+    // 池内每书保底席（BSP_ROUTE_POOL_FLOOR，默认 0 = 旧行为）：
+    // keep 抬到 18 后池子会向强书集中（实测 H05 由 7 本收缩到 4 本，mengzi/Dynamo 归零），
+    // 弱书可能因此整本丢候选。>0 时先从每本扫描书各留 N 席，再按全局余弦填满 poolCap。
+    poolFloor: _num(process.env.BSP_ROUTE_POOL_FLOOR, 0, 0, 64),
+    // route 邻块扩展参数（BSP_ROUTE_NBR 为总闸，默认关）
+    nbrSeeds: _num(process.env.BSP_ROUTE_NBR_SEEDS, 3, 1, 10),
+    nbrPerBook: _num(process.env.BSP_ROUTE_NBR_PERBOOK, 8, 1, 32),
+    nbrCap: _num(process.env.BSP_ROUTE_NBR_CAP, 16, 1, 64),
   });
 }
 // 参考文献条（kind=ref）在路由结果里只降权不剔除：它们几乎从不是用户要的答案，却因为
@@ -716,10 +731,81 @@ function attachChunks(rows) {
         r.text = row.text || "";
         r.kind = row.kind || "";
         r.chapterPath = hasPath ? (row.chapter_path ?? null) : null;
+        // 邻块扩展要判「同段落」：epub/docx 靠 chapter，pdf 靠 page（见 sameSection）。
+        // 这两个值本来就在上面的 SELECT 里，只是先前没挂到行上——补两行直通，零额外查询。
+        r.chapter = row.chapter ?? null;
+        r.page = row.page ?? null;
         r.loc = row.page ? `第${row.page}页` : (row.chapter || "");
       }
     } finally { try { db.close(); } catch { /* 关失败无从补救，继续 */ } }
   }
+}
+
+// ---------- route 邻块扩展（BSP_ROUTE_NBR=1，默认关）----------
+// 为什么 route 要自己一份、不抽 hybridSearch 那套（:463-485）：
+//   ① hybridSearch 手里是单库长连接 + 预处理语句，这里是跨书的一堆行，没有长连接；
+//   ② 邻接判据不同：PDF 的 chapter 全为 null（实测 5 本 pdf chapter=0/page 满，
+//      8 本 epub+docx 反之），只判 chapter 会让两本 PDF 结构性失效；
+//   ③ hybridSearch 那条路被 20+ 静态断言钉着，抽公共函数是纯风险。
+//
+// 同段落判据：chapter 优先 → page 兜底（Δpage ≤ 1）→ 双空不扩。
+// Δpage 必须 ≤1 而不是同页：H06 的答案块 #29 在 page 4、最好的种子 #31 在 page 5，
+// 要求同页会把这道题直接挡死。
+function sameSection(a, b) {
+  if (a.chapter && b.chapter) return a.chapter === b.chapter;
+  if (a.page != null && b.page != null) return Math.abs(a.page - b.page) <= 1;
+  return false;
+}
+
+// 给入选书的 topN 结果补同段落邻块。只附加、不挤位、不重跑复试官（与原邻块语义一致）。
+// 生成顺序固定：第 1 遍 ±1、第 2 遍 ±2；每本满 perBook 或全局满 cap 即止。
+// 顺序不能反：H16 的 #211 落在第 1 遍第 6 条、H06 的 #29 落在第 2 遍第 8 条——
+// 先扩大步会先把配额耗在远处，两题都救不回来。
+function expandRouteNeighbors({ picked, merged, seated, cfg }) {
+  const seen = new Set(seated.map(r => `${r.bookId}#${r.id}`));
+  const out = [];
+  for (const p of picked) {
+    if (out.length >= cfg.nbrCap) break;
+    // 种子只认正文块：拿脚注/图片说明当种子会把噪声扩进来
+    const seedRows = merged
+      .filter(r => r.bookId === p.bookId && (r.kind ?? "text") === "text")
+      .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0))
+      .slice(0, cfg.nbrSeeds);
+    if (!seedRows.length) continue;                       // 短库/无正文 → 该书空转，不报错
+    const dbPath = p.items?.[0]?.db;
+    if (!dbPath) continue;
+    let db;
+    try { db = new Database(dbPath, { readonly: true }); } catch { continue; }
+    try {
+      const get = db.prepare("SELECT id, kind, chapter, page, text FROM chunks WHERE id = ?");
+      let taken = 0;
+      for (const step of [1, 2]) {
+        for (const s of seedRows) {
+          if (taken >= cfg.nbrPerBook || out.length >= cfg.nbrCap) break;
+          for (const dir of [-1, 1]) {
+            if (taken >= cfg.nbrPerBook || out.length >= cfg.nbrCap) break;
+            const nid = s.id + dir * step;
+            const key = `${p.bookId}#${nid}`;
+            if (seen.has(key)) continue;
+            const c = get.get(nid);
+            // 白名单：只扩正文块（实测 attention #30 是 footnote、#23 是 image，
+            // 扩进来就是往答案上下文里灌脚注和图片说明）
+            if (!c || (c.kind ?? "text") !== "text") continue;
+            if (!sameSection(s, c)) continue;
+            seen.add(key);
+            out.push({
+              ...s, id: nid, chapter: c.chapter ?? null, page: c.page ?? null,
+              loc: c.page ? `第${c.page}页` : (c.chapter || ""), text: c.text,
+              score: +(((s.rank ?? s.score) || 0) * 0.5).toFixed(4), rerank: undefined,
+              nbr: Math.abs(dir * step), nbrOf: s.id,
+            });
+            taken++;
+          }
+        }
+      }
+    } finally { try { db.close(); } catch { /* 关失败无从补救，继续 */ } }
+  }
+  return out;
 }
 
 export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir = currentLibDir() } = {}) {
@@ -865,13 +951,59 @@ export async function routeAndSearch(question, { topN = 4, maxBooks = 4, libDir 
   // 第一屏，用户看到的就是「说翻了简爱，给的却是傲慢与偏见」。书序即答案序才对得上。
   const pickedIds = new Set(picked.map(p => p.bookId));
   const order = new Map(picked.map((p, i) => [p.bookId, i]));
-  const results = merged
+  const rowsSorted = merged
     .filter(r => pickedIds.has(r.bookId))
-    .sort((a, b) => (order.get(a.bookId) - order.get(b.bookId)) || ((b.rank ?? 0) - (a.rank ?? 0)))
+    .sort((a, b) => (order.get(a.bookId) - order.get(b.bookId)) || ((b.rank ?? 0) - (a.rank ?? 0)));
+
+  // 每书轮转配额（BSP_ROUTE_QUOTA=1；默认 0 = 逐字节旧行为）
+  //
+  // 为什么需要：上面的排序是 book-major，第 1 名的书可以把它池内的块全部排在前面，
+  // 吃掉全部 topN 席。实测 H16（福尔摩斯「At which church was the wedding」）：
+  // 挑书把福尔摩斯放进了 picked，但 5 席全给简爱，福尔摩斯池内第 3 的 #210 从未露面
+  // （topN=20 时才出现第 1 条）。「书挑对了却一条都看不到」就是死在这里。
+  //
+  // 为什么是轮转而不是「保底 1 + 余数按书内分」：后者在 2 本书时给首书 4 席、次书 1 席；
+  // 而 route 邻块扩展需要「邻块的宿主书在结果里可见」——这条是配额招与邻块招的联立
+  // 不变式，所以次书至少要 2 席。
+  //
+  // 退化条件（必须保持）：picked.length <= 1 或开关为 0 → seated === rowsSorted。
+  let seated = rowsSorted;
+  if (cfg.enabled && process.env.BSP_ROUTE_QUOTA !== "0" && picked.length > 1) {
+    const groups = picked.map(p => rowsSorted.filter(r => r.bookId === p.bookId));
+    seated = [];
+    for (let k = 0; seated.length < topN; k++) {          // 第 k 轮：每本各取第 k 条
+      let moved = false;
+      for (const g of groups) {
+        if (!g[k]) continue;
+        seated.push(g[k]);
+        moved = true;
+        if (seated.length >= topN) break;
+      }
+      if (!moved) break;                                   // 全部取尽 → 退出（不死循环）
+    }
+    if (seated.length < topN) {                            // 某书块不够配额时按 (书序, 书内分) 补满
+      const used = new Set(seated.map(r => `${r.bookId}#${r.id}`));
+      for (const r of rowsSorted) {
+        if (seated.length >= topN) break;
+        if (!used.has(`${r.bookId}#${r.id}`)) seated.push(r);
+      }
+    }
+  }
+
+  // route 邻块扩展：追加在 slice 之后（只附加不挤位，语义与 hybridSearch 的邻块一致）。
+  // 这条是 H06/H16 的唯一通路——route 路径原本既没有 SEM_GUARD 也没有邻块扩展。
+  const finalRows = seated.slice(0, topN);
+  // cfg.enabled 必顶：BSP_ROUTE=0 是「逐字节回到旧三段式」的总闸，
+  // 新加的两招不许绕过它（一轮 route-quota-test 就是这么抓到的）。
+  const nbrRows = (cfg.enabled && process.env.BSP_ROUTE_NBR !== "0" && finalRows.length)
+    ? expandRouteNeighbors({ picked, merged, seated: finalRows, cfg })
+    : [];
+
+  const results = [...finalRows, ...nbrRows]
     // bookId/id 是桌面端引用跳转要的直通字段（纯加法，不碰排序与打分）
-    .slice(0, topN)
+    .slice(0, topN + nbrRows.length)
     // score 仍报真实重排分（rank 只是内部排位用的降权分，不对外冒充相关度）
-    .map(r => ({ book: r.book, bookId: r.bookId, id: r.id, loc: r.loc, chapterPath: r.chapterPath ?? null, score: r.rerank ?? r.score, fts: r.fts, sem: r.sem, rerank: r.rerank, text: r.text }));
+    .map(r => ({ book: r.book, bookId: r.bookId, id: r.id, loc: r.loc, chapterPath: r.chapterPath ?? null, score: r.rerank ?? r.score, fts: r.fts, sem: r.sem, rerank: r.rerank, text: r.text, ...(r.nbr ? { nbr: r.nbr, nbrOf: r.nbrOf } : {}) }));
 
   const out = {
     // best_sim 语义变了：从「余弦最大值」变成「该书书分」（0.5×最好那条有效分 + 0.5×归一化书级信号）。

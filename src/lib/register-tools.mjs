@@ -20,7 +20,7 @@ function matchBook(book) {
 
 // topN 统一上限：模型一次索要 999 条会拖垮上下文，zod 拒收 + 处理器兜底夹取
 // 导出为测试钩子（guard-test 直接断言这两层）
-export const TOPN_SCHEMA = z.number().int().min(1).max(20).optional().describe("返回条数，默认 4，最多 20");
+export const TOPN_SCHEMA = z.number().int().min(1).max(20).optional().describe("返回条数，默认 4，最多 20。多书检索时会另附不超过 16 条同段落邻接上下文（带 nbr/nbrOf 标记，用于补全被切断的上下文），它们不占 topN 名额");
 export const clampTopN = (n) => Math.min(Math.max(1, Math.floor(Number(n) || 4)), 20);
 
 // maxBooks 统一上限（P5）：路由窗口 [1..8]，默认 3——与 TOPN 同款 zod + 处理器双层防呆
