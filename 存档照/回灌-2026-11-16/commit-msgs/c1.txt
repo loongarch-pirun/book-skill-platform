@@ -1,0 +1,12 @@
+chore(lint): eslint 忽略 runtime/ 与存档照/，存量 24 条清零（CI 第 5 步的元凶）
+
+CI 上次失败（run 43804169109）卡在第 5 步「代码规范检查」，后面 11 个测试步骤全部 skipped。
+根因是 `eslint .` 从来没被完整跑过：我们一直只对改动文件跑 eslint。
+
+- eslint.config.mjs：忽略 runtime/**（打包期塞进去的便携 Python，site-packages 上千个 .js，
+  单独就有 2 万多条假错，把真问题彻底淹没）+ 忽略 存档照/**（含代码备份副本）；
+  补 URL / AbortSignal 两个 Node 全局
+- engine.mjs / mineru.mjs / noise-rules.mjs / views-chat.js：去掉多余初值与冗余转义（语义等价）
+- catalog-fuzz / lib-judge / stage3 / quality-gate：删未使用变量与多余转义
+
+验收：`npx eslint .` 24 错 → 0；`npm run test:fast` 42 套全绿；`npm run test:ci` 18 套全绿。

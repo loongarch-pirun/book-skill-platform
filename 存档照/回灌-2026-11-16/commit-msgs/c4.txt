@@ -1,0 +1,4 @@
+chore(test): 把 holdout --gate 挂进 test:slow（10 → 11 套）
+
+留出集门禁原来只有 `npm run holdout` 一个手工入口，靠人记着跑。
+slow 档本来就需要真库 + 本地模型，正好满足卷子前置，挂在末尾不增加额外环境要求。

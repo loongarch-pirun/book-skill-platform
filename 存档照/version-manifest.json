@@ -1,9 +1,9 @@
 {
  "snapshotId": "r4-snapshot-20261115",
- "capturedAt": "2026-11-16T04:49:51.838Z",
+ "capturedAt": "2026-11-16T05:54:16.217Z",
  "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
- "treeSha16": "274252a67996e637",
- "fileCount": 261,
+ "treeSha16": "791853c092fe2958",
+ "fileCount": 262,
  "facts": {
   "golden": {
    "files": 11,
@@ -41,8 +41,8 @@
   },
   "evalBaseline": null,
   "lastCodeChange": {
-   "path": "src/lib/vec-cache.mjs",
-   "mtime": "2026-11-16T04:43:38.070Z"
+   "path": "test/quality-gate.mjs",
+   "mtime": "2026-11-16T05:14:07.718Z"
   },
   "release": [
    {
@@ -106,9 +106,9 @@
    },
    {
     "name": "quality-gate-run.log",
-    "bytes": 19,
-    "mtime": "2026-11-14T06:19:46.555Z",
-    "sha16": "fd48062422c0d660"
+    "bytes": 12688,
+    "mtime": "2026-11-16T05:32:16.300Z",
+    "sha16": "5a09af81f264de9f"
    }
   ]
  },
@@ -427,9 +427,9 @@
   },
   {
    "path": "eslint.config.mjs",
-   "bytes": 5932,
-   "mtime": "2026-11-16T04:29:27.092Z",
-   "sha256": "e4c205817817a322bed3ae9c0a51bae97866b77b8eb1a60cd3f102b7fb96d2e6"
+   "bytes": 6468,
+   "mtime": "2026-11-16T05:16:20.396Z",
+   "sha256": "67f5da832b68969a1898e7883c587bd1083d7c1735f81627807e3928ec7ba1e8"
   },
   {
    "path": "gate-live.log",
@@ -457,9 +457,9 @@
   },
   {
    "path": "package.json",
-   "bytes": 6114,
-   "mtime": "2026-11-15T17:07:01.088Z",
-   "sha256": "309d6886c76e0e66282b004d845d5ad82435c82a330aa7ef8daf9518c642fdbe"
+   "bytes": 6150,
+   "mtime": "2026-11-16T04:54:57.249Z",
+   "sha256": "ebb9b1451bb26b17051955b6bb154930c8aaef509665bf10132ca98004d0cb3e"
   },
   {
    "path": "quality-baseline.json",
@@ -469,9 +469,9 @@
   },
   {
    "path": "quality-gate-run.log",
-   "bytes": 19,
-   "mtime": "2026-11-14T06:19:46.555Z",
-   "sha256": "fd48062422c0d6609a9c2811d7e6002430d27d638dbcce5596855657cb22ad51"
+   "bytes": 12688,
+   "mtime": "2026-11-16T05:32:16.300Z",
+   "sha256": "5a09af81f264de9f6523c0fe17beb8f4801fcb5a19bfb25115c5077c037f3cab"
   },
   {
    "path": "README.md",
@@ -763,9 +763,9 @@
   },
   {
    "path": "src/desktop/engine.mjs",
-   "bytes": 44192,
-   "mtime": "2026-11-13T14:23:57.094Z",
-   "sha256": "496d3db9bbd5e8deff40753da09e621635f989ca3cc0ca0bef40f575a7d9dcd3"
+   "bytes": 44236,
+   "mtime": "2026-11-16T05:13:44.909Z",
+   "sha256": "46385534eb51cde7c61f17ed38cd88567efd98096c4f486532720ba1ed96afa3"
   },
   {
    "path": "src/desktop/enrich-job.mjs",
@@ -979,9 +979,9 @@
   },
   {
    "path": "src/lib/mineru.mjs",
-   "bytes": 28178,
-   "mtime": "2026-11-13T14:23:57.121Z",
-   "sha256": "7b54a69959cd8b35713e878663f2c06c4b6796bbb50a36c8e75ed7d9b29e96bf"
+   "bytes": 28177,
+   "mtime": "2026-11-16T05:13:57.773Z",
+   "sha256": "6147dafdf8fa9d07bf0d3912cbc8d1bfa943b63f82b9b1eec66e50aca66f6bfc"
   },
   {
    "path": "src/lib/models.mjs",
@@ -991,9 +991,9 @@
   },
   {
    "path": "src/lib/noise-rules.mjs",
-   "bytes": 21836,
-   "mtime": "2026-11-14T02:34:47.583Z",
-   "sha256": "42a885c1d10f295a3ca00589cb2eccf30327b23fb968f7204ddff23677fd962e"
+   "bytes": 21827,
+   "mtime": "2026-11-16T05:13:57.781Z",
+   "sha256": "51232505538ad78eb47b526bba17dc4ecc94973a76c6e96c8a331c4a643b00a1"
   },
   {
    "path": "src/lib/outline.mjs",
@@ -1027,9 +1027,9 @@
   },
   {
    "path": "src/lib/search.mjs",
-   "bytes": 54130,
-   "mtime": "2026-11-16T04:43:26.190Z",
-   "sha256": "1319cf4d5cf85969a2f05ef945a0e752ffe45211e04a3a5d05f1e1fbd649b375"
+   "bytes": 55001,
+   "mtime": "2026-11-16T05:14:07.716Z",
+   "sha256": "0e140b9a0b6c780c267e431c75019f09164ea35619740135b419f4b525fd3d6c"
   },
   {
    "path": "src/lib/semantic-chunk.mjs",
@@ -1153,9 +1153,9 @@
   },
   {
    "path": "src/renderer/views-chat.js",
-   "bytes": 17852,
-   "mtime": "2026-11-14T02:03:36.261Z",
-   "sha256": "9fc50bc3e20d55ec66f1437009cd10db93e7415375bbc45225328f72cc62114d"
+   "bytes": 17883,
+   "mtime": "2026-11-16T05:13:57.815Z",
+   "sha256": "9c08a4de3290039e25c6c361156a7f3e8f38557be5fe64e93aa341f3cd68ea18"
   },
   {
    "path": "src/renderer/views-reader.js",
@@ -1207,9 +1207,9 @@
   },
   {
    "path": "test/catalog-fuzz.mjs",
-   "bytes": 36515,
-   "mtime": "2026-11-13T14:23:57.152Z",
-   "sha256": "48bbbd8ed8c0cf55e8d7b37387c63e8e52ad32cc9295fb943e1a966743bc7419"
+   "bytes": 36473,
+   "mtime": "2026-11-16T05:13:57.822Z",
+   "sha256": "3009c36818ae638079d23f3e21a42a5f259e7d1a159d226260a124f6f1f9d25e"
   },
   {
    "path": "test/catalog-test.mjs",
@@ -1279,9 +1279,9 @@
   },
   {
    "path": "test/enrich-nom-test.mjs",
-   "bytes": 8319,
-   "mtime": "2026-11-13T14:23:57.161Z",
-   "sha256": "e0212c2617ac53f7829c31b8bc4a4ed89698ff989ec199f42d71ab1af5e4dfc6"
+   "bytes": 9740,
+   "mtime": "2026-11-16T05:00:50.232Z",
+   "sha256": "3b405f2219b9da113be84b7010c70ae44b83a60ad53a06b9c028557312aad9da"
   },
   {
    "path": "test/entry-adversarial-fuzz.mjs",
@@ -1315,9 +1315,9 @@
   },
   {
    "path": "test/ftsliteral-test.mjs",
-   "bytes": 18126,
-   "mtime": "2026-11-15T13:09:58.443Z",
-   "sha256": "7a3ab140e7e7de4c20f081cd9858cf2e679aa3db53b05a7d4b4d5827ca321dd7"
+   "bytes": 19195,
+   "mtime": "2026-11-16T05:13:57.834Z",
+   "sha256": "c75951fcee8bbb3b2e1716c89f7e0b951d174ea49051f945baaac034bf9bcbe0"
   },
   {
    "path": "test/gen-chinese-samples.js",
@@ -1501,9 +1501,9 @@
   },
   {
    "path": "test/lib/judge.mjs",
-   "bytes": 7522,
-   "mtime": "2026-11-15T13:07:38.903Z",
-   "sha256": "07f75bc9f67159eb4fcbc0ce6fc30d11c826fb76608ca72c1bfa613aef3be672"
+   "bytes": 7617,
+   "mtime": "2026-11-16T05:13:57.832Z",
+   "sha256": "ec742b7b401e766ff8f91e13883fe271ca452b7d76b1695b12f559e3bbc1ddaa"
   },
   {
    "path": "test/llm-fuzz.mjs",
@@ -1519,9 +1519,9 @@
   },
   {
    "path": "test/neighbor-test.mjs",
-   "bytes": 7178,
-   "mtime": "2026-11-13T14:23:57.235Z",
-   "sha256": "164edc86ba0ce278fec008d69e24a73fd951e5913cb4ab2e3774a245694ea1bf"
+   "bytes": 8371,
+   "mtime": "2026-11-16T05:04:56.841Z",
+   "sha256": "7aef63f1dd3a02bee76e4eb73d9b0b68f07bb765b178d016619bdbc5763a7076"
   },
   {
    "path": "test/newbook-check.mjs",
@@ -1567,9 +1567,9 @@
   },
   {
    "path": "test/quality-gate.mjs",
-   "bytes": 39881,
-   "mtime": "2026-11-15T13:09:13.512Z",
-   "sha256": "67440dc3302631faf4904e39edcf03b91370b240b562fc7757478452fa2fc2c8"
+   "bytes": 40597,
+   "mtime": "2026-11-16T05:14:07.718Z",
+   "sha256": "d54da4e6365e4f73dbb9430dfc7653025acf9acd6eed59c4f8717ca655c714e1"
   },
   {
    "path": "test/query-rewrite-test.mjs",
@@ -1582,6 +1582,12 @@
    "bytes": 49425,
    "mtime": "2026-11-14T02:03:12.847Z",
    "sha256": "673bc3aa8efa99241eb9314c05015a73aa36944c4f55625cd585705d26c96169"
+  },
+  {
+   "path": "test/selectbooks-test.mjs",
+   "bytes": 5194,
+   "mtime": "2026-11-16T04:55:15.021Z",
+   "sha256": "1a55837c12b629958eb26224ee6168efa799b54af533b7125acd9617bd964f6e"
   },
   {
    "path": "test/semantic-chunk-test.mjs",
@@ -1651,9 +1657,9 @@
   },
   {
    "path": "test/stage3-mcp-test.mjs",
-   "bytes": 26716,
-   "mtime": "2026-11-13T14:23:57.250Z",
-   "sha256": "d00cb40acb864ab63fa4427a7daffa4716a91ed017c73d54fab01318dd415f7a"
+   "bytes": 26701,
+   "mtime": "2026-11-16T05:13:57.843Z",
+   "sha256": "4f8506443a9bb568ed4a9da5f0a24e90b40eb0df849662f0c17abc6347acf664"
   },
   {
    "path": "test/structurize-test.mjs",
@@ -1680,5 +1686,5 @@
    "sha256": "6ba80b3bc2ce102574ddac54641397ef9a74b3905902457fccafffaf7f3f6144"
   }
  ],
- "previousTreeSha16": "274252a67996e637"
+ "previousTreeSha16": "5026adef8b1baf62"
 }
