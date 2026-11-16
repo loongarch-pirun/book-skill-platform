@@ -1,0 +1,14 @@
+test(search): 配额/邻块新套件 19 条 + 守卫补 6 条 + holdout 单题探针
+
+- test/route-quota-test.mjs（新，19 条）：这两招只在多书场景生效，日常单书问答永远走不到；
+  靠整卷覆盖太慢（30 题 × 5 秒），靠静态断言又验不出行为。覆盖：
+  默认值=全开逐字节等价 / 单书退化 / 配额关 book-major 吞满席位 / 配额开每本≥1 席 /
+  邻块只附加不挤位 / id 与 nbrOf 距离等于 nbr / 总闸优先。
+- test/guard-test.mjs（+6 条 → 357 项）：开关默认开门、两招受总闸约束、cap 参数化默认 6、
+  sameSection 的 page 兜底、kind 白名单、nbr 只在有值时透出；
+  同步 ROUTE_DEFAULTS 的 keep 10→18（其余六项仍逐字等于改造前）；
+  旧断言里写死的 added.length >= 4 改成 >= NBR_CAP。
+- test/neighbor-test.mjs：上限断言 4→6。
+- test/holdout-run.mjs：新增 --ids=H05,H06,H16 单题过滤（题号写错直接报错，不静默跑空）；
+  --gate 在抽样时跳过。没有它，三招归因要跑 2 小时而不是 20 秒。
+- package.json：test:fast 41→42 套。

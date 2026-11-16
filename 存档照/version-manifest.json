@@ -1,9 +1,9 @@
 {
  "snapshotId": "r4-snapshot-20261115",
- "capturedAt": "2026-11-16T09:18:28.445Z",
+ "capturedAt": "2026-11-16T11:43:24.407Z",
  "scope": "只读快照；不含 node_modules / library 二进制 / runtime / books / release / 中间任务目录 / .models 软链接",
- "treeSha16": "743eef533d580b0f",
- "fileCount": 263,
+ "treeSha16": "88ef16d489133a22",
+ "fileCount": 264,
  "facts": {
   "golden": {
    "files": 11,
@@ -41,8 +41,8 @@
   },
   "evalBaseline": null,
   "lastCodeChange": {
-   "path": "test/quality-gate.mjs",
-   "mtime": "2026-11-16T09:18:06.751Z"
+   "path": "src/lib/register-tools.mjs",
+   "mtime": "2026-11-16T11:43:18.987Z"
   },
   "release": [
    {
@@ -457,9 +457,9 @@
   },
   {
    "path": "package.json",
-   "bytes": 6150,
-   "mtime": "2026-11-16T04:54:57.249Z",
-   "sha256": "ebb9b1451bb26b17051955b6bb154930c8aaef509665bf10132ca98004d0cb3e"
+   "bytes": 6184,
+   "mtime": "2026-11-16T10:36:28.383Z",
+   "sha256": "c0496091998aa97757776dedb2459465b889a6da2626067f6c58347b734797eb"
   },
   {
    "path": "quality-baseline.json",
@@ -1021,15 +1021,15 @@
   },
   {
    "path": "src/lib/register-tools.mjs",
-   "bytes": 28520,
-   "mtime": "2026-11-13T14:23:57.127Z",
-   "sha256": "a8f481164838ed3951a8d852fe4b123d307fe2dacc57295bfe4eea6a6ec84979"
+   "bytes": 28676,
+   "mtime": "2026-11-16T11:43:18.987Z",
+   "sha256": "310e590c045f3aeaf956c3ea9a17c0a43cb9ca8a5676e831947a96f6b01c74c3"
   },
   {
    "path": "src/lib/search.mjs",
-   "bytes": 58617,
-   "mtime": "2026-11-16T08:49:05.296Z",
-   "sha256": "6bf2313236083b2196080f5dca05d2bd1feb8bca52556192a60b48289fd0fdf2"
+   "bytes": 66499,
+   "mtime": "2026-11-16T11:16:48.780Z",
+   "sha256": "464e02dd4522d91977e2e44ec69308b65a52e616b50a6b5ad47754bad793fe4e"
   },
   {
    "path": "src/lib/semantic-chunk.mjs",
@@ -1411,9 +1411,9 @@
   },
   {
    "path": "test/guard-test.mjs",
-   "bytes": 119813,
-   "mtime": "2026-11-16T08:52:51.780Z",
-   "sha256": "677c61329b65fb33761c4e0969b8156570803ea5b4c99d56fce86141d219f6b7"
+   "bytes": 121283,
+   "mtime": "2026-11-16T11:25:05.616Z",
+   "sha256": "6ece5532d0463d2e39036058f1e738793cf3278894b97c0094d42e9aeb1c7f94"
   },
   {
    "path": "test/hallucination-fuzz.mjs",
@@ -1423,9 +1423,9 @@
   },
   {
    "path": "test/holdout-run.mjs",
-   "bytes": 10854,
-   "mtime": "2026-11-16T04:43:09.755Z",
-   "sha256": "416677a9480f7d76ccae42bc2dc81c56ed16c5a7eb5bfcd387f646c20a9b6f3f"
+   "bytes": 11801,
+   "mtime": "2026-11-16T09:53:23.923Z",
+   "sha256": "4fcc9d885ca4feca2fc207d8e26ce315b1e0e47740bd4eecc0b69913b7d0b519"
   },
   {
    "path": "test/holdout/baseline-v2.json",
@@ -1525,9 +1525,9 @@
   },
   {
    "path": "test/neighbor-test.mjs",
-   "bytes": 8371,
-   "mtime": "2026-11-16T05:04:56.841Z",
-   "sha256": "7aef63f1dd3a02bee76e4eb73d9b0b68f07bb765b178d016619bdbc5763a7076"
+   "bytes": 8447,
+   "mtime": "2026-11-16T10:36:01.020Z",
+   "sha256": "21b2a95ff34eca3e36b29b4a3e69c3565767f47f523c142cb4dac16e6aa3bdeb"
   },
   {
    "path": "test/newbook-check.mjs",
@@ -1588,6 +1588,12 @@
    "bytes": 49425,
    "mtime": "2026-11-14T02:03:12.847Z",
    "sha256": "673bc3aa8efa99241eb9314c05015a73aa36944c4f55625cd585705d26c96169"
+  },
+  {
+   "path": "test/route-quota-test.mjs",
+   "bytes": 7578,
+   "mtime": "2026-11-16T11:25:05.671Z",
+   "sha256": "c8bf2ca2517cfdde2a1fcae61185184863e3aa8a8a1f795ca29717b196db9f96"
   },
   {
    "path": "test/selectbooks-test.mjs",
@@ -1692,5 +1698,5 @@
    "sha256": "6ba80b3bc2ce102574ddac54641397ef9a74b3905902457fccafffaf7f3f6144"
   }
  ],
- "previousTreeSha16": "a4d821811d65ca1f"
+ "previousTreeSha16": "743eef533d580b0f"
 }
