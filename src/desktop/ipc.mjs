@@ -78,6 +78,24 @@ export async function registerIpc({ ipcMain, app, dialog, shell, getWin }) {
   handle("enrich:cancel", (eng, bookId) => enrichJob.cancelEnrich(bookId));
   handle("enrich:status", () => enrichJob.enrichStatus());
   handle("enrich:audit", (eng, bookId) => enrichJob.enrichAudit(bookId));
+  // 洗数据外部智能体路（无 key）：导出任务书 → 外部 AI 填 → 选择结果 → 导入入库；
+  //   revealTask 用系统资源管理器打开任务书文件夹（shell 由主进程注入，与 book:openExternal 同款）
+  handle("enrich:export", (eng, bookId) => enrichJob.exportEnrichTask(bookId));
+  handle("enrich:import", (eng, bookId, resultPath) => enrichJob.importEnrichResult(bookId, resultPath || null));
+  handle("enrich:pickResult", async () => {
+    const r = await dialog.showOpenDialog(getWin(), {
+      properties: ["openFile"],
+      filters: [{ name: "洗数据结果 JSON", extensions: ["json"] }],
+      title: "选择洗数据结果 JSON（外部 AI 按任务书产出的那个）",
+    });
+    return r.canceled ? null : r.filePaths[0];
+  });
+  handle("enrich:revealTask", async (eng, bookId) => {
+    const info = enrichJob.enrichTaskInfo(bookId);
+    const err = await shell.openPath(info.dir);
+    if (err) throw new engine.UserError(`打不开任务书文件夹：${err}（任务书在 ${info.taskPath}）`);
+    return { opened: info.dir, taskPath: info.taskPath };
+  });
 
   // 问一问
   handle("ask:query", (eng, payload) => eng.ask(payload));

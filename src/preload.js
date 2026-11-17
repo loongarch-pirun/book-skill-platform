@@ -35,6 +35,11 @@ contextBridge.exposeInMainWorld("study", {
   enrichCancel: (bookId) => ipcRenderer.invoke("enrich:cancel", bookId),
   enrichStatus: () => ipcRenderer.invoke("enrich:status"),
   enrichAudit: (bookId) => ipcRenderer.invoke("enrich:audit", bookId),
+  // 洗数据外部智能体路（无 key）：导出任务书 / 选择结果 / 导入结果 / 打开任务书文件夹
+  enrichExport: (bookId) => ipcRenderer.invoke("enrich:export", bookId),
+  enrichPickResult: () => ipcRenderer.invoke("enrich:pickResult"),
+  enrichImport: (bookId, resultPath) => ipcRenderer.invoke("enrich:import", bookId, resultPath || null),
+  enrichRevealTask: (bookId) => ipcRenderer.invoke("enrich:revealTask", bookId),
   // 问一问
   ask: (payload) => ipcRenderer.invoke("ask:query", payload),
   // 云端问答（V2 P2）：配置 / 测试连接 / 云端总结

@@ -301,6 +301,18 @@ export async function shelfJobAction(act, bookId) {
       const picked = await call(window.study.jobsPickResult());
       await call(window.study.jobsResumeCatalog(bookId, picked));
       toast("编目入库完成");
+    } else if (act === "enrichexport") {
+      // 外部智能体路（无 key）：导出任务书 → 面板展示操作说明 + 路径 + 打开文件夹
+      const r = await call(window.study.enrichExport(bookId));
+      state.enrichExport = { bookId, instructions: r.instructions, path: r.path, chunks: r.chunks, batches: r.batches };
+      toast(`任务书已导出（${r.chunks} 块 / ${r.batches} 批）——把整个 JSON 交给外部 AI，结果存回 enrich-results/ 再点「导入洗数据结果」`);
+    } else if (act === "enrichreveal") {
+      await call(window.study.enrichRevealTask(bookId));
+    } else if (act === "enrichimport") {
+      const picked = await call(window.study.enrichPickResult());
+      if (!picked) { toast("没选结果文件——已取消导入"); return; }
+      const r = await call(window.study.enrichImport(bookId, picked));
+      toast(r?.message || "洗数据结果入库完成");
     }
   } catch (e) { toast(e.message); }
   finally {

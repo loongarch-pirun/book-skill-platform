@@ -32,6 +32,8 @@ const EXPECTED = ["config:get", "config:set", "config:pickLibDir",
   "chat:archiveList", "chat:archiveClear",
   // 洗数据一键入口（V3 第二波 #140）
   "enrich:start", "enrich:cancel", "enrich:status", "enrich:audit",
+  // 洗数据外部智能体路（无 key）：导出任务书 / 选择结果 / 导入结果 / 打开任务书文件夹
+  "enrich:export", "enrich:import", "enrich:pickResult", "enrich:revealTask",
   // 导入拆两段（V3 第四波 #167）：books:import 只复制登记，jobs:start 才是加工四步
   "books:import", "jobs:start", "jobs:cancel",
   // 原书视图（V3 第四波 #166）
@@ -101,6 +103,25 @@ const ejAudit = await invoke("enrich:audit", books.data[0].id);
 ok(ejAudit.ok && typeof ejAudit.data.ready === "boolean", `enrich:audit 真书只读复查（ready=${ejAudit.data.ready}，形状不断言数值）`);
 const ejAuditBad = await invoke("enrich:audit", "不存在的书xyz");
 ok(ejAuditBad.ok === false && ejAuditBad.error.code === "user", "enrich:audit 坏书走错误包装（M3）");
+
+// ---------- 洗数据外部智能体路（无 key）：通道契约 + 错误包装（真库零副作用） ----------
+// 导出/导入的happy-path由 enrich-job-test 在 tmp 自建库上验；这里只锁 IPC 契约：
+// 坏书/穿越书名 → {ok:false,user}（findBookDb 闸门），选择文件取消 → null，不真写真库。
+{
+  const extCh = ["enrich:export", "enrich:import", "enrich:pickResult", "enrich:revealTask"];
+  if (extCh.every((ch) => handlers.has(ch))) {
+    const exBad = await invoke("enrich:export", "不存在的书xyz");
+    ok(exBad.ok === false && exBad.error.code === "user", "enrich:export 坏书 → {ok:false,user}（不抛）");
+    const exEvil = await invoke("enrich:export", "../evil.docx");
+    ok(exEvil.ok === false && exEvil.error.code === "user", "enrich:export 穿越书名 → {ok:false,user}（findBookDb 闸门）");
+    const imBad = await invoke("enrich:import", "不存在的书xyz", null);
+    ok(imBad.ok === false && imBad.error.code === "user", "enrich:import 坏书 → {ok:false,user}（不抛）");
+    const pick = await invoke("enrich:pickResult");
+    ok(pick.ok && pick.data === null, "enrich:pickResult 取消选择 → {ok:true,data:null}（假 dialog canceled）");
+    const revBad = await invoke("enrich:revealTask", "不存在的书xyz");
+    ok(revBad.ok === false && revBad.error.code === "user", "enrich:revealTask 坏书 → {ok:false,user}（不真开文件夹）");
+  }
+}
 
 // ---------- 原书视图（V3 #166）：元信息 / 系统打开 / 坏书名包装 ----------
 {

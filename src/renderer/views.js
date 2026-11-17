@@ -89,6 +89,7 @@ export function renderShelf() {
     <div class="viewhead"><div class="view-title">书架</div>${verifyFlagHtml("off")}</div>
     <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据 · 每本书可生成前置/标签/摘要（可选云端，检索始终在本机）</div>
     ${cloudBannerHtml()}
+    ${enrichExportBoxHTML()}
     <div class="dropzone" id="dropzone"><b>把书拖到这里</b>（.epub / .docx / .pdf / .txt）<span class="soon">先放进书架看原件 → 点「开始加工」才切片/向量化/编目（编目结果可稍后导入）</span></div>
     <div class="shelf">${books.map((b) => bookCard(b)).join("") || '<div class="empty">书架空空如也——去拖本书进来</div>'}
     </div>
@@ -140,6 +141,25 @@ function promptBoxHTML() {
     </div>`;
 }
 
+// 洗数据外部智能体路：导出任务书后的操作说明面板（只读 + 复制说明/打开文件夹/收起）。
+// 复用编目提示词面板的 .promptbox 样式；渲染在书架可见区（cloudBanner 之后），导出即见路径。
+function enrichExportBoxHTML() {
+  const p = state.enrichExport;
+  if (!p) return "";
+  const book = state.books.find((b) => b.id === p.bookId);
+  return `
+    <div class="promptbox">
+      <div class="prompthead"><b>《${esc(book?.title || p.bookId)}》的洗数据任务书</b>
+        <span class="promptmeta">${p.chunks} 块 · ${p.batches} 批 · 已存 enrich-tasks/${esc(p.bookId)}.json</span></div>
+      <textarea readonly rows="6" id="enrichExportText">${esc(p.instructions)}</textarea>
+      <div class="promptactions">
+        <button class="ghost sm" data-action="enrichcopyinstr">复制操作说明</button>
+        <button class="ghost sm" data-action="enrichreveal" data-bid="${esc(p.bookId)}">打开文件夹</button>
+        <button class="ghost sm" data-action="enrichexportclose">收起</button>
+      </div>
+    </div>`;
+}
+
 // 书卡片：导入中显示阶段横幅（jobs 状态），失败显示哪一步，待编目给恢复入口。
 // raw（#165：仅入库未加工）显示「开始加工」入口（#167 第二段按钮）——洗数据要库，raw 没有。
 // 洗数据任务（#140）汇进同一个 state.jobs——stage 名落在同一套分支里，kind 区分取消/重试按钮
@@ -179,6 +199,9 @@ function bookCard(b) {
   const menuNormal = [
     cataloged ? `<button data-action="catprompt" data-bid="${esc(b.id)}">编目提示词</button>` : "",
     cataloged ? `<button data-action="catimport" data-bid="${esc(b.id)}">导入编目结果</button>` : "",
+    // 洗数据外部智能体路（无 key）：导出任务书给外部 AI 填 / 导入填好的结果（与编目同模式）
+    !raw ? `<button data-action="enrichexport" data-bid="${esc(b.id)}">导出洗数据任务书</button>` : "",
+    !raw ? `<button data-action="enrichimport" data-bid="${esc(b.id)}">导入洗数据结果</button>` : "",
     enriched ? `<button data-action="enrich" data-bid="${esc(b.id)}">重新洗数据</button>` : "",
   ].filter(Boolean).join("");
   const menuDanger = raw
@@ -337,6 +360,7 @@ export function bindShelfEvents() {
     else if (act === "cite") jumpTo(el.dataset.bid, el.dataset.cid);
     else if (act === "jobcancel" || act === "jobretry" || act === "catimport" || act === "catprompt"
       || act === "enrich" || act === "enrichretry" || act === "enrichcancel"
+      || act === "enrichexport" || act === "enrichimport" || act === "enrichreveal"
       // V3 #167：raw 书「开始加工」——第二段管线入口（切片→向量化→编目任务书）
       || act === "process") {
       e.stopPropagation();
@@ -347,6 +371,11 @@ export function bindShelfEvents() {
       toast(ok ? "已复制——粘给任意 AI 对话框即可（输出 JSON 存到 catalog-results/）" : "复制失败——请手动全选文本框里的内容");
     }
     else if (act === "promptclose") { state.prompt = null; refresh(); }
+    else if (act === "enrichcopyinstr") {
+      const ok = await copyText(state.enrichExport?.instructions || "");
+      toast(ok ? "已复制操作说明——任务书 JSON 在 enrich-tasks/，整个交给外部 AI 填" : "复制失败——请手动全选文本框里的内容");
+    }
+    else if (act === "enrichexportclose") { state.enrichExport = null; refresh(); }
     else if (act === "foldtoggle") {
       // S8：details 的展开态要记在 state 里，refresh 重建 innerHTML 时才不会弹回收起
       e.preventDefault();

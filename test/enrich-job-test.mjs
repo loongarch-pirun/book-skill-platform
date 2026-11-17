@@ -14,6 +14,8 @@ import { startEnrich, cancelEnrich, enrichStatus, enrichAudit, onEnrichProgress 
 import { configureSearch } from "../src/lib/search.mjs";
 import { configureLlmConfig } from "../src/desktop/llm-config.mjs";
 import { booksList } from "../src/desktop/engine.mjs";
+// 外部智能体路新入口用命名空间引：缺导出时只让本节断言失败，不拖垮整文件加载（干净 RED）
+import * as enrichJobNS from "../src/desktop/enrich-job.mjs";
 
 let pass = 0, fail = 0;
 const ok = (cond, name, extra = "") => {
@@ -124,6 +126,94 @@ const cell = (dbPath, sql, ...args) => {
   try { await startEnrich("nokey.md"); } catch (e) { err = e; }
   ok(!!err && /问一问/.test(err.message) && /API key/.test(err.message), `无 key 抛人话错误并指路问一问（${err && err.message.slice(0, 30)}…）`);
   ok(!enrichStatus()["nokey.md"], "无 key 不落任务态（点了也只是提示）");
+}
+
+// ========== 10) 外部智能体路：导出任务书（全程无 key——本节在 configureLlmConfig 之前跑） ==========
+// 用户不愿交明文 key：洗数据走「导出任务书 → 外部 AI 填 → 导入结果」，与编目同模式。
+{
+  ok(typeof enrichJobNS.exportEnrichTask === "function", "exportEnrichTask 已导出（外部智能体路入口）");
+  if (typeof enrichJobNS.exportEnrichTask === "function") {
+    const TASKS = path.join(TMP, "enrich-tasks"); // = LIB/../enrich-tasks，与生产同构
+    makeDb("ext.md.db");
+    const r = enrichJobNS.exportEnrichTask("ext.md");
+    ok(r && r.path === path.join(TASKS, "ext.md.json") && fs.existsSync(r.path),
+      "导出任务书落 <书库上级>/enrich-tasks/<id>.json", r && r.path);
+    ok(r.chunks === 6 && r.batches >= 1, `导出回执带块数/批数（chunks=${r.chunks} batches=${r.batches}）`);
+    const task = JSON.parse(fs.readFileSync(r.path, "utf8"));
+    ok(task.book && task.book.content_hash === "hash-aaa" && Array.isArray(task.instructions) && Array.isArray(task.batches),
+      "任务书含 book.content_hash / instructions / batches（外部 AI 的契约）");
+    ok(typeof r.instructions === "string" && r.instructions.length > 0 && !r.instructions.includes(CHUNKS[0].text),
+      "操作说明可复制且不含原文（只给步骤，原文在任务书里）");
+    ok(!enrichStatus()["ext.md"], "导出不落任务态（同步操作，不是后台跑批）");
+    let err = null;
+    try { enrichJobNS.exportEnrichTask("不存在的书"); } catch (e) { err = e; }
+    ok(!!err && /找不到/.test(err.message), "导出坏书抛人话错误");
+  }
+}
+
+// ========== 11) 外部智能体路：导入结果（无 key；裸数组桥接 + 对象直通 + STALE + 人话） ==========
+{
+  ok(typeof enrichJobNS.importEnrichResult === "function", "importEnrichResult 已导出（外部结果入库入口）");
+  if (typeof enrichJobNS.importEnrichResult === "function") {
+    // 外部 AI 按任务书 instructions 产的就是裸数组（idx 与块一一对应，标签取自原文前 5 字必回源）
+    const bare = CHUNKS.map((c, i) => ({
+      idx: i + 1, prefix: `第 ${i + 1} 块前置。`, tags: [c.text.slice(0, 5)],
+      questions: ["这块讲了什么"], summary: `第 ${i + 1} 块摘要。`,
+    }));
+    // 11-1 裸数组 + 选择文件路径 → 桥接成规范产物入库（复用 10 的 ext.md 任务书/库）
+    const db = path.join(LIB, "ext.md.db");
+    const before = textHash(db);
+    const picked = path.join(TMP, "picked-ext.json");
+    fs.writeFileSync(picked, JSON.stringify(bare), "utf8");
+    const r = enrichJobNS.importEnrichResult("ext.md", picked);
+    ok(r && r.ok === true && r.stats && r.stats.imported === 6, `裸数组结果入库 6 条（imported=${r && r.stats && r.stats.imported}）`, r && r.message);
+    const row = cell(db, "SELECT ctx, tags, questions FROM chunks WHERE id=1");
+    ok(!!row.ctx && JSON.parse(row.tags).length > 0 && JSON.parse(row.questions).length > 0, "裸数组入库后 ctx/tags/questions 三列落值");
+    ok(cell(db, "SELECT COUNT(*) c FROM chunk_tags").c === 6, "裸数组入库后 chunk_tags 倒排 6 条");
+    ok(textHash(db) === before, "外部结果入库原文一字不改");
+    // 桥接产物落规范位（enrich-results/<id>.json），带任务书快照的 book.content_hash
+    const art = JSON.parse(fs.readFileSync(path.join(RESULTS, "ext.md.json"), "utf8"));
+    ok(Array.isArray(art.entries) && art.entries.length === 6 && art.book && art.book.content_hash === "hash-aaa",
+      "裸数组桥接成 {entries,book} 规范产物落 enrich-results（book 取自任务书快照）");
+    const audit = enrichAudit("ext.md");
+    ok(audit.ready === true && audit.tags.bad === 0 && audit.coverage.pct === 100, `外部路入库后 audit 复查（bad=${audit.tags && audit.tags.bad} pct=${audit.coverage && audit.coverage.pct}）`);
+    const b = booksList().find((x) => x.id === "ext.md");
+    ok(b && b.enrich && b.enrich.ready === true && b.enrich.pct === 100, "外部路入库后书架摘要挂载（ready/pct）");
+
+    // 11-2 对象直通：外部 AI 直接产 {book,entries} 规范产物 → 原样入库（不需要任务书）
+    makeDb("ext2.md.db");
+    const wrapped = { version: 1, book: { db: "ext2.md.db", content_hash: "hash-aaa", chunk_count: 6 }, entries: bare };
+    const wp = path.join(TMP, "wrapped-ext2.json");
+    fs.writeFileSync(wp, JSON.stringify(wrapped), "utf8");
+    const r2 = enrichJobNS.importEnrichResult("ext2.md", wp);
+    ok(r2 && r2.ok === true && r2.stats.imported === 6, "对象产物直通入库 6 条（无需任务书桥接）");
+
+    // 11-3 STALE：任务书快照 hash-aaa，库重建为 hash-bbb → 桥接产物对不上 → 拒收人话
+    makeDb("extstale.md.db");
+    enrichJobNS.exportEnrichTask("extstale.md");
+    const sp = path.join(TMP, "stale-ext.json");
+    fs.writeFileSync(sp, JSON.stringify(bare), "utf8");
+    makeDb("extstale.md.db", CHUNKS, { content_hash: "hash-bbb" }); // 同名重建换 hash
+    let staleErr = null;
+    try { enrichJobNS.importEnrichResult("extstale.md", sp); } catch (e) { staleErr = e; }
+    ok(!!staleErr && /重建|作废/.test(staleErr.message), `STALE 拒收且人话带修复指引（${staleErr && staleErr.message.slice(0, 36)}…）`);
+    ok(cell(path.join(LIB, "extstale.md.db"), "SELECT COUNT(*) c FROM pragma_table_info('chunks') WHERE name='ctx'").c === 0,
+      "STALE 后连 ctx 列都没建（一个字符都不写）");
+
+    // 11-4 人话边界：坏书 / 缺结果文件 / 裸数组但无任务书
+    let badErr = null;
+    try { enrichJobNS.importEnrichResult("不存在的书", picked); } catch (e) { badErr = e; }
+    ok(!!badErr && /找不到/.test(badErr.message), "导入坏书抛人话错误");
+    let noFileErr = null;
+    try { enrichJobNS.importEnrichResult("ext.md", path.join(TMP, "no-such-result.json")); } catch (e) { noFileErr = e; }
+    ok(!!noFileErr && /找不到/.test(noFileErr.message), "缺结果文件抛人话错误（指路选择文件）");
+    makeDb("ext3.md.db"); // 没导出任务书
+    const np = path.join(TMP, "bare-ext3.json");
+    fs.writeFileSync(np, JSON.stringify(bare), "utf8");
+    let noTaskErr = null;
+    try { enrichJobNS.importEnrichResult("ext3.md", np); } catch (e) { noTaskErr = e; }
+    ok(!!noTaskErr && /任务书/.test(noTaskErr.message), "裸数组但无任务书 → 人话指路先导出");
+  }
 }
 
 // 配一把假 key（plain 模式；userData 指临时目录，不碰真 %APPDATA%）——后面各节都靠它过前置检查

@@ -11,7 +11,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
-import { runEnrich, buildEnrichTasks, estimateEnrich } from "../lib/enrich.mjs";
+import { runEnrich, buildEnrichTasks, estimateEnrich, buildEnrichTaskFile } from "../lib/enrich.mjs";
 import { importEnrich, auditEnrich } from "../lib/enrich-import.mjs";
 import { listBooks, currentLibDir } from "../lib/search.mjs";
 import { chat } from "../lib/llm.mjs";
@@ -180,4 +180,66 @@ export function cancelEnrich(bookId) {
 export function enrichAudit(bookId) {
   const b = findBookDb(bookId);
   return auditEnrich(b.db);
+}
+
+// ---------- 外部智能体路（无 key）：导出任务书 → 外部 AI 填 → 导入结果 ----------
+// 用户不愿交明文 key 时的正路，与编目「生成提示词 / 导入结果」同模式。
+// 任务书目录：<书库上级>/enrich-tasks（与 enrich-results 同构，迁库一起走；dev 态即项目根/enrich-tasks，与 CLI --export 同址）。
+function tasksDirOf() { return path.join(currentLibDir(), "..", "enrich-tasks"); }
+
+// 操作说明（可复制，不含原文——原文在任务书 batches 里，这里只给步骤与铁律）
+function exportInstructions(b, built) {
+  return [
+    `《${b.title}》洗数据任务书已导出：${built.outPath}`,
+    `共 ${built.chunks} 块待洗（${built.batches} 批）。把整个任务书 JSON 交给外部 AI，按里面 instructions 为每块产出 {idx,prefix,tags,questions,summary}。`,
+    `结果存成 enrich-results/${b.id}.json（裸数组或 {entries:[…]} 对象都行），回书架点「导入洗数据结果」入库。`,
+    `铁律：标签取自块内原文（自造会被机器丢弃）；原文一字不改；书重建过（content_hash 变）结果作废。`,
+  ].join("\n");
+}
+
+// 导出任务书（同步、无 key）：复用 lib buildEnrichTaskFile，落 enrich-tasks/<id>.json。
+// findBookDb 已是防逃逸闸门（id 走 listBooks 匹配，db 路径取自库清单，不拼字符串）。
+export function exportEnrichTask(bookId) {
+  const b = findBookDb(bookId);
+  const built = buildEnrichTaskFile(b.db, tasksDirOf());
+  if (built.error) throw new UserError(built.message);
+  return {
+    bookId: b.id, path: built.outPath, chunks: built.chunks,
+    skipped: built.skipped, batches: built.batches, instructions: exportInstructions(b, built),
+  };
+}
+
+// 导入外部结果（同步、无 key）：复用 lib importEnrich（验真/闸门/原文指纹保险全在那层）。
+// 桥接：任务书 instructions 让外部 AI 产「裸数组」，而 importEnrich 要 {entries,book} 对象——
+//   裸数组 → 用任务书导出时的 book 快照包装（content_hash/chunk_fp 是导出时点，书重建过则
+//   对不上，importEnrich 整单拒收，STALE 防护不丢）；已是对象 → 原样直通。
+// 失败抛 UserError 人话（IPC → {ok:false} → toast），与编目 resumeCatalog 同款。
+export function importEnrichResult(bookId, resultPath) {
+  const b = findBookDb(bookId);
+  const rp = resultPath ? path.resolve(String(resultPath)) : path.join(resultsDirOf(), `${b.id}.json`);
+  if (!fs.existsSync(rp)) throw new UserError(`找不到洗数据结果文件：${rp}——可以用「选择文件」挑一个结果 JSON`);
+  let parsed;
+  try { parsed = JSON.parse(fs.readFileSync(rp, "utf8")); }
+  catch (e) { throw new UserError(`洗数据结果不是合法 JSON：${e.message}`); }
+  let artifactPath = rp;
+  if (Array.isArray(parsed)) {
+    const taskPath = path.join(tasksDirOf(), `${b.id}.json`);
+    if (!fs.existsSync(taskPath)) throw new UserError(`找不到《${b.title}》的洗数据任务书——先点「导出任务书」再让外部 AI 填`);
+    let task;
+    try { task = JSON.parse(fs.readFileSync(taskPath, "utf8")); }
+    catch (e) { throw new UserError(`洗数据任务书不是合法 JSON：${e.message}——可重新导出`); }
+    const artifact = { version: 1, book: task.book, entries: parsed, updated_at: new Date().toISOString() };
+    artifactPath = path.join(resultsDirOf(), `${b.id}.json`);
+    fs.mkdirSync(resultsDirOf(), { recursive: true });
+    fs.writeFileSync(artifactPath, JSON.stringify(artifact, null, 1), "utf8");
+  }
+  const imp = importEnrich(b.db, artifactPath);
+  if (!imp.ok) throw new UserError(imp.message);
+  return { bookId: b.id, ...imp };
+}
+
+// 任务书定位（供「打开文件夹」）：findBookDb 闸门后给出目录与文件路径，shell 由 IPC 层注入。
+export function enrichTaskInfo(bookId) {
+  const b = findBookDb(bookId);
+  return { bookId: b.id, dir: tasksDirOf(), taskPath: path.join(tasksDirOf(), `${b.id}.json`) };
 }

@@ -93,6 +93,11 @@ const studyStub = {
   enrichCancel: () => reply({ cancelled: true, note: "已取消" }),
   enrichStatus: () => reply({}),
   enrichAudit: (bookId) => { ipcCalls.push("enrichAudit"); return reply({ ready: false }); },
+  // 洗数据外部智能体路（无 key）：stub 覆盖 preload 全部 API（R6c 对账）
+  enrichExport: (bookId) => { ipcCalls.push("enrichExport"); return reply({ bookId, path: `enrich-tasks/${bookId}.json`, chunks: 6, skipped: 0, batches: 2, instructions: "【洗数据任务书】测试操作说明……" }); },
+  enrichPickResult: () => { ipcCalls.push("enrichPickResult"); return reply("enrich-results/t.docx.json"); },
+  enrichImport: (bookId) => { ipcCalls.push("enrichImport"); return reply({ bookId, ok: true, code: "OK", stats: { imported: 6 } }); },
+  enrichRevealTask: (bookId) => { ipcCalls.push("enrichRevealTask"); return reply({ opened: "enrich-tasks", taskPath: `enrich-tasks/${bookId}.json` }); },
   ask: (payload) => { ipcCalls.push("ask"); askTopN = payload?.topN; return reply({ mode: "book", results: [{ id: 1, book: "测试书", bookId: "t.docx", loc: "第一章", text: "學而時習之", rerank: 0.9 }] }); },
   llmConfigGet: () => { ipcCalls.push("llmConfigGet"); return reply({ baseUrl: "", model: "", hasKey: false, keyTail: null, encryption: "unknown", sendSourceText: null, warning: null }); },
   // P0-9：llmConfigSet 要如实回写 sendSourceText（UI 的「记住选择」靠返回值刷新 state）
@@ -550,6 +555,31 @@ await sleep(40);
 assert(app.state.prompt?.bookId === "t.docx" && app.state.prompt.text.includes("编目任务书"), "点击后拉回提示词全文（state.prompt）");
 assert(mainEl.innerHTML.includes('id="promptText"') && mainEl.innerHTML.includes("复制提示词") && mainEl.innerHTML.includes("收起"),
   "提示词面板渲染（只读文本框 + 复制/收起按钮）");
+
+// ---------- 7b) 洗数据外部智能体路（无 key）：导出按钮 → 面板（复制说明/打开文件夹/收起）+ 导入接线 ----------
+{
+  app.show("shelf");
+  await sleep(10);
+  assert(mainEl.innerHTML.includes('data-action="enrichexport"') && mainEl.innerHTML.includes('data-action="enrichimport"'),
+    "书卡菜单带洗数据外部路两按钮（导出任务书 / 导入结果）");
+  click("enrichexport", { bid: "t.docx" });
+  await sleep(40);
+  assert(ipcCalls.includes("enrichExport"), "点「导出洗数据任务书」→ enrichExport 拨通");
+  assert(app.state.enrichExport?.bookId === "t.docx" && app.state.enrichExport.instructions.includes("洗数据任务书"),
+    "导出后拉回操作说明（state.enrichExport）");
+  assert(mainEl.innerHTML.includes('id="enrichExportText"') && mainEl.innerHTML.includes("复制操作说明") && mainEl.innerHTML.includes("打开文件夹"),
+    "导出面板渲染（只读说明框 + 复制操作说明 + 打开文件夹）");
+  click("enrichreveal", { bid: "t.docx" });
+  await sleep(30);
+  assert(ipcCalls.includes("enrichRevealTask"), "点「打开文件夹」→ enrichRevealTask 拨通");
+  click("enrichimport", { bid: "t.docx" });
+  await sleep(40);
+  assert(ipcCalls.includes("enrichPickResult") && ipcCalls.includes("enrichImport"),
+    "点「导入洗数据结果」→ 选择文件 + enrichImport 拨通");
+  click("enrichexportclose", {});
+  await sleep(20);
+  assert(app.state.enrichExport === null, "收起导出面板（state.enrichExport 清空）");
+}
 
 // ---------- 8) P4 前端契约（R1~R6）：对话页事件面 + Enter 防连点 + 历史顺序 + 折叠区 + dropped 行 + IPC 对账 ----------
 // 先切回对话页——sendChat 里的 refresh() 重渲染当前视图，停在书架页的话下面的渲染断言全落空
