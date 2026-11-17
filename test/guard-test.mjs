@@ -1730,11 +1730,20 @@ const copyDb = (src) => {
   mk(path.join(uLib, "b.db"), "fpOLD", 3, true);    // 有洗数据成果 → 不许动
   mk(path.join(resLib, "c.db"), "fpSAME", 5, false);
   mk(path.join(uLib, "c.db"), "fpSAME", 5, false);  // 内容一致 → 不动
+  // d：块指纹/块数都同，但随包带洗数据成果而用户库没有（重洗未重切）→ 也算旧种子
+  mk(path.join(resLib, "d.db"), "fpSAME", 5, true);
+  mk(path.join(uLib, "d.db"), "fpSAME", 5, false);
+  // a 的旧 -wal/-shm 残留：迁移必须一并挪走，否则旧 WAL 会把新库污染回旧页
+  fs.writeFileSync(path.join(uLib, "a.db-wal"), "oldwal");
+  fs.writeFileSync(path.join(uLib, "a.db-shm"), "oldshm");
   engine.init({ packaged: true, userData: path.join(root, "userData"), resourcesDir: path.join(root, "resources") });
   const rep = engine.migrateStaleBundledLibrary();
   ok(rep.migrated.some((s) => s.startsWith("a.db")), "同引擎内容旧种子零成果 → 让位迁移（a.db）");
   ok(fs.existsSync(path.join(uLib, "a.db.bak-m3")), "旧种子 rename 成 .bak 留底（可回滚）");
   ok(fpOf(path.join(uLib, "a.db")) === "fpNEW", "让位后 userData 拿到随包新内容");
+  ok(!fs.existsSync(path.join(uLib, "a.db-wal")) && !fs.existsSync(path.join(uLib, "a.db-shm")),
+    "旧 -wal/-shm 随迁移挪走（不留污染新库的旧 WAL）");
+  ok(rep.migrated.some((s) => s.startsWith("d.db")), "块数/指纹同但随包带成果用户库没有 → 也让位（d.db）");
   ok(rep.stale.some((s) => s.startsWith("b.db")), "有用户成果的旧库进 stale 记账、不动（b.db）");
   ok(fpOf(path.join(uLib, "b.db")) === "fpOLD", "有成果的库内容原封不动");
   ok(!rep.migrated.some((s) => s.startsWith("c.db")) && fpOf(path.join(uLib, "c.db")) === "fpSAME",

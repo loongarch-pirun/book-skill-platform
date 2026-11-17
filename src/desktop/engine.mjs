@@ -129,19 +129,32 @@ export function migrateStaleBundledLibrary() {
     const sameGen = newModel === oldModel;
     // 同引擎也要看内容：重切/重灌后的旧种子（块指纹/块数不同）同样挡新数据进门，
     // 1.0.0 真机实测：userData 旧种子零成果却被幂等规则护着，随包新库永远进不来。
-    if (sameGen && !contentStale(src, dst)) continue;  // 同代且内容一致：不动
+    if (sameGen && !contentStale(src, dst)) {
+      // 块指纹/块数都同也可能旧：重洗/重编目没重切（1.0.0 真机实测孟子 274=274 漏迁）。
+      // 随包带用户可见成果而用户库没有 → 旧种子缺随包成果，同样让位。
+      let srcWork = null, dstWork = null;
+      try { srcWork = userCatalogWork(src); dstWork = userCatalogWork(dst); } catch { /* 读不出不猜 */ }
+      if (!(srcWork && !dstWork)) continue;
+    }
     let worked;
     try { worked = userCatalogWork(dst); } catch { worked = "编目状态读不出来"; }
     if (worked) { out.stale.push(`${name}（${sameGen ? "同引擎内容旧" : oldModel + "→" + newModel}，${worked}，未动）`); continue; }
     const bak = `${dst}.bak-${oldModel}`;
+    const sides = [`${dst}-wal`, `${dst}-shm`];
+    const sideBak = (s) => `${bak}-${s.slice(dst.length + 1)}`;
     try {
       if (fs.existsSync(bak)) fs.rmSync(bak, { force: true });
       fs.renameSync(dst, bak);          // 同盘 rename：瞬间、不占额外空间、可回滚
+      // 旧 -wal/-shm 必须一并挪走：留着会让 SQLite 把旧 WAL 页盖回新库（真机实测污染回旧块）
+      for (const s of sides) if (fs.existsSync(s)) fs.renameSync(s, sideBak(s));
       fs.copyFileSync(src, dst);
       out.migrated.push(`${name}（${sameGen ? "同引擎内容换代" : oldModel + "→" + newModel}，旧库留在 ${path.basename(bak)}）`);
     } catch (e) {
       // 半途失败先把旧库放回去：留一个换了一半的库比留着旧库更糟
-      try { if (!fs.existsSync(dst) && fs.existsSync(bak)) fs.renameSync(bak, dst); } catch { /* 尽力而为 */ }
+      try {
+        if (!fs.existsSync(dst) && fs.existsSync(bak)) fs.renameSync(bak, dst);
+        for (const s of sides) if (!fs.existsSync(s) && fs.existsSync(sideBak(s))) fs.renameSync(sideBak(s), s);
+      } catch { /* 尽力而为 */ }
       out.skipped.push(`${name}（迁移失败：${e.code || e.message}）`);
     }
   }
