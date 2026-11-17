@@ -1702,6 +1702,47 @@ const copyDb = (src) => {
     "缓存: 命中/未命中计数存在（要不要真开缓存只能靠它判，不能靠 entries 猜）");
 }
 
+// ---------- 1.0.0 真机回归：同引擎旧种子（内容换代、零用户成果）升级让位 ----------
+// 背景：安装版 userData 里躺着同引擎(m3)但旧切片的种子库（无编目无洗数据），
+// 旧迁移只认「引擎换代」，同代旧种子被幂等规则当用户数据护着 → 新随包数据永远进不来。
+// 判据扩一条：同引擎但块指纹/块数不同 且 零用户成果 → 让位；有成果/内容一致 → 不动。
+{
+  const engine = await import("../src/desktop/engine.mjs");
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-mig-"));
+  const resLib = path.join(root, "resources", "library");
+  const uLib = path.join(root, "userData", "library");
+  fs.mkdirSync(resLib, { recursive: true });
+  fs.mkdirSync(uLib, { recursive: true });
+  const mk = (p, fp, n, work) => {
+    const db = new Database(p);
+    db.exec("CREATE TABLE chunks(id INTEGER PRIMARY KEY, text TEXT)");
+    db.exec("CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)");
+    db.prepare("INSERT INTO meta VALUES('model','m3')").run();
+    db.prepare("INSERT INTO meta VALUES('chunk_fp',?)").run(fp);
+    for (let i = 0; i < n; i++) db.prepare("INSERT INTO chunks(text) VALUES(?)").run("块" + i);
+    if (work) { db.exec("ALTER TABLE chunks ADD COLUMN ctx TEXT"); db.prepare("UPDATE chunks SET ctx='x' WHERE id=1").run(); }
+    db.close();
+  };
+  const fpOf = (p) => { const db = new Database(p, { readonly: true }); const v = db.prepare("SELECT value FROM meta WHERE key='chunk_fp'").get().value; db.close(); return v; };
+  mk(path.join(resLib, "a.db"), "fpNEW", 5, false);
+  mk(path.join(uLib, "a.db"), "fpOLD", 3, false);   // 同引擎旧种子零成果 → 应让位
+  mk(path.join(resLib, "b.db"), "fpNEW", 5, false);
+  mk(path.join(uLib, "b.db"), "fpOLD", 3, true);    // 有洗数据成果 → 不许动
+  mk(path.join(resLib, "c.db"), "fpSAME", 5, false);
+  mk(path.join(uLib, "c.db"), "fpSAME", 5, false);  // 内容一致 → 不动
+  engine.init({ packaged: true, userData: path.join(root, "userData"), resourcesDir: path.join(root, "resources") });
+  const rep = engine.migrateStaleBundledLibrary();
+  ok(rep.migrated.some((s) => s.startsWith("a.db")), "同引擎内容旧种子零成果 → 让位迁移（a.db）");
+  ok(fs.existsSync(path.join(uLib, "a.db.bak-m3")), "旧种子 rename 成 .bak 留底（可回滚）");
+  ok(fpOf(path.join(uLib, "a.db")) === "fpNEW", "让位后 userData 拿到随包新内容");
+  ok(rep.stale.some((s) => s.startsWith("b.db")), "有用户成果的旧库进 stale 记账、不动（b.db）");
+  ok(fpOf(path.join(uLib, "b.db")) === "fpOLD", "有成果的库内容原封不动");
+  ok(!rep.migrated.some((s) => s.startsWith("c.db")) && fpOf(path.join(uLib, "c.db")) === "fpSAME",
+    "内容一致的同代库不动（c.db）");
+  engine.init({});  // 恢复开发态指向，不影响后续断言
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n===== 防线包验收结果 =====`);
 if (fail) { console.error(`${fail} 项 FAIL`); process.exit(1); }

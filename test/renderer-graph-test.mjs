@@ -555,6 +555,9 @@ await sleep(40);
 assert(app.state.prompt?.bookId === "t.docx" && app.state.prompt.text.includes("编目任务书"), "点击后拉回提示词全文（state.prompt）");
 assert(mainEl.innerHTML.includes('id="promptText"') && mainEl.innerHTML.includes("复制提示词") && mainEl.innerHTML.includes("收起"),
   "提示词面板渲染（只读文本框 + 复制/收起按钮）");
+// 1.0.0 真机回归：面板渲染在默认折叠的「设置」条里，不自动展开=用户看着像「点了没反应」
+assert(mainEl.innerHTML.includes('<details class="settings-fold" open'),
+  "提示词生成后设置折叠条自动展开（结果不被藏起来）");
 
 // ---------- 7b) 洗数据外部智能体路（无 key）：导出按钮 → 面板（复制说明/打开文件夹/收起）+ 导入接线 ----------
 {

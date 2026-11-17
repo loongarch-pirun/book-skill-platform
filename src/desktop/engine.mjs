@@ -125,16 +125,20 @@ export function migrateStaleBundledLibrary() {
     let newModel, oldModel;
     try { newModel = dbModel(src); oldModel = dbModel(dst); }
     catch (e) { out.skipped.push(`${name}（读不了 meta：${e.code || e.message}）`); continue; }
-    if (!newModel || !oldModel || newModel === oldModel) continue;  // 同代/缺标记：不猜
+    if (!newModel || !oldModel) continue;  // 缺标记：不猜
+    const sameGen = newModel === oldModel;
+    // 同引擎也要看内容：重切/重灌后的旧种子（块指纹/块数不同）同样挡新数据进门，
+    // 1.0.0 真机实测：userData 旧种子零成果却被幂等规则护着，随包新库永远进不来。
+    if (sameGen && !contentStale(src, dst)) continue;  // 同代且内容一致：不动
     let worked;
     try { worked = userCatalogWork(dst); } catch { worked = "编目状态读不出来"; }
-    if (worked) { out.stale.push(`${name}（${oldModel}→${newModel}，${worked}，未动）`); continue; }
+    if (worked) { out.stale.push(`${name}（${sameGen ? "同引擎内容旧" : oldModel + "→" + newModel}，${worked}，未动）`); continue; }
     const bak = `${dst}.bak-${oldModel}`;
     try {
       if (fs.existsSync(bak)) fs.rmSync(bak, { force: true });
       fs.renameSync(dst, bak);          // 同盘 rename：瞬间、不占额外空间、可回滚
       fs.copyFileSync(src, dst);
-      out.migrated.push(`${name}（${oldModel}→${newModel}，旧库留在 ${path.basename(bak)}）`);
+      out.migrated.push(`${name}（${sameGen ? "同引擎内容换代" : oldModel + "→" + newModel}，旧库留在 ${path.basename(bak)}）`);
     } catch (e) {
       // 半途失败先把旧库放回去：留一个换了一半的库比留着旧库更糟
       try { if (!fs.existsSync(dst) && fs.existsSync(bak)) fs.renameSync(bak, dst); } catch { /* 尽力而为 */ }
@@ -152,6 +156,21 @@ function dbModel(dbPath) {
     const row = db.prepare("SELECT value FROM meta WHERE key='model'").get();
     return row?.value || null;
   } finally { try { db?.close(); } catch { /* 关不上不致命 */ } }
+}
+
+// 同引擎但内容换代（重切/重灌）的判据：块结构指纹优先，缺指纹比块数。
+// 读不出来一律不算旧（不猜）——宁可留下旧种子，也不赌用户数据。
+function contentStale(src, dst) {
+  const sig = (p) => {
+    let db;
+    try {
+      db = new Database(p, { readonly: true });
+      const fp = db.prepare("SELECT value FROM meta WHERE key='chunk_fp'").get()?.value;
+      if (fp) return "fp:" + fp;
+      return "n:" + db.prepare("SELECT COUNT(*) c FROM chunks").get().c;
+    } finally { try { db?.close(); } catch { /* 关不上不致命 */ } }
+  };
+  try { return sig(src) !== sig(dst); } catch { return false; }
 }
 
 // 这本库有没有用户自己烧出来的成果（LLM 编目 / 洗数据）。返回人话描述（有）或 null（没有）。

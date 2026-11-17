@@ -296,6 +296,8 @@ export async function shelfJobAction(act, bookId) {
     } else if (act === "catprompt") {
       const r = await call(window.study.jobsCatalogPrompt(bookId));
       state.prompt = { bookId, text: r.text, chars: r.chars, path: r.path };
+      // 面板渲染在默认折叠的「设置」条里——不展开用户看着像「点了没反应」（1.0.0 真机回归）
+      state.shelfFoldOpen = true;
       toast(`提示词已生成（${r.chars} 字）——复制后粘给任意 AI，结果存回 catalog-results/`);
     } else if (act === "catimport") {
       const picked = await call(window.study.jobsPickResult());

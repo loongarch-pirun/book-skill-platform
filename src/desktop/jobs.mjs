@@ -401,7 +401,21 @@ export function catalogPrompt(bookId) {
   if (!id) throw new UserError("书名不合法");
   const { tasksDir } = jobDirs();
   const taskPath = path.join(tasksDir, `${id}.json`);
-  if (!fs.existsSync(taskPath)) throw new UserError(`找不到《${id}》的编目任务书——这本书还没走到编目这步`);
+  if (!fs.existsSync(taskPath)) {
+    // 升级/换库后侧车可能不在（安装版读 userData 库而任务书生成在别处）：
+    // 库在就能现场建——与加工管线同一套 clusterChunks/buildTask，不依赖侧车残留。
+    const dbPath = path.join(jobDirs().libDir, `${id}.db`);
+    if (!fs.existsSync(dbPath)) throw new UserError(`找不到《${id}》的编目任务书——这本书还没走到编目这步`);
+    let dbRo;
+    try {
+      dbRo = new Database(dbPath, { readonly: true });
+      const built = buildTask(dbRo, clusterChunks(dbRo));
+      fs.mkdirSync(tasksDir, { recursive: true });
+      fs.writeFileSync(taskPath, JSON.stringify(built, null, 1), "utf8");
+    } catch (e) {
+      throw new UserError(`编目任务书现场生成失败：${e.message || e}`);
+    } finally { dbRo?.close(); }
+  }
   let task;
   try { task = JSON.parse(fs.readFileSync(taskPath, "utf8")); }
   catch (e) { throw new UserError(`任务书不是合法 JSON（${e.message}）——可先重新导入这本书`); }

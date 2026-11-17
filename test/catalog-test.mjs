@@ -187,6 +187,32 @@ assert(before.llm > 0 && afterLlm === 0 && afterRule > 0 && afterVecs === 0 && a
   `回滚演练: llm ${before.llm}→${afterLlm} / rule 保留 ${afterRule} / 原文 ${afterChunks.b} 字节不动 / catalog meta 清零`);
 fs.rmSync(tmp, { recursive: true, force: true });
 
+// ---------- 1.0.0 真机回归：升级/换库后任务书侧车缺失 → catalogPrompt 按需现场建 ----------
+// 背景：安装版读 userData 老库时 catalog-tasks/ 侧车不在，点「编目」抛「找不到任务书」。
+// 库在就能现场建（与加工管线同一套 clusterChunks/buildTask），不该依赖侧车残file。
+{
+  const { configureSearch, currentLibDir } = await import("../src/lib/search.mjs");
+  const { catalogPrompt } = await import("../src/desktop/jobs.mjs");
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "bsp-catprompt-"));
+  const tmpLib = path.join(tmp, "library");
+  fs.mkdirSync(tmpLib, { recursive: true });
+  fs.copyFileSync(ppDb, path.join(tmpLib, "pride-and-prejudice-en.epub.db"));
+  const prevLib = currentLibDir();
+  configureSearch({ libDir: tmpLib });
+  try {
+    const r = catalogPrompt("pride-and-prejudice-en.epub");
+    assert(r.chars > 0 && typeof r.text === "string" && r.text.length > 0,
+      "缺任务书侧车时 catalogPrompt 现场建并返回提示词全文");
+    assert(fs.existsSync(path.join(tmp, "catalog-tasks", "pride-and-prejudice-en.epub.json")),
+      "现场建的任务书落盘侧车（下次直接读）");
+  } catch (e) {
+    assert(false, "缺任务书侧车时 catalogPrompt 不应抛错（实际：" + e.message + "）");
+  } finally {
+    configureSearch({ libDir: prevLib });
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
 console.log("\n===== 编目功能验收结果 =====");
 if (failed > 0) { console.log(`${failed} 项 FAIL`); process.exit(1); }
 console.log("全部 PASS：迁移/完整性/防幻觉/mention/向量缓存/检索信号/保真/回滚 八关全过");
