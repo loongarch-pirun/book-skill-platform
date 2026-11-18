@@ -172,7 +172,8 @@ export function createAssetProtocol() {
     }
     // epub / pptx：orig-web 统一映射应用内自开（消除 415 强制 external）
     if (asset.ext === "epub" || asset.ext === "pptx") {
-      const r = await originalWeb(libDir, id, { page: null });
+      const pageParam = u0.searchParams.get("page");
+      const r = await originalWeb(libDir, id, { page: pageParam == null || pageParam === "" ? null : Number(pageParam) });
       if (r.type === "html") return new Response(r.html, { headers: HTML_HEADERS });
       return new Response(r.message, { status: 500 });
     }

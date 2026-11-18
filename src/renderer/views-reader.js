@@ -3,6 +3,7 @@
 // 铁律同 views.js：顶层不碰 DOM，事件绑定走 bindReaderEvents()。
 import { $, state, call, toast, show } from "./app.js";
 import { esc, origFlagHtml, verifyFlagHtml } from "./views.js";
+import { chooseOrigTarget, renderPdf } from "./orig-view.js";
 
 // token 账展示：1 位小数 K 记法（1234 → "1.2K"，999 → "999"）——与 list_books 的 total_tokens 同一语义
 function fmtK(n) {
@@ -59,8 +60,9 @@ function renderOriginal(r) {
       <p><b>${esc(meta.name)}</b>（${esc(meta.ext)} 格式 · ${fmtSize(meta.size)}）</p>
       <p class="orighint">${esc(meta.ext)} 格式应用内不直接渲染，点上方「用系统程序打开」看原文；或回块视图看库里切好的原文块。</p>
     </div>`;
-  // text/html 都走 iframe 加载 book://（协议层已包好纸色样式壳；不 fetch——红线：渲染层无直连 fetch）
-  else body = `<iframe class="origframe" src="${esc(meta.url)}" title="原件原文"></iframe>`;
+  // text/html 走 iframe 加载 book://（协议层包壳；pptx 带 page 只呈现该幻灯片）；pdf 走 orig-view 按页渲染
+  else if (meta.render === "pdf") body = `<div id="origPdf" class="origpdf"></div>`;
+  else body = `<iframe class="origframe" src="${esc(meta.url)}${o.page != null && meta.ext === "pptx" ? `?page=${encodeURIComponent(o.page)}` : ""}" title="原件原文"></iframe>`;
   return `
     <div class="view-title">${esc(r.title || r.bookId)}<span class="origtag">原件视图</span></div>
     <div class="view-sub">books/ 里的原始文件，一字未改 · 与块视图（切好块的原文）互为对照</div>
@@ -80,13 +82,26 @@ function refreshReader() {
   if (!main) return;
   main.innerHTML = renderReader();
   if (!state.reader.original) loadReader();
+  else {
+    // pdf 原件：innerHTML 落地后按页渲染（bytes 走 IPC，不 fetch）
+    const o = state.reader.original;
+    if (o.meta && o.meta.render === "pdf" && !o.loading && !o.error) {
+      const el = document.querySelector("#origPdf");
+      if (el && !el.dataset.rendered) {
+        el.dataset.rendered = "1";
+        call(window.study.bookRawBytes(state.reader.bookId))
+          .then((bytes) => renderPdf(el, bytes, { page: o.page ?? 1, quote: o.quote || "" }))
+          .catch((e) => { el.innerHTML = `<div class="origcard"><p>${esc(e.message || e)}</p></div>`; });
+      }
+    }
+  }
 }
 
 // 进入原书视图：book:original 拿元信息即可——内容由 iframe 直接加载 book://（协议层包壳）
-async function loadOriginal() {
+async function loadOriginal(opts = {}) {
   const r = state.reader;
   if (!r.bookId) return;
-  r.original = { loading: true, meta: null, error: null };
+  r.original = { loading: true, meta: null, error: null, page: opts.page ?? null, quote: opts.quote ?? "" };
   refreshReader();
   try {
     const meta = await call(window.study.bookOriginal(r.bookId));
@@ -257,8 +272,14 @@ export async function jumpTo(bookId, chunkId) {
   try {
     const loc = await call(window.study.locate(bookId, chunkId));
     if (!loc.chapter) { toast("找不到这一块了（书可能被删过）"); return; }
+    // T5：优先翻回原件对应页/章；无原件/需系统打开 → 退块视图高亮 + 人话理由
+    let meta = null;
+    try { meta = await call(window.study.bookOriginal(bookId)); } catch { meta = null; }
+    const target = chooseOrigTarget(meta, loc);
     state.reader = { bookId, title: null, chapter: loc.chapter, chapters: [], loadedChapter: null, highlightId: chunkId, mode: "chapter", filter: null, themes: [], persons: [], blocks: [], catLoaded: false, original: null };
-    show("reader"); // show → renderMain → loadReader → loadChapter，高亮在渲染后生效
+    show("reader");
+    if (target.mode === "block") { if (target.reason) toast(target.reason); return; }
+    loadOriginal({ page: target.page, quote: target.quote });
   } catch (e) { toast("跳转失败：" + e.message); }
 }
 

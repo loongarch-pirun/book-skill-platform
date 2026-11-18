@@ -63,6 +63,8 @@ contextBridge.exposeInMainWorld("study", {
   readerPersonBlocks: (bookId, person) => ipcRenderer.invoke("reader:personBlocks", bookId, person),
   // 原书视图（V3 #166）：原件元信息 + 系统程序打开（book:// 协议内容由渲染层直接 fetch）
   bookOriginal: (bookId) => ipcRenderer.invoke("book:original", bookId),
+  bookRawBytes: (bookId) => ipcRenderer.invoke("book:rawBytes", bookId),
+  bookOrigWeb: (p) => ipcRenderer.invoke("book:origWeb", p),
   bookOpenExternal: (bookId) => ipcRenderer.invoke("book:openExternal", bookId),
   // 技能
   skillsList: () => ipcRenderer.invoke("skills:list"),
