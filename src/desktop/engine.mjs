@@ -607,8 +607,8 @@ export function locateChunk(bookId, chunkId) {
   if (!b) throw new UserError(`书库里找不到「${bookId}」`);
   const db = new Database(b.db, { readonly: true });
   try {
-    const r = db.prepare("SELECT chapter FROM chunks WHERE id = ?").get(Number(chunkId));
-    return { chapter: r ? (r.chapter || "未分章") : null };
+    const r = db.prepare("SELECT chapter, page, text FROM chunks WHERE id = ?").get(Number(chunkId));
+    return r ? { chapter: r.chapter || "未分章", page: r.page ?? null, text: r.text || "", loc: r.chapter || "未分章" } : { chapter: null, page: null, text: "", loc: null };
   } finally { db.close(); }
 }
 
