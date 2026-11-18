@@ -10,7 +10,7 @@ export function readPptx(filePath) {
   const names = zip.getEntries().map((e) => e.entryName)
     .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
     .sort((a, b) => (+a.match(/slide(\d+)/)[1]) - (+b.match(/slide(\d+)/)[1]));
-  return names.map((n, i) => {
+  return names.map((n) => {
     const xml = zip.readAsText(n);
     const paras = xml.split(/<a:p[ >]/).slice(1).map((seg) => {
       const ts = [...seg.matchAll(/<a:t>([\s\S]*?)<\/a:t>/g)].map((m) => dec(m[1]));
@@ -23,6 +23,6 @@ export function readPptx(filePath) {
       const e = zip.getEntry("ppt/media/" + m[1]);
       if (e) images.push({ name: m[1], dataUrl: `data:image/${m[1].split(".").pop()};base64,${e.getData().toString("base64")}` });
     }
-    return { page: i + 1, text: paras.join("\n"), images };
+    return { page: +n.match(/slide(\d+)/)[1], text: paras.join("\n"), images };
   });
 }
