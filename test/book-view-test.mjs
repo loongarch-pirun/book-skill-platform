@@ -49,7 +49,8 @@ ok(readTextBuffer(Buffer.alloc(0)) === "", "空文件 → 空串不抛");
   ok(!("path" in d.data), "describeAsset 不带绝对路径（路径不外泄渲染层）");
 }
 ok(describeAsset(libDir, "plain.txt").data.render === "text", "txt → render=text");
-ok(describeAsset(libDir, "paper.pdf").data.render === "external", "pdf → render=external（系统打开）");
+ok(describeAsset(libDir, "paper.pdf").data.render === "pdf", "pdf → render=pdf（应用内 pdfjs 按页，2026-11-18 去 415）");
+ok(describeAsset(libDir, "paper.pdf").data.url.startsWith("book://raw/"), "pdf url=book://raw（字节交 pdfjs）");
 ok(describeAsset(libDir, "huge.docx").data.render === "external", "超大 docx → render=external（拒转）");
 ok(describeAsset(libDir, "不存在的书").ok === false, "无原件 → ok:false（不抛）");
 for (const bad of ["", "../x", "a/b"]) ok(describeAsset(libDir, bad).ok === false, `describeAsset 拒非法 id：${JSON.stringify(bad)}`);

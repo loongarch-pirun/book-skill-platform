@@ -5,6 +5,10 @@ import * as engine from "./engine.mjs";
 import * as jobs from "./jobs.mjs";
 import * as chat from "./chat.mjs";
 import * as enrichJob from "./enrich-job.mjs";
+import { originalWeb } from "./orig-web.mjs";
+import { currentLibDir } from "../lib/search.mjs";
+import { resolveAsset } from "../lib/assets.mjs";
+import fs from "node:fs";
 
 export async function registerIpc({ ipcMain, app, dialog, shell, getWin }) {
   const handle = (channel, fn) => ipcMain.handle(channel, async (_e, ...args) => {
@@ -124,6 +128,13 @@ export async function registerIpc({ ipcMain, app, dialog, shell, getWin }) {
   // 原书视图（V3 #166）：book:// 协议读 books/ 原件（协议 handler 在 main.js 注册）；
   // openExternal 用系统程序打开（shell 由主进程注入，engine 不直接碰 electron）
   handle("book:original", (eng, bookId) => eng.bookOriginal(bookId));
+  // T4/T5：原件→网页映射（page 可选）与原件字节（pdfjs 按页渲染用）
+  handle("book:origWeb", (eng, p) => originalWeb(currentLibDir(), p?.bookId, { page: p?.page ?? null }));
+  handle("book:rawBytes", (eng, bookId) => {
+    const a = resolveAsset(currentLibDir(), bookId);
+    if (!a.exists) throw new engine.UserError("原件不在 books/ 目录");
+    return fs.readFileSync(a.path);
+  });
   handle("book:openExternal", async (eng, bookId) => {
     const p = eng.bookAssetPath(bookId);
     const err = await shell.openPath(p);

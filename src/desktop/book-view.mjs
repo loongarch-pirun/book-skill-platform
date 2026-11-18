@@ -14,6 +14,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import { resolveAsset, safeBookId } from "../lib/assets.mjs";
 import { currentLibDir } from "../lib/search.mjs";
+import { originalWeb } from "./orig-web.mjs";
 
 const require = createRequire(import.meta.url);
 const mammoth = require("mammoth");
@@ -64,13 +65,15 @@ export function describeAsset(libDir, bookId) {
   try { size = fs.statSync(asset.path).size; } catch { return { ok: false, error: "原件读不出来（可能正在被占用）" }; }
   const render = asset.ext === "txt" || asset.ext === "md" ? "text"
     : asset.ext === "docx" && size <= DOCX_HTML_MAX ? "html"
-      : "external";
+      : (asset.ext === "epub" || asset.ext === "pptx") ? "html"
+        : asset.ext === "pdf" ? "pdf"
+          : "external";
   return {
     ok: true,
     data: {
       bookId: id, ext: asset.ext, name: path.basename(asset.path), size,
-      url: `book://asset/${encodeURIComponent(id)}`,
-      render, // text=直接读 / html=mammoth 片段 / external=系统打开
+      url: asset.ext === "pdf" ? `book://raw/${encodeURIComponent(id)}` : `book://asset/${encodeURIComponent(id)}`,
+      render, // text=直接读 / html=mammoth或orig-web / pdf=pdfjs按页 / external=系统打开(兜底)
     },
   };
 }
@@ -86,6 +89,19 @@ export function createAssetProtocol() {
   };
 
   return async (request) => {
+    // raw 主机名：回原件字节（pdfjs 按页渲染用），与 asset 同一把安全闸门+体积闸门
+    let u0;
+    try { u0 = new URL(request.url); } catch { return new Response("book:// 地址不对", { status: 400 }); }
+    if (u0.hostname === "raw") {
+      const rid = safeBookId(decodeURIComponent(u0.pathname.replace(/^\//, "")));
+      if (!rid) return new Response("书名不合法", { status: 400 });
+      const rasset = resolveAsset(currentLibDir(), rid);
+      if (!rasset.exists) return new Response("原件不在 books/ 目录", { status: 404 });
+      let rbuf;
+      try { rbuf = fs.readFileSync(rasset.path); } catch (e) { return new Response("原件读不出来（可能刚被移动、删除或被占用）", { status: e?.code === "ENOENT" ? 404 : 500 }); }
+      if (rbuf.length > ASSET_READ_MAX) return new Response("文件太大（>50MB），请用系统程序打开", { status: 413 });
+      return new Response(rbuf, { headers: { "content-type": "application/octet-stream" } });
+    }
     let bookId;
     try {
       const u = new URL(request.url);
@@ -153,6 +169,12 @@ export function createAssetProtocol() {
       } catch (e) {
         return new Response(`这个 docx 打不开（${e.message || e}）——请用系统程序打开`, { status: 500 });
       }
+    }
+    // epub / pptx：orig-web 统一映射应用内自开（消除 415 强制 external）
+    if (asset.ext === "epub" || asset.ext === "pptx") {
+      const r = await originalWeb(libDir, id, { page: null });
+      if (r.type === "html") return new Response(r.html, { headers: HTML_HEADERS });
+      return new Response(r.message, { status: 500 });
     }
     // pdf / epub：应用内不渲染，前端拿 415 后走「系统打开」卡片
     return new Response(`${asset.ext} 格式请用系统程序打开`, { status: 415 });
