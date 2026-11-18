@@ -25,7 +25,7 @@ const EMBED_SCRIPT = path.join(import.meta.dirname, "..", "embed-book.js");
 const CLEAN_SCRIPT = path.join(import.meta.dirname, "..", "clean-book.mjs");
 const INLINE_SCRIPT = path.join(import.meta.dirname, "..", "inline-clean.mjs");
 const TXT2DOCX_SCRIPT = path.join(import.meta.dirname, "..", "txt2docx.js");
-const EXT_FMT = { pdf: "pdf", epub: "epub", docx: "docx", txt: "docx" }; // txt 先转 docx 再建库
+const EXT_FMT = { pdf: "pdf", epub: "epub", docx: "docx", pptx: "pptx", txt: "docx" }; // txt 先转 docx 再建库
 
 // 子进程 node 化：打包态 process.execPath 是 BookSkillPlatform.exe——缺这个变量，
 // 子进程被当成 GUI 应用启动：脚本一行不执行、进程永不退出 → Promise 永不 resolve，
@@ -102,7 +102,7 @@ export async function startImport(filePath) {
   if (!fs.existsSync(file)) throw new UserError(`找不到文件：${file}`);
   const ext = (path.extname(file).match(/^\.(.+)$/) || [])[1]?.toLowerCase();
   const fmt = EXT_FMT[ext];
-  if (!fmt) throw new UserError(`不支持的格式 .${ext || "?"}（支持 .epub / .docx / .pdf / .txt）`);
+  if (!fmt) throw new UserError(`不支持的格式 .${ext || "?"}（支持 .epub / .docx / .pdf / .pptx / .txt）`);
   const { booksDir, libDir } = jobDirs();
   fs.mkdirSync(booksDir, { recursive: true }); // 连带把 libDir 上级建出来
   const base = path.basename(file).replace(/\.[^.]+$/, "");
@@ -176,7 +176,7 @@ export async function startProcessing(bookId) {
   }
   const asset = resolveAsset(libDir, id);
   if (!asset.exists) throw new UserError(`books/ 里找不到《${id}》的原件——这本书没有可加工的原件（可能是旧管线建的库）`);
-  if (!EXT_FMT[asset.ext]) throw new UserError(`不支持的格式 .${asset.ext}（支持 .epub / .docx / .pdf / .txt）`);
+  if (!EXT_FMT[asset.ext]) throw new UserError(`不支持的格式 .${asset.ext}（支持 .epub / .docx / .pdf / .pptx / .txt）`);
   const outDb = path.join(libDir, `${id}.db`);
   cancelled.delete(id);
   const g = nextGen(id); // 新代：取消后旧管线残留的 emit/cancelResult 全部落空

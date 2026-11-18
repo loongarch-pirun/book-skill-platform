@@ -13,7 +13,7 @@ import path from "node:path";
 import { listBooks } from "./search.mjs";
 
 // 支持的原件扩展（md 仅 CLI 建库场景的容错查找，应用导入不含 md）
-const ASSET_EXTS = [".pdf", ".epub", ".docx", ".txt", ".md"];
+const ASSET_EXTS = [".pdf", ".epub", ".docx", ".pptx", ".txt", ".md"];
 
 // bookId 合法性：非空、不含路径分隔符/../控制字符——防目录穿越的唯一闸门
 export function safeBookId(bookId) {
