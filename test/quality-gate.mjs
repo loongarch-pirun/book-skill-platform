@@ -112,6 +112,7 @@ const BOOK_ALIAS = {
 };
 
 // ---- 形态脏块判据：照抄 21-切块质量\dirty-scan.mjs ----------------------------
+// 检索侧共享副本见 src/lib/junk.mjs（2026-11-18 抽出供邻块守卫）；改任一处必须同步另一处并复跑本闸门。
 // 出处：dirty-scan.mjs:32-47（JUNK 7 条）+ :49-67（classify 的长度门槛）
 const JUNK = [
   { name: "journal_masthead", re: /(communications|proceedings|transactions|journal|letters|magazine)\s*[|,]?.*\b(19|20)\d{2}\b|\bvolume\s+\d+|\bnumber\s+\d+|\bvol\.?\s*\d+\s*,?\s*no\.?\s*\d+/i },

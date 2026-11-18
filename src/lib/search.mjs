@@ -14,6 +14,7 @@ import { loadCatalogSignal, entityAliasTerms } from "./catalog.mjs";
 import { loadEnrichSignal } from "./enrich-signal.mjs";
 import { loadSkillState } from "./skill-state.mjs";
 import { bookTokenTotal, detectLang, qualityFromStats } from "./token-estimate.mjs";
+import { formDirtyOf } from "./junk.mjs";
 export { getEmbedder, cosine };
 
 const DEFAULT_LIB_DIR = path.join(import.meta.dirname, "..", "..", "library");
@@ -457,19 +458,22 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
       final = ranked;
     }
   }
-  // P3-③ 邻块扩展（BSP_NEIGHBOR=1 开，默认关）：复试官终排后，对终排结果按
-  // 同章 id±1 各补一席紧邻上下文——衰减计分 ×0.5、只附加不挤位（原 topN 一个
-  // 不动）、不重跑复试官（邻居不进复试，成本零）；总数 ≤4 控提示词增量。
+  // P3-③ 邻块扩展（2026-11-18 问题5 默认开：补偿切片无重叠；BSP_NEIGHBOR=0 可关）：
+  // 复试官终排后，对终排结果按同章 id±1 各补一席紧邻上下文——衰减计分 ×0.5、只附加不挤位
+  // （原 topN 一个不动）、不重跑复试官（邻居不进复试，成本零）；总数 ≤6 控提示词增量。
   // 变体快路径（rerank:false）不扩展——邻块只跟终排走；同章判据用扁平 chapter
-  // （null 章 / 跨章不扩）。双门（evals 漏题⊆基线）过了才考虑默认开。
+  // （null 章 / 跨章不扩）。默认开经 quality-gate 双门验证不退化（2026-11-18）。
   const topFinal = final.slice(0, topN);
-  if (process.env.BSP_NEIGHBOR === "1" && rerank && topFinal.length) {
-    // 邻块上限参数化（2026-11-16）：原来是硬编码 4。实测 H16 差的就是一个名额——
-    // 种子 769/772/210 的 ±1 依次得 768,770,771,773,209,211，第 6 条才是答案块 #211。
-    // 默认 6；BSP_NEIGHBOR_CAP=4 可回退到旧上限（BSP_NEIGHBOR 本身的默认值不动）。
+  if (process.env.BSP_NEIGHBOR !== "0" && rerank && topFinal.length) {
+    // 邻块守卫（2026-11-18 gate7 脏块红修）：只扩 kind=text 且非形态 JUNK 的邻块——
+    // 默认开曾把脚注/图片说明/孤立页码扩进上下文（脏块率 0.0031→0.0059）。与闸门同一把尺子（lib/junk.mjs）。
     const NBR_CAP = Math.min(Math.max(+(process.env.BSP_NEIGHBOR_CAP ?? 6), 1), 20);
     const inSet = new Set(topFinal.map(r => r.id));
-    const nbrGet = db.prepare("SELECT id, chapter, page, text FROM chunks WHERE id = ?");
+    // 老/简 schema（.md 纯文本分支）无 kind 列：有列才取才过滤，无列视同 text（不炸老库）
+    const hasKind = db.prepare("PRAGMA table_info(chunks)").all().some((c) => c.name === "kind");
+    const nbrGet = db.prepare(hasKind
+      ? "SELECT id, chapter, page, text, kind FROM chunks WHERE id = ?"
+      : "SELECT id, chapter, page, text FROM chunks WHERE id = ?");
     const added = [];
     outer:
     for (const s of topFinal) {
@@ -479,6 +483,8 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
         if (inSet.has(nid)) continue;
         const c = nbrGet.get(nid);
         if (!c || !c.chapter || c.chapter !== s.chapter) continue;
+        if (hasKind && c.kind && c.kind !== "text") continue;
+        if (formDirtyOf(c.text)) continue;
         inSet.add(nid);
         added.push({
           ...s, id: nid, chapter: c.chapter, loc: c.page ? `第${c.page}页` : (c.chapter || ""),
@@ -579,10 +585,10 @@ function routeCfg() {
     floorRatio: d.floorRatio,                    // 0.3 默认不变
     rerankBudgetMs: _num(process.env.BSP_RERANK_BUDGET_MS, 6000, 1000, 60000),
     rerankCostMs: 128,                           // 无观测回退值（models.mjs 串行逐条实测 ~128ms）
-    // 池内每书保底席（BSP_ROUTE_POOL_FLOOR，默认 0 = 旧行为）：
+    // 池内每书保底席（BSP_ROUTE_POOL_FLOOR，2026-11-18 问题3 默认 2 提弱书召回）：
     // keep 抬到 18 后池子会向强书集中（实测 H05 由 7 本收缩到 4 本，mengzi/Dynamo 归零），
     // 弱书可能因此整本丢候选。>0 时先从每本扫描书各留 N 席，再按全局余弦填满 poolCap。
-    poolFloor: _num(process.env.BSP_ROUTE_POOL_FLOOR, 0, 0, 64),
+    poolFloor: _num(process.env.BSP_ROUTE_POOL_FLOOR, 2, 0, 64),
     // route 邻块扩展参数（BSP_ROUTE_NBR 为总闸，默认关）
     nbrSeeds: _num(process.env.BSP_ROUTE_NBR_SEEDS, 3, 1, 10),
     nbrPerBook: _num(process.env.BSP_ROUTE_NBR_PERBOOK, 8, 1, 32),

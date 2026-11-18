@@ -66,7 +66,7 @@ function msgHtml(m) {
     `${renderCite(x)}`).join("");
   // V3-R7：引用为空 = 大概率书里没有——诚实标注而不是让用户猜
   const noHit = (m.citations || []).length === 0 ? ` · <span class="dropwarn">书里可能没有相关内容——换个问法试试</span>` : "";
-  const meta = m.segments ? `<div class="chatmeta">取材 ${m.segments} 段原文${m.book ? " · 《" + esc(m.book) + "》" : ""}${m.mode === "library" ? " · 全库模式" : ""}${noHit}</div>` : "";
+  const meta = m.segments ? `<div class="chatmeta">取材 ${m.segments} 段原文${m.book ? " · 《" + esc(m.book) + "》" : ""}${m.mode === "library" ? " · 全库模式" : ""}${noHit}${m.grounding?.unsupported?.length ? ` · <span class="dropwarn">正文 ${m.grounding.unsupported.length} 句未逐字回源，请点引用核对</span>` : ""}</div>` : "";
   return `<div class="msg ai"><div class="bubble">
     <div class="atext">${esc(m.content)}</div>
     ${meta}
@@ -114,7 +114,7 @@ function archivePanelHtml() {
   if (!a.items.length) return `<div class="archpanel">${head}<div class="empty">还没有存档——每有一条云端回答，这里就留一份：问题、依据片段、回答，引用可点回原文</div></div>`;
   const items = a.items.map((e) => `
     <div class="architem">
-      <div class="archmeta">${esc(fmtTs(e.ts))} · ${e.mode === "library" ? "全库模式" : "《" + esc(e.book || "?") + "》"} · ${esc(e.model || "")}${e.dropped ? ` · ${e.dropped} 条引用未过核验已隐藏` : ""}</div>
+      <div class="archmeta">${esc(fmtTs(e.ts))} · ${e.mode === "library" ? "全库模式" : "《" + esc(e.book || "?") + "》"} · ${esc(e.model || "")}${e.dropped ? ` · ${e.dropped} 条引用未过核验已隐藏` : ""}${e.grounding?.unsupported?.length ? ` · 正文 ${e.grounding.unsupported.length} 句未逐字回源` : ""}</div>
       <div class="archq">问：${esc(e.question || "")}</div>
       <div class="archa">${esc(e.answer || "")}</div>
       ${(e.citations || []).length ? `<div class="cacites">${e.citations.map((x) => renderCite(x)).join("")}</div>` : ""}
@@ -173,7 +173,7 @@ async function maybeCompact() {
 }
 
 // P0-9（病 B）：把原文发给云端前的「一次性同意 + 记住选择」。
-// 为什么要有：主进程 chat.mjs 的 includeSourceText 缺省 false，模型只收到书名和章号、一个字原文
+// 为什么要有：主进程 chat.mjs 的 includeSourceText 若为 false，模型只收到书名和章号、一个字原文
 // 都没有，verifyAnswer 必然判引用全飞 → QUOTE_FAIL → 整包降级（这是「配了 key 也答不出成句答案」
 // 的根因）。但也不能反过来默认偷偷发原文——隐私红线的精神是「用户明确点过头才发」。
 // 三态语义（落 llm.json 的 sendSourceText）：true=允许过；false=拒绝过；null=从没选过。
@@ -240,7 +240,7 @@ async function sendChat() {
     }));
     if (r.degraded) c.messages.push({ role: "assistant", error: r.error, results: r.results || [], rewrite: r.rewrite }); // A1：降级通道，错误消息携带本地原文 + 换法建议
     else {
-      c.messages.push({ role: "assistant", content: r.answer, citations: r.citations || [], dropped: r.dropped || 0, segments: r.segments, book: r.book, mode: r.mode, rewrite: r.rewrite });
+      c.messages.push({ role: "assistant", content: r.answer, citations: r.citations || [], dropped: r.dropped || 0, grounding: r.grounding || null, segments: r.segments, book: r.book, mode: r.mode, rewrite: r.rewrite });
       if (c.archive.open) { c.archive.loaded = false; loadArchive(); } // P4：存档面板开着，就地刷进新快照
       maybeCompact(); // V3-R6：异步不阻塞（压缩失败静默）
     }

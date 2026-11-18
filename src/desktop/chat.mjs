@@ -7,7 +7,7 @@
 //   - 错误全部抛 UserError 人话（IPC 层统一包装，UI toast 直接展示）。
 import { ask, attachSkill, UserError, dirs } from "./engine.mjs";
 import { loadLlmConfig, readLlmKey, saveLlmConfig } from "./llm-config.mjs";
-import { askCloud, chat, sanitizeHistory } from "../lib/llm.mjs";
+import { askCloud, chat, sanitizeHistory, resolveSendSource } from "../lib/llm.mjs";
 import { appendArchive, listArchive, purgeBook, clearArchive } from "./chat-archive.mjs";
 import { appendFeedback, purgeBook as purgeFeedbackBook } from "./feedback-pool.mjs";
 import { findBook, listBooks, multiVariantSearch, currentLibDir } from "../lib/search.mjs";
@@ -153,12 +153,13 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
   //   「一次性同意 + 记住选择」：
   //     - 调用方显式传 true/false（问一问页每次 confirm 的结论）→ 以此为准，最高优先级；
   //     - 不传（对话页）→ 读 llm.json 的 sendSourceText：true = 用户点过「允许」；
-  //       false = 点过「拒绝」；null = 从没选过，一律按「不发」走（隐私红线缺省不发）。
+  //       false = 点过「拒绝」；null = 从没选过 → 按「发」走（2026-11-18 拍板准确优先，
+  //       见 llm.mjs resolveSendSource；拒绝仍尊重，同意门 UI 保留）。
   //       界面的补问逻辑在 views-chat.js 的 ensureSourceTextConsent()：它先本地检索一次拿到
-  //       真实字数，再问一次，然后把选择写回 llm.json——所以到这里的 null 就是「不发」。
+  //       真实字数，再问一次，然后把选择写回 llm.json。两条 UI 路（views-chat/views-ask）都
+  //       显式传 includeSourceText，故同意门不被缺省绕过；null 缺省「发」仅作未传参调用方的背兜。
   //   注意：这条开关对环回本机 Ollama 同样生效，不给「本地就静默发原文」留后门。
-  const includeSrc = includeSourceText === true ? true
-    : (includeSourceText === false ? false : cfg.sendSourceText === true);
+  const includeSrc = resolveSendSource(includeSourceText, cfg.sendSourceText);
   const r = await askCloud({
     config: { baseUrl: cfg.baseUrl, apiKey: key, model: cfg.model, reasoningEffort: cfg.reasoningEffort },
     question: q, results, skillChapters,
@@ -189,6 +190,7 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
       model: cfg.model,
       segments: raw.length,
       dropped: r.dropped || 0,
+      grounding: r.grounding || null,
       usage: r.usage || null,
       citations: (r.citations || []).map((c) => {
         const src = results[c.n - 1] || {}; // n 越界/缺页都退空串，不炸
@@ -205,7 +207,7 @@ export async function cloudSummary({ bookId = null, question, topN = 6, skillSlu
       });
     } catch { /* 回写失败不影响回答 */ }
   }
-  return { answer: r.answer, citations: r.citations, dropped: r.dropped, usage: r.usage, segments: raw.length, mode: base.mode, book: base.book || null, rewrite, full_read: !!fullRead, includeSourceText: includeSrc };
+  return { answer: r.answer, citations: r.citations, dropped: r.dropped, usage: r.usage, grounding: r.grounding || null, segments: raw.length, mode: base.mode, book: base.book || null, rewrite, full_read: !!fullRead, includeSourceText: includeSrc };
 }
 
 // ---------- P4 存档：列表 / 删书联动 / 清空（UI 消费；libDir 取不到时安全退化） ----------

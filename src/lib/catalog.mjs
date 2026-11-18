@@ -103,7 +103,7 @@ export function clusterChunks(db, { th = 0.38, minSize = 5, maxClusters = 0 } = 
   return { clusters: [{ id: "c001", members: rows.map(r => r.id), repIds: rows.slice(0, 2).map(r => r.id) }], method: "single(retry-exhausted)", covered: total, total };
 }
 
-function greedyCluster(rows, th, minSize) {
+export function greedyCluster(rows, th, minSize) {
   const n = rows.length;
   const dim = rows[0].emb.length / 4;
   const V = new Float32Array(n * dim);
@@ -122,11 +122,36 @@ function greedyCluster(rows, th, minSize) {
   }
   const cosIJ = (i, j) => { let s = 0; const a = i * dim, b = j * dim; for (let d = 0; d < dim; d++) s += V[a + d] * V[b + d]; return s; };
 
-  // 邻接表（只留 cos>=0.30 的边，省内存）
+  // 邻接表（只留 cos>=0.30 的边）。问题6：不再全量两两比 O(n²)——IVF 近邻桶：
+  // k≈√n 个质心把块分桶，只比「同桶 + 最近两个邻桶」内的对（≈O(n^1.5)）。这是近似近邻
+  // （issue 建议「只比近邻」），跨远桶的边可能漏；由 clusterChunks 的质量门（effective>=3 /
+  // coverage>=0.5）+ 降阈重试 + 章节堆兜底护底，漏边不会产出不可用聚类。
+  const EDGE_COS = 0.30;
+  const k = Math.max(4, Math.round(Math.sqrt(n)));
+  const cen = [];
+  for (let c = 0; c < k; c++) { const s0 = Math.floor(c * n / k) * dim; cen.push(Float32Array.from(V.subarray(s0, s0 + dim))); }
+  const cellOf = new Int32Array(n);
+  const assignAll = () => { for (let i = 0; i < n; i++) { let bi = 0, bs = -Infinity; for (let c = 0; c < k; c++) { let s = 0; const cc = cen[c]; for (let d = 0; d < dim; d++) s += V[i * dim + d] * cc[d]; if (s > bs) { bs = s; bi = c; } } cellOf[i] = bi; } };
+  for (let it = 0; it < 3; it++) {
+    assignAll();
+    const sum = Array.from({ length: k }, () => new Float64Array(dim)); const cnt = new Int32Array(k);
+    for (let i = 0; i < n; i++) { const c = cellOf[i]; cnt[c]++; for (let d = 0; d < dim; d++) sum[c][d] += V[i * dim + d]; }
+    for (let c = 0; c < k; c++) { if (!cnt[c]) continue; let nn = 0; for (let d = 0; d < dim; d++) { sum[c][d] /= cnt[c]; nn += sum[c][d] * sum[c][d]; } nn = Math.sqrt(nn) || 1; for (let d = 0; d < dim; d++) cen[c][d] = sum[c][d] / nn; }
+  }
+  assignAll();
+  const cells = Array.from({ length: k }, () => []);
+  for (let i = 0; i < n; i++) cells[cellOf[i]].push(i);
+  const near = cells.map((_, c) => { const arr = []; for (let o = 0; o < k; o++) { if (o === c) continue; let s = 0; for (let d = 0; d < dim; d++) s += cen[c][d] * cen[o][d]; arr.push([o, s]); } arr.sort((a, b) => b[1] - a[1]); return arr.slice(0, 2).map(x => x[0]); });
   const nbr = Array.from({ length: n }, () => []);
-  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
-    const s = cosIJ(i, j);
-    if (s >= 0.30) { nbr[i].push({ j, s }); nbr[j].push({ j: i, s }); }
+  // comparisons 如实计全部 dim 维点积：4 遍 assignAll（3 轮 Lloyd+1 终赋）各 n*k，
+  // 加邻桶质心两两 k*(k-1)，加 link 内唯一对。供 cluster-perf-test 钉"真省算力"。
+  let comparisons = 4 * n * k + k * (k - 1), edges = 0;
+  const seen = new Set();
+  const link = (i, j) => { const key = i < j ? i * n + j : j * n + i; if (seen.has(key)) return; seen.add(key); comparisons++; const s = cosIJ(i, j); if (s >= EDGE_COS) { edges++; nbr[i].push({ j, s }); nbr[j].push({ j: i, s }); } };
+  for (let c = 0; c < k; c++) {
+    const mem = cells[c];
+    for (let a = 0; a < mem.length; a++) for (let b = a + 1; b < mem.length; b++) link(mem[a], mem[b]);
+    for (const o of near[c]) for (const i of mem) for (const j of cells[o]) link(i, j);
   }
   const density = nbr.map(l => l.filter(x => x.s >= th).length);
   const order = [...Array(n).keys()].sort((a, b) => density[b] - density[a]);
@@ -182,7 +207,7 @@ function greedyCluster(rows, th, minSize) {
 
   const effective = clusters.filter(cl => cl.idxs.length >= minSize).length;
   const covered = clusters.reduce((a, cl) => a + (cl.idxs.length >= minSize ? cl.idxs.length : 0), 0);
-  return { V, dim, rows, clusters, effective, coverage: covered / n, th };
+  return { V, dim, rows, clusters, effective, coverage: covered / n, th, comparisons, edges };
 }
 
 function finalizeClusters(res, th, maxClusters) {

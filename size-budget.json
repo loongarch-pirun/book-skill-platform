@@ -10,11 +10,12 @@
     "compressionRatio": 1.57
   },
   "budget": {
-    "regressionLineGib": 1.1,
-    "regressionLineSource": "docs/收官打包与交接规划-2026-10-21.md:190",
-    "status": "exceeded",
-    "overByGib": 0.7,
-    "ratioToLine": 1.64
+    "regressionLineGib": 2.0,
+    "regressionLineSource": "2026-11-18 用户拍板：改预算线认现状（保留离线开箱即用+PDF+本地模型）。旧 1.1GiB 线出处 docs/收官打包与交接规划-2026-10-21.md:190，已被本决策 superseded",
+    "status": "ok",
+    "overByGib": 0,
+    "ratioToLine": 0.9,
+    "decision": "2026-11-18：1.80GiB 在 2.0GiB 新线内（ratio 0.9）。下方 verdict/deadEnds 为旧 1.1GiB 线下的物理分析，作历史保留；零上传与否另由问题1方向（准确优先·同意发片段）决定，与包体线无关"
   },
   "modelsInPackage": {
     "totalMb": 1271.2,
@@ -74,7 +75,7 @@
   },
   "constraints": {
     "contentNeverUploaded": false,
-    "singlePackageUnderLine": false,
+    "singlePackageUnderLine": true,
     "pdfImportSupported": true,
     "modelDtype": "int8/q8-lowest-available"
   },

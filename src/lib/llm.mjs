@@ -72,6 +72,15 @@ const SYSTEM = `你是一个严谨的读书助手：用户提问后，你会收�
 - citations 里只放真正支撑你回答的引用，每条 quote 是完整的一句话（不要只引半句）。
 - 没有可用引用时 citations 为 []。`;
 
+// 问题1落实（2026-11-18 用户拍板：准确优先·同意发片段）：没选过(null/undefined)缺省=发原文
+// 片段（换逐字答案）；用户明确拒绝(false)仍尊重=不发；调用方显式 true/false 最高优先级。
+// 同意门 UI（首次 confirm / 随时开关 / 横幅明示）保留不动，本函数只定缺省方向。
+export function resolveSendSource(explicit, sendSourceText) {
+  if (explicit === true) return true;
+  if (explicit === false) return false;
+  return sendSourceText !== false;
+}
+
 // 组装 messages：system 在首、历史居中、问题+新鲜片段收尾（每轮检索都是新鲜的）
 // V3-R6：memory = 滚动对话记忆（渲染层压缩旧轮次得来），作为独立要点块钉在问题前
 export function buildMessages({ question, results, skillChapters = [], history = [], memory = "", includeSourceText = false }) {
@@ -187,6 +196,25 @@ function hitRate(srcText, quote) {
   return { ok: hits / cls.length >= 0.6, hits, total: cls.length };
 }
 
+// 问题2（正文防幻觉）：正文回源体检，本地、零云依赖。逐句与「已通过校验的片段」做
+// 字符二元组重叠：重叠高=正文贴着原文（抽取/近义复述）；重叠低=引入原文没有的内容
+// （疑似编造）→ 标进 unsupported 明示给用户，不静默放行、也不硬杀大意回答。
+const bigrams = (s) => { const n = normalize(stripAnnotations(s)); const g = []; for (let i = 0; i < n.length - 1; i++) g.push(n.slice(i, i + 2)); return g; };
+const PROSE_GRAM_THRESHOLD = 0.6;
+export function proseGrounding(answer, sourceTexts) {
+  const src = (sourceTexts || []).map((t) => normalize(stripAnnotations(t))).join("");
+  const sents = String(answer || "").split(/[。；！？!?;\n]+/).map((s) => s.trim()).filter((s) => normalize(s).length >= 4);
+  const unsupported = [];
+  let supported = 0;
+  for (const s of sents) {
+    const g = bigrams(s);
+    const ov = g.length ? g.filter((x) => src.includes(x)).length / g.length : 1;
+    if (ov >= PROSE_GRAM_THRESHOLD) supported++; else unsupported.push(s);
+  }
+  const checked = sents.length;
+  return { checked, supported, unsupported, groundedRate: checked ? +(supported / checked).toFixed(3) : 1 };
+}
+
 // 逐条校验：编号必须存在、quote 必须命中对应片段。
 // 返回通过列表（补齐 book/loc/id 供 UI 跳转）与被剔除列表。
 export function verifyAnswer(parsed, results) {
@@ -209,7 +237,8 @@ export function verifyAnswer(parsed, results) {
       dropped.push({ n, quote, reason: r.tooShort ? "quote-too-short" : "quote-not-found", hits: r.hits, total: r.total });
     }
   }
-  return { answer: p.answer, citations: passed, dropped };
+  const grounding = proseGrounding(p.answer, passed.map((c) => list[c.n - 1]?.text || ""));
+  return { answer: p.answer, citations: passed, dropped, grounding };
 }
 
 // ---------- 一站式（chat.mjs 调用） ----------
@@ -232,7 +261,7 @@ export async function askCloud({ config, question, results, skillChapters, histo
     if (parsed.citations.length > 0 && v.citations.length === 0) {
       return llmErr("QUOTE_FAIL", "云端回答的引用未能通过核验，已降级为原文片段");
     }
-    return { ok: true, answer: v.answer, citations: v.citations, dropped: v.dropped.length, usage: r.usage };
+    return { ok: true, answer: v.answer, citations: v.citations, dropped: v.dropped.length, usage: r.usage, grounding: v.grounding };
   };
   let out = await once(null);
   if (!out.ok && retryOnQuoteFail && (out.code === "QUOTE_FAIL" || out.code === "BADRESP")) {

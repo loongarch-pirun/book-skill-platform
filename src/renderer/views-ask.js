@@ -107,10 +107,10 @@ export function cloudBarHtml() {
         ${c.warning ? `<div class="cfgwarn">${esc(c.warning)}</div>` : ""}
       </div>`;
   }
-  // P0-9：发送原文的两态开关。三态语义见 llm-config.mjs（true/false/null）：
-  // null = 从没问过 → 显示「未选」，第一次发问时才弹一次明确选择；这里让用户随时能反悔。
-  const src = c.sendSourceText === true ? "允许" : (c.sendSourceText === false ? "不允许" : "未选");
-  const srcCls = c.sendSourceText === true ? "chip ok" : "chip";
+  // P0-9：发送原文开关。三态语义见 llm-config.mjs（true/false/null）：
+  // null = 从没问过 → 按「允许」显示（2026-11-18 准确优先缺省）；第一次发问仍会弹一次明确选择，这里让用户随时能反悔。
+  const src = c.sendSourceText === false ? "不允许" : "允许";
+  const srcCls = c.sendSourceText === false ? "chip" : "chip ok";
   return `
     <div class="cloudrow">
       ${c.hasKey
@@ -140,7 +140,7 @@ function cloudAnswerHtml(r) {
     const chips = (a.rewrite && a.rewrite.used && Array.isArray(a.rewrite.variants) ? a.rewrite.variants.slice(1) : []);
     return `
       <div class="cloudans">
-        <div class="chead">云端总结 · ${esc(c.model || "")}${a.book ? " · 取材《" + esc(a.book) + "》" : ""}${a.dropped ? ` · <span class="dropwarn">${a.dropped} 条引用未通过核验已隐藏</span>` : ""}${noHit}</div>
+        <div class="chead">云端总结 · ${esc(c.model || "")}${a.book ? " · 取材《" + esc(a.book) + "》" : ""}${a.dropped ? ` · <span class="dropwarn">${a.dropped} 条引用未通过核验已隐藏</span>` : ""}${a.grounding?.unsupported?.length ? ` · <span class="dropwarn">正文 ${a.grounding.unsupported.length} 句未逐字回源（大意/推断），请点引用核对</span>` : ""}${noHit}</div>
         <div class="catext">${esc(a.answer)}</div>
         ${a.citations?.length ? `<div class="cacites">${a.citations.map((x) => renderCite(x)).join("")}</div>` : ""}
         ${chips.length ? `<div class="cacites"><span class="chip">换个问法试试：</span>${chips.map((v) => `<button class="ghost sm" data-action="askre" data-q="${esc(v)}">${esc(v)}</button>`).join("")}</div>` : ""}
@@ -361,9 +361,9 @@ export function bindAskEvents() {
       } catch (err) { toast("连接失败：" + err.message); }
     }
     else if (act === "llmsrc") {
-      // P0-9：随时可改的「发送原文」开关。三态里 null（从没问过）按「当没允许」处理 → 点一下变允许。
+      // P0-9：随时可改的「发送原文」开关。null（从没问过）按「允许」处理（2026-11-18 准确优先缺省）→ 点一下变拒绝。
       // 这是用户显式点击，所以直接写 true/false，不再弹确认框。
-      const cur = state.llm.config?.sendSourceText === true;
+      const cur = state.llm.config?.sendSourceText !== false;
       try {
         const cfg = await call(window.study.llmConfigSet({ sendSourceText: !cur }));
         state.llm.config = cfg;
@@ -404,7 +404,7 @@ export function bindAskEvents() {
           question: q,
           topN: RETRIEVE_TOPN,
           skillSlug: state.ask.skillSlug,
-          includeSourceText, // 接口约定字段名：A 线默认 false，只有 confirm 通过才 true
+          includeSourceText, // 显式传本轮 confirm 结论（最高优先级）；缺省方向见 llm.mjs resolveSendSource
         }));
         state.llm.answer = r;
         state.llm.error = null;

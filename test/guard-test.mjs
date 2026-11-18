@@ -1026,10 +1026,12 @@ const copyDb = (src) => {
     "静态: renderCite 有路径优先展示（老库回退 loc）");
 
   // ③ 邻块扩展：开关门 + 终排限定 + 衰减 + 同章判据 + 只附加 + 套件挂载
-  ok(searchSrc.includes('process.env.BSP_NEIGHBOR === "1" && rerank'),
-    "静态: 邻块 BSP_NEIGHBOR=1 开且只跟终排（变体快路 rerank:false 不扩）");
+  ok(searchSrc.includes('process.env.BSP_NEIGHBOR !== "0" && rerank'),
+    "静态: 邻块默认开（BSP_NEIGHBOR=0 可关）且只跟终排（变体快路 rerank:false 不扩）");
   ok(/\* 0\.5\)\.toFixed\(4\)/.test(searchSrc) && searchSrc.includes("added.length >= NBR_CAP"),
     "静态: 邻块衰减 ×0.5 计分 + 总数受 NBR_CAP 控制（默认 6，提示词增量可控）");
+  ok(searchSrc.includes("formDirtyOf(c.text)") && searchSrc.includes("hasKind"),
+    "静态: 邻块形态 JUNK + kind 守卫（与闸门同尺 lib/junk.mjs；老库无 kind 列兼容）");
   ok(searchSrc.includes("c.chapter !== s.chapter"),
     "静态: 邻块同章判据（跨章/空章不扩）");
   ok((pkgSrc.scripts["test:fast"] || "").includes("neighbor-test"),
@@ -1650,7 +1652,7 @@ const copyDb = (src) => {
     && /cfg\.enabled && process\.env\.BSP_ROUTE_NBR/.test(searchSrc),
     "路由: 配额与邻块都受总闸约束（BSP_ROUTE=0 必须逐字节回旧行为）");
   ok(/BSP_NEIGHBOR_CAP \?\? 6/.test(searchSrc),
-    "邻块: 上限参数化默认 6（原硬编码 4；BSP_NEIGHBOR 自身的默认值仍为关）");
+    "邻块: 上限参数化默认 6（原硬编码 4；BSP_NEIGHBOR 默认开、=0 可关）");
   ok(/function sameSection\(a, b\)/.test(searchSrc) && /Math\.abs\(a\.page - b\.page\) <= 1/.test(searchSrc),
     "邻块: 同段落判据 chapter 优先、page Δ≤1 兜底（5 本 PDF 的 chapter 全为 null）");
   ok(/\(c\.kind \?\? "text"\) !== "text"\) continue/.test(searchSrc),

@@ -1,4 +1,4 @@
-// P3-③ 邻块扩展验收：BSP_NEIGHBOR 默认关 + 开关后同章 ±1 附加 + 衰减计分 +
+// P3-③ 邻块扩展验收：BSP_NEIGHBOR 默认开（=0 可关）+ 同章 ±1 附加 + 衰减计分 +
 // 跨章不扩 + 去重 + 上限 4 + 变体快路径不扩 + chapter_path 透传
 // 跑法: node test/neighbor-test.mjs
 import fs from "node:fs";
@@ -94,11 +94,21 @@ const textOf = (id) => chunks.find(c => c.id === id)?.text;
     `夹具: 7 块 / 数组 4 + 链表 3（实际 ${chunks.length} 块：${JSON.stringify(byCh)}）`);
 }
 
-// ===== 1) 默认关：无 nbr 字段、条数不超 topN =====
+// ===== 1) 默认开（2026-11-18 问题5：邻块补偿无重叠）：unset 时即有邻块附加 =====
 {
+  delete process.env.BSP_NEIGHBOR;
   const rs = await hybridSearch(dbPath, "樱桃独特词", 3);
-  assert(rs.length <= 3 && rs.every(r => r.nbr === undefined), `默认关: 无邻块扩展（${rs.length} 行全无 nbr 字段）`);
-  assert(rs.some(r => r.text.includes("樱桃")), "默认关: 检索本身正常（樱桃命中）");
+  const nbrs = rs.filter(r => r.nbr !== undefined);
+  assert(nbrs.length > 0, `默认开: 邻块附加生效（${nbrs.length} 席）`);
+  assert(rs.some(r => r.text.includes("樱桃")), "默认开: 检索本身正常（樱桃命中）");
+}
+
+// ===== 1b) opt-out：BSP_NEIGHBOR=0 回到无邻块（尊重显式关闭）=====
+{
+  process.env.BSP_NEIGHBOR = "0";
+  const rs = await hybridSearch(dbPath, "樱桃独特词", 3);
+  assert(rs.every(r => r.nbr === undefined), "opt-out: =0 无邻块扩展");
+  delete process.env.BSP_NEIGHBOR;
 }
 
 // ===== 2) 开：同章 ±1 附加、衰减 ×0.5、种子在位、跨章不扩 =====
