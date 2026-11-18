@@ -15,3 +15,10 @@ export function parseDeepLink(url) {
   const p = u.searchParams.get("p");
   return { bookId: b, chunkId: Number(c), page: p === "" || p == null ? null : Number(p), loc: null, chapter: null, quote: "" };
 }
+// second-instance / argv 里捞第一条 bookskill:// 深链（Windows 单实例转发用）
+export function deepLinkFromArgv(argv) {
+  for (const a of Array.isArray(argv) ? argv : []) {
+    if (typeof a === "string" && a.startsWith("bookskill://")) return parseDeepLink(a);
+  }
+  return null;
+}

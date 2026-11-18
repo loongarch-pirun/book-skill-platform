@@ -3,7 +3,7 @@
 // 本文件只做"壳"。事件绑定由各视图模块的 bindXxxEvents() 在 boot() 里统一调用——
 // 视图模块顶层绝不碰 DOM（ESM 循环导入下 app.js 的 const 绑定尚未初始化，会 TDZ 崩掉整个渲染层）。
 import { renderShelf, bindShelfEvents } from "./views.js";
-import { renderReader, loadReader, bindReaderEvents } from "./views-reader.js";
+import { renderReader, loadReader, bindReaderEvents, jumpTo } from "./views-reader.js";
 import { renderAsk, renderSkills, loadSkillsView, bindAskEvents } from "./views-ask.js";
 import { renderChat, scrollChatBottom, bindChatEvents } from "./views-chat.js";
 import { initTheme, themeList, accentList, currentTheme, setTheme, setAccent, setAuto, resetTheme, registerPanelPainter } from "./theme.js";
@@ -139,6 +139,8 @@ function bindModelChip() {
   });
   window.study.onEngineReady(() => { state.model.ready = true; paint("模型已就绪", "ok"); $("#sideFoot").textContent = "模型已就绪 · 引擎直连"; });
   window.study.onEngineError((e) => paint("模型加载失败", "bad"));
+  // T6：第三方智能体深链（bookskill://）→ 主进程转发 → 翻回原件对应页/章
+  window.study.onOrigJump?.((a) => jumpTo(a.bookId, a.chunkId));
   $("#sideFoot").textContent = "模型加载中…（已内置）";
 }
 

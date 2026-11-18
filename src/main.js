@@ -133,11 +133,25 @@ app.whenReady().then(async () => {
     return;
   }
 
+  // T6：OS 深链 bookskill:// → 聚焦窗口并翻回原件对应页/章（智能体代为触发翻书）。
+  // 单实例：第二实例把深链经 second-instance 转发给首实例后退出，避免双开占库。
+  const { parseDeepLink, deepLinkFromArgv } = await import(pathToFileURL(path.join(__dirname, "lib", "anchor.mjs")).href);
+  app.setAsDefaultProtocolClient("bookskill");
+  const focusJump = (a) => {
+    if (!a || !win || win.isDestroyed()) return;
+    win.show(); win.focus();
+    win.webContents.send("orig:jump", a);
+  };
+  app.on("open-url", (e, url) => { e.preventDefault(); focusJump(parseDeepLink(url)); });
+  app.on("second-instance", (e, argv) => { focusJump(deepLinkFromArgv(argv)); });
+  if (!app.requestSingleInstanceLock()) { app.quit(); return; }
+
   // 引擎初始化失败也要把窗口开起来（UI 会显示错误，不是白屏）
   let booted = null;
   try { booted = await boot(); }
   catch (e) { console.error("[boot] 引擎初始化失败：", e); }
   createWindow();
+  focusJump(deepLinkFromArgv(process.argv)); // 协议冷启动：argv 里带深链
   // G-04：启动恢复「待编目」横幅必须在 createWindow 之后——scanPending 的 emit 经
   // boot() 里注册的转发发给 win，createWindow 之前 win 还是 null，事件会被守卫静默丢掉
   booted?.jobs.scanPending();

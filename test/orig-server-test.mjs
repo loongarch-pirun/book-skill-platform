@@ -1,0 +1,23 @@
+// T6 环回网页映射：仅 127.0.0.1 + 一次性 token；/book/<id> 回 orig-web html；/raw 回字节；错 token 403。
+import assert from "node:assert";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { startOrigServer } from "../src/desktop/orig-server.mjs";
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "origsrv-"));
+const books = path.join(TMP, "books"); const lib = path.join(TMP, "library");
+fs.mkdirSync(books); fs.mkdirSync(lib);
+fs.writeFileSync(path.join(books, "a.txt"), "环回原文第一段。", "utf8");
+const srv = await startOrigServer({ libDir: lib });
+assert.strictEqual(srv.server.address().address, "127.0.0.1", "仅绑环回");
+const ok = await fetch(srv.bookUrl("a.txt"));
+assert.strictEqual(ok.status, 200);
+assert.ok((await ok.text()).includes("环回原文第一段"));
+const bad = await fetch(srv.bookUrl("a.txt").replace(/t=[0-9a-f]+/, "t=wrong"));
+assert.strictEqual(bad.status, 403, "错 token 403");
+const raw = await fetch(`http://127.0.0.1:${srv.port}/raw/a.txt?t=${srv.token}`);
+assert.strictEqual(raw.status, 200);
+assert.ok((await raw.arrayBuffer()).byteLength > 0);
+srv.server.close();
+fs.rmSync(TMP, { recursive: true, force: true });
+console.log("orig-server-test: PASS");

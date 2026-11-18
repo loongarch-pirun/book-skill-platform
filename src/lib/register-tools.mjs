@@ -11,6 +11,21 @@ import { saveSkill as defaultSaveSkill, readSkill, listSkills } from "./skill-st
 import { checkSkills } from "./skill-health.mjs";
 import { loadSkillState } from "./skill-state.mjs";
 import { loadUsagePolicy, serviceStatus, checkBudget, chargeUsage, recordUsage } from "./usage-policy.mjs";
+import { buildAnchor, formatDeepLink } from "./anchor.mjs";
+import { startOrigServer } from "../desktop/orig-server.mjs";
+
+// T6：给检索结果附锚点+深链+环回网页 URL（智能体 webview 看原文/点深链拉回客户端）。
+// 环回服务懒起（MCP stdio 进程自己起一个，仅 127.0.0.1+token）。
+let _origSrv = null;
+async function withWeb(results) {
+  if (!Array.isArray(results) || !results.length) return results;
+  if (process.env.BSP_ORIG_WEB === "0") return results; // 回退开关：不起环回服务/不附 webUrl
+  _origSrv ||= await startOrigServer({ libDir: currentLibDir() });
+  return results.map((r) => {
+    const a = buildAnchor(r);
+    return { ...r, anchor: a, deepLink: formatDeepLink(a), webUrl: _origSrv.bookUrl(r.bookId || r.book, r.page ?? null) };
+  });
+}
 
 // 按 book 片段找书（与 query_book 同一套匹配；找不到返回 null 和可选书目）
 function matchBook(book) {
@@ -326,12 +341,12 @@ export function registerServerTools(server, { gate = true, deps = {} } = {}) {
       const routed = await routeAndSearch(question, { topN: n, maxBooks: 1 });
       if (!routed.routed_books.length)
         return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」且书库为空`, available: listBooks().map(x => x.title) }) }] };
-      return { content: [{ type: "text", text: JSON.stringify({ book: routed.routed_books[0].title, question, note: `未找到名为「${book}」的书，已自动选择最相关的书`, results: routed.results }, null, 2) }] };
+      return { content: [{ type: "text", text: JSON.stringify({ book: routed.routed_books[0].title, question, note: `未找到名为「${book}」的书，已自动选择最相关的书`, results: await withWeb(routed.results) }, null, 2) }] };
     }
     const b = matches[0];
     const note = matches.length > 1 ? `书名「${book}」匹配到 ${matches.length} 本，已选「${b.id}」（其余：${matches.slice(1).map(m => m.id).join("、")}）。要查特定版本请用完整书名。` : undefined;
     const results = await hybridSearch(b.db, question, n);
-    return { content: [{ type: "text", text: JSON.stringify({ book: b.title, question, note, results }, null, 2) }] };
+    return { content: [{ type: "text", text: JSON.stringify({ book: b.title, question, note, results: await withWeb(results) }, null, 2) }] };
   });
 
   reg("query_library", {
@@ -344,6 +359,7 @@ export function registerServerTools(server, { gate = true, deps = {} } = {}) {
     },
   }, async ({ question, topN, maxBooks }) => {
     const out = await routeAndSearch(question, { topN: clampTopN(topN), maxBooks: clampMaxBooks(maxBooks) });
+    out.results = await withWeb(out.results);
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 

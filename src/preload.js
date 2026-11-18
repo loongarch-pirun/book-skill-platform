@@ -65,6 +65,7 @@ contextBridge.exposeInMainWorld("study", {
   bookOriginal: (bookId) => ipcRenderer.invoke("book:original", bookId),
   bookRawBytes: (bookId) => ipcRenderer.invoke("book:rawBytes", bookId),
   bookOrigWeb: (p) => ipcRenderer.invoke("book:origWeb", p),
+  onOrigJump: (cb) => ipcRenderer.on("orig:jump", (e, a) => cb(a)),
   bookOpenExternal: (bookId) => ipcRenderer.invoke("book:openExternal", bookId),
   // 技能
   skillsList: () => ipcRenderer.invoke("skills:list"),
