@@ -13,9 +13,9 @@ const AdmZip = require("adm-zip");
 
 const escHtml = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const readTextBuffer = (buf) => {
-  if (buf.length >= 2 && buf[0] === 0xff && buf[1] === 0xfe) return buf.toString("utf16le").replace(/^﻿/, "");
-  if (buf.length >= 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf) return buf.toString("utf8").replace(/^﻿/, "");
-  return buf.toString("utf8").replace(/^﻿/, "");
+  if (buf.length >= 2 && buf[0] === 0xff && buf[1] === 0xfe) return buf.toString("utf16le").replace(/^\uFEFF/, "");
+  if (buf.length >= 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf) return buf.toString("utf8").replace(/^\uFEFF/, "");
+  return buf.toString("utf8").replace(/^\uFEFF/, "");
 };
 const SHELL = (cls, body) => `<style>
 .orig-${cls}{font-family:Georgia,"Songti SC","SimSun",serif;font-size:15px;line-height:1.9;color:#3a2f23}
@@ -59,7 +59,7 @@ export async function originalWeb(libDir, bookId, { page = null } = {}) {
   if (!id) return { type: "error", message: "书名不合法" };
   const asset = resolveAsset(libDir, id);
   if (!asset.exists) return { type: "error", message: `《${id}》没有原件文件（books/ 里找不到）——翻书视图看的是库里的原文块` };
-  let size = 0;
+  let size;
   try { size = fs.statSync(asset.path).size; } catch { return { type: "error", message: "原件读不出来（可能正在被占用）" }; }
   if (size > 50 * 1024 * 1024) return { type: "error", message: "文件太大（>50MB），请用系统程序打开" };
   try {
