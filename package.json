@@ -1,6 +1,6 @@
 {
   "name": "book-skill-platform",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "通用个人知识库平台：书进来，变成 AI 能查的 skill",
   "main": "src/main.js",
   "author": "boss",
@@ -47,6 +47,14 @@
     "appId": "com.boss.book-skill-platform",
     "productName": "BookSkillPlatform",
     "npmRebuild": false,
+    "protocols": [
+      {
+        "name": "BookSkillPlatform 深链",
+        "schemes": [
+          "bookskill"
+        ]
+      }
+    ],
     "directories": {
       "output": "release"
     },
@@ -140,7 +148,8 @@
     "nsis": {
       "oneClick": true,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": false
+      "allowToChangeInstallationDirectory": false,
+      "deleteAppDataOnUninstall": false
     }
   }
 }
