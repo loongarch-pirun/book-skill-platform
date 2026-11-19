@@ -81,6 +81,7 @@ export default [
         AbortController: "readonly", // Node 18+ 全局（llm.mjs / probe-llm.mjs 的网络超时用）
         AbortSignal: "readonly",     // Node 18+ 全局（mineru / mineru-runtime 的 AbortSignal.timeout）
         URL: "readonly", // Node 全局（book-view 协议 handler 解析请求）
+        URLSearchParams: "readonly", // Node 全局（anchor.mjs 的 deep link 查询串）
         Request: "readonly", // Node 18+ 全局（测试里构造协议请求）
         Response: "readonly", // Node 18+ 全局（book-view 协议 handler 返回）
         setTimeout: "readonly",
@@ -131,6 +132,7 @@ export default [
         global: "readonly", // renderer-graph-test 的 DOM stub 挂在 global 上
         Request: "readonly", // Node 18+ 全局（book-view-test 构造协议请求）
         Response: "readonly",
+        fetch: "readonly", // Node 18+ 全局（orig-server-test 环回请求）
         setTimeout: "readonly",
         clearTimeout: "readonly",
         setInterval: "readonly",
