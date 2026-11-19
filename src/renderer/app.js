@@ -297,6 +297,9 @@ async function boot() {
   } catch (e) { toast("启动失败：" + e.message); }
   renderMain();
   window.__studyBooted = true; // 冒烟脚本的启动完成信号（test/desktop-smoke-main.js）
+  // T6：报到给主进程——冷启动深链必须等 boot() 全部跑完（含这次 renderMain）再投递，
+  // 否则 jumpTo 画的阅读视图会被这里重绘成「加载中」，章节永远出不来（真机实测卡死）
+  window.study.rendererReady?.();
 }
 
 boot();

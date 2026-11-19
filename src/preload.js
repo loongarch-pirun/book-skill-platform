@@ -66,6 +66,8 @@ contextBridge.exposeInMainWorld("study", {
   bookRawBytes: (bookId) => ipcRenderer.invoke("book:rawBytes", bookId),
   bookOrigWeb: (p) => ipcRenderer.invoke("book:origWeb", p),
   onOrigJump: (cb) => ipcRenderer.on("orig:jump", (e, a) => cb(a)),
+  // 渲染端初始化完成报到：冷启动深链要等这份信号才能投递（早发会丢/会被启动收尾重绘覆盖）
+  rendererReady: () => ipcRenderer.send("renderer:ready"),
   bookOpenExternal: (bookId) => ipcRenderer.invoke("book:openExternal", bookId),
   // 技能
   skillsList: () => ipcRenderer.invoke("skills:list"),

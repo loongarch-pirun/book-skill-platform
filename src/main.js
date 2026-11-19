@@ -151,7 +151,19 @@ app.whenReady().then(async () => {
   try { booted = await boot(); }
   catch (e) { console.error("[boot] 引擎初始化失败：", e); }
   createWindow();
-  focusJump(deepLinkFromArgv(process.argv)); // 协议冷启动：argv 里带深链
+  // 协议冷启动：argv 里带深链，但不能现在发。两道坑都实测过：
+  // ① createWindow() 返回时渲染进程还没注册 orig:jump 监听 → send 被静默丢掉，停在书架
+  //    （截图与书架基准图逐像素相同）；
+  // ② 只在 did-finish-load 发也不行：那时渲染端 boot() 还没跑完，紧随其后的 renderMain()
+  //    会把 jumpTo 画出的阅读视图重绘回「目录/原文加载中」，章节列表永远出不来。
+  // 所以等渲染端 boot() 收尾主动报到的 renderer:ready 再投递（payload 只发一次）。
+  let pendingCold = deepLinkFromArgv(process.argv);
+  ipcMain.on("renderer:ready", () => {
+    if (!pendingCold) return;
+    const link = pendingCold;
+    pendingCold = null;  // 清空：向导 reload / 二次报到都不许重复跳
+    focusJump(link);
+  });
   // G-04：启动恢复「待编目」横幅必须在 createWindow 之后——scanPending 的 emit 经
   // boot() 里注册的转发发给 win，createWindow 之前 win 还是 null，事件会被守卫静默丢掉
   booted?.jobs.scanPending();

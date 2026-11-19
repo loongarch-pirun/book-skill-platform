@@ -90,7 +90,7 @@ export function renderShelf() {
     <div class="view-sub">${books.length} 本书 · 点卡片翻书 · 主题签来自编目数据 · 每本书可生成前置/标签/摘要（可选云端，检索始终在本机）</div>
     ${cloudBannerHtml()}
     ${enrichExportBoxHTML()}
-    <div class="dropzone" id="dropzone"><b>把书拖到这里</b>（.epub / .docx / .pdf / .txt）<span class="soon">先放进书架看原件 → 点「开始加工」才切片/向量化/编目（编目结果可稍后导入）</span></div>
+    <div class="dropzone" id="dropzone"><b>把书拖到这里</b>（.epub / .docx / .pdf / .pptx / .txt）<span class="soon">先放进书架看原件 → 点「开始加工」才切片/向量化/编目（编目结果可稍后导入）</span></div>
     <div class="shelf">${books.map((b) => bookCard(b)).join("") || '<div class="empty">书架空空如也——去拖本书进来</div>'}
     </div>
     ${settings}`;
@@ -237,7 +237,7 @@ function enrichTag(b) {
 // ---------- 拖拽导入（V3 #167：第一段只放进书架，加工是第二步） ----------
 async function importFile(filePath, name) {
   const ext = (name.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase();
-  if (!["epub", "docx", "pdf", "txt"].includes(ext)) { toast(`不支持 .${ext || "?"}（支持 .epub/.docx/.pdf/.txt）`); return; }
+  if (!["epub", "docx", "pdf", "pptx", "txt"].includes(ext)) { toast(`不支持 .${ext || "?"}（支持 .epub/.docx/.pdf/.pptx/.txt）`); return; }
   try {
     const r = await call(window.study.importBook(filePath));
     // 两段式提示：不自动开跑加工——先看原文，用户自己决定什么时候烧算力

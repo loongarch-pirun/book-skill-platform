@@ -405,9 +405,13 @@ export async function hybridSearch(dbPath, question, topN = 5, { qv = null, rera
   // 只搭载不动 loc（loc 喂提示词，动它=动模型输入）；展示层自行选用
   const hasPath = db.prepare("SELECT COUNT(*) n FROM pragma_table_info('chunks') WHERE name='chapter_path'").get().n > 0;
   const get = db.prepare(`SELECT id, chapter, page, text${hasPath ? ", chapter_path" : ""} FROM chunks WHERE id = ?`);
+  // 结果必须自带 bookId：下游（register-tools 的 withWeb → buildAnchor/formatDeepLink/bookUrl）
+  // 靠它拼深链与原件网页地址。缺了会拼出 bookskill://open?b=&c=22 和 /book/undefined（404）。
+  // 口径与 listBooks 的 id 一致：库文件名去掉 .db，即 books/ 里的原件名。
+  const bookId = path.basename(dbPath).replace(/\.db$/, "");
   let final = merged.map(m => {
     const c = get.get(m.id);
-    return { ...m, chapter: c.chapter || null, loc: c.page ? `第${c.page}页` : (c.chapter || ""), chapterPath: hasPath ? (c.chapter_path || null) : null, text: c.text };
+    return { ...m, bookId, chapter: c.chapter || null, loc: c.page ? `第${c.page}页` : (c.chapter || ""), chapterPath: hasPath ? (c.chapter_path || null) : null, text: c.text };
   });
 
   // 复试官：对（问题, 块原文）逐对精算相关度，重排
