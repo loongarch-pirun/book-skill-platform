@@ -17,14 +17,50 @@ import { startOrigServer } from "../desktop/orig-server.mjs";
 // T6：给检索结果附锚点+深链+环回网页 URL（智能体 webview 看原文/点深链拉回客户端）。
 // 环回服务懒起（MCP stdio 进程自己起一个，仅 127.0.0.1+token）。
 let _origSrv = null;
+async function ensureOrigSrv() {
+  _origSrv ||= await startOrigServer({ libDir: currentLibDir() });
+  return _origSrv;
+}
+
+// 取结果的书籍标识（P3）：没有标识就别造链接。
+// 历史坑：直接 encodeURIComponent(undefined) 会得到字符串 "undefined"，
+// 生成 /book/undefined 死链和 bookskill://open?b=&… 空深链——今天两个跨端 bug 都源于此。
+const bookKeyOf = (r) => {
+  const k = r?.bookId || r?.book || "";
+  return typeof k === "string" && k.trim() && k !== "undefined" ? k.trim() : "";
+};
+
 async function withWeb(results) {
   if (!Array.isArray(results) || !results.length) return results;
   if (process.env.BSP_ORIG_WEB === "0") return results; // 回退开关：不起环回服务/不附 webUrl
-  _origSrv ||= await startOrigServer({ libDir: currentLibDir() });
+  const srv = await ensureOrigSrv();
   return results.map((r) => {
-    const a = buildAnchor(r);
-    return { ...r, anchor: a, deepLink: formatDeepLink(a), webUrl: _origSrv.bookUrl(r.bookId || r.book, r.page ?? null) };
+    const bookId = bookKeyOf(r);
+    if (!bookId) return r; // 没有书籍标识：原样返回，不给假链接
+    const a = buildAnchor({ ...r, bookId });
+    return { ...r, bookId, anchor: a, deepLink: formatDeepLink(a), webUrl: srv.bookUrl(bookId, a.page) };
   });
+}
+
+// 深读/浏览类工具（browse.mjs、lookup.mjs、similar.mjs）只认 dbPath，不知道 bookId；
+// 处理器知道（matches[0].id 就是原件名）。不回填的话：智能体读到的原文块没有翻书链接，
+// 用户点不回软件（跨端测试 P1，read_range/get_chapter/read_full_book/lookup/similar_chunks 全中）。
+// 只给块级 deepLink + 顶层 webUrl，不给每块塞 anchor.quote——那等于把 80 块正文再复制一遍，
+// token 直接翻倍、会把 8K 的读闸冲破。
+async function withBookLinks(out, bookId) {
+  if (!out || out.error || !bookId) return out;
+  const field = Array.isArray(out.blocks) ? "blocks" : (Array.isArray(out.results) ? "results" : null);
+  if (!field || !out[field].length) return out;
+  out.bookId = bookId;
+  out[field] = out[field].map((b) => {
+    const a = buildAnchor({ bookId, id: b.id, page: b.page, chapter: b.chapter });
+    return { ...b, bookId, deepLink: formatDeepLink(a) };
+  });
+  if (process.env.BSP_ORIG_WEB !== "0") {
+    const srv = await ensureOrigSrv();
+    out.webUrl = srv.bookUrl(bookId, null);
+  }
+  return out;
 }
 
 // 按 book 片段找书（与 query_book 同一套匹配；找不到返回 null 和可选书目）
@@ -35,12 +71,16 @@ function matchBook(book) {
 
 // topN 统一上限：模型一次索要 999 条会拖垮上下文，zod 拒收 + 处理器兜底夹取
 // 导出为测试钩子（guard-test 直接断言这两层）
-export const TOPN_SCHEMA = z.number().int().min(1).max(20).optional().describe("返回条数，默认 4，最多 20。多书检索时会另附不超过 16 条同段落邻接上下文（带 nbr/nbrOf 标记，用于补全被切断的上下文），它们不占 topN 名额");
+// 超出范围时给中文提示：默认的 zod 英文报错（"Too big: expected number to be <=20"）会
+// 原样透给智能体，模型看不出该传什么，还可能反复重试同一个错值。
+export const TOPN_SCHEMA = z.number().int().min(1, "topN 最小 1").max(20, "topN 最大 20——要更多内容请用 get_chapter/read_range 通读，别把 topN 调爆")
+  .optional().describe("返回条数，默认 4，最多 20。多书检索时会另附不超过 16 条同段落邻接上下文（带 nbr/nbrOf 标记，用于补全被切断的上下文），它们不占 topN 名额");
 export const clampTopN = (n) => Math.min(Math.max(1, Math.floor(Number(n) || 4)), 20);
 
 // maxBooks 统一上限（P5）：路由窗口 [1..8]，默认 3——与 TOPN 同款 zod + 处理器双层防呆
 // 2026-10-16 V3 第二波：书库 7→12 本，默认 2 会把真相关书切出窗口（论语题实测被凤凰架构/孟子挤掉），抬到 3
-export const MAXBOOKS_SCHEMA = z.number().int().min(1).max(8).optional().describe("全库检索最多挑几本书，默认 4，最多 8；资料库多时可调大");
+export const MAXBOOKS_SCHEMA = z.number().int().min(1, "maxBooks 最小 1").max(8, "maxBooks 最大 8——书太多会稀释相关性，要更多的话分开提问")
+  .optional().describe("全库检索最多挑几本书，默认 4，最多 8；资料库多时可调大");
 export const clampMaxBooks = (n) => Math.min(Math.max(1, Math.floor(Number(n) || 4)), 8);
 
 // ---------- 三级暴露闸机（W1 用量治理，2026-10-21） ----------
@@ -238,7 +278,7 @@ export function registerServerTools(server, { gate = true, deps = {} } = {}) {
     const matches = matchBook(book);
     if (!matches.length)
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
-    const out = lookupEntry(matches[0].db, key, { maxBlocks });
+    const out = await withBookLinks(lookupEntry(matches[0].db, key, { maxBlocks }), matches[0].id);
     out.book = matches[0].title;
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
@@ -256,6 +296,11 @@ export function registerServerTools(server, { gate = true, deps = {} } = {}) {
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
     const out = checkCitation(matches[0].db, quote);
     out.book = matches[0].title;
+    // 命中就给块级深链：用户看到「这句确实在第 N 块」能一键跳过去核对
+    if (out.hit && out.chunk_id) {
+      out.bookId = matches[0].id;
+      out.deepLink = formatDeepLink(buildAnchor({ bookId: matches[0].id, id: out.chunk_id, page: out.page, chapter: out.chapter }));
+    }
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
 
@@ -269,7 +314,7 @@ export function registerServerTools(server, { gate = true, deps = {} } = {}) {
     const matches = matchBook(book);
     if (!matches.length)
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
-    const out = readFullBook(matches[0].db);
+    const out = await withBookLinks(readFullBook(matches[0].db), matches[0].id);
     out.book = matches[0].title;
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
@@ -302,7 +347,7 @@ export function registerServerTools(server, { gate = true, deps = {} } = {}) {
     const matches = matchBook(book);
     if (!matches.length)
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
-    const out = readChapter(matches[0].db, chapter, { maxBlocks });
+    const out = await withBookLinks(readChapter(matches[0].db, chapter, { maxBlocks }), matches[0].id);
     out.book = matches[0].title;
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
@@ -320,7 +365,7 @@ export function registerServerTools(server, { gate = true, deps = {} } = {}) {
     const matches = matchBook(book);
     if (!matches.length)
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
-    const out = readRange(matches[0].db, from, to, { maxBlocks });
+    const out = await withBookLinks(readRange(matches[0].db, from, to, { maxBlocks }), matches[0].id);
     out.book = matches[0].title;
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
@@ -376,7 +421,7 @@ export function registerServerTools(server, { gate = true, deps = {} } = {}) {
     const matches = matchBook(book);
     if (!matches.length)
       return { content: [{ type: "text", text: JSON.stringify({ error: `找不到书「${book}」`, available: listBooks().map(x => x.title) }) }] };
-    const out = await similarChunks(matches[0].db, { chunkId: chunk_id, text, topN: clampTopN(topN) });
+    const out = await withBookLinks(await similarChunks(matches[0].db, { chunkId: chunk_id, text, topN: clampTopN(topN) }), matches[0].id);
     out.book = matches[0].title;
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   });
