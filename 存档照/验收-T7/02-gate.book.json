@@ -1,0 +1,3846 @@
+{
+ "items": [
+  {
+   "book": "attention-is-all-you-need-en.pdf",
+   "file": "attention-is-all-you-need-en.pdf.db",
+   "q": "what kind of model does the paper propose that uses only attention",
+   "perN": {
+    "4": {
+     "lat": 10188,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 76,
+       "score": 0.4269078473213921
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 13,
+       "score": 0.6948136576056565
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 16,
+       "score": 0.40202682624001584
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 1,
+       "score": 1
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "attention-is-all-you-need-en.pdf",
+   "file": "attention-is-all-you-need-en.pdf.db",
+   "q": "how many GPUs were used for training the big model",
+   "perN": {
+    "4": {
+     "lat": 3611,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 54,
+       "score": 1
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 62,
+       "score": 0.903309223888782
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 9,
+       "score": 0.672329147511272
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 64,
+       "score": 0.6103155569174208
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "attention-is-all-you-need-en.pdf",
+   "file": "attention-is-all-you-need-en.pdf.db",
+   "q": "which translation benchmark is used for english to german",
+   "perN": {
+    "4": {
+     "lat": 3758,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 62,
+       "score": 0.8231884944088561
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 76,
+       "score": 0.7649363145541332
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 8,
+       "score": 0.7500303861434028
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 66,
+       "score": 0.5693714826425149
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "attention-is-all-you-need-en.pdf",
+   "file": "attention-is-all-you-need-en.pdf.db",
+   "q": "what BLEU score did the big model get on english to german",
+   "perN": {
+    "4": {
+     "lat": 4558,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 62,
+       "score": 1
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 63,
+       "score": 0.7920383107581479
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 59,
+       "score": 0.7476076758189331
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 8,
+       "score": 0.6128146044684557
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "attention-is-all-you-need-en.pdf",
+   "file": "attention-is-all-you-need-en.pdf.db",
+   "q": "what functions encode token positions",
+   "perN": {
+    "4": {
+     "lat": 3726,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 41,
+       "score": 0.7143747186198404
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 70,
+       "score": 0.2728022684050753
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 44,
+       "score": 0.37874527452641354
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 35,
+       "score": 0.6344460987402362
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "attention-is-all-you-need-en.pdf",
+   "file": "attention-is-all-you-need-en.pdf.db",
+   "q": "how long does one training step take on the big model",
+   "perN": {
+    "4": {
+     "lat": 3641,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 54,
+       "score": 1
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 62,
+       "score": 0.5755371260960424
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 9,
+       "score": 0.3059539325831621
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 63,
+       "score": 0.5274104057424016
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "attention-is-all-you-need-en.pdf",
+   "file": "attention-is-all-you-need-en.pdf.db",
+   "q": "which convolutional sequence models are cited as prior work",
+   "perN": {
+    "4": {
+     "lat": 3065,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 76,
+       "score": 0.5137954652729003
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 87,
+       "score": 1
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 8,
+       "score": 0.7508993033643004
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 14,
+       "score": 0.3959783873111781
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "attention-is-all-you-need-en.pdf",
+   "file": "attention-is-all-you-need-en.pdf.db",
+   "q": "论文里的缩放点积注意力是什么",
+   "perN": {
+    "4": {
+     "lat": 3211,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 25,
+       "score": 0.4610175533609392
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 23,
+       "score": 0.3600544265434839
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 105,
+       "score": 0.3581965944231367
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 22,
+       "score": 0.5
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "attention-is-all-you-need-en.pdf",
+   "file": "attention-is-all-you-need-en.pdf.db",
+   "q": "这篇论文用了几张显卡训练",
+   "perN": {
+    "4": {
+     "lat": 3165,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 9,
+       "score": 0.36618892107846746
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 54,
+       "score": 0.47576186673121806
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 13,
+       "score": 0.4070313778092206
+      },
+      {
+       "bookId": "attention-is-all-you-need-en.pdf",
+       "id": 1,
+       "score": 1
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "daodejing-zh.docx",
+   "file": "daodejing-zh.docx.db",
+   "q": "可以说出来的道就不是永恒的道吗",
+   "perN": {
+    "4": {
+     "lat": 2306,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 1,
+       "score": 0.4416474865234279
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 47,
+       "score": 0.47106293539624516
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 32,
+       "score": 0.41818583761969813
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 23,
+       "score": 0.5
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "daodejing-zh.docx",
+   "file": "daodejing-zh.docx.db",
+   "q": "最高的善像什么",
+   "perN": {
+    "4": {
+     "lat": 1870,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 68,
+       "score": 0.3869596465075881
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 33,
+       "score": 0.3786884363822581
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 49,
+       "score": 0.5
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 8,
+       "score": 0.3989875197435672
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "daodejing-zh.docx",
+   "file": "daodejing-zh.docx.db",
+   "q": "了解别人叫聪明，了解自己叫什么",
+   "perN": {
+    "4": {
+     "lat": 1955,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 33,
+       "score": 0.5
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 41,
+       "score": 0.2717360458568979
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 44,
+       "score": 0.2948497907718608
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 56,
+       "score": 0.30344609732369154
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "daodejing-zh.docx",
+   "file": "daodejing-zh.docx.db",
+   "q": "再远的路从哪里开始",
+   "perN": {
+    "4": {
+     "lat": 2549,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 43,
+       "score": 0.406551024222699
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 25,
+       "score": 0.3978289987865383
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 7,
+       "score": 0.3929547449526212
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 34,
+       "score": 0.5
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "daodejing-zh.docx",
+   "file": "daodejing-zh.docx.db",
+   "q": "天下最柔弱的东西是什么",
+   "perN": {
+    "4": {
+     "lat": 2296,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 78,
+       "score": 0.9215972838663291
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 76,
+       "score": 1
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 36,
+       "score": 0.7841700351933617
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 43,
+       "score": 0.3599826833781107
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "daodejing-zh.docx",
+   "file": "daodejing-zh.docx.db",
+   "q": "治理大国像做什么菜",
+   "perN": {
+    "4": {
+     "lat": 2313,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 60,
+       "score": 1
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 57,
+       "score": 0.37352202870539797
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 78,
+       "score": 0.27441743870186824
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 35,
+       "score": 0.2850833608561326
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "daodejing-zh.docx",
+   "file": "daodejing-zh.docx.db",
+   "q": "功业成就之后怎么办才符合天道",
+   "perN": {
+    "4": {
+     "lat": 2516,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 79,
+       "score": 0.9127527034591802
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 77,
+       "score": 0.4485997575782352
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 9,
+       "score": 0.4204138244540927
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 54,
+       "score": 0.5
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "daodejing-zh.docx",
+   "file": "daodejing-zh.docx.db",
+   "q": "杯子装满了不如怎样",
+   "perN": {
+    "4": {
+     "lat": 2377,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 9,
+       "score": 0.8821269134647173
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 4,
+       "score": 0.38381934380634813
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 62,
+       "score": 0.7268664679106948
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 35,
+       "score": 0.5
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "daodejing-zh.docx",
+   "file": "daodejing-zh.docx.db",
+   "q": "缤纷的颜色动听的音乐厚味让人怎样",
+   "perN": {
+    "4": {
+     "lat": 2602,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 12,
+       "score": 0.5
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 44,
+       "score": 0.36090345631804277
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 43,
+       "score": 0.32965863036182896
+      },
+      {
+       "bookId": "daodejing-zh.docx",
+       "id": 2,
+       "score": 0.3021417666076433
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "dynamo-2007-en.pdf",
+   "file": "Dynamo-亚马逊高可用键值存储-2007.pdf.db",
+   "q": "what partitioning technique does dynamo use to spread its keys across nodes",
+   "perN": {
+    "4": {
+     "lat": 3809,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 134,
+       "score": 0.9684932585207231
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 60,
+       "score": 0.5145640142657971
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 96,
+       "score": 0.43161491816656283
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 102,
+       "score": 0.5
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "dynamo-2007-en.pdf",
+   "file": "Dynamo-亚马逊高可用键值存储-2007.pdf.db",
+   "q": "what mechanism does dynamo use to capture causality between different versions of the same object",
+   "perN": {
+    "4": {
+     "lat": 4030,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 72,
+       "score": 1
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 69,
+       "score": 0.5542994300172163
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 122,
+       "score": 0.5077330524452586
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 12,
+       "score": 0.4242263175290086
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "dynamo-2007-en.pdf",
+   "file": "Dynamo-亚马逊高可用键值存储-2007.pdf.db",
+   "q": "what quorum-like technique keeps writes available when some replicas are temporarily down",
+   "perN": {
+    "4": {
+     "lat": 4475,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 56,
+       "score": 0.7778180462246769
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 12,
+       "score": 0.9750021574451356
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 90,
+       "score": 0.5495632995847903
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 86,
+       "score": 0.6657756666561052
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "dynamo-2007-en.pdf",
+   "file": "Dynamo-亚马逊高可用键值存储-2007.pdf.db",
+   "q": "what structure is used in anti-entropy to synchronize divergent replicas",
+   "perN": {
+    "4": {
+     "lat": 3849,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 56,
+       "score": 0.8278234799438484
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 93,
+       "score": 0.9865919430860111
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 95,
+       "score": 0.5240456669490384
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 96,
+       "score": 0.5
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "dynamo-2007-en.pdf",
+   "file": "Dynamo-亚马逊高可用键值存储-2007.pdf.db",
+   "q": "what load distribution did dynamo choose for uniform performance across nodes",
+   "perN": {
+    "4": {
+     "lat": 3606,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 134,
+       "score": 1
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 160,
+       "score": 0.5955814591884911
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 60,
+       "score": 0.4294649327242077
+      },
+      {
+       "bookId": "Dynamo-亚马逊高可用键值存储-2007.pdf",
+       "id": 62,
+       "score": 0.5151644255801657
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "frankenstein-en.epub",
+   "file": "frankenstein-en.epub.db",
+   "q": "who writes the letters that open the novel",
+   "perN": {
+    "4": {
+     "lat": 2955,
+     "nRes": 7,
+     "books": [
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 167,
+       "score": 0.8960979023506792
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 3,
+       "score": 0.4855403722506795
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 179,
+       "score": 0.47846446282774924
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 166,
+       "score": 0.5
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 168,
+       "score": 0.0649
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 178,
+       "score": 0.0382
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 180,
+       "score": 0.0382
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "frankenstein-en.epub",
+   "file": "frankenstein-en.epub.db",
+   "q": "who is falsely accused of william's murder",
+   "perN": {
+    "4": {
+     "lat": 4088,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 265,
+       "score": 0.45714801564700863
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 220,
+       "score": 0.9156965592011554
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 196,
+       "score": 0.9099002535867893
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 194,
+       "score": 0.9105191255557943
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 264,
+       "score": 0.0931
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 266,
+       "score": 0.0931
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 219,
+       "score": 0.0595
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 221,
+       "score": 0.0595
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 195,
+       "score": 0.0466
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 197,
+       "score": 0.0466
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "frankenstein-en.epub",
+   "file": "frankenstein-en.epub.db",
+   "q": "who teaches the creature language in the cottage",
+   "perN": {
+    "4": {
+     "lat": 4207,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 345,
+       "score": 0.7402797276858541
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 316,
+       "score": 0.4573461109698357
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 319,
+       "score": 0.5496998128299001
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 405,
+       "score": 0.5
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 344,
+       "score": 0.0244
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 346,
+       "score": 0.0244
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 315,
+       "score": 0.0063
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 317,
+       "score": 0.0063
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 318,
+       "score": 0.0042
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 320,
+       "score": 0.0042
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "frankenstein-en.epub",
+   "file": "frankenstein-en.epub.db",
+   "q": "what does the creature ask victor to create for him",
+   "perN": {
+    "4": {
+     "lat": 4138,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 683,
+       "score": 0.936804238676312
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 436,
+       "score": 0.41371880412138
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 159,
+       "score": 0.9569446991811896
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 294,
+       "score": 0.5
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 682,
+       "score": 0.015
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 684,
+       "score": 0.015
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 437,
+       "score": 0.0084
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 158,
+       "score": 0.0034
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 160,
+       "score": 0.0034
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 293,
+       "score": 0.0014
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "frankenstein-en.epub",
+   "file": "frankenstein-en.epub.db",
+   "q": "which university does victor attend",
+   "perN": {
+    "4": {
+     "lat": 4571,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 178,
+       "score": 0.5
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 94,
+       "score": 0.9611540871217181
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 167,
+       "score": 0.5221340018913592
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 214,
+       "score": 0.4513896266267291
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 177,
+       "score": 0.0278
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 179,
+       "score": 0.0278
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 95,
+       "score": 0.0106
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 166,
+       "score": 0.0038
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 168,
+       "score": 0.0038
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 213,
+       "score": 0.0014
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "frankenstein-en.epub",
+   "file": "frankenstein-en.epub.db",
+   "q": "which outdated philosopher's work first inspires victor",
+   "perN": {
+    "4": {
+     "lat": 4229,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 83,
+       "score": 0.7346138985189404
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 198,
+       "score": 0.4548649282159852
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 85,
+       "score": 0.917300128876602
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 384,
+       "score": 0.5
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 82,
+       "score": 0.0681
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 84,
+       "score": 0.0681
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 197,
+       "score": 0.0106
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 199,
+       "score": 0.0106
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 86,
+       "score": 0.004
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 383,
+       "score": 0.0025
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "frankenstein-en.epub",
+   "file": "frankenstein-en.epub.db",
+   "q": "怪物最后说要把自己怎么样",
+   "perN": {
+    "4": {
+     "lat": 3512,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 518,
+       "score": 0.4754734458046694
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 502,
+       "score": 0.397672527714499
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 643,
+       "score": 0.3933403954593989
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 693,
+       "score": 0.5
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 517,
+       "score": 0.0509
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 519,
+       "score": 0.0509
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 501,
+       "score": 0.0129
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 503,
+       "score": 0.0129
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 642,
+       "score": 0.0075
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 644,
+       "score": 0.0075
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "frankenstein-en.epub",
+   "file": "frankenstein-en.epub.db",
+   "q": "弗兰肯斯坦在哪个城市读大学",
+   "perN": {
+    "4": {
+     "lat": 4346,
+     "nRes": 9,
+     "books": [
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 1,
+       "score": 0.5
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 198,
+       "score": 0.42318844193306665
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 484,
+       "score": 0.35252960761221824
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 87,
+       "score": 0.39630126849926584
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 197,
+       "score": 0.0078
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 199,
+       "score": 0.0078
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 485,
+       "score": 0.0018
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 86,
+       "score": 0.0013
+      },
+      {
+       "bookId": "frankenstein-en.epub",
+       "id": 88,
+       "score": 0.0013
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "jane-eyre-en.epub",
+   "file": "pg1260-简爱.epub.db",
+   "q": "what was impossible to do on the day the novel opens",
+   "perN": {
+    "4": {
+     "lat": 4508,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 14,
+       "score": 0.5
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1034,
+       "score": 0.46219624100320755
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 877,
+       "score": 0.5837848299864516
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1218,
+       "score": 0.43890336485395814
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 15,
+       "score": 0.0184
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1033,
+       "score": 0.0115
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1035,
+       "score": 0.0115
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 876,
+       "score": 0.0106
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 878,
+       "score": 0.0106
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1217,
+       "score": 0.0057
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "jane-eyre-en.epub",
+   "file": "pg1260-简爱.epub.db",
+   "q": "what is the name of mr rochester's country estate",
+   "perN": {
+    "4": {
+     "lat": 4072,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1767,
+       "score": 0.44247444265395197
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1124,
+       "score": 0.45790569926594754
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 407,
+       "score": 0.4140773869491635
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 712,
+       "score": 0.5
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1768,
+       "score": 0.2383
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1123,
+       "score": 0.1336
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1125,
+       "score": 0.1336
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 406,
+       "score": 0.0634
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 408,
+       "score": 0.0634
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 711,
+       "score": 0.049
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "jane-eyre-en.epub",
+   "file": "pg1260-简爱.epub.db",
+   "q": "who is rochester's first wife hidden in the attic at thornfield",
+   "perN": {
+    "4": {
+     "lat": 4937,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1185,
+       "score": 0.7443993982950896
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1759,
+       "score": 0.4046282250868074
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1563,
+       "score": 0.6898896897839972
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1755,
+       "score": 0.5281910553154987
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1184,
+       "score": 0.3025
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1186,
+       "score": 0.3025
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1758,
+       "score": 0.2309
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1760,
+       "score": 0.2309
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1562,
+       "score": 0.1842
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1564,
+       "score": 0.1842
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "jane-eyre-en.epub",
+   "file": "pg1260-简爱.epub.db",
+   "q": "简爱离开盖茨黑德之后就读的学校叫什么",
+   "perN": {
+    "4": {
+     "lat": 4407,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 92,
+       "score": 0.42948808784117587
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 93,
+       "score": 0.5
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1229,
+       "score": 0.4213181521196922
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 219,
+       "score": 0.3856653899905627
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 91,
+       "score": 0.0357
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 94,
+       "score": 0.0176
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1228,
+       "score": 0.0126
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1230,
+       "score": 0.0126
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 218,
+       "score": 0.0043
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 220,
+       "score": 0.0043
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "jane-eyre-en.epub",
+   "file": "pg1260-简爱.epub.db",
+   "q": "who is the clergyman who runs lowood school and humiliates jane in public",
+   "perN": {
+    "4": {
+     "lat": 4235,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 145,
+       "score": 0.5
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 189,
+       "score": 0.4634906577629306
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 128,
+       "score": 0.5681473408169689
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 132,
+       "score": 0.46285712529856265
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 144,
+       "score": 0.1143
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 146,
+       "score": 0.1143
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 188,
+       "score": 0.0324
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 190,
+       "score": 0.0324
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 127,
+       "score": 0.0323
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 129,
+       "score": 0.0323
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "jane-eyre-en.epub",
+   "file": "pg1260-简爱.epub.db",
+   "q": "who is the little french girl that jane works for as governess at thornfield",
+   "perN": {
+    "4": {
+     "lat": 4545,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1024,
+       "score": 0.5
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 709,
+       "score": 0.5525357559669535
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 409,
+       "score": 0.5613063139651844
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1229,
+       "score": 0.46526115125897133
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1023,
+       "score": 0.1461
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1025,
+       "score": 0.1461
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 708,
+       "score": 0.0226
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 710,
+       "score": 0.0226
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 408,
+       "score": 0.0184
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 410,
+       "score": 0.0184
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "jane-eyre-en.epub",
+   "file": "pg1260-简爱.epub.db",
+   "q": "whose laugh does jane keep hearing from the third storey of thornfield",
+   "perN": {
+    "4": {
+     "lat": 3917,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 438,
+       "score": 0.5
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1034,
+       "score": 0.4228541796079938
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 679,
+       "score": 0.42799459221005814
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 610,
+       "score": 0.7928462827868683
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 437,
+       "score": 0.0221
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 439,
+       "score": 0.0221
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1033,
+       "score": 0.0196
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1035,
+       "score": 0.0196
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 678,
+       "score": 0.0194
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 680,
+       "score": 0.0194
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "jane-eyre-en.epub",
+   "file": "pg1260-简爱.epub.db",
+   "q": "who proposes marriage to jane while she is living with the rivers family",
+   "perN": {
+    "4": {
+     "lat": 7239,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1819,
+       "score": 0.5153318190779311
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1521,
+       "score": 0.5330938476149276
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1400,
+       "score": 0.522170852679956
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1820,
+       "score": 0.5
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1818,
+       "score": 0.0352
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1520,
+       "score": 0.018
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1522,
+       "score": 0.018
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1399,
+       "score": 0.0138
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1401,
+       "score": 0.0138
+      },
+      {
+       "bookId": "pg1260-简爱.epub",
+       "id": 1821,
+       "score": 0.0135
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lamport-1978-en.pdf",
+   "file": "Lamport-时间时钟与分布式系统排序-1978.pdf.db",
+   "q": "what relation does lamport define to order events in a distributed system",
+   "perN": {
+    "4": {
+     "lat": 4126,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 3,
+       "score": 1
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 10,
+       "score": 0.6217088805462165
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 9,
+       "score": 0.6070977671735207
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 84,
+       "score": 0.5272408850731708
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lamport-1978-en.pdf",
+   "file": "Lamport-时间时钟与分布式系统排序-1978.pdf.db",
+   "q": "what does lamport introduce into the system to assign numbers to events",
+   "perN": {
+    "4": {
+     "lat": 3946,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 23,
+       "score": 0.9333670007718097
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 3,
+       "score": 0.7223048211882523
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 46,
+       "score": 0.5638041031340311
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 132,
+       "score": 0.715710729447334
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lamport-1978-en.pdf",
+   "file": "Lamport-时间时钟与分布式系统排序-1978.pdf.db",
+   "q": "what must the system of clocks satisfy so events can be ordered by their timestamps",
+   "perN": {
+    "4": {
+     "lat": 4097,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 34,
+       "score": 0.4907618756682817
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 36,
+       "score": 1
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 38,
+       "score": 0.9402733886536275
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 77,
+       "score": 0.6060932028508026
+      }
+     ],
+     "routed": [],
+     "formDirty": [
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 36,
+       "rule": "journal_masthead"
+      }
+     ],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lamport-1978-en.pdf",
+   "file": "Lamport-时间时钟与分布式系统排序-1978.pdf.db",
+   "q": "how are ties broken when two events happen to get the same clock value",
+   "perN": {
+    "4": {
+     "lat": 4603,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 37,
+       "score": 0.955314908019973
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 71,
+       "score": 0.413100272547902
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 29,
+       "score": 0.4007570608145142
+      },
+      {
+       "bookId": "Lamport-时间时钟与分布式系统排序-1978.pdf",
+       "id": 33,
+       "score": 0.919230914464652
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lunyu-xueer-zh.docx",
+   "file": "lunyu-xueer-zh.docx.db",
+   "q": "学了之后经常温习会怎么样",
+   "perN": {
+    "4": {
+     "lat": 1543,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 1,
+       "score": 0.5
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 8,
+       "score": 0.35407680219049853
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 14,
+       "score": 0.4027931197588129
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 4,
+       "score": 0.20027439379089393
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lunyu-xueer-zh.docx",
+   "file": "lunyu-xueer-zh.docx.db",
+   "q": "别人不了解我我也不生气，算怎样的人",
+   "perN": {
+    "4": {
+     "lat": 1668,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 1,
+       "score": 0.9483411266519506
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 16,
+       "score": 0.5
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 8,
+       "score": 0.3055278008818723
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 2,
+       "score": 0.2677343647233064
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lunyu-xueer-zh.docx",
+   "file": "lunyu-xueer-zh.docx.db",
+   "q": "君子专心做人的根本，根本立住了会怎样",
+   "perN": {
+    "4": {
+     "lat": 1894,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 2,
+       "score": 1
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 8,
+       "score": 0.48390892866079
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 16,
+       "score": 0.1628737456018239
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 14,
+       "score": 0.4219770063984608
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lunyu-xueer-zh.docx",
+   "file": "lunyu-xueer-zh.docx.db",
+   "q": "曾子每天反省自己的哪几件事",
+   "perN": {
+    "4": {
+     "lat": 2053,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 4,
+       "score": 1
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 9,
+       "score": 0.7306648734777864
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 16,
+       "score": 0.11679727985642148
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 5,
+       "score": 0.14474340115066803
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lunyu-xueer-zh.docx",
+   "file": "lunyu-xueer-zh.docx.db",
+   "q": "治理一个大国要怎么做",
+   "perN": {
+    "4": {
+     "lat": 2392,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 5,
+       "score": 0.5
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 16,
+       "score": 0.13957859440595297
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 3,
+       "score": 0.13785584108187415
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 2,
+       "score": 0.2334073540392957
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lunyu-xueer-zh.docx",
+   "file": "lunyu-xueer-zh.docx.db",
+   "q": "年轻人怎么对待父母兄长和朋友",
+   "perN": {
+    "4": {
+     "lat": 1764,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 13,
+       "score": 0.4253347389050645
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 7,
+       "score": 0.9993088614564194
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 6,
+       "score": 0.5
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 16,
+       "score": 0.2579708619478713
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lunyu-xueer-zh.docx",
+   "file": "lunyu-xueer-zh.docx.db",
+   "q": "礼的运用以什么为贵",
+   "perN": {
+    "4": {
+     "lat": 1803,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 12,
+       "score": 0.5
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 13,
+       "score": 0.3090381788582027
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 15,
+       "score": 0.20627275107604826
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 3,
+       "score": 0.2066713650502101
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lunyu-xueer-zh.docx",
+   "file": "lunyu-xueer-zh.docx.db",
+   "q": "不担心别人不了解自己，该担心什么",
+   "perN": {
+    "4": {
+     "lat": 1899,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 16,
+       "score": 0.5
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 4,
+       "score": 0.4147803732506315
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 13,
+       "score": 0.22008060895736675
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 8,
+       "score": 0.2937914109960595
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "lunyu-xueer-zh.docx",
+   "file": "lunyu-xueer-zh.docx.db",
+   "q": "贫穷不谄媚富贵不骄傲，更好的境界是什么",
+   "perN": {
+    "4": {
+     "lat": 1851,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 15,
+       "score": 0.5
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 1,
+       "score": 0.19872173445832467
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 14,
+       "score": 0.32129913432477486
+      },
+      {
+       "bookId": "lunyu-xueer-zh.docx",
+       "id": 5,
+       "score": 0.1890946417493418
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mapreduce-2004-en.pdf",
+   "file": "MapReduce-谷歌大规模分布式处理-2004.pdf.db",
+   "q": "which functional language inspired the map and reduce primitives",
+   "perN": {
+    "4": {
+     "lat": 3449,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 7,
+       "score": 1
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 50,
+       "score": 0.5533897138762721
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 14,
+       "score": 0.379238999290072
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 15,
+       "score": 0.38529463532987174
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mapreduce-2004-en.pdf",
+   "file": "MapReduce-谷歌大规模分布式处理-2004.pdf.db",
+   "q": "what is the primary mechanism mapreduce uses for fault tolerance",
+   "perN": {
+    "4": {
+     "lat": 3686,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 102,
+       "score": 0.7476581840967822
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 7,
+       "score": 0.84004057290703
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 104,
+       "score": 0.44818515431810213
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 33,
+       "score": 0.7530567630290476
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mapreduce-2004-en.pdf",
+   "file": "MapReduce-谷歌大规模分布式处理-2004.pdf.db",
+   "q": "what does the master launch to handle straggler machines that slow down completion",
+   "perN": {
+    "4": {
+     "lat": 4522,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 49,
+       "score": 0.8124416634118392
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 48,
+       "score": 1
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 63,
+       "score": 0.32644104832534093
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 67,
+       "score": 0.38885352698917997
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mapreduce-2004-en.pdf",
+   "file": "MapReduce-谷歌大规模分布式处理-2004.pdf.db",
+   "q": "why does mapreduce schedule map tasks close to the data they process",
+   "perN": {
+    "4": {
+     "lat": 3907,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 43,
+       "score": 0.5314137434887166
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 49,
+       "score": 0.9479132270126616
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 99,
+       "score": 0.8607621949322337
+      },
+      {
+       "bookId": "MapReduce-谷歌大规模分布式处理-2004.pdf",
+       "id": 102,
+       "score": 0.5
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mengzi-zh.docx",
+   "file": "mengzi-zh.docx.db",
+   "q": "上天要降大任给一个人之前会怎么考验他",
+   "perN": {
+    "4": {
+     "lat": 4011,
+     "nRes": 5,
+     "books": [
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 189,
+       "score": 1
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 270,
+       "score": 0.3601747531591376
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 80,
+       "score": 0.3525187863019807
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 57,
+       "score": 0.3518780597416847
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 56,
+       "score": 0.0006
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mengzi-zh.docx",
+   "file": "mengzi-zh.docx.db",
+   "q": "鱼和熊掌不能同时得到该怎么选",
+   "perN": {
+    "4": {
+     "lat": 3931,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 164,
+       "score": 1
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 124,
+       "score": 0.36223392456680376
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 193,
+       "score": 0.3199007675831513
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 123,
+       "score": 0.29748444689947834
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mengzi-zh.docx",
+   "file": "mengzi-zh.docx.db",
+   "q": "打仗的时候天时和地利哪个更重要",
+   "perN": {
+    "4": {
+     "lat": 4393,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 39,
+       "score": 1
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 87,
+       "score": 0.283280108878544
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 263,
+       "score": 0.2672602074487034
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 238,
+       "score": 0.24562035145590996
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mengzi-zh.docx",
+   "file": "mengzi-zh.docx.db",
+   "q": "国家当中什么最贵重，江山和君主哪个轻",
+   "perN": {
+    "4": {
+     "lat": 4082,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 250,
+       "score": 0.5
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 264,
+       "score": 0.4121101409451172
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 78,
+       "score": 0.8225897364553313
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 254,
+       "score": 0.361478959169066
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mengzi-zh.docx",
+   "file": "mengzi-zh.docx.db",
+   "q": "不得志的时候修养自身，得志的时候要怎么样",
+   "perN": {
+    "4": {
+     "lat": 3231,
+     "nRes": 6,
+     "books": [
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 199,
+       "score": 0.9197003776656598
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 64,
+       "score": 0.8170075925298013
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 270,
+       "score": 0.8828353182163184
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 29,
+       "score": 0.5
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 28,
+       "score": 0.0029
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 30,
+       "score": 0.0029
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mengzi-zh.docx",
+   "file": "mengzi-zh.docx.db",
+   "q": "富贵贫穷威武什么样的考验都不能动摇一个人",
+   "perN": {
+    "4": {
+     "lat": 3439,
+     "nRes": 4,
+     "books": [
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 64,
+       "score": 0.8105823483554613
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 246,
+       "score": 0.5
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 234,
+       "score": 0.48660830331645405
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 112,
+       "score": 0.45021150313123665
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mengzi-zh.docx",
+   "file": "mengzi-zh.docx.db",
+   "q": "不用学就会的能力不用想就懂的见识叫什么",
+   "perN": {
+    "4": {
+     "lat": 5132,
+     "nRes": 6,
+     "books": [
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 205,
+       "score": 0.5
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 180,
+       "score": 0.829821765556346
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 95,
+       "score": 0.4299757123141105
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 60,
+       "score": 0.7751724016817992
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 59,
+       "score": 0.0044
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 61,
+       "score": 0.0044
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mengzi-zh.docx",
+   "file": "mengzi-zh.docx.db",
+   "q": "看见小孩子快要掉进井里为什么会心跳",
+   "perN": {
+    "4": {
+     "lat": 4787,
+     "nRes": 5,
+     "books": [
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 34,
+       "score": 0.5
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 219,
+       "score": 0.33020170425962214
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 161,
+       "score": 0.4044524145033747
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 57,
+       "score": 0.3944995044639279
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 56,
+       "score": 0.0001
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "mengzi-zh.docx",
+   "file": "mengzi-zh.docx.db",
+   "q": "有人嫌禾苗不长就往高里拔，苗最后怎样了",
+   "perN": {
+    "4": {
+     "lat": 6099,
+     "nRes": 6,
+     "books": [
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 29,
+       "score": 0.8849299626790827
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 66,
+       "score": 0.6649230118012623
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 70,
+       "score": 0.8392516949639699
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 87,
+       "score": 0.5
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 28,
+       "score": 0.015
+      },
+      {
+       "bookId": "mengzi-zh.docx",
+       "id": 30,
+       "score": 0.015
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "pride-and-prejudice-en.epub",
+   "file": "pride-and-prejudice-en.epub.db",
+   "q": "what is the famous opening sentence about",
+   "perN": {
+    "4": {
+     "lat": 3445,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1252,
+       "score": 0.48868441785518274
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1243,
+       "score": 0.49351371755918144
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 958,
+       "score": 0.4486156738093488
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 42,
+       "score": 0.5
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1251,
+       "score": 0.0283
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1253,
+       "score": 0.0283
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1242,
+       "score": 0.0234
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1244,
+       "score": 0.0234
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 959,
+       "score": 0.0231
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 43,
+       "score": 0.001
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "pride-and-prejudice-en.epub",
+   "file": "pride-and-prejudice-en.epub.db",
+   "q": "how many daughters does the bennet family have",
+   "perN": {
+    "4": {
+     "lat": 5425,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1014,
+       "score": 0.49917682785518896
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 259,
+       "score": 0.5323829887663319
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1264,
+       "score": 0.676258873575529
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1265,
+       "score": 0.5
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1013,
+       "score": 0.4653
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1015,
+       "score": 0.4653
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 258,
+       "score": 0.4649
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 260,
+       "score": 0.4649
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1263,
+       "score": 0.451
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1266,
+       "score": 0.2337
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "pride-and-prejudice-en.epub",
+   "file": "pride-and-prejudice-en.epub.db",
+   "q": "whom does mr collins marry after being rejected",
+   "perN": {
+    "4": {
+     "lat": 5474,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 446,
+       "score": 0.745103648593753
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 396,
+       "score": 0.5
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 503,
+       "score": 0.4877066118313223
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 387,
+       "score": 0.4770525889927155
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 445,
+       "score": 0.4456
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 447,
+       "score": 0.4456
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 395,
+       "score": 0.443
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 397,
+       "score": 0.443
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 502,
+       "score": 0.3953
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 504,
+       "score": 0.3953
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "pride-and-prejudice-en.epub",
+   "file": "pride-and-prejudice-en.epub.db",
+   "q": "who finds lydia and wickham in london",
+   "perN": {
+    "4": {
+     "lat": 4619,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1059,
+       "score": 0.45918685508341595
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 263,
+       "score": 0.6736177358540241
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1061,
+       "score": 0.8410311029862894
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 981,
+       "score": 0.9943460793678001
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1058,
+       "score": 0.4401
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1060,
+       "score": 0.4401
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 262,
+       "score": 0.4148
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 264,
+       "score": 0.4148
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1062,
+       "score": 0.4124
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 980,
+       "score": 0.3732
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "pride-and-prejudice-en.epub",
+   "file": "pride-and-prejudice-en.epub.db",
+   "q": "what is mr darcy's estate called",
+   "perN": {
+    "4": {
+     "lat": 3808,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 292,
+       "score": 0.45697401198638693
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 287,
+       "score": 0.44307602807410196
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 288,
+       "score": 0.44418411263500546
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 681,
+       "score": 0.5
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 291,
+       "score": 0.1643
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 293,
+       "score": 0.1643
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 286,
+       "score": 0.0556
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 289,
+       "score": 0.0167
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 680,
+       "score": 0.0071
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 682,
+       "score": 0.0071
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "pride-and-prejudice-en.epub",
+   "file": "pride-and-prejudice-en.epub.db",
+   "q": "who tries to separate jane and bingley",
+   "perN": {
+    "4": {
+     "lat": 4640,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 632,
+       "score": 0.5419001910730898
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 419,
+       "score": 0.950729840307551
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 863,
+       "score": 0.45387397801279744
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 696,
+       "score": 0.5
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 631,
+       "score": 0.3164
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 633,
+       "score": 0.3164
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 418,
+       "score": 0.2298
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 420,
+       "score": 0.2298
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 864,
+       "score": 0.2094
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 695,
+       "score": 0.0132
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "pride-and-prejudice-en.epub",
+   "file": "pride-and-prejudice-en.epub.db",
+   "q": "达西先生的庄园叫什么名字",
+   "perN": {
+    "4": {
+     "lat": 3921,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 155,
+       "score": 0.4230598337978556
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1257,
+       "score": 0.4195487443583694
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 292,
+       "score": 0.42114160499825476
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1243,
+       "score": 0.5
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 154,
+       "score": 0.0203
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 156,
+       "score": 0.0203
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1256,
+       "score": 0.0105
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 1258,
+       "score": 0.0105
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 291,
+       "score": 0.0088
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 293,
+       "score": 0.0088
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "pride-and-prejudice-en.epub",
+   "file": "pride-and-prejudice-en.epub.db",
+   "q": "what legal arrangement means the estate passes to collins",
+   "perN": {
+    "4": {
+     "lat": 4171,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 433,
+       "score": 0.4630738231783765
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 562,
+       "score": 0.9807443268333446
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 460,
+       "score": 0.9116705737470249
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 380,
+       "score": 0.6686344776169086
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 434,
+       "score": 0.0239
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 561,
+       "score": 0.0162
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 563,
+       "score": 0.0162
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 459,
+       "score": 0.0083
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 461,
+       "score": 0.0083
+      },
+      {
+       "bookId": "pride-and-prejudice-en.epub",
+       "id": 379,
+       "score": 0.0056
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "sherlock-holmes-adventures-en.epub",
+   "file": "pg1661-福尔摩斯冒险史.epub.db",
+   "q": "who is the woman who outwits sherlock holmes in a scandal in bohemia",
+   "perN": {
+    "4": {
+     "lat": 3930,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 91,
+       "score": 0.9791348041392148
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 4,
+       "score": 0.7343242092994113
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 194,
+       "score": 0.49753715412514704
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 68,
+       "score": 0.49478669347265775
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 90,
+       "score": 0.4732
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 5,
+       "score": 0.368
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 193,
+       "score": 0.1202
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 195,
+       "score": 0.1202
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 67,
+       "score": 0.0646
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 69,
+       "score": 0.0646
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "sherlock-holmes-adventures-en.epub",
+   "file": "pg1661-福尔摩斯冒险史.epub.db",
+   "q": "what is the address of sherlock holmes's london lodgings",
+   "perN": {
+    "4": {
+     "lat": 3030,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 182,
+       "score": 0.6189284611782111
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 132,
+       "score": 0.44288834272139954
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 39,
+       "score": 0.4584851059575636
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 693,
+       "score": 0.8743103244774659
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 183,
+       "score": 0.4736
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 131,
+       "score": 0.2824
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 133,
+       "score": 0.2824
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 38,
+       "score": 0.2737
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 40,
+       "score": 0.2737
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 692,
+       "score": 0.2253
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "sherlock-holmes-adventures-en.epub",
+   "file": "pg1661-福尔摩斯冒险史.epub.db",
+   "q": "what kind of snake is the deadly serpent in the speckled band",
+   "perN": {
+    "4": {
+     "lat": 4107,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 670,
+       "score": 1
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 608,
+       "score": 0.36542605463191524
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 599,
+       "score": 0.2303694686946547
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 669,
+       "score": 0.23334745102194726
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 671,
+       "score": 0.485
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 607,
+       "score": 0.0014
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 609,
+       "score": 0.0014
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 598,
+       "score": 0.0011
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 600,
+       "score": 0.0011
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 668,
+       "score": 0.0008
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "sherlock-holmes-adventures-en.epub",
+   "file": "pg1661-福尔摩斯冒险史.epub.db",
+   "q": "who is the friend and colleague who helps sherlock holmes and narrates the cases",
+   "perN": {
+    "4": {
+     "lat": 3201,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 25,
+       "score": 0.8117200222962215
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 779,
+       "score": 0.9162855796824523
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 587,
+       "score": 0.5
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 880,
+       "score": 0.4390441417918252
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 24,
+       "score": 0.4916
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 26,
+       "score": 0.4916
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 778,
+       "score": 0.4803
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 780,
+       "score": 0.4803
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 586,
+       "score": 0.3158
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 588,
+       "score": 0.3158
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "sherlock-holmes-adventures-en.epub",
+   "file": "pg1661-福尔摩斯冒险史.epub.db",
+   "q": "who brought jabez wilson the newspaper advertisement about the red-headed league",
+   "perN": {
+    "4": {
+     "lat": 3837,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 112,
+       "score": 0.7527783431793427
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 109,
+       "score": 1
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 141,
+       "score": 0.3720084040250713
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 104,
+       "score": 0.5427050644620641
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 111,
+       "score": 0.3119
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 113,
+       "score": 0.3119
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 108,
+       "score": 0.2462
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 110,
+       "score": 0.2462
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 140,
+       "score": 0.1732
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 142,
+       "score": 0.1732
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "sherlock-holmes-adventures-en.epub",
+   "file": "pg1661-福尔摩斯冒险史.epub.db",
+   "q": "what did john openshaw's relatives receive from london before dying, marked with K.K.K.",
+   "perN": {
+    "4": {
+     "lat": 3626,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 369,
+       "score": 0.5
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 407,
+       "score": 0.4954662300179484
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 416,
+       "score": 0.8538412795808552
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 378,
+       "score": 0.39072516589559236
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 368,
+       "score": 0.1671
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 370,
+       "score": 0.1671
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 406,
+       "score": 0.08
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 408,
+       "score": 0.08
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 415,
+       "score": 0.0709
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 377,
+       "score": 0.0376
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  },
+  {
+   "book": "sherlock-holmes-adventures-en.epub",
+   "file": "pg1661-福尔摩斯冒险史.epub.db",
+   "q": "who did holmes confront and release for the theft of the blue carbuncle",
+   "perN": {
+    "4": {
+     "lat": 3604,
+     "nRes": 10,
+     "books": [
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 531,
+       "score": 0.7565925933425635
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 528,
+       "score": 0.7493619769880214
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 536,
+       "score": 0.6759102846084335
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 1018,
+       "score": 0.5668518671868716
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 530,
+       "score": 0.3
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 532,
+       "score": 0.3
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 527,
+       "score": 0.1696
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 529,
+       "score": 0.1696
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 535,
+       "score": 0.1559
+      },
+      {
+       "bookId": "pg1661-福尔摩斯冒险史.epub",
+       "id": 537,
+       "score": 0.1559
+      }
+     ],
+     "routed": [],
+     "formDirty": [],
+     "prodDirty": []
+    }
+   }
+  }
+ ],
+ "meta": {
+  "n": 80,
+  "topN": 4,
+  "caliber": "perbook",
+  "rerank": true
+ }
+}
